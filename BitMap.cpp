@@ -1,7 +1,7 @@
 
 #include "BitMap.h"
 
-BitMap* readBMP(const std::string& filename) {
+MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename) {
     std::ifstream file(filename, std::ios::in | std::ios::binary);
 
     if(!file.is_open()) {
