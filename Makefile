@@ -4,8 +4,8 @@ CXX=clang++
 BUILD_DIR=build
 OUT_DIR=bin
 
-SOURCES=BitMap.cpp main.cpp
-OBJECTS=$(BUILD_DIR)/BitMap.o $(BUILD_DIR)/main.o
+SOURCES=BitMap.cpp main.cpp ShapeFinder.cpp GraphicalDebugger.cpp
+OBJECTS=$(BUILD_DIR)/BitMap.o $(BUILD_DIR)/main.o $(BUILD_DIR)/ShapeFinder.o $(BUILD_DIR)/GraphicalDebugger.o
 
 DEBUG_FLAG=-g
 ENABLE_GRAPHICS_C=-DENABLE_GRAPHICS `sdl2-config --cflags`
@@ -27,6 +27,12 @@ $(BUILD_DIR)/BitMap.o: BitMap.h $(BUILD_DIR)/
 
 $(BUILD_DIR)/main.o: $(BUILD_DIR)/
 	$(CXX) $(CXXFLAGS) -c main.cpp -o $(BUILD_DIR)/main.o
+
+$(BUILD_DIR)/ShapeFinder.o: ShapeFinder.h $(BUILD_DIR)/
+	$(CXX) $(CXXFLAGS) -c ShapeFinder.cpp -o $(BUILD_DIR)/ShapeFinder.o
+
+$(BUILD_DIR)/GraphicalDebugger.o: GraphicalDebugger.h $(BUILD_DIR)/
+	$(CXX) $(CXXFLAGS) -c GraphicalDebugger.cpp -o $(BUILD_DIR)/GraphicalDebugger.o
 
 $(OUT_DIR)/:
 	mkdir -p $(OUT_DIR)
