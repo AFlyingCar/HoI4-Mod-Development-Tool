@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "GraphicalDebugger.h" // writeDebugColor
+#include "UniqueColorGenerator.h" // generateUniqueColor
 
 // NOTE: This is a debug vector, in the future, we should have a function which
 //   chooses new unique color values
@@ -74,7 +75,11 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
 
     std::cout << "Building shape #" << shapes.size() + 1 << std::endl;
 
+    Color next_color;
+
 findAllShapes_restart_loop:
+    next_color = generateUniqueColor(shapes.size() + 1);
+
     while(!points.empty()) {
         Pixel point = points.front();
         points.erase(points.begin());
@@ -101,16 +106,17 @@ findAllShapes_restart_loop:
                 next_shape.pixels.push_back(p);
 
                 writeDebugColor(debug_data, image->width, p.point.x, p.point.y,
-                                UNIQUE_COLORS[next_color]);
+                                next_color);//UNIQUE_COLORS[next_color]);
 
                 visited[xyToIndex(image, p.point.x, p.point.y)] = true;
             }
 
-            ++next_color;
+            // ++next_color;
             partition_idx = 0;
-            next_shape.u_color = UNIQUE_COLORS[next_color];
+            next_shape.u_color = next_color;//UNIQUE_COLORS[next_color];
             shapes.push_back(next_shape);
             next_shape.pixels.clear();
+            next_color = generateUniqueColor(shapes.size() + 1);
 
             std::cout << "Building shape #" << shapes.size() + 1 << std::endl;
         }
@@ -187,7 +193,7 @@ findAllShapes_restart_loop:
 
         next_shape.pixels.push_back(point);
         writeDebugColor(debug_data, image->width, point.point.x, point.point.y,
-                        UNIQUE_COLORS[next_color]);
+                        next_color);//UNIQUE_COLORS[next_color]);
     }
 
     size_t x = 0;
@@ -220,14 +226,14 @@ end_double_for_loop:;
                 std::cout << "Found a pixel we missed at (" << x << ',' << y
                           << ")." << std::endl;
                 // Reset the state back to the beginning and jump to the top
-                ++next_color;
+                //++next_color;
                 partition_idx = 1;
                 points.insert(points.begin(), p);
                 next_shape.pixels.clear();
-                next_shape.u_color = UNIQUE_COLORS[next_color];
+                next_shape.u_color = next_color = generateUniqueColor(shapes.size() + 1);//UNIQUE_COLORS[next_color];
 
                 writeDebugColor(debug_data, image->width, p.point.x, p.point.y,
-                                UNIQUE_COLORS[next_color]);
+                                next_color);//UNIQUE_COLORS[next_color]);
 
                 goto findAllShapes_restart_loop;
             }
@@ -239,3 +245,4 @@ end_double_for_loop:;
 
     return shapes;
 }
+
