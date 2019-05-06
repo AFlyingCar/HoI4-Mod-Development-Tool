@@ -193,80 +193,33 @@ findAllShapes_restart_loop:
             std::cout << "Building shape #" << shapes.size() + 1 << std::endl;
         }
 
-        // Is the shape to the left of the current pixel still viable to look at?
-        uint32_t index = xyToIndex(image, point.point.x + 1, point.point.y);
-        if(isInImage(image, point.point.x + 1, point.point.y) &&
-           !visited[index])
-        {
-            writeDebugColor(debug_data, image->width, point.point.x + 1, point.point.y,
-                            Color{0, 0, 0xFF});
+        auto point_check = [&](uint32_t x, uint32_t y) {
+            uint32_t index = xyToIndex(image, x, y);
 
-            // Mark that this pixel is no longer viable
-            visited[index] = true;
+            // Is the pixel still viable to look at?
+            if(isInImage(image, x, y) && !visited[index]) {
+                writeDebugColor(debug_data, image->width, x, y,
+                                Color{0, 0, 0xFF});
 
-            auto pix = getAsPixel(image, point.point.x + 1, point.point.y);
+                // Mark that this pixel is no longer viable
+                visited[index] = true;
 
-            // Add it to before or after the partition depending on if its a
-            //   boundary pixel or not
-            if(isBoundaryPixel(pix)) {
-                points.push_back(pix);
-            } else {
-                points.insert(points.begin() + (partition_idx++), pix);
+                auto pix = getAsPixel(image, x, y);
+
+                // Add it to before or after the partition depending on if its a
+                //   boundary pixel or not
+                if(isBoundaryPixel(pix)) {
+                    points.push_back(pix);
+                } else {
+                    points.insert(points.begin() + (partition_idx++), pix);
+                }
             }
-        }
+        };
 
-        // Is the shape to the right of the current pixel still viable to look at?
-        index = xyToIndex(image, point.point.x - 1, point.point.y);
-        if(isInImage(image, point.point.x - 1, point.point.y) &&
-           !visited[index])
-        {
-            writeDebugColor(debug_data, image->width, point.point.x - 1, point.point.y,
-                            Color{0, 0, 0xFF});
-
-            visited[index] = true;
-
-            auto pix = getAsPixel(image, point.point.x - 1, point.point.y);
-
-            if(isBoundaryPixel(pix)) {
-                points.push_back(pix);
-            } else {
-                points.insert(points.begin() + (partition_idx++), pix);
-            }
-        }
-
-        index = xyToIndex(image, point.point.x, point.point.y + 1);
-        if(isInImage(image, point.point.x, point.point.y + 1)
-           && !visited[index])
-        {
-            writeDebugColor(debug_data, image->width, point.point.x, point.point.y + 1,
-                            Color{0, 0, 0xFF});
-
-            visited[index] = true;
-            auto pix = getAsPixel(image, point.point.x, point.point.y + 1);
-
-            if(isBoundaryPixel(pix)) {
-                points.push_back(pix);
-            } else {
-                points.insert(points.begin() + (partition_idx++), pix);
-            }
-        }
-
-        index = xyToIndex(image, point.point.x, point.point.y - 1);
-        if(isInImage(image, point.point.x, point.point.y - 1) &&
-           !visited[index])
-        {
-            writeDebugColor(debug_data, image->width, point.point.x, point.point.y - 1,
-                            Color{0, 0, 0xFF});
-
-            visited[index] = true;
-            auto pix = getAsPixel(image, point.point.x, point.point.y - 1);
-
-            if(isBoundaryPixel(pix)) {
-                points.push_back(pix);
-            } else {
-                points.insert(points.begin() + (partition_idx++), pix);
-            }
-        }
+        point_check(point.point.x + 1, point.point.y); // left
+        point_check(point.point.x - 1, point.point.y); // right
+        point_check(point.point.x, point.point.y + 1); // up
+        point_check(point.point.x, point.point.y - 1); // down
 
         next_shape.pixels.push_back(point);
         writeDebugColor(debug_data, image->width, point.point.x, point.point.y,
