@@ -3,15 +3,19 @@ CXX=clang++
 
 BUILD_DIR=build
 OUT_DIR=bin
+SRC_DIR=src
+INC_DIR=inc
 
-SOURCES=BitMap.cpp main.cpp ShapeFinder.cpp GraphicalDebugger.cpp UniqueColorGenerator.cpp
+SOURCES=$(SRC_DIR)/BitMap.cpp $(SRC_DIR)/main.cpp $(SRC_DIR)/ShapeFinder.cpp $(SRC_DIR)/GraphicalDebugger.cpp $(SRC_DIR)/UniqueColorGenerator.cpp
 OBJECTS=$(BUILD_DIR)/BitMap.o $(BUILD_DIR)/main.o $(BUILD_DIR)/ShapeFinder.o $(BUILD_DIR)/GraphicalDebugger.o $(BUILD_DIR)/UniqueColorGenerator.o
+INCLUDES=$(INC_DIR)/BitMap.h $(INC_DIR)/ShapeFinder.h $(INC_DIR)/GraphicalDebugger.h $(INC_DIR)/UniqueColorGenerator.h
 
 DEBUG_FLAG=-g
 ENABLE_GRAPHICS_C=-DENABLE_GRAPHICS `sdl2-config --cflags`
 ENABLE_GRAPHICS_L=-DENABLE_GRAPHICS `sdl2-config --libs`
 
-CXXFLAGS=$(DEBUG_FLAG) $(ENABLE_GRAPHICS_C) -std=c++14
+INCFLAGS=-I$(INC_DIR)/
+CXXFLAGS=$(DEBUG_FLAG) $(ENABLE_GRAPHICS_C) -std=c++14 $(INCFLAGS)
 LFLAGS=-pthread $(ENABLE_GRAPHICS_L)
 
 OUT=$(OUT_DIR)/fp
@@ -22,20 +26,20 @@ all: $(OBJECTS) $(OUT_DIR)/
 clean:
 	rm $(OBJECTS) $(OUT)
 
-$(BUILD_DIR)/BitMap.o: BitMap.h $(BUILD_DIR)/
-	$(CXX) $(CXXFLAGS) -c BitMap.cpp -o $(BUILD_DIR)/BitMap.o
+$(BUILD_DIR)/BitMap.o: $(INC_DIR)/BitMap.h $(BUILD_DIR)/
+	$(CXX) $(CXXFLAGS) -c $(SRC_DIR)/BitMap.cpp -o $(BUILD_DIR)/BitMap.o
 
 $(BUILD_DIR)/main.o: $(BUILD_DIR)/
-	$(CXX) $(CXXFLAGS) -c main.cpp -o $(BUILD_DIR)/main.o
+	$(CXX) $(CXXFLAGS) -c $(SRC_DIR)/main.cpp -o $(BUILD_DIR)/main.o
 
-$(BUILD_DIR)/ShapeFinder.o: ShapeFinder.h $(BUILD_DIR)/
-	$(CXX) $(CXXFLAGS) -c ShapeFinder.cpp -o $(BUILD_DIR)/ShapeFinder.o
+$(BUILD_DIR)/ShapeFinder.o: $(INC_DIR)/ShapeFinder.h $(BUILD_DIR)/
+	$(CXX) $(CXXFLAGS) -c $(SRC_DIR)/ShapeFinder.cpp -o $(BUILD_DIR)/ShapeFinder.o
 
-$(BUILD_DIR)/GraphicalDebugger.o: GraphicalDebugger.h $(BUILD_DIR)/
-	$(CXX) $(CXXFLAGS) -c GraphicalDebugger.cpp -o $(BUILD_DIR)/GraphicalDebugger.o
+$(BUILD_DIR)/GraphicalDebugger.o: $(INC_DIR)/GraphicalDebugger.h $(BUILD_DIR)/
+	$(CXX) $(CXXFLAGS) -c $(SRC_DIR)/GraphicalDebugger.cpp -o $(BUILD_DIR)/GraphicalDebugger.o
 
-$(BUILD_DIR)/UniqueColorGenerator.o: UniqueColorGenerator.h $(BUILD_DIR)/
-	$(CXX) $(CXXFLAGS) -c UniqueColorGenerator.cpp -o $(BUILD_DIR)/UniqueColorGenerator.o
+$(BUILD_DIR)/UniqueColorGenerator.o: $(INC_DIR)/UniqueColorGenerator.h $(BUILD_DIR)/
+	$(CXX) $(CXXFLAGS) -c $(SRC_DIR)/UniqueColorGenerator.cpp -o $(BUILD_DIR)/UniqueColorGenerator.o
 
 $(OUT_DIR)/:
 	mkdir -p $(OUT_DIR)
