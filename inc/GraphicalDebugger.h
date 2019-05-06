@@ -1,10 +1,8 @@
 #ifndef GRAPHICALDEBUGGER_H
 #define GRAPHICALDEBUGGER_H
 
-#include <mutex>
-
-#include "BitMap.h"
-#include "Types.h"
+#include "BitMap.h" // BitMap
+#include "Types.h" // Color
 
 namespace MapNormalizer {
     void writeDebugColor(unsigned char*, uint32_t, uint32_t, uint32_t, Color);

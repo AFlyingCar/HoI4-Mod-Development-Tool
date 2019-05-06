@@ -1,8 +1,8 @@
 #ifndef SHAPEFINDER_H
 #define SHAPEFINDER_H
 
-#include "Types.h"
-#include "BitMap.h"
+#include "Types.h" // Pixel
+#include "BitMap.h" // BitMap
 
 namespace MapNormalizer {
     bool isAdjacent(const Pixel&, size_t, size_t);

@@ -1,8 +1,8 @@
 #ifndef _BITMAP_H_
 #define _BITMAP_H_
 
-#include <fstream>
-#include <string>
+#include <fstream> // std::ifstream
+#include <string> // std::string
 
 namespace MapNormalizer {
     /**
@@ -77,6 +77,24 @@ namespace MapNormalizer {
      *         nullptr otherwise.
      */
     BitMap* readBMP(const std::string&);
+
+    /**
+     * @brief Writes a bitmap file
+     *
+     * @param filename The filename to write to
+     * @param bmp The BitMap object to write.
+     */
+    void writeBMP(const std::string&, const BitMap*);
+
+    /**
+     * @brief Writes a bitmap file
+     *
+     * @param filename The filename to write to
+     * @param data The color data to write
+     * @param width The width of the bitmap
+     * @param height The height of the bitmap
+     */
+    void writeBMP(const std::string&, const char*, uint32_t, uint32_t);
 }
 
 #endif

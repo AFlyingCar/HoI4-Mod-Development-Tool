@@ -6,14 +6,22 @@
 #include <iostream> // std::cerr
 #include <thread> // std::this_thread
 
+#include "BitMap.h" // BitMap
 #include "ShapeFinder.h"
 
 #ifdef ENABLE_GRAPHICS 
-# include <SDL.h>
+# include <SDL.h> // SDL_*
 #endif
 
 static std::mutex graphics_debug_mutex;
 
+/**
+ * @brief Worker function which manages displaying graphical debugging data.
+ *
+ * @param image The image being debugged
+ * @param disp_data The pixel data to display
+ * @param done A boolean for this to know when the algorithm is done.
+ */
 void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
                                    bool& done)
 {
@@ -22,11 +30,14 @@ void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
     (void)disp_data;
     (void)done;
 #else
+
+    // Initialize SDL
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "Failed to initialize SDL! " << SDL_GetError() << std::endl;
         return;
     }
 
+    // Create SDL window to write to
     SDL_Window* window = SDL_CreateWindow("Shape Finder Debugger",
                                           SDL_WINDOWPOS_UNDEFINED,
                                           SDL_WINDOWPOS_UNDEFINED,
@@ -50,6 +61,7 @@ void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
         return;
     }
 
+    // Create initial RGB surface
     SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(disp_data, image->width,
                                                     image->height, 24,
                                                     3 * image->width,
@@ -59,11 +71,12 @@ void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
 
     SDL_Event event;
 
+    // Keep going until the calling thread finishes
     while(!done) {
         while(SDL_PollEvent(&event) != 0) {
             switch(event.type) {
                 case SDL_QUIT:
-                    done = true;
+                    done = true; // Notify the calling thread that we are done
                     std::exit(0);
             }
         }
@@ -83,6 +96,15 @@ kill_graphics_worker:
 #endif
 }
 
+/**
+ * @brief Writes a color to the screen 
+ *
+ * @param debug_data The color data location to write into
+ * @param w The width of the color data
+ * @param x The x coordinate to write to
+ * @param y The y coordinate to write to
+ * @param c The color to write
+ */
 void MapNormalizer::writeDebugColor(unsigned char* debug_data, uint32_t w,
                                     uint32_t x, uint32_t y, Color c)
 {
