@@ -6,9 +6,9 @@ OUT_DIR=bin
 SRC_DIR=src
 INC_DIR=inc
 
-SOURCES=$(SRC_DIR)/BitMap.cpp $(SRC_DIR)/main.cpp $(SRC_DIR)/ShapeFinder.cpp $(SRC_DIR)/GraphicalDebugger.cpp $(SRC_DIR)/UniqueColorGenerator.cpp
-OBJECTS=$(BUILD_DIR)/BitMap.o $(BUILD_DIR)/main.o $(BUILD_DIR)/ShapeFinder.o $(BUILD_DIR)/GraphicalDebugger.o $(BUILD_DIR)/UniqueColorGenerator.o
-INCLUDES=$(INC_DIR)/BitMap.h $(INC_DIR)/ShapeFinder.h $(INC_DIR)/GraphicalDebugger.h $(INC_DIR)/UniqueColorGenerator.h
+SOURCES=$(SRC_DIR)/BitMap.cpp $(SRC_DIR)/main.cpp $(SRC_DIR)/ShapeFinder.cpp $(SRC_DIR)/GraphicalDebugger.cpp $(SRC_DIR)/UniqueColorGenerator.cpp $(SRC_DIR)/ProvinceMapBuilder.cpp
+OBJECTS=$(BUILD_DIR)/BitMap.o $(BUILD_DIR)/main.o $(BUILD_DIR)/ShapeFinder.o $(BUILD_DIR)/GraphicalDebugger.o $(BUILD_DIR)/UniqueColorGenerator.o $(BUILD_DIR)/ProvinceMapBuilder.o
+INCLUDES=$(INC_DIR)/BitMap.h $(INC_DIR)/ShapeFinder.h $(INC_DIR)/GraphicalDebugger.h $(INC_DIR)/UniqueColorGenerator.h $(INC_DIR)/ProvinceMapBuilder.h
 
 ifndef NODEBUG
 DEBUG_FLAG=-g
@@ -46,6 +46,9 @@ $(BUILD_DIR)/GraphicalDebugger.o: $(INC_DIR)/GraphicalDebugger.h $(BUILD_DIR)/
 
 $(BUILD_DIR)/UniqueColorGenerator.o: $(INC_DIR)/UniqueColorGenerator.h $(BUILD_DIR)/
 	$(CXX) $(CXXFLAGS) -c $(SRC_DIR)/UniqueColorGenerator.cpp -o $(BUILD_DIR)/UniqueColorGenerator.o
+
+$(BUILD_DIR)/ProvinceMapBuilder.o: $(INC_DIR)/ProvinceMapBuilder.h $(BUILD_DIR)/
+	$(CXX) $(CXXFLAGS) -c $(SRC_DIR)/ProvinceMapBuilder.cpp -o $(BUILD_DIR)/ProvinceMapBuilder.o
 
 $(OUT_DIR)/:
 	mkdir -p $(OUT_DIR)
