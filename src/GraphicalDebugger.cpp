@@ -73,7 +73,7 @@ void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
     std::cout << "Creating a window of size (" << width << ',' << height << ")"
               << std::endl;
 
-    ::should_sleep = (image->width * image->height) > NUM_PIX_REQ_SLEEP;
+    ::should_sleep = (image->width * image->height) < NUM_PIX_REQ_SLEEP;
 
     // Create SDL window to write to
     SDL_Window* window = SDL_CreateWindow("Shape Finder Debugger",
