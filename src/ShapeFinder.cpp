@@ -184,7 +184,6 @@ findAllShapes_restart_loop:
             }
 
             partition_idx = points.begin();
-            next_shape.u_color = next_color;
 
             // Add this shape to the list of shapes and prepare it for receving
             //   the pixels in the next shape we look at
@@ -285,7 +284,7 @@ end_double_for_loop:;
                 // Reset the state back to the beginning and jump to the top
                 partition_idx = points.insert(points.begin(), p);
                 next_shape.pixels.clear();
-                next_shape.u_color = next_color = generateUniqueColor(shapes.size() + 1);
+                next_color = generateUniqueColor(shapes.size() + 1);
 
                 writeDebugColor(debug_data, image->width, p.point.x, p.point.y,
                                 next_color);

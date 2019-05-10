@@ -36,14 +36,58 @@ namespace MapNormalizer {
      */
     struct Polygon {
         std::vector<Pixel> pixels;
-        Color u_color; // TODO: This should be just the solid color fo this shape
         Color color; //!< Color of the shape as it was read in
+    };
+
+    /**
+     * @brief The type of province
+     */
+    enum class ProvinceType {
+        UNKNOWN = 0,
+        LAND,
+        SEA,
+        LAKE
+    };
+
+    /**
+     * @brief The possible terrain types.
+     */
+    enum class Terrain {
+        UNKNOWN = 0,
+        DESERT,
+        FOREST,
+        HILLS,
+        JUNGLE,
+        MARSH,
+        MOUNTAIN,
+        PLAINS,
+        URBAN,
+        OCEAN,
+        LAKE
+    };
+
+    /**
+     * @brief A province as HOI4 will recognize it.
+     */
+    struct Province {
+        size_t id;
+        Color unique_color;
+        ProvinceType type;
+        bool coastal;
+        Terrain terrain;
+        size_t continent;
     };
 
     /**
      * @brief A list of all shapes
      */
     using PolygonList = std::vector<Polygon>;
+
+
+    /**
+     * @brief A list of all provinces
+     */
+    using ProvinceList = std::vector<Province>;
 }
 
 #endif
