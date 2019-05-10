@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
     std::cout << "Detected " << shapes.size() << " shapes." << std::endl;
 
     for(size_t i = 0; i < shapes.size(); ++i) {
-        auto color = shapes.at(i).u_color;
+        auto color = shapes.at(i).color;
         auto c = (color.r << 16) | (color.g << 8) | color.b;
         std::cout << std::dec << i << ": " << shapes.at(i).pixels.size();
         std::cout << " pixels, color = 0x" << std::hex << c << std::endl;
