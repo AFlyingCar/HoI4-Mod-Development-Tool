@@ -37,6 +37,7 @@ namespace MapNormalizer {
     struct Polygon {
         std::vector<Pixel> pixels;
         Color u_color; // TODO: This should be just the solid color fo this shape
+        Color color; //!< Color of the shape as it was read in
     };
 
     /**
