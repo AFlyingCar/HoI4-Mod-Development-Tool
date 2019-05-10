@@ -10,13 +10,19 @@ SOURCES=$(SRC_DIR)/BitMap.cpp $(SRC_DIR)/main.cpp $(SRC_DIR)/ShapeFinder.cpp $(S
 OBJECTS=$(BUILD_DIR)/BitMap.o $(BUILD_DIR)/main.o $(BUILD_DIR)/ShapeFinder.o $(BUILD_DIR)/GraphicalDebugger.o $(BUILD_DIR)/UniqueColorGenerator.o
 INCLUDES=$(INC_DIR)/BitMap.h $(INC_DIR)/ShapeFinder.h $(INC_DIR)/GraphicalDebugger.h $(INC_DIR)/UniqueColorGenerator.h
 
+ifndef NODEBUG
 DEBUG_FLAG=-g
+else
+DEBUG_FLAG=-O3 -flto=thin
+LFLAGS=-flto=thin #-fuse-ld=gold
+endif
+
 ENABLE_GRAPHICS_C=-DENABLE_GRAPHICS `sdl2-config --cflags`
 ENABLE_GRAPHICS_L=-DENABLE_GRAPHICS `sdl2-config --libs`
 
-INCFLAGS=-I$(INC_DIR)/
-CXXFLAGS=$(DEBUG_FLAG) $(ENABLE_GRAPHICS_C) -std=c++14 $(INCFLAGS)
-LFLAGS=-pthread $(ENABLE_GRAPHICS_L)
+INCFLAGS+=-I$(INC_DIR)/
+CXXFLAGS+=$(DEBUG_FLAG) $(ENABLE_GRAPHICS_C) -std=c++14 $(INCFLAGS)
+LFLAGS+=-pthread $(ENABLE_GRAPHICS_L)
 
 OUT=$(OUT_DIR)/fp
 
