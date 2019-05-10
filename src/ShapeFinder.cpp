@@ -18,6 +18,19 @@ bool MapNormalizer::isBoundaryPixel(Pixel p) {
     return p.color.r == 0 && p.color.g == 0 && p.color.b == 0;
 }
 
+
+/**
+ * @brief Checks if two colors match
+ *
+ * @param c1 The first color
+ * @param c2 The second color
+ *
+ * @return True if c1 matches c2
+ */
+bool MapNormalizer::doColorsMatch(Color c1, Color c2) {
+    return c1.r == c2.r && c1.g == c2.g && c1.b == c2.b;
+}
+
 /**
  * @brief Checks if a given point is within the bounds of the image.
  *
@@ -209,6 +222,27 @@ findAllShapes_restart_loop:
         point_check(point.point.x - 1, point.point.y); // right
         point_check(point.point.x, point.point.y + 1); // up
         point_check(point.point.x, point.point.y - 1); // down
+
+        // Ignore the second pixel, since at this point the only one we will have
+        //  seen is a boundary pixel, which does not have the correct color we
+        //  want
+        if(next_shape.pixels.size() > 1) {
+            if(!doColorsMatch(point.color, next_shape.color)) {
+                std::cerr << "[WARN] ~ Pixel at coordinate (" << point.point.x
+                          << ',' << point.point.y << ") is part of the shape, "
+                                                     "but does not match in color."
+                          << std::endl;
+                std::cerr << "\t(" << static_cast<int>(point.color.r) << ','
+                          << static_cast<int>(point.color.g)
+                          << ',' << static_cast<int>(point.color.b) << ") != ("
+                          << static_cast<int>(next_shape.color.r) << ','
+                          << static_cast<int>(next_shape.color.g)
+                          << ',' << static_cast<int>(next_shape.color.b) << ")"
+                          << std::endl;
+            }
+        } else {
+            next_shape.color = point.color;
+        }
 
         next_shape.pixels.push_back(point);
         writeDebugColor(debug_data, image->width, point.point.x, point.point.y,
