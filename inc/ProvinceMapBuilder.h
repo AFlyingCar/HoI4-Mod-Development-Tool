@@ -11,5 +11,9 @@ namespace MapNormalizer {
     size_t getContinent(const Color&);
 }
 
+#include <fstream>
+
+std::ostream& operator<<(std::ostream&, const MapNormalizer::Province&);
+
 #endif
 

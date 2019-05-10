@@ -5,7 +5,7 @@
 
 MapNormalizer::ProvinceType MapNormalizer::getProvinceType(const Color& color) {
     // TODO
-    return ProvinceType::UNKNOWN; 
+    return ProvinceType::UNKNOWN;
 }
 
 bool MapNormalizer::isCoastal(const Polygon& shape) {
@@ -41,5 +41,16 @@ MapNormalizer::ProvinceList MapNormalizer::createProvinceList(const PolygonList&
     }
 
     return provinces;
+}
+
+std::ostream& operator<<(std::ostream& stream,
+                         const MapNormalizer::Province& province)
+{
+    stream << ';' << province.id << ';' << province.unique_color.r << ';'
+           << province.unique_color.g << ';' << province.unique_color.b << ';'
+           << static_cast<int>(province.type) << ';' << province.coastal << ';'
+           << static_cast<int>(province.terrain) << ';' << province.continent;
+
+    return stream;
 }
 
