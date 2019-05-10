@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <cmath> // std::sqrt
+#include <list>
 
 #include "GraphicalDebugger.h" // writeDebugColor
 #include "UniqueColorGenerator.h" // generateUniqueColor
