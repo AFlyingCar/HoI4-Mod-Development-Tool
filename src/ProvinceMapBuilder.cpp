@@ -46,10 +46,44 @@ MapNormalizer::ProvinceList MapNormalizer::createProvinceList(const PolygonList&
 std::ostream& operator<<(std::ostream& stream,
                          const MapNormalizer::Province& province)
 {
-    stream << ';' << province.id << ';' << province.unique_color.r << ';'
-           << province.unique_color.g << ';' << province.unique_color.b << ';'
-           << static_cast<int>(province.type) << ';' << province.coastal << ';'
-           << static_cast<int>(province.terrain) << ';' << province.continent;
+    stream << province.id << ';' << static_cast<int>(province.unique_color.r)
+           << ';' << static_cast<int>(province.unique_color.g) << ';'
+           << static_cast<int>(province.unique_color.b) << ';'
+           << province.type << ';' << province.coastal << ';'
+           << province.terrain << ';' << province.continent;
+
+    return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, MapNormalizer::Terrain terrain) {
+    switch(terrain) {
+        case MapNormalizer::Terrain::DESERT:   stream << "desert"; break;
+        case MapNormalizer::Terrain::FOREST:   stream << "forest"; break;
+        case MapNormalizer::Terrain::HILLS:    stream << "hills"; break;
+        case MapNormalizer::Terrain::JUNGLE:   stream << "jungle"; break;
+        case MapNormalizer::Terrain::MARSH:    stream << "marsh"; break;
+        case MapNormalizer::Terrain::MOUNTAIN: stream << "mountain"; break;
+        case MapNormalizer::Terrain::URBAN:    stream << "urban"; break;
+        case MapNormalizer::Terrain::OCEAN:    stream << "ocean"; break;
+        case MapNormalizer::Terrain::LAKE:     stream << "lake"; break;
+        case MapNormalizer::Terrain::PLAINS:
+        default:
+            stream << "plains"; break;
+    }
+
+    return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream,
+                         MapNormalizer::ProvinceType province)
+{
+    switch(province) {
+        case MapNormalizer::ProvinceType::SEA:  stream << "sea"; break;
+        case MapNormalizer::ProvinceType::LAKE: stream << "lake"; break;
+        case MapNormalizer::ProvinceType::LAND:
+        default:
+            stream << "land"; break;
+    }
 
     return stream;
 }

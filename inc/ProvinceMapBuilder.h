@@ -14,6 +14,8 @@ namespace MapNormalizer {
 #include <fstream>
 
 std::ostream& operator<<(std::ostream&, const MapNormalizer::Province&);
+std::ostream& operator<<(std::ostream&, MapNormalizer::Terrain);
+std::ostream& operator<<(std::ostream&, MapNormalizer::ProvinceType);
 
 #endif
 
