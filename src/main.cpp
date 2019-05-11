@@ -7,6 +7,7 @@
 #include "Types.h" // Point, Color, Polygon, Pixel
 #include "ShapeFinder.h" // findAllShapes
 #include "GraphicalDebugger.h" // graphicsWorker
+#include "ProvinceMapBuilder.h"
 
 int main(int argc, char** argv) {
     if(argc < 2) {
@@ -54,6 +55,16 @@ int main(int argc, char** argv) {
         std::cout << std::dec << i << ": " << shapes.at(i).pixels.size();
         std::cout << " pixels, color = 0x" << std::hex << c << std::endl;
     }
+
+    auto provinces = MapNormalizer::createProvinceList(shapes);
+
+    std::cout << "Provinces CSV:\n"
+                 "=============="
+              << std::endl;
+    for(size_t i = 0; i < provinces.size(); ++i) {
+        std::cout << std::dec << provinces[i] << std::endl;
+    }
+
 
 #ifdef ENABLE_GRAPHICS
     std::getchar();
