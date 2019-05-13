@@ -17,8 +17,20 @@ DEBUG_FLAG=-O3 -flto=thin
 LFLAGS=-flto=thin #-fuse-ld=gold
 endif
 
-ENABLE_GRAPHICS_C=-DENABLE_GRAPHICS `sdl2-config --cflags`
-ENABLE_GRAPHICS_L=-DENABLE_GRAPHICS `sdl2-config --libs`
+ifeq ($(OS),Windows_NT)
+SDL_CFLAGS=-I./SDL/ -D_REENTRANT
+SDL_LFLAGS=-lSDL2 -lsdl2main
+
+CXXFLAGS+=-Xclang -flto-visibility-public-std -m32
+LFLAGS+=-m32
+
+else
+SDL_CFLAGS:=`sdl2-config --cflags`
+SDL_LFLAGS:=`sdl2-config --libs`
+endif
+
+ENABLE_GRAPHICS_C=-DENABLE_GRAPHICS $(SDL_CFLAGS)
+ENABLE_GRAPHICS_L=-DENABLE_GRAPHICS $(SDL_LFLAGS)
 
 INCFLAGS+=-I$(INC_DIR)/
 CXXFLAGS+=$(DEBUG_FLAG) $(ENABLE_GRAPHICS_C) -std=c++14 $(INCFLAGS)
