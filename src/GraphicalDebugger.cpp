@@ -8,6 +8,7 @@
 
 #define NOMINMAX
 #include <cmath>
+#include <algorithm>
 
 #include "BitMap.h" // BitMap
 #include "ShapeFinder.h"
