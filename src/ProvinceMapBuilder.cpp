@@ -2,25 +2,51 @@
 #include "ProvinceMapBuilder.h"
 
 #include "UniqueColorGenerator.h"
+#include "Util.h"
 
-MapNormalizer::ProvinceType MapNormalizer::getProvinceType(const Color& color) {
-    // TODO
-    return ProvinceType::UNKNOWN;
+std::pair<MapNormalizer::ProvinceType, std::uint32_t>
+    MapNormalizer::getProvinceType(const Color& color)
+{
+    auto value = (color.r << 16) & (color.g << 8) & color.b;
+
+    if(value & PROV_LAND_MASK) {
+        return { ProvinceType::LAND, PROV_LAND_MASK };
+    } else if(value & PROV_LAKE_MASK) {
+        return { ProvinceType::LAND, PROV_LAKE_MASK };
+    } else if(value & PROV_SEA_MASK) {
+        return { ProvinceType::SEA, PROV_SEA_MASK };
+    } else {
+        return { ProvinceType::UNKNOWN, 0 };
+    }
 }
 
-bool MapNormalizer::isCoastal(const Polygon& shape) {
-    // TODO
-    return false;
+/*
+ *
+ *   4 bits       1 bit        3 bits
+ * +---------+------------+--------------+
+ * | Terrain | Is Coastal | Continent ID |
+ * +---------+------------+--------------+
+ *
+ */
+
+bool MapNormalizer::isCoastal(const Color& color, std::uint32_t mask) {
+    auto value = ((color.r << 16) & (color.g << 8) & color.b) & mask;
+
+    return ((value >> indexOfLSB(mask)) & IS_COASTAL_MASK) == 1;
 }
 
-MapNormalizer::Terrain MapNormalizer::getTerrainType(const Color& color) {
-    // TODO
-    return Terrain::UNKNOWN;
+MapNormalizer::Terrain MapNormalizer::getTerrainType(const Color& color,
+                                                     std::uint32_t mask)
+{
+    auto value = ((color.r << 16) & (color.g << 8) & color.b) & mask;
+
+    return static_cast<Terrain>((value >> indexOfLSB(mask)) & TERRAIN_MASK);
 }
 
-size_t MapNormalizer::getContinent(const Color& color) {
-    // TODO
-    return 1;
+size_t MapNormalizer::getContinent(const Color& color, std::uint32_t mask) {
+    auto value = ((color.r << 16) & (color.g << 8) & color.b) & mask;
+
+    return (value >> indexOfLSB(mask)) & CONTINENT_ID_MASK;
 }
 
 MapNormalizer::ProvinceList MapNormalizer::createProvinceList(const PolygonList& shape_list)
@@ -30,13 +56,15 @@ MapNormalizer::ProvinceList MapNormalizer::createProvinceList(const PolygonList&
     for(size_t i = 0; i < shape_list.size(); ++i) {
         auto&& shape = shape_list[i];
 
+        auto [prov_type, mask] = getProvinceType(shape.color);
+
         provinces.push_back(Province{
             i,
             generateUniqueColor(i),
-            getProvinceType(shape.color),
-            isCoastal(shape),
-            getTerrainType(shape.color),
-            getContinent(shape.color)
+            prov_type,
+            isCoastal(shape.color, mask),
+            getTerrainType(shape.color, mask),
+            getContinent(shape.color, mask)
         });
     }
 
@@ -49,8 +77,8 @@ std::ostream& operator<<(std::ostream& stream,
     stream << province.id << ';' << static_cast<int>(province.unique_color.r)
            << ';' << static_cast<int>(province.unique_color.g) << ';'
            << static_cast<int>(province.unique_color.b) << ';'
-           << province.type << ';' << province.coastal << ';'
-           << province.terrain << ';' << province.continent;
+           << province.type << ';' << (province.coastal ? "true" : "false")
+           << ';' << province.terrain << ';' << province.continent;
 
     return stream;
 }
