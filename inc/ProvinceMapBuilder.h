@@ -10,7 +10,7 @@ namespace MapNormalizer {
 
     const auto TERRAIN_MASK      = 0b11110000;
     const auto IS_COASTAL_MASK   = 0b00001000;
-    const auto CONTINENT_ID_MASK = 0x00000111;
+    const auto CONTINENT_ID_MASK = 0x00000111; // Maximum of 8 total continents
 
     ProvinceList createProvinceList(const PolygonList&);
     std::pair<ProvinceType, std::uint32_t> getProvinceType(const Color&);
