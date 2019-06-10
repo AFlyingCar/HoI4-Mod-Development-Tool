@@ -58,13 +58,14 @@ MapNormalizer::ProvinceList MapNormalizer::createProvinceList(const PolygonList&
 
         auto [prov_type, mask] = getProvinceType(shape.color);
 
+        auto is_coastal = isCoastal(shape.color, mask);
+        auto terrain_type = getTerrainType(shape.color, mask);
+        auto continent = getContinent(shape.color, mask);
+
+        auto unique_color = generateUniqueColor(i);
+
         provinces.push_back(Province{
-            i,
-            generateUniqueColor(i),
-            prov_type,
-            isCoastal(shape.color, mask),
-            getTerrainType(shape.color, mask),
-            getContinent(shape.color, mask)
+            i, unique_color, prov_type, is_coastal, terrain_type, continent
         });
     }
 
