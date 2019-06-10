@@ -82,3 +82,24 @@ MapNormalizer::Color MapNormalizer::generateUniqueColor(uint32_t id) {
     return c;
 }
 
+MapNormalizer::Color MapNormalizer::generateUniqueColor(uint32_t id, Color bias)
+{
+    std::cout << "generateUniqueColor() with bias" << std::endl;
+    std::cout << "id = " << id << std::endl;
+
+    // hue: increments by 1 after every SATURATION_MAX generated values. repeats
+    //      every HUE_MAX values
+    // saturation: increments from 1 to SATURATION_MAX. Will be turned into
+    //             a percentage. repeats every SATURATION_MAX valuesS
+
+    // increment by 1 after the %, to prevent us from getting unwanted 0s
+    auto c = convertHSVToRGB(((id / SATURATION_MAX) % HUE_MAX) + 1,
+                             ((id % SATURATION_MAX) + 1) * SATURATION_STEP,
+                             LIGHTNESS);
+
+    std::cout << "Color = { " << (int)c.r << ',' << (int)c.g << ',' << (int)c.b
+              << "}" << std::endl;
+
+    return c;
+}
+
