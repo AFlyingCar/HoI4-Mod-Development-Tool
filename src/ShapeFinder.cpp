@@ -4,9 +4,11 @@
 #include <iostream>
 #include <cmath> // std::sqrt
 #include <list>
+#include <map>
 
 #include "GraphicalDebugger.h" // writeDebugColor
 #include "UniqueColorGenerator.h" // generateUniqueColor
+#include "Util.h"
 
 /**
  * @brief Checks if the given pixel is a boundary pixel.
@@ -153,8 +155,12 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
 
     Color next_color;
 
+    // Original Color -> Pixels with this color
+    std::map<std::uint32_t, size_t> read_color_amounts;
+
 findAllShapes_restart_loop:
     next_color = generateUniqueColor(shapes.size() + 1);
+    read_color_amounts.clear();
 
     while(!points.empty()) {
         // Pop the pixel off the top of the queue
@@ -185,13 +191,34 @@ findAllShapes_restart_loop:
 
             partition_idx = points.begin();
 
+            Color orig_color;
+            if(read_color_amounts.size() > 1) {
+                std::cerr << "[WRN] Found more than 1 color in the image: "
+                          << std::endl;
+
+                auto most = 0;
+                for(auto&& [color,amount] : read_color_amounts) {
+                    std::cerr << "\t0x" << std::hex << color << " appears "
+                              << std::dec << amount << " times." << std::endl;
+
+                    if(most < amount)
+                        orig_color = RGBToColor(color);
+                }
+            } else {
+                orig_color = RGBToColor(read_color_amounts.begin()->first);
+            }
+
             // Add this shape to the list of shapes and prepare it for receving
             //   the pixels in the next shape we look at
             shapes.push_back(next_shape);
             next_shape.pixels.clear();
-            next_color = generateUniqueColor(shapes.size() + 1);
+            next_color = orig_color;//generateUniqueColor(shapes.size() + 1);
 
             std::cout << "Building shape #" << shapes.size() + 1 << std::endl;
+        } else {
+            // Make sure we do the counting here, so we don't include
+            //   boundary pixels
+            ++read_color_amounts[colorToRGB(point.color)];
         }
 
         auto point_check = [&](uint32_t x, uint32_t y) {
