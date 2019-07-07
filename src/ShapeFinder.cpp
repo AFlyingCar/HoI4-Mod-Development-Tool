@@ -8,6 +8,8 @@
 
 #include "GraphicalDebugger.h" // writeDebugColor
 #include "UniqueColorGenerator.h" // generateUniqueColor
+#include "ProvinceMapBuilder.h"
+#include "Constants.h"
 #include "Util.h"
 
 /**
@@ -132,8 +134,8 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
     //   length(<0, Height> - <width, 0>)
     //   length(<-width, height>)
     //   sqrt(width^2 + height^2)
-    auto starting_size = std::sqrt((image->width * image->width) + 
-                                   (image->height * image->height));
+    // auto starting_size = std::sqrt((image->width * image->width) + 
+    //                                (image->height * image->height));
 
     // A partitioned vector of pixels
     // +---------------------------------------+
@@ -153,13 +155,10 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
     // Start off in the top left of the image
     auto partition_idx = points.insert(points.begin(), getAsPixel(image, 0, 0));
 
-    Color next_color;
-
     // Original Color -> Pixels with this color
     std::map<std::uint32_t, size_t> read_color_amounts;
 
 findAllShapes_restart_loop:
-    next_color = generateUniqueColor(shapes.size() + 1);
     read_color_amounts.clear();
 
     while(!points.empty()) {
@@ -182,7 +181,7 @@ findAllShapes_restart_loop:
                 next_shape.pixels.push_back(p);
 
                 writeDebugColor(debug_data, image->width, p.point.x, p.point.y,
-                                next_color);
+                                DEBUG_COLOR);
 
                 // Make sure it is marked as visited
                 //   NOTE: Do we actually need to do this?
@@ -208,11 +207,19 @@ findAllShapes_restart_loop:
                 orig_color = RGBToColor(read_color_amounts.begin()->first);
             }
 
+            auto prov_type = getProvinceType(orig_color).first;
+
+            next_shape.color = orig_color;
+            next_shape.unique_color = generateUniqueColor(prov_type);
+
+            for(auto&& pixel : next_shape.pixels)
+                writeDebugColor(debug_data, image->width, pixel.point.x,
+                                pixel.point.y, next_shape.unique_color);
+
             // Add this shape to the list of shapes and prepare it for receving
             //   the pixels in the next shape we look at
             shapes.push_back(next_shape);
             next_shape.pixels.clear();
-            next_color = orig_color;//generateUniqueColor(shapes.size() + 1);
 
             std::cout << "Building shape #" << shapes.size() + 1 << std::endl;
         } else {
@@ -249,30 +256,9 @@ findAllShapes_restart_loop:
         point_check(point.point.x, point.point.y + 1); // up
         point_check(point.point.x, point.point.y - 1); // down
 
-        // Ignore the second pixel, since at this point the only one we will have
-        //  seen is a boundary pixel, which does not have the correct color we
-        //  want
-        if(next_shape.pixels.size() > 1) {
-            if(!doColorsMatch(point.color, next_shape.color)) {
-                std::cerr << "[WARN] ~ Pixel at coordinate (" << point.point.x
-                          << ',' << point.point.y << ") is part of the shape, "
-                                                     "but does not match in color."
-                          << std::endl;
-                std::cerr << "\t(" << static_cast<int>(point.color.r) << ','
-                          << static_cast<int>(point.color.g)
-                          << ',' << static_cast<int>(point.color.b) << ") != ("
-                          << static_cast<int>(next_shape.color.r) << ','
-                          << static_cast<int>(next_shape.color.g)
-                          << ',' << static_cast<int>(next_shape.color.b) << ")"
-                          << std::endl;
-            }
-        } else {
-            next_shape.color = point.color;
-        }
-
         next_shape.pixels.push_back(point);
         writeDebugColor(debug_data, image->width, point.point.x, point.point.y,
-                        next_color);
+                        DEBUG_COLOR);
     }
 
     // Check for pixels that were missed in the last pass
@@ -311,10 +297,9 @@ end_double_for_loop:;
                 // Reset the state back to the beginning and jump to the top
                 partition_idx = points.insert(points.begin(), p);
                 next_shape.pixels.clear();
-                next_color = generateUniqueColor(shapes.size() + 1);
 
                 writeDebugColor(debug_data, image->width, p.point.x, p.point.y,
-                                next_color);
+                                DEBUG_COLOR);
 
                 goto findAllShapes_restart_loop;
             }
