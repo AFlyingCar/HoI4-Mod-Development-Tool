@@ -2,6 +2,7 @@
 #include "ProvinceMapBuilder.h"
 
 #include "UniqueColorGenerator.h"
+#include "Constants.h"
 #include "Util.h"
 
 std::pair<MapNormalizer::ProvinceType, std::uint32_t>
@@ -62,10 +63,8 @@ MapNormalizer::ProvinceList MapNormalizer::createProvinceList(const PolygonList&
         auto terrain_type = getTerrainType(shape.color, mask);
         auto continent = getContinent(shape.color, mask);
 
-        auto unique_color = generateUniqueColor(i);
-
         provinces.push_back(Province{
-            i, unique_color, prov_type, is_coastal, terrain_type, continent
+            i, shape.unique_color, prov_type, is_coastal, terrain_type, continent
         });
     }
 
