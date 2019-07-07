@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <filesystem>
 #include <thread>
 
 #include "BitMap.h" // BitMap
@@ -12,17 +13,15 @@
 int main(int argc, char** argv) {
     if(argc < 2) {
         std::cerr << "Missing filename argument." << std::endl;
-        std::cerr << "Missing output filename argument." << std::endl;
-        return 1;
     }
 
     if(argc < 3) {
-        std::cerr << "Missing output filename argument." << std::endl;
+        std::cerr << "Missing output directory argument." << std::endl;
         return 1;
     }
 
     char* filename = argv[1];
-    // char* outfilename = argv[2];
+    char* outdirname = argv[2];
 
     MapNormalizer::BitMap* image = MapNormalizer::readBMP(filename);
 
@@ -58,14 +57,22 @@ int main(int argc, char** argv) {
 
     auto provinces = MapNormalizer::createProvinceList(shapes);
 
+    std::filesystem::path output_path(outdirname);
+    std::ofstream output_csv(output_path / "definition.csv");
+
     std::cout << "Provinces CSV:\n"
                  "=============="
               << std::endl;
     for(size_t i = 0; i < provinces.size(); ++i) {
         std::cout << std::dec << provinces[i] << std::endl;
+        output_csv << std::dec << provinces[i] << std::endl;
     }
 
+    std::cout << "Writing province bitmap to file..." << std::endl;
+    MapNormalizer::writeBMP(output_path / "provinces.bmp", image);
+    std::cout << "Done." << std::endl;
 
+    std::cout << "Press any key to exit.";
 #ifdef ENABLE_GRAPHICS
     std::getchar();
     done = true;
