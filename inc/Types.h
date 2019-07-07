@@ -37,6 +37,7 @@ namespace MapNormalizer {
     struct Polygon {
         std::vector<Pixel> pixels;
         Color color; //!< Color of the shape as it was read in
+        Color unique_color; //!< Unique color we have generated just for this shape
     };
 
     /**
