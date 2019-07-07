@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     }
 
     char* filename = argv[1];
-    char* outfilename = argv[2];
+    // char* outfilename = argv[2];
 
     MapNormalizer::BitMap* image = MapNormalizer::readBMP(filename);
 
