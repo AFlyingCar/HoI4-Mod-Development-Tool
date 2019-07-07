@@ -4,8 +4,7 @@
 #include "Types.h" // Color
 
 namespace MapNormalizer {
-    Color generateUniqueColor(uint32_t);
-    Color generateUniqueColor(uint32_t, Color);
+    Color generateUniqueColor(ProvinceType);
 }
 
 #endif
