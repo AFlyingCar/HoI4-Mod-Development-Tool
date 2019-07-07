@@ -5,16 +5,20 @@
 #include <string> // std::string
 
 namespace MapNormalizer {
+    struct BitMapHeader {
+        uint16_t filetype;     //! The filetype
+        uint32_t fileSize;     //! The size of the file.
+        uint16_t reserved1;    //! RESERVED
+        uint16_t reserved2;    //! RESERVED
+        uint32_t bitmapOffset; //! How far into the file the bitmap starts.
+    };
+
     /**
      * @brief A simple representation of a Bit Map image.
      */
     struct BitMap {
-        const char* filename;        //! The filename
-        unsigned short filetype;     //! The filetype
-        unsigned int fileSize;       //! The size of the file.
-        unsigned short reserved1;    //! RESERVED
-        unsigned short reserved2;    //! RESERVED
-        unsigned int bitmapOffset;   //! How far into the file the bitmap starts.
+        // const char* filename;        //! The filename
+        BitMapHeader header;         //! The header of the BitMap
         unsigned int headerSize;     //! The size of the header (always 40)
         int width;                   //! The width of the file
         int height;                  //! The height of the file
@@ -94,7 +98,7 @@ namespace MapNormalizer {
      * @param width The width of the bitmap
      * @param height The height of the bitmap
      */
-    void writeBMP(const std::string&, const char*, uint32_t, uint32_t);
+    void writeBMP(const std::string&, unsigned char*, uint32_t, uint32_t);
 }
 
 #endif
