@@ -1,6 +1,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#include "Types.h"
 #include <cstdint>
 
 namespace MapNormalizer {
@@ -8,6 +9,8 @@ namespace MapNormalizer {
     const std::uint32_t BLUE_MASK  = 0x00FF00;
     const std::uint32_t GREEN_MASK = 0x0000FF;
     const std::uint32_t COLOR_MASK = 0xFFFFFF;
+
+    const Color DEBUG_COLOR = Color{ 255, 255, 255 };
 }
 
 #endif
