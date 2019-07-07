@@ -163,9 +163,9 @@ void MapNormalizer::writeDebugColor(unsigned char* debug_data, uint32_t w,
 
         graphics_debug_mutex.lock();
 
-        debug_data[index] = c.r;
+        debug_data[index] = c.b;
         debug_data[index + 1] = c.g;
-        debug_data[index + 2] = c.b;
+        debug_data[index + 2] = c.r;
 
         graphics_debug_mutex.unlock();
     }
