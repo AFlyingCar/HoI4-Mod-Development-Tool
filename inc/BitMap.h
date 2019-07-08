@@ -5,7 +5,7 @@
 #include <string> // std::string
 
 namespace MapNormalizer {
-    struct BitMapHeader {
+    struct BitMapFileHeader {
         uint16_t filetype;     //! The filetype
         uint32_t fileSize;     //! The size of the file.
         uint16_t reserved1;    //! RESERVED
@@ -13,12 +13,7 @@ namespace MapNormalizer {
         uint32_t bitmapOffset; //! How far into the file the bitmap starts.
     };
 
-    /**
-     * @brief A simple representation of a Bit Map image.
-     */
-    struct BitMap {
-        // const char* filename;        //! The filename
-        BitMapHeader header;         //! The header of the BitMap
+    struct BitMapInfoHeader {
         unsigned int headerSize;     //! The size of the header (always 40)
         int width;                   //! The width of the file
         int height;                  //! The height of the file
@@ -30,8 +25,15 @@ namespace MapNormalizer {
         unsigned int vertResolution; //! IGNORED
         unsigned int colorsUsed;     //! IGNORED
         unsigned int colorImportant; //! IGNORED
+    };
 
-        unsigned char* data; //! The image data
+    /**
+     * @brief A simple representation of a Bit Map image.
+     */
+    struct BitMap {
+        BitMapFileHeader file_header; //! The file header of the BitMap
+        BitMapInfoHeader info_header; //! The info header of the BitMap
+        unsigned char* data;          //! The image data
     };
 
     /**
