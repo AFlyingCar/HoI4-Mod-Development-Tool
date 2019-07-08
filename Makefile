@@ -6,10 +6,10 @@ OUT_DIR=bin
 SRC_DIR=src
 INC_DIR=inc
 
-CXXSOURCES=$(SRC_DIR)/BitMap.cpp $(SRC_DIR)/main.cpp $(SRC_DIR)/ShapeFinder.cpp $(SRC_DIR)/GraphicalDebugger.cpp $(SRC_DIR)/UniqueColorGenerator.cpp $(SRC_DIR)/ProvinceMapBuilder.cpp $(SRC_DIR)/Util.cpp
+CXXSOURCES=$(SRC_DIR)/BitMap.cpp $(SRC_DIR)/main.cpp $(SRC_DIR)/ShapeFinder.cpp $(SRC_DIR)/GraphicalDebugger.cpp $(SRC_DIR)/UniqueColorGenerator.cpp $(SRC_DIR)/ProvinceMapBuilder.cpp $(SRC_DIR)/Util.cpp $(SRC_DIR)/Logger.cpp
 CXXOBJECTS=$(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(CXXSOURCES))
 # OBJECTS=$(BUILD_DIR)/BitMap.o $(BUILD_DIR)/main.o $(BUILD_DIR)/ShapeFinder.o $(BUILD_DIR)/GraphicalDebugger.o $(BUILD_DIR)/UniqueColorGenerator.o $(BUILD_DIR)/ProvinceMapBuilder.o $(BUILD_DIR)/Util.o $(BUILD_DIR)/ColorArray.o
-INCLUDES=$(INC_DIR)/BitMap.h $(INC_DIR)/ShapeFinder.h $(INC_DIR)/GraphicalDebugger.h $(INC_DIR)/UniqueColorGenerator.h $(INC_DIR)/ProvinceMapBuilder.h $(INC_DIR)/Util.h
+INCLUDES=$(INC_DIR)/BitMap.h $(INC_DIR)/ShapeFinder.h $(INC_DIR)/GraphicalDebugger.h $(INC_DIR)/UniqueColorGenerator.h $(INC_DIR)/ProvinceMapBuilder.h $(INC_DIR)/Util.h $(INC_DIR)/Logger.h
 COLOR_BINS=lakes.bin lands.bin unknowns.bin seas.bin
 
 # TODO: Add support for other architectures
@@ -25,7 +25,7 @@ DEBUG_FLAG=-O3 -flto=thin
 LFLAGS=-flto=thin #-fuse-ld=gold
 endif
 
-WFLAGS=-Wall -Werror -Wextra -Wno-unused-command-line-argument -Wno-sign-compare -Wno-unused-label -Wno-unused-const-variable -Wno-unused-parameter
+WFLAGS=-Wall -Werror -Wextra -Wno-unused-command-line-argument -Wno-sign-compare -Wno-unused-label -Wno-unused-const-variable -Wno-unused-parameter -Wno-unused-function
 
 ifeq ($(OS),Windows_NT)
 SDL_CFLAGS=-I./SDL/ -D_REENTRANT
