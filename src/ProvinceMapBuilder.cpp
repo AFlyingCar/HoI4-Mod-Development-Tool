@@ -8,7 +8,7 @@
 std::pair<MapNormalizer::ProvinceType, std::uint32_t>
     MapNormalizer::getProvinceType(const Color& color)
 {
-    auto value = (color.r << 16) & (color.g << 8) & color.b;
+    auto value = colorToRGB(color);
 
     if(value & PROV_LAND_MASK) {
         return { ProvinceType::LAND, PROV_LAND_MASK };
