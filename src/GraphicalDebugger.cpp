@@ -63,8 +63,8 @@ void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
     const auto MAX_SCREEN_WIDTH = (8 * current.w) / 10;
     const auto MAX_SCREEN_HEIGHT = (8 * current.h) / 10;
 
-    auto width = std::min(image->width, MAX_SCREEN_WIDTH);
-    auto height = std::min(image->height, MAX_SCREEN_HEIGHT);
+    auto width = std::min(image->info_header.width, MAX_SCREEN_WIDTH);
+    auto height = std::min(image->info_header.height, MAX_SCREEN_HEIGHT);
 
     if(width < MIN_SCREEN_WIDTH)
         width *= 10;
@@ -74,7 +74,7 @@ void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
     std::cout << "Creating a window of size (" << width << ',' << height << ")"
               << std::endl;
 
-    ::should_sleep = (image->width * image->height) < NUM_PIX_REQ_SLEEP;
+    ::should_sleep = (image->info_header.width * image->info_header.height) < NUM_PIX_REQ_SLEEP;
 
     // Create SDL window to write to
     SDL_Window* window = SDL_CreateWindow("Shape Finder Debugger",
@@ -100,12 +100,12 @@ void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
     }
 
     // Create initial RGB surface
-    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(disp_data, image->width,
-                                                    image->height, 24,
-                                                    3 * image->width,
-                                                    0xFF0000, 0xFF00, 0xFF, 0);
+    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(disp_data, image->info_header.width,
+                                                    image->info_header.height, 24,
+                                                    3 * image->info_header.width,
+                                                    0xFF, 0xFF00, 0xFF0000, 0);
 
-    SDL_Rect dest = { 0, 0, image->width * 10, image->height * 10 };
+    SDL_Rect dest = { 0, 0, image->info_header.width * 10, image->info_header.height * 10 };
 
     SDL_Event event;
 
@@ -146,13 +146,6 @@ kill_graphics_worker:
 void MapNormalizer::writeDebugColor(unsigned char* debug_data, uint32_t w,
                                     uint32_t x, uint32_t y, Color c)
 {
-#ifndef ENABLE_GRAPHICS
-    (void)debug_data;
-    (void)w;
-    (void)x;
-    (void)y;
-    (void)c;
-#else
     if(debug_data != nullptr) {
         using namespace std::chrono_literals;
 
@@ -163,12 +156,11 @@ void MapNormalizer::writeDebugColor(unsigned char* debug_data, uint32_t w,
 
         graphics_debug_mutex.lock();
 
-        debug_data[index] = c.b;
+        debug_data[index] = c.r;
         debug_data[index + 1] = c.g;
-        debug_data[index + 2] = c.r;
+        debug_data[index + 2] = c.b;
 
         graphics_debug_mutex.unlock();
     }
-#endif
 }
 
