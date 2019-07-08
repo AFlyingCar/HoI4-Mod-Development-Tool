@@ -27,8 +27,8 @@ std::uint32_t MapNormalizer::colorToRGB(const Color& color) {
 
 MapNormalizer::Color MapNormalizer::RGBToColor(std::uint32_t rgb) {
     return Color{ static_cast<std::uint8_t>((rgb & RED_MASK) >> 16),
-                  static_cast<std::uint8_t>((rgb & BLUE_MASK) >> 8),
-                  static_cast<std::uint8_t>((rgb & GREEN_MASK))
+                  static_cast<std::uint8_t>((rgb & GREEN_MASK) >> 8),
+                  static_cast<std::uint8_t>((rgb & BLUE_MASK))
                 };
 }
 
