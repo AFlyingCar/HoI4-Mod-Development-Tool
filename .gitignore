@@ -3,7 +3,13 @@
 *.png
 *.bin
 *.csv
+*.P
+*.bmp
+*.xcf
+
+valout.txt
 
 build/
 bin/
+run/
 
