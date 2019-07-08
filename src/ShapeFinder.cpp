@@ -2,6 +2,7 @@
 #include "ShapeFinder.h"
 
 #include <iostream>
+#include <sstream>
 #include <cmath> // std::sqrt
 #include <list>
 #include <map>
@@ -11,6 +12,7 @@
 #include "ProvinceMapBuilder.h"
 #include "Constants.h"
 #include "Util.h"
+#include "Logger.h"
 
 /**
  * @brief Checks if the given pixel is a boundary pixel.
@@ -45,8 +47,8 @@ bool MapNormalizer::doColorsMatch(Color c1, Color c2) {
  * @return True if the point is within the bounds of the image, false otherwise
  */
 bool MapNormalizer::isInImage(BitMap* image, uint32_t x, uint32_t y) {
-    return x >= 0 && x < static_cast<uint32_t>(image->width) &&
-           y >= 0 && y < static_cast<uint32_t>(image->height);
+    return x >= 0 && x < static_cast<uint32_t>(image->info_header.width) &&
+           y >= 0 && y < static_cast<uint32_t>(image->info_header.height);
 }
 
 /**
@@ -59,7 +61,7 @@ bool MapNormalizer::isInImage(BitMap* image, uint32_t x, uint32_t y) {
  * @return The given XY coordinate as a flat index
  */
 uint32_t MapNormalizer::xyToIndex(BitMap* image, uint32_t x, uint32_t y) {
-    return x + (y * image->width);
+    return x + (y * image->info_header.width);
 }
 
 /**
@@ -89,9 +91,9 @@ MapNormalizer::Pixel MapNormalizer::getAsPixel(BitMap* image, uint32_t x,
 {
     return Pixel {
         { x, y },
-        { image->data[(x * 3) + (y * image->width * 3)],
-          image->data[(x * 3) + (y * image->width * 3) + 1],
-          image->data[(x * 3) + (y * image->width * 3) + 2]
+        { image->data[(x * 3) + (y * image->info_header.width * 3)],
+          image->data[(x * 3) + (y * image->info_header.width * 3) + 1],
+          image->data[(x * 3) + (y * image->info_header.width * 3) + 2]
         }
     };
 }
@@ -126,8 +128,10 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
 {
     PolygonList shapes;
 
+    using namespace std::string_literals;
+
     // Vector of whether or not we've visited a given index
-    std::vector<bool> visited(image->width * image->height, false);
+    std::vector<bool> visited(image->info_header.width * image->info_header.height, false);
     Polygon next_shape;
 
     // Starting Size:
@@ -144,13 +148,6 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
     // |                     |                 |
     // +---------------------------------------+
     std::list<Pixel> points;
-#if 0
-    points.reserve(starting_size);
-
-    std::cout << "Reserved " << (points.capacity() * sizeof(Pixel))
-              << " bytes (" << points.capacity() << " elements) of memory."
-              << std::endl;
-#endif
 
     // Start off in the top left of the image
     auto partition_idx = points.insert(points.begin(), getAsPixel(image, 0, 0));
@@ -166,7 +163,7 @@ findAllShapes_restart_loop:
         Pixel point = points.front();
         partition_idx = points.erase(points.begin());
 
-        writeDebugColor(debug_data, image->width, point.point.x, point.point.y,
+        writeDebugColor(debug_data, image->info_header.width, point.point.x, point.point.y,
                         Color{0xFF, 0, 0});
 
         // If we find a boundary pixel, then that means that there are no
@@ -180,7 +177,7 @@ findAllShapes_restart_loop:
                 points.erase(points.begin());
                 next_shape.pixels.push_back(p);
 
-                writeDebugColor(debug_data, image->width, p.point.x, p.point.y,
+                writeDebugColor(debug_data, image->info_header.width, p.point.x, p.point.y,
                                 DEBUG_COLOR);
 
                 // Make sure it is marked as visited
@@ -192,13 +189,16 @@ findAllShapes_restart_loop:
 
             Color orig_color;
             if(read_color_amounts.size() > 1) {
-                std::cerr << "[WRN] Found more than 1 color in the image: "
-                          << std::endl;
+                writeWarning("Found more than 1 color in the image: ");
 
                 auto most = 0;
                 for(auto&& [color,amount] : read_color_amounts) {
-                    std::cerr << "\t0x" << std::hex << color << " appears "
-                              << std::dec << amount << " times." << std::endl;
+                    std::stringstream ss;
+                    ss << std::hex << color;
+
+                    writeWarning("\t0x"s + ss.str() +
+                                 " appears " + std::to_string(amount) +
+                                 " times.");
 
                     if(most < amount)
                         orig_color = RGBToColor(color);
@@ -213,7 +213,7 @@ findAllShapes_restart_loop:
             next_shape.unique_color = generateUniqueColor(prov_type);
 
             for(auto&& pixel : next_shape.pixels)
-                writeDebugColor(debug_data, image->width, pixel.point.x,
+                writeDebugColor(debug_data, image->info_header.width, pixel.point.x,
                                 pixel.point.y, next_shape.unique_color);
 
             // Add this shape to the list of shapes and prepare it for receving
@@ -221,7 +221,7 @@ findAllShapes_restart_loop:
             shapes.push_back(next_shape);
             next_shape.pixels.clear();
 
-            std::cout << "Building shape #" << shapes.size() + 1 << std::endl;
+            setInfoLine("Building shape #" + std::to_string(shapes.size() + 1));
         } else {
             // Make sure we do the counting here, so we don't include
             //   boundary pixels
@@ -233,7 +233,7 @@ findAllShapes_restart_loop:
 
             // Is the pixel still viable to look at?
             if(isInImage(image, x, y) && !visited[index]) {
-                writeDebugColor(debug_data, image->width, x, y,
+                writeDebugColor(debug_data, image->info_header.width, x, y,
                                 Color{0, 0, 0xFF});
 
                 // Mark that this pixel is no longer viable
@@ -257,7 +257,7 @@ findAllShapes_restart_loop:
         point_check(point.point.x, point.point.y - 1); // down
 
         next_shape.pixels.push_back(point);
-        writeDebugColor(debug_data, image->width, point.point.x, point.point.y,
+        writeDebugColor(debug_data, image->info_header.width, point.point.x, point.point.y,
                         DEBUG_COLOR);
     }
 
@@ -266,10 +266,10 @@ findAllShapes_restart_loop:
     size_t x = 0;
     size_t y = 0;
 
-    std::cout << "Checking for pixels we may have missed." << std::endl;
+    writeStdout("Checking for pixels we may have missed...");
     for(auto index = 0; index < visited.size(); ++index) {
         // Index -> XY conversion
-        x = (x + 1) % image->width;
+        x = (x + 1) % image->info_header.width;
         y += (x == 0 ? 1 : 0);
 
         if(!visited[index]) {
@@ -278,7 +278,8 @@ findAllShapes_restart_loop:
             visited[index] = true;
 
             if(isBoundaryPixel(p)) {
-                std::cout << "Non-visited boundary point found at (" << x << ',' << y << ")." << std::endl;
+                writeStdout("Non-visited boundary point found at (" +
+                            std::to_string(x) + ',' + std::to_string(y) + ").");
 
                 // Find the first shape which has a pixel adjacent to this one
                 for(auto&& s : shapes) {
@@ -292,13 +293,14 @@ findAllShapes_restart_loop:
                 }
 end_double_for_loop:;
             } else {
-                std::cout << "Found a pixel we missed at (" << x << ',' << y
-                          << ")." << std::endl;
+                writeStdout("Found a pixel we missed at (" + std::to_string(x) +
+                            ',' + std::to_string(y) + ").");
+
                 // Reset the state back to the beginning and jump to the top
                 partition_idx = points.insert(points.begin(), p);
                 next_shape.pixels.clear();
 
-                writeDebugColor(debug_data, image->width, p.point.x, p.point.y,
+                writeDebugColor(debug_data, image->info_header.width, p.point.x, p.point.y,
                                 DEBUG_COLOR);
 
                 goto findAllShapes_restart_loop;
