@@ -30,19 +30,39 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    std::cout << "Read a bitmap of " << image->width << " by " << image->height
-              << " pixels." << std::endl;
+    std::cout << "Read a bitmap of " << image->info_header.width << " by "
+              << image->info_header.height << " pixels." << std::endl;
+
+    std::cout << "BitMap = {" << std::endl;
+    std::cout << "    Header = {" << std::endl;
+    std::cout << "        filetype = " << image->file_header.filetype << std::endl;
+    std::cout << "        fileSize = " << image->file_header.fileSize << std::endl;
+    std::cout << "        reserved1 = " << image->file_header.reserved1 << std::endl;
+    std::cout << "        reserved2 = " << image->file_header.reserved2 << std::endl;
+    std::cout << "        bitmapOffset = " << image->file_header.bitmapOffset << std::endl;
+    std::cout << "    }" << std::endl;
+    std::cout << "    headerSize = " << image->info_header.headerSize << std::endl;
+    std::cout << "    width = " << image->info_header.width << std::endl;
+    std::cout << "    height = " << image->info_header.height << std::endl;
+    std::cout << "    bitPlanes = " << image->info_header.bitPlanes << std::endl;
+    std::cout << "    bitsPerPixel = " << image->info_header.bitsPerPixel << std::endl;
+    std::cout << "    compression = " << image->info_header.compression << std::endl;
+    std::cout << "    sizeOfBitmap = " << image->info_header.sizeOfBitmap << std::endl;
+    std::cout << "    horzResolution = " << image->info_header.horzResolution << std::endl;
+    std::cout << "    vertResolution = " << image->info_header.vertResolution << std::endl;
+    std::cout << "    colorsUsed = " << image->info_header.colorsUsed << std::endl;
+    std::cout << "    colorImportant = " << image->info_header.colorImportant << std::endl;
+    std::cout << "    data = { ... }" << std::endl;
+    std::cout << "}" << std::endl;
 
     unsigned char* graphics_data = nullptr;
 
-#ifdef ENABLE_GRAPHICS
     bool done = false;
-    graphics_data = new unsigned char[image->width * image->height * 3];
+    graphics_data = new unsigned char[image->info_header.width * image->info_header.height * 3];
 
     std::thread graphics_thread([&image, &done, &graphics_data]() {
             MapNormalizer::graphicsWorker(image, graphics_data, done);
     });
-#endif
 
     auto shapes = MapNormalizer::findAllShapes(image, graphics_data);
 
@@ -69,16 +89,19 @@ int main(int argc, char** argv) {
     }
 
     std::cout << "Writing province bitmap to file..." << std::endl;
-    MapNormalizer::writeBMP(output_path / "provinces.bmp", image);
+    MapNormalizer::writeBMP(output_path / "provinces.bmp", graphics_data,
+                            image->info_header.width, image->info_header.height);
     std::cout << "Done." << std::endl;
 
     std::cout << "Press any key to exit.";
-#ifdef ENABLE_GRAPHICS
+
     std::getchar();
     done = true;
 
     graphics_thread.join();
-#endif
+
+    // Note: no need to free graphics_data, since we are exiting anyway and the
+    //   OS will clean it up for us.
 
     return 0;
 }
