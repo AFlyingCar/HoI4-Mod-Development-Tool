@@ -20,20 +20,22 @@ static bool isErrAnsiEnabled() {
     return ansi_enabled;
 }
 
-static void deleteInfoLine() {
-    if(isOutAnsiEnabled()) {
+static void writeInfoLine() {
+    if(!info_line.empty()) {
+        std::cout << (isOutAnsiEnabled() ? "\33[32m" : "") << "==> " << info_line
+                  << (isOutAnsiEnabled() ? "\33[0m" : "");
+        if(!isOutAnsiEnabled()) std::cout << std::endl;
+        std::cout.flush();
+    }
+}
+
+void MapNormalizer::deleteInfoLine() {
+    if(!info_line.empty() && isOutAnsiEnabled()) {
         std::cout << "\33[1000D"; // Go to start of line
         std::cout << "\33[0K";    // Clear the line
         std::cout << "\33[1000D"; // Go to start of line
+        std::cout.flush();
     }
-    std::cout.flush();
-}
-
-static void writeInfoLine() {
-    std::cout << (isOutAnsiEnabled() ? "\33[32m" : "") << "==> " << info_line
-              << (isOutAnsiEnabled() ? "\33[0m" : "");
-    if(!isOutAnsiEnabled()) std::cout << std::endl;
-    std::cout.flush();
 }
 
 void MapNormalizer::setInfoLine(const std::string& line) {
@@ -44,26 +46,38 @@ void MapNormalizer::setInfoLine(const std::string& line) {
 }
 
 
-void MapNormalizer::writeWarning(const std::string& message) {
+void MapNormalizer::writeWarning(const std::string& message, bool write_prefix)
+{
     deleteInfoLine();
     std::cerr << (isErrAnsiEnabled() ? "\33[33m" : "")
-              << "[WRN] ~ " << message << (isErrAnsiEnabled() ? "\33[0m" : "")
-              << std::endl;
-    std::cerr.flush();
-    writeInfoLine();
-}
-
-void MapNormalizer::writeError(const std::string& message) {
-    deleteInfoLine();
-    std::cerr << (isErrAnsiEnabled() ? "\33[31m" : "") << "[ERR] ~ " << message
+              << (write_prefix ? "[WRN] ~ " : "") << message
               << (isErrAnsiEnabled() ? "\33[0m" : "") << std::endl;
     std::cerr.flush();
     writeInfoLine();
 }
 
-void MapNormalizer::writeStdout(const std::string& message) {
+void MapNormalizer::writeError(const std::string& message, bool write_prefix) {
     deleteInfoLine();
-    std::cout << (isOutAnsiEnabled() ? "\33[37m" : "") << "[OUT] ~ " << message
+    std::cerr << (isErrAnsiEnabled() ? "\33[31m" : "")
+              << (write_prefix ? "[ERR] ~ " : "") << message
+              << (isErrAnsiEnabled() ? "\33[0m" : "") << std::endl;
+    std::cerr.flush();
+    writeInfoLine();
+}
+
+void MapNormalizer::writeStdout(const std::string& message, bool write_prefix) {
+    deleteInfoLine();
+    std::cout << (isOutAnsiEnabled() ? "\33[37m" : "")
+              << (write_prefix ? "[OUT] ~ " : "") << message
+              << (isOutAnsiEnabled() ? "\33[0m" : "") << std::endl;
+    std::cout.flush();
+    writeInfoLine();
+}
+
+void MapNormalizer::writeDebug(const std::string& message, bool write_prefix) {
+    deleteInfoLine();
+    std::cout << (isOutAnsiEnabled() ? "\33[34m" : "")
+              << (write_prefix ? "[DBG] ~ " : "") << message
               << (isOutAnsiEnabled() ? "\33[0m" : "") << std::endl;
     std::cout.flush();
     writeInfoLine();
