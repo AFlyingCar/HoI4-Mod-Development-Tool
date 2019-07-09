@@ -3,6 +3,7 @@
 
 #include <vector> // std::vector
 #include <cstdint> // uint32_t, uint8_t
+#include <ostream>
 
 namespace MapNormalizer {
     /**
@@ -90,6 +91,9 @@ namespace MapNormalizer {
      */
     using ProvinceList = std::vector<Province>;
 }
+
+std::ostream& operator<<(std::ostream&, const MapNormalizer::Color&);
+std::ostream& operator<<(std::ostream&, const MapNormalizer::ProvinceType&);
 
 #endif
 
