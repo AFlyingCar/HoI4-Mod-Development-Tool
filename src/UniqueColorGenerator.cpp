@@ -43,11 +43,11 @@ MapNormalizer::Color MapNormalizer::generateUniqueColor(ProvinceType bias) {
             c = Color { land_ptr[0], land_ptr[1], land_ptr[2] };
             land_ptr += 3;
             break;
-        case ProvinceType::SEA:
+        case ProvinceType::LAKE:
             c = Color { lake_ptr[0], lake_ptr[1], lake_ptr[2] };
             lake_ptr += 3;
             break;
-        case ProvinceType::LAKE:
+        case ProvinceType::SEA:
             c = Color { sea_ptr[0], sea_ptr[1], sea_ptr[2] };
             sea_ptr += 3;
             break;
