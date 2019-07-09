@@ -17,7 +17,9 @@
 # include <SDL.h> // SDL_*
 #endif
 
+#ifdef ENABLE_GRAPHICS
 static std::mutex graphics_debug_mutex;
+#endif
 
 // Maximum width + height that SDL will create a window for
 static const auto MAX_SCREEN_WIDTH = 16384;
@@ -28,7 +30,9 @@ static const auto MIN_SCREEN_WIDTH = 100;
 static const auto MIN_SCREEN_HEIGHT = 100;
 static const auto NUM_PIX_REQ_SLEEP = 10000;
 
+#ifdef ENABLE_GRAPHICS
 static bool should_sleep = true;
+#endif
 
 /**
  * @brief Worker function which manages displaying graphical debugging data.
@@ -149,18 +153,24 @@ void MapNormalizer::writeDebugColor(unsigned char* debug_data, uint32_t w,
     if(debug_data != nullptr) {
         using namespace std::chrono_literals;
 
+#ifdef ENABLE_GRAPHICS
         if(should_sleep)
             std::this_thread::sleep_for(0.01s);
+#endif
 
         uint32_t index = xyToIndex(w * 3, x * 3, y);
 
+#ifdef ENABLE_GRAPHICS
         graphics_debug_mutex.lock();
+#endif
 
         debug_data[index] = c.r;
         debug_data[index + 1] = c.g;
         debug_data[index + 2] = c.b;
 
+#ifdef ENABLE_GRAPHICS
         graphics_debug_mutex.unlock();
+#endif
     }
 }
 
