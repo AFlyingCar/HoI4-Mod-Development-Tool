@@ -6,19 +6,23 @@
 #include "Util.h"
 
 std::pair<MapNormalizer::ProvinceType, std::uint32_t>
-    MapNormalizer::getProvinceType(const Color& color)
+    MapNormalizer::getProvinceType(std::uint32_t color)
 {
-    auto value = colorToRGB(color);
-
-    if(value & PROV_LAND_MASK) {
+    if(color & PROV_LAND_MASK) {
         return { ProvinceType::LAND, PROV_LAND_MASK };
-    } else if(value & PROV_LAKE_MASK) {
-        return { ProvinceType::LAND, PROV_LAKE_MASK };
-    } else if(value & PROV_SEA_MASK) {
+    } else if(color & PROV_LAKE_MASK) {
+        return { ProvinceType::LAKE, PROV_LAKE_MASK };
+    } else if(color & PROV_SEA_MASK) {
         return { ProvinceType::SEA, PROV_SEA_MASK };
     } else {
         return { ProvinceType::UNKNOWN, 0 };
     }
+}
+
+std::pair<MapNormalizer::ProvinceType, std::uint32_t>
+    MapNormalizer::getProvinceType(const Color& color)
+{
+    return getProvinceType(colorToRGB(color));
 }
 
 /*
@@ -97,20 +101,6 @@ std::ostream& operator<<(std::ostream& stream, MapNormalizer::Terrain terrain) {
         case MapNormalizer::Terrain::PLAINS:
         default:
             stream << "plains"; break;
-    }
-
-    return stream;
-}
-
-std::ostream& operator<<(std::ostream& stream,
-                         MapNormalizer::ProvinceType province)
-{
-    switch(province) {
-        case MapNormalizer::ProvinceType::SEA:  stream << "sea"; break;
-        case MapNormalizer::ProvinceType::LAKE: stream << "lake"; break;
-        case MapNormalizer::ProvinceType::LAND:
-        default:
-            stream << "land"; break;
     }
 
     return stream;

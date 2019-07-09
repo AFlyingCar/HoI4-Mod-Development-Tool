@@ -13,6 +13,7 @@ namespace MapNormalizer {
     const auto CONTINENT_ID_MASK = 0x00000111; // Maximum of 8 total continents
 
     ProvinceList createProvinceList(const PolygonList&);
+    std::pair<ProvinceType, std::uint32_t> getProvinceType(std::uint32_t);
     std::pair<ProvinceType, std::uint32_t> getProvinceType(const Color&);
     bool isCoastal(const Color&, std::uint32_t);
     Terrain getTerrainType(const Color&, std::uint32_t);
@@ -23,7 +24,6 @@ namespace MapNormalizer {
 
 std::ostream& operator<<(std::ostream&, const MapNormalizer::Province&);
 std::ostream& operator<<(std::ostream&, MapNormalizer::Terrain);
-std::ostream& operator<<(std::ostream&, MapNormalizer::ProvinceType);
 
 #endif
 
