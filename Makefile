@@ -16,7 +16,11 @@ COLOR_BINS=lakes.bin lands.bin unknowns.bin seas.bin
 ASMSOURCES=$(SRC_DIR)/ColorArray_x86.asm
 ASMOBJECTS=$(patsubst $(SRC_DIR)/%.asm,$(BUILD_DIR)/%.o,$(ASMSOURCES))
 
+OBJECTS=$(ASMOBJECTS) $(CXXOBJECTS)
+
 COLOR_GEN=color_generator.py
+
+RM=rm
 
 ifndef NODEBUG
 DEBUG_FLAG=-g
@@ -57,13 +61,15 @@ LFLAGS+=-pthread $(ENABLE_GRAPHICS_L) $(CPP_VER)
 
 OUT=$(OUT_DIR)/fp
 
-.PHONY: all clean color_files
+.PHONY: all clean
 
-all: $(ASMOBJECTS) $(CXXOBJECTS) |$(OUT_DIR)/
+all: $(OUT)
+
+$(OUT): $(ASMOBJECTS) $(CXXOBJECTS) |$(OUT_DIR)/
 	$(CXX) $(ASMOBJECTS) $(CXXOBJECTS) $(LFLAGS) -o $(OUT)
 
 clean:
-	rm $(CXXOBJECTS) $(OUT)
+	$(RM) $(OBJECTS) $(OUT)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp $(INC_DIR)/%.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -74,12 +80,12 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.asm
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/ColorArray_x86.o: $(SRC_DIR)/ColorArray_x86.asm $(INC_DIR)/ColorArray.h color_files
+$(BUILD_DIR)/ColorArray_x86.o: $(SRC_DIR)/ColorArray_x86.asm $(INC_DIR)/ColorArray.h $(COLOR_BINS)
 	$(CXX) $(CXXFLAGS) -c $(SRC_DIR)/ColorArray_x86.asm -o $@
 
 $(CXXOBJECTS) $(ASMOBJECTS): |$(BUILD_DIR)
 
-color_files: |$(COLOR_GEN)
+$(COLOR_BINS): $(COLOR_GEN) $(wordlist 1,$(words $<),$<)
 	$(PYTHON) $(COLOR_GEN)
 
 $(OUT_DIR)/:
