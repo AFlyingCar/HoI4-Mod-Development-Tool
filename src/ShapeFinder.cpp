@@ -14,6 +14,8 @@
 #include "Util.h"
 #include "Logger.h"
 
+std::vector<MapNormalizer::Pixel> MapNormalizer::problematic_pixels;
+
 /**
  * @brief Checks if the given pixel is a boundary pixel.
  *
@@ -120,11 +122,14 @@ bool MapNormalizer::isAdjacent(const Pixel& p, size_t x, size_t y) {
  * @param image The image to get all shapes from
  * @param debug_data A flat array of color values to write to for debugging. May
  *                   be NULL
+ * @param problem_pixels A vector to be filled with pixels that have caused either
+ *                       an error or a warning.
  *
  * @return A list of all shapes in the BitMap image
  */
 MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
-                                                        unsigned char* debug_data)
+                                                        unsigned char* debug_data,
+                                                        std::vector<Pixel>& problem_pixels)
 {
     PolygonList shapes;
 
@@ -133,13 +138,6 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
     // Vector of whether or not we've visited a given index
     std::vector<bool> visited(image->info_header.width * image->info_header.height, false);
     Polygon next_shape;
-
-    // Starting Size:
-    //   length(<0, Height> - <width, 0>)
-    //   length(<-width, height>)
-    //   sqrt(width^2 + height^2)
-    // auto starting_size = std::sqrt((image->width * image->width) + 
-    //                                (image->height * image->height));
 
     // A partitioned vector of pixels
     // +---------------------------------------+
@@ -153,11 +151,89 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
     auto partition_idx = points.insert(points.begin(), getAsPixel(image, 0, 0));
 
     // Original Color -> Pixels with this color
-    std::map<std::uint32_t, size_t> read_color_amounts;
+    std::map<std::uint32_t, std::vector<Pixel>> read_color_amounts;
+
+    auto finalize_shape = [&read_color_amounts, &shapes, &problem_pixels, &debug_data, &image](Polygon& shape)
+    {
+        // Determine what the original color was
+        auto orig_color = read_color_amounts.begin()->first;
+        if(read_color_amounts.size() > 1) {
+            writeWarning("Found more than 1 color in the shape. Choosing the most common color.");
+
+            auto most = read_color_amounts.begin()->second.size();
+            for(auto&& [color,dup_pixels] : read_color_amounts) {
+                // Ignore border colors
+                if(color == 0) continue;
+
+                problem_pixels.insert(problem_pixels.end(),
+                                      dup_pixels.begin(), dup_pixels.end());
+
+                std::stringstream ss;
+                ss << std::hex << color;
+                writeWarning("\t0x"s + ss.str() +
+                             " appears " + std::to_string(dup_pixels.size()) +
+                             " times.");
+
+                if(most < dup_pixels.size())
+                    orig_color = color;
+            }
+        }
+
+        // Determine what the province type of this shape was based on the color
+        //   it was read in as
+        auto prov_type = getProvinceType(orig_color).first;
+
+        shape.color = RGBToColor(orig_color);
+
+        // Generate a unique color for this shape based on the province type
+        shape.unique_color = generateUniqueColor(prov_type);
+
+        std::stringstream ss;
+        ss << "0x" << std::hex << orig_color << " -> " << prov_type << " -> 0x" << shape.unique_color;
+        writeDebug(ss.str());
+
+        // Redraw the shape with the new unique color
+        // // Redraw the shape with the new unique color
+        for(auto&& pixel : shape.pixels)
+            writeDebugColor(debug_data, image->info_header.width, pixel.point.x,
+                            pixel.point.y, shape.unique_color);
+
+        // Add this shape to the list of shapes and prepare it for receving
+        //   the pixels in the next shape we look at
+        shapes.push_back(shape);
+
+        shape.pixels.clear();
+        read_color_amounts.clear();
+    };
+
+        auto point_check = [&](uint32_t x, uint32_t y) {
+            uint32_t index = xyToIndex(image, x, y);
+
+            // Is the pixel still viable to look at?
+            if(isInImage(image, x, y) && !visited[index]) {
+                writeDebugColor(debug_data, image->info_header.width, x, y,
+                                Color{0, 0, 0xFF});
+
+                // Mark that this pixel is no longer viable
+                visited[index] = true;
+
+                auto pix = getAsPixel(image, x, y);
+
+                if(x == 209 && y == 666) {
+                    std::cout << "Point (209,666) has color (" << pix.color.r << ',' << pix.color.g << ',' << pix.color.b << ")" << std::endl;
+                }
+
+                // Add it to before or after the partition depending on if its a
+                //   boundary pixel or not
+                if(isBoundaryPixel(pix)) {
+                    points.push_back(pix);
+                } else {
+                    partition_idx = points.insert(partition_idx, pix);
+                }
+            }
+        };
 
 findAllShapes_restart_loop:
-    read_color_amounts.clear();
-
     while(!points.empty()) {
         // Pop the pixel off the top of the queue
         Pixel point = points.front();
@@ -187,69 +263,55 @@ findAllShapes_restart_loop:
 
             partition_idx = points.begin();
 
-            Color orig_color;
-            if(read_color_amounts.size() > 1) {
-                writeWarning("Found more than 1 color in the image: ");
+            writeDebug("Shape detected with "s +
+                       std::to_string(read_color_amounts.size()) +
+                       " different color(s) and " +
+                       std::to_string(next_shape.pixels.size()) + " pixels.");
 
-                auto most = 0;
-                for(auto&& [color,amount] : read_color_amounts) {
-                    std::stringstream ss;
-                    ss << std::hex << color;
+            if(next_shape.pixels.size() < 10) {
+                writeWarning("Tiny province detected! Either your input image "
+                             "is wrong or there is a bug! Please check the "
+                             "following pixels and press any key to continue "
+                             "execution, or CTRL+C to quit.");
+                deleteInfoLine();
 
-                    writeWarning("\t0x"s + ss.str() +
-                                 " appears " + std::to_string(amount) +
-                                 " times.");
-
-                    if(most < amount)
-                        orig_color = RGBToColor(color);
+                std::cerr << "Pixels = {" << std::endl;
+                for(auto pix : next_shape.pixels) {
+                    problem_pixels.push_back(pix);
+                    shapes.back().pixels.push_back(pix);
+                    writeDebugColor(debug_data, image->info_header.width,
+                                    pix.point.x, pix.point.y,
+                                    shapes.back().unique_color);
+                    std::cerr << "\t(" << pix.point.x << ',' << pix.point.y
+                              << ')' << std::endl;
                 }
+                std::cerr << '}' << std::endl;
+
+                // std::getchar();
             } else {
-                orig_color = RGBToColor(read_color_amounts.begin()->first);
+                setInfoLine("Building shape #" + std::to_string(shapes.size() + 1));
+                finalize_shape(next_shape);
             }
-
-            auto prov_type = getProvinceType(orig_color).first;
-
-            next_shape.color = orig_color;
-            next_shape.unique_color = generateUniqueColor(prov_type);
-
-            for(auto&& pixel : next_shape.pixels)
-                writeDebugColor(debug_data, image->info_header.width, pixel.point.x,
-                                pixel.point.y, next_shape.unique_color);
-
-            // Add this shape to the list of shapes and prepare it for receving
-            //   the pixels in the next shape we look at
-            shapes.push_back(next_shape);
-            next_shape.pixels.clear();
-
-            setInfoLine("Building shape #" + std::to_string(shapes.size() + 1));
         } else {
             // Make sure we do the counting here, so we don't include
             //   boundary pixels
-            ++read_color_amounts[colorToRGB(point.color)];
-        }
+            read_color_amounts[colorToRGB(point.color)].push_back(point);
 
-        auto point_check = [&](uint32_t x, uint32_t y) {
-            uint32_t index = xyToIndex(image, x, y);
-
-            // Is the pixel still viable to look at?
-            if(isInImage(image, x, y) && !visited[index]) {
-                writeDebugColor(debug_data, image->info_header.width, x, y,
-                                Color{0, 0, 0xFF});
-
-                // Mark that this pixel is no longer viable
-                visited[index] = true;
-
-                auto pix = getAsPixel(image, x, y);
-
-                // Add it to before or after the partition depending on if its a
-                //   boundary pixel or not
-                if(isBoundaryPixel(pix)) {
-                    points.push_back(pix);
-                } else {
-                    partition_idx = points.insert(partition_idx, pix);
-                }
+            if(colorToRGB(point.color) == 0) {
+                std::stringstream ss;
+                ss << "Pixel (" << point.point.x << ',' << point.point.y
+                   << ") has color value of 0x0. This should not happen, and "
+                      "can cause weird side-effects with CSV and image "
+                      "generation.";
+                writeWarning(ss.str());
             }
-        };
+
+            //    << ") has color 0x" << std::hex << colorToRGB(point.color)
+            //    << ". Pixel #" << std::dec
+            //    << read_color_amounts[colorToRGB(point.color)]
+            //    << " with this color.";
+            // writeDebug(ss.str());
+        }
 
         point_check(point.point.x + 1, point.point.y); // left
         point_check(point.point.x - 1, point.point.y); // right
@@ -262,15 +324,13 @@ findAllShapes_restart_loop:
     }
 
     // Check for pixels that were missed in the last pass
-
-    size_t x = 0;
-    size_t y = 0;
-
     writeStdout("Checking for pixels we may have missed...");
     for(auto index = 0; index < visited.size(); ++index) {
         // Index -> XY conversion
-        x = (x + 1) % image->info_header.width;
-        y += (x == 0 ? 1 : 0);
+        // Note: We need to subtract 1 from x since this calculation puts as
+        //   always at 1 after index
+        size_t x = index % image->info_header.width;
+        size_t y = index / image->info_header.width;
 
         if(!visited[index]) {
             auto p = getAsPixel(image, x, y);
@@ -286,6 +346,7 @@ findAllShapes_restart_loop:
                     for(auto&& pix : s.pixels) {
                         if(isAdjacent(pix, x, y)) {
                             // Add this pixel that shape
+                            writeDebugColor(debug_data, image->info_header.width, x, y, s.unique_color);
                             s.pixels.push_back(p);
                             goto end_double_for_loop;
                         }
@@ -296,9 +357,13 @@ end_double_for_loop:;
                 writeStdout("Found a pixel we missed at (" + std::to_string(x) +
                             ',' + std::to_string(y) + ").");
 
+                // First finish completing the last shape we were working on
+                // Note: we don't need to reset points here, since us just being
+                //   here means that it should already be empty
+                finalize_shape(next_shape);
+
                 // Reset the state back to the beginning and jump to the top
                 partition_idx = points.insert(points.begin(), p);
-                next_shape.pixels.clear();
 
                 writeDebugColor(debug_data, image->info_header.width, p.point.x, p.point.y,
                                 DEBUG_COLOR);
@@ -308,8 +373,9 @@ end_double_for_loop:;
         }
     }
 
-    if(!next_shape.pixels.empty())
-        shapes.push_back(next_shape);
+    if(!next_shape.pixels.empty()) {
+        finalize_shape(next_shape);
+    }
 
     return shapes;
 }
