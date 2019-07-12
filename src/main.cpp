@@ -36,27 +36,27 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    std::cout << "BitMap = {" << std::endl;
-    std::cout << "    Header = {" << std::endl;
-    std::cout << "        filetype = " << image->file_header.filetype << std::endl;
-    std::cout << "        fileSize = " << image->file_header.fileSize << std::endl;
-    std::cout << "        reserved1 = " << image->file_header.reserved1 << std::endl;
-    std::cout << "        reserved2 = " << image->file_header.reserved2 << std::endl;
-    std::cout << "        bitmapOffset = " << image->file_header.bitmapOffset << std::endl;
-    std::cout << "    }" << std::endl;
-    std::cout << "    headerSize = " << image->info_header.headerSize << std::endl;
-    std::cout << "    width = " << image->info_header.width << std::endl;
-    std::cout << "    height = " << image->info_header.height << std::endl;
-    std::cout << "    bitPlanes = " << image->info_header.bitPlanes << std::endl;
-    std::cout << "    bitsPerPixel = " << image->info_header.bitsPerPixel << std::endl;
-    std::cout << "    compression = " << image->info_header.compression << std::endl;
-    std::cout << "    sizeOfBitmap = " << image->info_header.sizeOfBitmap << std::endl;
-    std::cout << "    horzResolution = " << image->info_header.horzResolution << std::endl;
-    std::cout << "    vertResolution = " << image->info_header.vertResolution << std::endl;
-    std::cout << "    colorsUsed = " << image->info_header.colorsUsed << std::endl;
-    std::cout << "    colorImportant = " << image->info_header.colorImportant << std::endl;
-    std::cout << "    data = { ... }" << std::endl;
-    std::cout << "}" << std::endl;
+    MapNormalizer::writeDebug("BitMap = {", false);
+    MapNormalizer::writeDebug("    Header = {", false);
+    MapNormalizer::writeDebug("        filetype = "s + std::to_string(image->file_header.filetype), false);
+    MapNormalizer::writeDebug("        fileSize = "s + std::to_string(image->file_header.fileSize), false);
+    MapNormalizer::writeDebug("        reserved1 = "s + std::to_string(image->file_header.reserved1), false);
+    MapNormalizer::writeDebug("        reserved2 = "s + std::to_string(image->file_header.reserved2), false);
+    MapNormalizer::writeDebug("        bitmapOffset = "s + std::to_string(image->file_header.bitmapOffset), false);
+    MapNormalizer::writeDebug("    }", false);
+    MapNormalizer::writeDebug("    headerSize = "s + std::to_string(image->info_header.headerSize), false);
+    MapNormalizer::writeDebug("    width = "s + std::to_string(image->info_header.width), false);
+    MapNormalizer::writeDebug("    height = "s + std::to_string(image->info_header.height), false);
+    MapNormalizer::writeDebug("    bitPlanes = "s + std::to_string(image->info_header.bitPlanes), false);
+    MapNormalizer::writeDebug("    bitsPerPixel = "s + std::to_string(image->info_header.bitsPerPixel), false);
+    MapNormalizer::writeDebug("    compression = "s + std::to_string(image->info_header.compression), false);
+    MapNormalizer::writeDebug("    sizeOfBitmap = "s + std::to_string(image->info_header.sizeOfBitmap), false);
+    MapNormalizer::writeDebug("    horzResolution = "s + std::to_string(image->info_header.horzResolution), false);
+    MapNormalizer::writeDebug("    vertResolution = "s + std::to_string(image->info_header.vertResolution), false);
+    MapNormalizer::writeDebug("    colorsUsed = "s + std::to_string(image->info_header.colorsUsed), false);
+    MapNormalizer::writeDebug("    colorImportant = "s + std::to_string(image->info_header.colorImportant), false);
+    MapNormalizer::writeDebug("    data = { ... }", false);
+    MapNormalizer::writeDebug("}", false);
 
     unsigned char* graphics_data = nullptr;
 
