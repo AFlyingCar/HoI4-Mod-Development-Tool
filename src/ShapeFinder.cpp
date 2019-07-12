@@ -219,10 +219,6 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
 
                 auto pix = getAsPixel(image, x, y);
 
-                if(x == 209 && y == 666) {
-                    std::cout << "Point (209,666) has color (" << pix.color.r << ',' << pix.color.g << ',' << pix.color.b << ")" << std::endl;
-                }
-
                 // Add it to before or after the partition depending on if its a
                 //   boundary pixel or not
                 if(isBoundaryPixel(pix)) {
@@ -286,6 +282,9 @@ findAllShapes_restart_loop:
                               << ')' << std::endl;
                 }
                 std::cerr << '}' << std::endl;
+
+                shapes.back().pixels.push_back(point);
+                visited[xyToIndex(image, point.point.x, point.point.y)] = true;
 
                 // std::getchar();
             } else {
