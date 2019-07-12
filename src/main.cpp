@@ -6,32 +6,35 @@
 
 #include "BitMap.h" // BitMap
 #include "Types.h" // Point, Color, Polygon, Pixel
+#include "Logger.h" // writeError
 #include "ShapeFinder.h" // findAllShapes
 #include "GraphicalDebugger.h" // graphicsWorker
 #include "ProvinceMapBuilder.h"
+#include "Util.h"
 
 int main(int argc, char** argv) {
+    using namespace std::string_literals;
+
     if(argc < 2) {
-        std::cerr << "Missing filename argument." << std::endl;
+        MapNormalizer::writeError("Missing filename argument.");
     }
 
     if(argc < 3) {
-        std::cerr << "Missing output directory argument." << std::endl;
+        MapNormalizer::writeError("Missing output directory argument.");
         return 1;
     }
 
     char* filename = argv[1];
     char* outdirname = argv[2];
 
+    MapNormalizer::setInfoLine("Reading in .BMP file.");
+
     MapNormalizer::BitMap* image = MapNormalizer::readBMP(filename);
 
     if(image == nullptr) {
-        std::cerr << "Reading bitmap failed." << std::endl;
+        MapNormalizer::writeError("Reading bitmap failed.");
         return 1;
     }
-
-    std::cout << "Read a bitmap of " << image->info_header.width << " by "
-              << image->info_header.height << " pixels." << std::endl;
 
     std::cout << "BitMap = {" << std::endl;
     std::cout << "    Header = {" << std::endl;
@@ -60,45 +63,74 @@ int main(int argc, char** argv) {
     bool done = false;
     graphics_data = new unsigned char[image->info_header.width * image->info_header.height * 3];
 
+#ifdef ENABLE_GRAPHICS
+    MapNormalizer::writeDebug("Graphical debugger enabled.");
     std::thread graphics_thread([&image, &done, &graphics_data]() {
             MapNormalizer::graphicsWorker(image, graphics_data, done);
     });
+#endif
 
+    MapNormalizer::setInfoLine("Finding all possible shapes.");
     auto shapes = MapNormalizer::findAllShapes(image, graphics_data);
 
-    std::cout << "Detected " << shapes.size() << " shapes." << std::endl;
+    MapNormalizer::setInfoLine("");
+    MapNormalizer::writeStdout("Detected "s + std::to_string(shapes.size()) + " shapes.");
 
+#if 0
     for(size_t i = 0; i < shapes.size(); ++i) {
         auto color = shapes.at(i).color;
         auto c = (color.r << 16) | (color.g << 8) | color.b;
-        std::cout << std::dec << i << ": " << shapes.at(i).pixels.size();
-        std::cout << " pixels, color = 0x" << std::hex << c << std::endl;
+
+        std::stringstream ss;
+        ss << std::dec << i << ": " << shapes.at(i).pixels.size();
+        ss << " pixels, color = 0x" << std::hex << c;
+
+        MapNormalizer::writeDebug(ss.str());
+    }
+#endif
+
+    if(!MapNormalizer::problematic_pixels.empty())
+        MapNormalizer::writeWarning("The following "s +
+                                    std::to_string(MapNormalizer::problematic_pixels.size()) +
+                                    " pixels had problems. This could be a bug "
+                                    "with the program, or a problem with y our "
+                                    "input file. Please check these pixels in "
+                                    "your input in case of any problems.");
+    for(auto& problem_pixel : MapNormalizer::problematic_pixels) {
+        std::stringstream ss;
+        ss << "\t{\n"
+           << "\t\t(" << problem_pixel.point.x << ',' << problem_pixel.point.y << ")\n"
+           << "\t\t0x" << std::hex << colorToRGB(problem_pixel.color) << "\n"
+           << "\t}\n";
+        MapNormalizer::writeWarning(ss.str(), false);
     }
 
+    MapNormalizer::setInfoLine("Creating Provinces List.");
     auto provinces = MapNormalizer::createProvinceList(shapes);
-
     std::filesystem::path output_path(outdirname);
     std::ofstream output_csv(output_path / "definition.csv");
 
-    std::cout << "Provinces CSV:\n"
-                 "=============="
-              << std::endl;
+    // std::cout << "Provinces CSV:\n"
+    //              "=============="
+    //           << std::endl;
     for(size_t i = 0; i < provinces.size(); ++i) {
-        std::cout << std::dec << provinces[i] << std::endl;
+        // std::cout << std::dec << provinces[i] << std::endl;
         output_csv << std::dec << provinces[i] << std::endl;
     }
 
-    std::cout << "Writing province bitmap to file..." << std::endl;
+    MapNormalizer::setInfoLine("Writing province bitmap to file...");
     MapNormalizer::writeBMP(output_path / "provinces.bmp", graphics_data,
                             image->info_header.width, image->info_header.height);
-    std::cout << "Done." << std::endl;
 
-    std::cout << "Press any key to exit.";
+    MapNormalizer::setInfoLine("Press any key to exit.");
 
     std::getchar();
     done = true;
 
+#ifdef ENABLE_GRAPHICS
+    MapNormalizer::setInfoLine("Waiting for graphical debugger thread to join...");
     graphics_thread.join();
+#endif
 
     // Note: no need to free graphics_data, since we are exiting anyway and the
     //   OS will clean it up for us.
