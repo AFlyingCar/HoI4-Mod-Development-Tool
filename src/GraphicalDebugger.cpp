@@ -12,6 +12,7 @@
 
 #include "BitMap.h" // BitMap
 #include "ShapeFinder.h"
+#include "Options.h"
 
 #ifdef ENABLE_GRAPHICS
 # include <SDL.h> // SDL_*
@@ -154,14 +155,15 @@ void MapNormalizer::writeDebugColor(unsigned char* debug_data, uint32_t w,
         using namespace std::chrono_literals;
 
 #ifdef ENABLE_GRAPHICS
-        if(should_sleep)
+        if(!prog_opts.no_gui && should_sleep)
             std::this_thread::sleep_for(0.01s);
 #endif
 
         uint32_t index = xyToIndex(w * 3, x * 3, y);
 
 #ifdef ENABLE_GRAPHICS
-        graphics_debug_mutex.lock();
+        if(!prog_opts.no_gui)
+            graphics_debug_mutex.lock();
 #endif
 
         debug_data[index] = c.r;
@@ -169,7 +171,8 @@ void MapNormalizer::writeDebugColor(unsigned char* debug_data, uint32_t w,
         debug_data[index + 2] = c.b;
 
 #ifdef ENABLE_GRAPHICS
-        graphics_debug_mutex.unlock();
+        if(!prog_opts.no_gui)
+            graphics_debug_mutex.unlock();
 #endif
     }
 }

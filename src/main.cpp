@@ -71,11 +71,14 @@ int main(int argc, char** argv) {
     graphics_data = new unsigned char[image->info_header.width * image->info_header.height * 3];
 
 #ifdef ENABLE_GRAPHICS
-    if(MapNormalizer::prog_opts.verbose)
-        MapNormalizer::writeDebug("Graphical debugger enabled.");
-    std::thread graphics_thread([&image, &done, &graphics_data]() {
-            MapNormalizer::graphicsWorker(image, graphics_data, done);
-    });
+    std::thread graphics_thread;
+    if(!MapNormalizer::prog_opts.no_gui) {
+        if(MapNormalizer::prog_opts.verbose)
+            MapNormalizer::writeDebug("Graphical debugger enabled.");
+        graphics_thread = std::thread([&image, &done, &graphics_data]() {
+                MapNormalizer::graphicsWorker(image, graphics_data, done);
+        });
+    }
 #endif
 
     if(!MapNormalizer::prog_opts.quiet)
@@ -142,9 +145,11 @@ int main(int argc, char** argv) {
     done = true;
 
 #ifdef ENABLE_GRAPHICS
-    if(!MapNormalizer::prog_opts.quiet)
-        MapNormalizer::setInfoLine("Waiting for graphical debugger thread to join...");
-    graphics_thread.join();
+    if(!MapNormalizer::prog_opts.no_gui) {
+        if(!MapNormalizer::prog_opts.quiet)
+            MapNormalizer::setInfoLine("Waiting for graphical debugger thread to join...");
+        graphics_thread.join();
+    }
 #endif
 
     // One last newline so that the command line isn't horrible at the end of
