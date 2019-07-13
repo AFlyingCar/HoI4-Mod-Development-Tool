@@ -6,6 +6,8 @@ OUT_DIR=bin
 SRC_DIR=src
 INC_DIR=inc
 
+OUT=$(OUT_DIR)/map_normalizer
+
 CXXSOURCES=$(wildcard $(SRC_DIR)/*.cpp)
 CXXOBJECTS=$(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(CXXSOURCES))
 INCLUDES=$(INC_DIR)/BitMap.h $(INC_DIR)/ShapeFinder.h $(INC_DIR)/GraphicalDebugger.h $(INC_DIR)/UniqueColorGenerator.h $(INC_DIR)/ProvinceMapBuilder.h $(INC_DIR)/Util.h $(INC_DIR)/Logger.h
@@ -57,8 +59,6 @@ CPP_VER=-std=c++17
 INCFLAGS+=-I$(INC_DIR)/
 CXXFLAGS+=$(DEBUG_FLAG) $(ENABLE_GRAPHICS_C) $(CPP_VER) $(INCFLAGS) $(WFLAGS)
 LFLAGS+=-pthread $(ENABLE_GRAPHICS_L) $(CPP_VER)
-
-OUT=$(OUT_DIR)/fp
 
 .PHONY: all clean
 
