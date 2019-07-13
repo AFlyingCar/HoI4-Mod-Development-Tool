@@ -15,6 +15,7 @@ namespace MapNormalizer {
         std::string outpath;
         bool verbose;
         bool quiet;
+        bool no_gui;
     };
 
     ProgramOptions parseArgs(int, char**);
