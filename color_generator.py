@@ -45,7 +45,7 @@ else:
     print("Missing parameter.", file=sys.stderr)
     exit(1)
 
-print(f"Generating {filename[:4]} colors...")
+print(f"Generating {filename[:-5]} colors...")
 genAllColors(hue_range, (MIN_SAT_VALUE, 100), (MIN_VAL_VALUE, 100))
 
 print(f"Generated {len(colors)} colors.")
