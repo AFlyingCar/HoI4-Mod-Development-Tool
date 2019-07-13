@@ -12,24 +12,26 @@
 #include "ProvinceMapBuilder.h"
 #include "Util.h"
 
+#include "ArgParser.h"
+
 int main(int argc, char** argv) {
     using namespace std::string_literals;
 
-    if(argc < 2) {
-        MapNormalizer::writeError("Missing filename argument.");
-    }
+    MapNormalizer::ProgramOptions prog_opts = MapNormalizer::parseArgs(argc, argv);
 
-    if(argc < 3) {
-        MapNormalizer::writeError("Missing output directory argument.");
-        return 1;
+    switch(prog_opts.status) {
+        case 1:
+            return 1;
+        case 2:
+            return 0;
+        case 0:
+        default:
+            break;
     }
-
-    char* filename = argv[1];
-    char* outdirname = argv[2];
 
     MapNormalizer::setInfoLine("Reading in .BMP file.");
 
-    MapNormalizer::BitMap* image = MapNormalizer::readBMP(filename);
+    MapNormalizer::BitMap* image = MapNormalizer::readBMP(prog_opts.infilename);
 
     if(image == nullptr) {
         MapNormalizer::writeError("Reading bitmap failed.");
@@ -107,7 +109,7 @@ int main(int argc, char** argv) {
 
     MapNormalizer::setInfoLine("Creating Provinces List.");
     auto provinces = MapNormalizer::createProvinceList(shapes);
-    std::filesystem::path output_path(outdirname);
+    std::filesystem::path output_path(prog_opts.outpath);
     std::ofstream output_csv(output_path / "definition.csv");
 
     // std::cout << "Provinces CSV:\n"
@@ -131,6 +133,10 @@ int main(int argc, char** argv) {
     MapNormalizer::setInfoLine("Waiting for graphical debugger thread to join...");
     graphics_thread.join();
 #endif
+
+    // One last newline so that the command line isn't horrible at the end of
+    //   all this
+    std::cout << std::endl;
 
     // Note: no need to free graphics_data, since we are exiting anyway and the
     //   OS will clean it up for us.
