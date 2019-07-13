@@ -84,8 +84,8 @@ $(BUILD_DIR)/ColorArray_x86.o: $(SRC_DIR)/ColorArray_x86.asm $(INC_DIR)/ColorArr
 
 $(CXXOBJECTS) $(ASMOBJECTS): |$(BUILD_DIR)
 
-$(COLOR_BINS): $(COLOR_GEN) $(wordlist 1,$(words $<),$<)
-	$(PYTHON) $(COLOR_GEN)
+%.bin: $(COLOR_GEN)
+	$(PYTHON) $(COLOR_GEN) $*
 
 $(OUT_DIR)/:
 	mkdir -p $(OUT_DIR)
