@@ -18,7 +18,7 @@ namespace MapNormalizer {
         int width;                   //! The width of the file
         int height;                  //! The height of the file
         unsigned short bitPlanes;    //! IGNORED
-        unsigned short bitsPerPixel; //! IGNORED
+        unsigned short bitsPerPixel; //! The number of bits making up each pixel
         unsigned int compression;    //! IGNORED
         unsigned int sizeOfBitmap;   //! Size of the image data
         unsigned int horzResolution; //! IGNORED

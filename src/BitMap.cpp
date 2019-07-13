@@ -7,6 +7,8 @@
 #include <iostream>
 
 #include "Constants.h"
+#include "ShapeFinder.h"
+#include "Logger.h"
 
 MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename) {
     std::ifstream file(filename, std::ios::in | std::ios::binary);
@@ -42,13 +44,18 @@ MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename) {
         return nullptr;
     }
 
+    // Calculate how many bytes make up one line
+    size_t orig_pitch = bm->info_header.width * bm->info_header.bitsPerPixel;
+    size_t new_pitch = bm->info_header.width * 3; // This is how many we _want_ each line to take up.
+
     // Allocate space for our new image data
-    bm->data = new unsigned char[bm->info_header.sizeOfBitmap];
+    bm->data = new unsigned char[new_pitch * bm->info_header.height];
 
     // Make sure we read where the file tells us the offset is, and not just
     //  assume that the data starts after the header (it doesn't always do that)
     file.seekg(bm->file_header.bitmapOffset, file.beg);
 
+#if 0
     for(size_t i = 0; i < bm->info_header.sizeOfBitmap; i += 3) {
         unsigned char bgr[3];
         if(!safeRead(bgr, 3, file)) {
@@ -63,6 +70,41 @@ MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename) {
         bm->data[i + 1] = bgr[1];
         bm->data[i + 2] = bgr[0];
     }
+#else
+    if(!safeRead(bm->data, bm->info_header.sizeOfBitmap, file)) {
+        delete bm->data;
+        delete bm;
+        return nullptr;
+    }
+
+    if(orig_pitch % 4 != 0) {
+        using namespace std::string_literals;
+        writeWarning("BitMap Width is not a multiple of 4! May contain up to "s +
+                     std::to_string(orig_pitch / 4) + " padding bytes.");
+    }
+
+    // Swap B and R every 3 pixels (because BitMap is a stupid format)
+    for(size_t i = 0; i < bm->info_header.sizeOfBitmap; i += bm->info_header.bitsPerPixel)
+        std::swap(bm->data[i], bm->data[i + 2]);
+
+    //----------------
+    // Flip the entire image, because BitMap is a weird format.
+    //----------------
+
+    // Big enough to store exactly one line of the image
+    unsigned char* temp = new unsigned char[new_pitch];
+
+    size_t idx_s = 0;
+    size_t idx_t = (bm->info_header.height - 1) * new_pitch;
+    for(size_t y = 0; y < bm->info_header.height / 2; ++y) {
+        std::memcpy(temp, bm->data + idx_s, new_pitch);
+        std::memcpy(bm->data + idx_s, bm->data + idx_t, new_pitch);
+        std::memcpy(bm->data + idx_t, temp, new_pitch);
+
+        idx_s += new_pitch;
+        idx_t -= new_pitch;
+    }
+#endif
 
     return bm;
 }
