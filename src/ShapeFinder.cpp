@@ -13,6 +13,7 @@
 #include "Constants.h"
 #include "Util.h"
 #include "Logger.h"
+#include "Options.h"
 
 std::vector<MapNormalizer::Pixel> MapNormalizer::problematic_pixels;
 
@@ -188,9 +189,11 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
         // Generate a unique color for this shape based on the province type
         shape.unique_color = generateUniqueColor(prov_type);
 
-        std::stringstream ss;
-        ss << "0x" << std::hex << orig_color << " -> " << prov_type << " -> 0x" << shape.unique_color;
-        writeDebug(ss.str());
+        if(prog_opts.verbose) {
+            std::stringstream ss;
+            ss << "0x" << std::hex << orig_color << " -> " << prov_type << " -> 0x" << shape.unique_color;
+            writeDebug(ss.str());
+        }
 
         // Redraw the shape with the new unique color
         // // Redraw the shape with the new unique color
@@ -259,10 +262,11 @@ findAllShapes_restart_loop:
 
             partition_idx = points.begin();
 
-            writeDebug("Shape detected with "s +
-                       std::to_string(read_color_amounts.size()) +
-                       " different color(s) and " +
-                       std::to_string(next_shape.pixels.size()) + " pixels.");
+            if(prog_opts.verbose)
+                writeDebug("Shape detected with "s +
+                           std::to_string(read_color_amounts.size()) +
+                           " different color(s) and " +
+                           std::to_string(next_shape.pixels.size()) + " pixels.");
 
             if(next_shape.pixels.size() < 10) {
                 writeWarning("Tiny province detected! Either your input image "
@@ -288,7 +292,8 @@ findAllShapes_restart_loop:
 
                 // std::getchar();
             } else {
-                setInfoLine("Building shape #" + std::to_string(shapes.size() + 1));
+                if(!prog_opts.quiet)
+                    setInfoLine("Building shape #" + std::to_string(shapes.size() + 1));
                 finalize_shape(next_shape);
             }
         } else {
@@ -323,7 +328,8 @@ findAllShapes_restart_loop:
     }
 
     // Check for pixels that were missed in the last pass
-    writeStdout("Checking for pixels we may have missed...");
+    if(!prog_opts.quiet)
+        writeStdout("Checking for pixels we may have missed...");
     for(auto index = 0; index < visited.size(); ++index) {
         // Index -> XY conversion
         // Note: We need to subtract 1 from x since this calculation puts as
@@ -337,8 +343,9 @@ findAllShapes_restart_loop:
             visited[index] = true;
 
             if(isBoundaryPixel(p)) {
-                writeStdout("Non-visited boundary point found at (" +
-                            std::to_string(x) + ',' + std::to_string(y) + ").");
+                if(prog_opts.verbose)
+                    writeStdout("Non-visited boundary point found at (" +
+                                std::to_string(x) + ',' + std::to_string(y) + ").");
 
                 // Find the first shape which has a pixel adjacent to this one
                 for(auto&& s : shapes) {
@@ -353,8 +360,9 @@ findAllShapes_restart_loop:
                 }
 end_double_for_loop:;
             } else {
-                writeStdout("Found a pixel we missed at (" + std::to_string(x) +
-                            ',' + std::to_string(y) + ").");
+                if(prog_opts.verbose)
+                    writeStdout("Found a pixel we missed at (" + std::to_string(x) +
+                                ',' + std::to_string(y) + ").");
 
                 // First finish completing the last shape we were working on
                 // Note: we don't need to reset points here, since us just being
