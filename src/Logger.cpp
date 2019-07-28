@@ -6,6 +6,8 @@
 
 #include <unistd.h>
 
+#include "Options.h"
+
 static std::string info_line;
 
 static bool isOutAnsiEnabled() {
@@ -21,6 +23,8 @@ static bool isErrAnsiEnabled() {
 }
 
 static void writeInfoLine() {
+    if(MapNormalizer::prog_opts.quiet) return;
+
     if(!info_line.empty()) {
         std::cout << (isOutAnsiEnabled() ? "\33[32m" : "") << "==> " << info_line
                   << (isOutAnsiEnabled() ? "\33[0m" : "");
@@ -30,6 +34,8 @@ static void writeInfoLine() {
 }
 
 void MapNormalizer::deleteInfoLine() {
+    if(prog_opts.quiet) return;
+
     if(!info_line.empty() && isOutAnsiEnabled()) {
         std::cout << "\33[1000D"; // Go to start of line
         std::cout << "\33[0K";    // Clear the line
@@ -66,6 +72,8 @@ void MapNormalizer::writeError(const std::string& message, bool write_prefix) {
 }
 
 void MapNormalizer::writeStdout(const std::string& message, bool write_prefix) {
+    if(prog_opts.quiet) return;
+
     deleteInfoLine();
     std::cout << (isOutAnsiEnabled() ? "\33[37m" : "")
               << (write_prefix ? "[OUT] ~ " : "") << message
@@ -75,6 +83,9 @@ void MapNormalizer::writeStdout(const std::string& message, bool write_prefix) {
 }
 
 void MapNormalizer::writeDebug(const std::string& message, bool write_prefix) {
+    // Do nothing if we don't have verbose output.
+    if(!prog_opts.verbose) return;
+
     deleteInfoLine();
     std::cout << (isOutAnsiEnabled() ? "\33[34m" : "")
               << (write_prefix ? "[DBG] ~ " : "") << message
