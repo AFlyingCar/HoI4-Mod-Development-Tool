@@ -112,10 +112,8 @@ int main(int argc, char** argv) {
                                     "your input in case of any problems.");
     for(auto& problem_pixel : MapNormalizer::problematic_pixels) {
         std::stringstream ss;
-        ss << "\t{\n"
-           << "\t\t(" << problem_pixel.point.x << ',' << problem_pixel.point.y << ")\n"
-           << "\t\t0x" << std::hex << colorToRGB(problem_pixel.color) << "\n"
-           << "\t}\n";
+        ss << "\t{ (" << problem_pixel.point.x << ',' << problem_pixel.point.y
+           << ") -> 0x" << std::hex << colorToRGB(problem_pixel.color) << " }";
         MapNormalizer::writeWarning(ss.str(), false);
     }
 
