@@ -8,11 +8,11 @@
 static std::string program_name = "map_normalizer";
 
 void MapNormalizer::printHelp() {
-        writeStdout(program_name + " [OPTIONS...] [INFILE] [OUTPATH]", false);
-        writeStdout("\t--no-gui       Do not open or render the map GUI.", false);
-        writeStdout("\t-v,--verbose   Display all output.", false);
-        writeStdout("\t-q,--quiet     Display only errors and warnings.", false);
-        writeStdout("\t-h,--help      Display this message and exit.", false);
+    writeStdout(program_name + " [OPTIONS...] [INFILE] [OUTPATH]", false);
+    writeStdout("\t   --no-gui    Do not open or render the map GUI.", false);
+    writeStdout("\t-v,--verbose   Display all output.", false);
+    writeStdout("\t-q,--quiet     Display only errors and warnings (does not affect this message).", false);
+    writeStdout("\t-h,--help      Display this message and exit.", false);
 }
 
 auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
