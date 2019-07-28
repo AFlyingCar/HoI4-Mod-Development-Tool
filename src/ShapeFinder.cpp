@@ -238,6 +238,8 @@ findAllShapes_restart_loop:
         Pixel point = points.front();
         partition_idx = points.erase(points.begin());
 
+        visited[xyToIndex(image, point.point.x, point.point.y)] = true;
+
         writeDebugColor(debug_data, image->info_header.width, point.point.x, point.point.y,
                         Color{0xFF, 0, 0});
 
@@ -259,6 +261,9 @@ findAllShapes_restart_loop:
                 //   NOTE: Do we actually need to do this?
                 visited[xyToIndex(image, p.point.x, p.point.y)] = true;
             }
+
+            // Make absolutely-doubly sure that it is in fact empty
+            points.clear();
 
             partition_idx = points.begin();
 
