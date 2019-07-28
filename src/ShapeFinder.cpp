@@ -163,6 +163,8 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
 
             auto most = read_color_amounts.begin()->second.size();
             for(auto&& [color,dup_pixels] : read_color_amounts) {
+                checkForPause();
+
                 // Ignore border colors
                 if(color == 0) continue;
 
@@ -197,9 +199,11 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
 
         // Redraw the shape with the new unique color
         // // Redraw the shape with the new unique color
-        for(auto&& pixel : shape.pixels)
+        for(auto&& pixel : shape.pixels) {
+            checkForPause();
             writeDebugColor(debug_data, image->info_header.width, pixel.point.x,
                             pixel.point.y, shape.unique_color);
+        }
 
         // Add this shape to the list of shapes and prepare it for receving
         //   the pixels in the next shape we look at
@@ -209,31 +213,33 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
         read_color_amounts.clear();
     };
 
-        auto point_check = [&](uint32_t x, uint32_t y) {
-            uint32_t index = xyToIndex(image, x, y);
+    auto point_check = [&](uint32_t x, uint32_t y) {
+        uint32_t index = xyToIndex(image, x, y);
 
-            // Is the pixel still viable to look at?
-            if(isInImage(image, x, y) && !visited[index]) {
-                writeDebugColor(debug_data, image->info_header.width, x, y,
-                                Color{0, 0, 0xFF});
+        // Is the pixel still viable to look at?
+        if(isInImage(image, x, y) && !visited[index]) {
+            writeDebugColor(debug_data, image->info_header.width, x, y,
+                            Color{0, 0, 0xFF});
 
-                // Mark that this pixel is no longer viable
-                visited[index] = true;
+            // Mark that this pixel is no longer viable
+            visited[index] = true;
 
-                auto pix = getAsPixel(image, x, y);
+            auto pix = getAsPixel(image, x, y);
 
-                // Add it to before or after the partition depending on if its a
-                //   boundary pixel or not
-                if(isBoundaryPixel(pix)) {
-                    points.push_back(pix);
-                } else {
-                    partition_idx = points.insert(partition_idx, pix);
-                }
+            // Add it to before or after the partition depending on if its a
+            //   boundary pixel or not
+            if(isBoundaryPixel(pix)) {
+                points.push_back(pix);
+            } else {
+                partition_idx = points.insert(partition_idx, pix);
             }
-        };
+        }
+    };
 
 findAllShapes_restart_loop:
     while(!points.empty()) {
+        checkForPause();
+
         // Pop the pixel off the top of the queue
         Pixel point = points.front();
         partition_idx = points.erase(points.begin());
@@ -250,6 +256,8 @@ findAllShapes_restart_loop:
             // Grab every boundary pixel left in the queue, and add it to the
             //   current shape
             while(!points.empty()) {
+                checkForPause();
+
                 Pixel p = points.front();
                 points.erase(points.begin());
                 next_shape.pixels.push_back(p);
@@ -332,10 +340,14 @@ findAllShapes_restart_loop:
                         DEBUG_COLOR);
     }
 
+    checkForPause();
+
     // Check for pixels that were missed in the last pass
     if(!prog_opts.quiet)
         writeStdout("Checking for pixels we may have missed...");
     for(auto index = 0; index < visited.size(); ++index) {
+        checkForPause();
+
         // Index -> XY conversion
         // Note: We need to subtract 1 from x since this calculation puts as
         //   always at 1 after index
