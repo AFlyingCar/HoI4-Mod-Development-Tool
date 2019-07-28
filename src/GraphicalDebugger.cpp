@@ -13,13 +13,21 @@
 #include "BitMap.h" // BitMap
 #include "ShapeFinder.h"
 #include "Options.h"
+#include "Logger.h"
 
 #ifdef ENABLE_GRAPHICS
 # include <SDL.h> // SDL_*
 #endif
 
 #ifdef ENABLE_GRAPHICS
+#include <condition_variable>
+#include <atomic>
+
 static std::mutex graphics_debug_mutex;
+
+static std::mutex main_thread_should_unpause_mutex;
+static std::condition_variable main_thread_should_unpause_cv;
+static std::atomic<bool> main_thread_should_pause;
 #endif
 
 // Maximum width + height that SDL will create a window for
@@ -76,8 +84,10 @@ void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
     if(height < MIN_SCREEN_HEIGHT)
         height *= 10;
 
-    std::cout << "Creating a window of size (" << width << ',' << height << ")"
-              << std::endl;
+    using namespace std::string_literals;
+
+    writeDebug("Creating a window of size ("s + std::to_string(width) + ',' +
+               std::to_string(height) + ")");
 
     ::should_sleep = (image->info_header.width * image->info_header.height) < NUM_PIX_REQ_SLEEP;
 
@@ -90,7 +100,7 @@ void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
                                           );
 
     if(window == nullptr) {
-        std::cerr << "Failed to create SDL window! " << SDL_GetError() << std::endl;
+        writeError("Failed to create SDL window! "s + SDL_GetError());
         SDL_Quit();
         return;
     }
@@ -98,7 +108,7 @@ void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
     SDL_Surface* win_surface = SDL_GetWindowSurface(window);
 
     if(win_surface == nullptr) {
-        std::cerr << "Failed to get window surface! " << SDL_GetError() << std::endl;
+        writeError("Failed to get window surface! "s + SDL_GetError());
         SDL_DestroyWindow(window);
         SDL_Quit();
         return;
@@ -119,12 +129,28 @@ void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
         while(SDL_PollEvent(&event) != 0) {
             switch(event.type) {
                 case SDL_QUIT:
-                    done = true; // Notify the calling thread that we are done
-                    std::exit(0);
+                    // Notify the calling thread that we are done
+                    done = true;
+
+                    // Make sure that we still kill everything even if the main thread is paused.
+                    main_thread_should_pause = false;
+                    main_thread_should_unpause_cv.notify_all();
+
+                    std::exit(0); // No need to break here
+                case SDL_KEYDOWN:
+                    switch(event.key.keysym.sym) {
+                        case ' ':
+                            main_thread_should_pause = !main_thread_should_pause;
+
+                            // If we are now false, then notify the cv of this change
+                            if(!main_thread_should_pause) {
+                                writeDebug("Notifying main thread that it should wake up!");
+                                main_thread_should_unpause_cv.notify_all();
+                            }
+                            break;
+                    }
             }
         }
-
-        // SDL_FillRect(win_surface, nullptr, 0);
 
         graphics_debug_mutex.lock();
         SDL_BlitScaled(surface, nullptr, win_surface, &dest);
@@ -175,5 +201,15 @@ void MapNormalizer::writeDebugColor(unsigned char* debug_data, uint32_t w,
             graphics_debug_mutex.unlock();
 #endif
     }
+}
+
+void MapNormalizer::checkForPause() {
+#ifdef ENABLE_GRAPHICS
+    if(main_thread_should_pause) {
+        writeDebug("Going to sleep now!");
+        std::unique_lock<std::mutex> lk(main_thread_should_unpause_mutex);
+        main_thread_should_unpause_cv.wait(lk, []() -> bool { return !main_thread_should_pause; });
+    }
+#endif
 }
 

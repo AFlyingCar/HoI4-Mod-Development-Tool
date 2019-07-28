@@ -7,6 +7,8 @@
 namespace MapNormalizer {
     void writeDebugColor(unsigned char*, uint32_t, uint32_t, uint32_t, Color);
     void graphicsWorker(BitMap*, unsigned char*, bool&);
+
+    void checkForPause();
 }
 
 #endif
