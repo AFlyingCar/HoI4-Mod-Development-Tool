@@ -126,7 +126,7 @@ void MapNormalizer::writeBMP(const std::string& filename, const BitMap* bmp) {
     // Helper macro to make the following code easier to read
 #define WRITE_BMP_VALUE(MEMBER) \
     file.write(reinterpret_cast<const char*>(&(MEMBER)), \
-               sizeof(bmp->MEMBER))
+               sizeof(MEMBER))
 
     WRITE_BMP_VALUE(bmp->file_header.filetype);
     WRITE_BMP_VALUE(bmp->file_header.fileSize);
