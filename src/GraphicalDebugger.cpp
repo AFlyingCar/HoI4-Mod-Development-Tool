@@ -148,6 +148,9 @@ void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
                                 main_thread_should_unpause_cv.notify_all();
                             }
                             break;
+                        case 's':
+                            should_sleep = !should_sleep;
+                            break;
                     }
             }
         }
