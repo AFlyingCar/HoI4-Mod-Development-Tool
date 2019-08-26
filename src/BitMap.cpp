@@ -125,28 +125,29 @@ void MapNormalizer::writeBMP(const std::string& filename, const BitMap* bmp) {
 
     // Helper macro to make the following code easier to read
 #define WRITE_BMP_VALUE(MEMBER) \
-    file.write(reinterpret_cast<const char*>(&(bmp->MEMBER)), \
+    file.write(reinterpret_cast<const char*>(&(MEMBER)), \
                sizeof(bmp->MEMBER))
 
-    WRITE_BMP_VALUE(file_header.filetype);
-    WRITE_BMP_VALUE(file_header.fileSize);
-    WRITE_BMP_VALUE(file_header.reserved1);
-    WRITE_BMP_VALUE(file_header.reserved2);
-    WRITE_BMP_VALUE(file_header.bitmapOffset);
-    WRITE_BMP_VALUE(info_header.headerSize);
-    WRITE_BMP_VALUE(info_header.width);
-    WRITE_BMP_VALUE(info_header.height);
-    WRITE_BMP_VALUE(info_header.bitPlanes);
-    WRITE_BMP_VALUE(info_header.bitsPerPixel);
-    WRITE_BMP_VALUE(info_header.compression);
-    WRITE_BMP_VALUE(info_header.sizeOfBitmap);
-    WRITE_BMP_VALUE(info_header.horzResolution);
-    WRITE_BMP_VALUE(info_header.vertResolution);
-    WRITE_BMP_VALUE(info_header.colorsUsed);
-    WRITE_BMP_VALUE(info_header.colorImportant);
+    WRITE_BMP_VALUE(bmp->file_header.filetype);
+    WRITE_BMP_VALUE(bmp->file_header.fileSize);
+    WRITE_BMP_VALUE(bmp->file_header.reserved1);
+    WRITE_BMP_VALUE(bmp->file_header.reserved2);
+    WRITE_BMP_VALUE(bmp->file_header.bitmapOffset);
+    WRITE_BMP_VALUE(bmp->info_header.headerSize);
+    WRITE_BMP_VALUE(bmp->info_header.width);
+    WRITE_BMP_VALUE(bmp->info_header.height);
+    WRITE_BMP_VALUE(bmp->info_header.bitPlanes);
+    WRITE_BMP_VALUE(bmp->info_header.bitsPerPixel);
+    WRITE_BMP_VALUE(bmp->info_header.compression);
+    WRITE_BMP_VALUE(bmp->info_header.sizeOfBitmap);
+    WRITE_BMP_VALUE(bmp->info_header.horzResolution);
+    WRITE_BMP_VALUE(bmp->info_header.vertResolution);
+    WRITE_BMP_VALUE(bmp->info_header.colorsUsed);
+    WRITE_BMP_VALUE(bmp->info_header.colorImportant);
 
     // Pointers must be handled as a special case
-    file.write(reinterpret_cast<const char*>(bmp->data), bmp->info_header.sizeOfBitmap);
+    file.write(reinterpret_cast<const char*>(bmp->data),
+               bmp->info_header.sizeOfBitmap);
 }
 
 /**
@@ -163,22 +164,26 @@ void MapNormalizer::writeBMP(const std::string& filename, unsigned char* data,
     BitMap* bmp = new BitMap();
     std::memset(bmp, 0, sizeof(BitMap));
 
+    // Just hard-code these, they (should) never change
+    constexpr auto fheader_size = 14;
+    constexpr auto iheader_size = 40;
+
     // Remove the size of the pointer from the calculated size
-    auto bmp_size = sizeof(BitMap) - sizeof(char*);
+    constexpr auto fiheader_size = fheader_size + iheader_size;
     auto num_pixels = width * height;
 
     // bmp->filename = filename.c_str();
     bmp->file_header.filetype = BM_TYPE;
-    bmp->file_header.fileSize = bmp_size + num_pixels * 3;
+    bmp->file_header.fileSize = fiheader_size + num_pixels * 3;
     bmp->file_header.reserved1 = 0;
     bmp->file_header.reserved2 = 0;
-    bmp->file_header.bitmapOffset = static_cast<uint32_t>(offsetof(BitMap, data));
-    bmp->info_header.headerSize = sizeof(BitMapInfoHeader);
+    bmp->file_header.bitmapOffset = static_cast<uint32_t>(fiheader_size);
+    bmp->info_header.headerSize = iheader_size;
     bmp->info_header.width = static_cast<int>(width);
     bmp->info_header.height = static_cast<int>(height);
-    bmp->info_header.bitPlanes = 0;
+    bmp->info_header.bitPlanes = 1;
     bmp->info_header.bitsPerPixel = 24; // 3 color values, 8 bits each
-    bmp->info_header.compression = 0;
+    bmp->info_header.compression = 0; // For Win32 systems, this is BI_RGB
     bmp->info_header.sizeOfBitmap = num_pixels * 3; // 3 bytes per pixel
     bmp->info_header.horzResolution = 0; // TODO: Do we need to set this?
     bmp->info_header.vertResolution = 0; // TODO: Do we need to set this?
