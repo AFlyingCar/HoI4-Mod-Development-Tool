@@ -5,6 +5,8 @@ BUILD_DIR=build
 OUT_DIR=bin
 SRC_DIR=src
 INC_DIR=inc
+TMP_DIR=tmp
+CWD_DIR=$(realpath .)
 
 OUT=$(OUT_DIR)/map_normalizer
 
@@ -92,4 +94,26 @@ $(OUT_DIR)/:
 
 $(BUILD_DIR)/:
 	mkdir -p $(BUILD_DIR)
+
+# https://gist.github.com/JayKickliter/f4e1945abe1d3bbbe3263640a3669e3c
+COMPDB_ENTRIES=$(addsuffix .compdb_entry, $(basename $(CXXSOURCES)))
+
+compile_commands.json: $(COMPDB_ENTRIES)
+	@mkdir -p $(TMP_DIR)/
+	@echo "Generating compile_commands.json in $(CWD_DIR)"
+	@echo "[" > $(TMP_DIR)/$@.tmp
+	@cat $^ >> $(TMP_DIR)/$@.tmp
+	@sed '$$d' < $(TMP_DIR)/$@.tmp > $@
+	@echo "    }" >> $@
+	@echo "]" >> $@
+	@echo "Deleting temporary files..."
+	@rm $(TMP_DIR)/$@.tmp
+	@rm $^
+
+%.compdb_entry: %.cpp
+	@echo "    {" > $@
+	@echo "        \"command\": \"$(CXX) $(CXXFLAGS) -c $<\"," >> $@
+	@echo "        \"directory\": \"$(CWD_DIR)\"," >> $@
+	@echo "        \"file\": \"$<\"" >> $@
+	@echo "    }," >> $@
 
