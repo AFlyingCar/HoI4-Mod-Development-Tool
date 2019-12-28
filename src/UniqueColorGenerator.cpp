@@ -2,15 +2,25 @@
 #include "UniqueColorGenerator.h"
 #include "Constants.h"
 #include "ColorArray.h"
+#include "Logger.h"
 
 #define NOMINMAX
 #include <cmath>
 #include <algorithm>
 
-#include <iostream>
+#include <iostream> // std::cerr
 
-// Note: if we are completely out of color values for some bias, then we will give back BLACK
-//   If we don't know what the bias is, then we return WHITE
+/**
+ * @brief Generates a unique color value.
+ * @details If there are no more color values for the given bias, then give out
+ *          BLACK instead. If we don't recognize the bias, then give out WHITE
+ *          instead.
+ *
+ * @param bias The type of province which will change the type of color chosen.
+ * @return A unique color, biased based on the given ProvinceType. Will return
+ *         BLACK if no color values are left, or WHITE if the given bias is
+ *         unknown.
+ */
 MapNormalizer::Color MapNormalizer::generateUniqueColor(ProvinceType bias) {
     static const unsigned char* land_ptr = MN_ALL_LANDS;
     static const unsigned char* sea_ptr = MN_ALL_SEAS;
@@ -21,19 +31,19 @@ MapNormalizer::Color MapNormalizer::generateUniqueColor(ProvinceType bias) {
     Color c;
 
     if(land_ptr >= MN_ALL_LANDS + MN_ALL_LANDS_SIZE) {
-        std::cerr << "[WRN] ~ NO LAND VALUES LEFT!" << std::endl;
+        writeWarning("NO LAND VALUES LEFT!");
         err = true;
         goto unknown_color_label;
     }
 
     if(sea_ptr >= MN_ALL_SEAS + MN_ALL_SEAS_SIZE) {
-        std::cerr << "[WRN] ~ NO SEA VALUES LEFT!" << std::endl;
+        writeWarning("NO SEA VALUES LEFT!");
         err = true;
         goto unknown_color_label;
     }
 
     if(lake_ptr >= MN_ALL_LAKES + MN_ALL_LAKES_SIZE) {
-        std::cerr << "[WRN] ~ NO LAKE VALUES LEFT!" << std::endl;
+        writeWarning("NO LAKE VALUES LEFT!");
         err = true;
         goto unknown_color_label;
     }
@@ -58,7 +68,7 @@ MapNormalizer::Color MapNormalizer::generateUniqueColor(ProvinceType bias) {
 unknown_color_label:
     if(err) {
         if(unknown_ptr >= MN_ALL_UNKNOWNS + MN_ALL_UNKNOWNS_SIZE) {
-            std::cerr << "[ERR] ~ NO UNKNOWN COLOR VALUES LEFT!";
+            writeError("NO UNKNOWN COLOR VALUES LEFT!");
             return Color { 0, 0, 0 }; // Last possible resort
         }
 
