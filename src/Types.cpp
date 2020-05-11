@@ -26,13 +26,13 @@ std::ostream& operator<<(std::ostream& stream,
 {
     switch(prov_type) {
         case MapNormalizer::ProvinceType::LAND:
-            return (stream << "ProvinceType{LAND}");
+            return (stream << "land");
         case MapNormalizer::ProvinceType::LAKE:
-            return (stream << "ProvinceType{LAKE}");
+            return (stream << "lake");
         case MapNormalizer::ProvinceType::SEA:
-            return (stream << "ProvinceType{SEA}");
+            return (stream << "sea");
         case MapNormalizer::ProvinceType::UNKNOWN:
-            return (stream << "ProvinceType{UNKNOWN}");
+            return (stream << "UNKNOWN");
     }
 }
 
