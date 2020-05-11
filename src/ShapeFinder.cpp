@@ -182,6 +182,18 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
             }
         }
 
+        // Check for minimum province size.
+        //  See: https://hoi4.paradoxwikis.com/Map_modding
+        if(shape.pixels.size() <= MIN_SHAPE_SIZE) {
+            std::stringstream ss;
+            ss << "Shape #" << shapes.size() << " has only "
+               << shape.pixels.size() << " pixels. The minimum is "
+               << MIN_SHAPE_SIZE << ". Check your input file!";
+            writeWarning(ss.str());
+        }
+
+        // TODO: Should we check here for invalid X crossing?
+
         // Determine what the province type of this shape was based on the color
         //   it was read in as
         auto prov_type = getProvinceType(orig_color).first;

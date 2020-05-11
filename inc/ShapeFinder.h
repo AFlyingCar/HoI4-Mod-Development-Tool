@@ -5,6 +5,8 @@
 #include "BitMap.h" // BitMap
 
 namespace MapNormalizer {
+    constexpr size_t MIN_SHAPE_SIZE = 8;
+
     bool isAdjacent(const Pixel&, size_t, size_t);
     bool isBoundaryPixel(Pixel);
     bool doColorsMatch(Color, Color);
