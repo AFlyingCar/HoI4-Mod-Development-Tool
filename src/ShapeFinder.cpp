@@ -185,11 +185,35 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
         // Check for minimum province size.
         //  See: https://hoi4.paradoxwikis.com/Map_modding
         if(shape.pixels.size() <= MIN_SHAPE_SIZE) {
-            std::stringstream ss;
-            ss << "Shape #" << shapes.size() << " has only "
-               << shape.pixels.size() << " pixels. The minimum is "
-               << MIN_SHAPE_SIZE << ". Check your input file!";
-            writeWarning(ss.str());
+            // If there is only one pixel, then most likely it is a result of 
+            //  the bug which sometimes skips a pixel.
+            // TODO: This is a terrible solution, as it doesn't actually solve
+            //  the problem, but it should work in all cases that this might
+            //  come up.
+            if(shape.pixels.size() == 1) {
+                auto pixel = shape.pixels.at(0);
+                std::stringstream ss;
+                ss << "Encountered known bug causing some pixels to not join "
+                      "the right shape. Going to try and merge them anyway. "
+                      "Verify pixel " << pixel.point << '.';
+                writeWarning(ss.str());
+
+                shapes.back().pixels.push_back(pixel);
+
+                // Finish up what the rest of the function would have done to
+                //  this one pixel
+                writeDebugColor(debug_data, image->info_header.width, pixel.point.x,
+                                pixel.point.y, shapes.back().unique_color);
+                shape.pixels.clear();
+                read_color_amounts.clear();
+                return;
+            } else {
+                std::stringstream ss;
+                ss << "Shape #" << shapes.size() << " has only "
+                   << shape.pixels.size() << " pixels. The minimum is "
+                   << MIN_SHAPE_SIZE << ". Check your input file!";
+                writeWarning(ss.str());
+            }
         }
 
         // TODO: Should we check here for invalid X crossing?
