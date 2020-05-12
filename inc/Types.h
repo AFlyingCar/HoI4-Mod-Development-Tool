@@ -92,6 +92,7 @@ namespace MapNormalizer {
     using ProvinceList = std::vector<Province>;
 }
 
+std::ostream& operator<<(std::ostream&, const MapNormalizer::Point2D&);
 std::ostream& operator<<(std::ostream&, const MapNormalizer::Color&);
 std::ostream& operator<<(std::ostream&, const MapNormalizer::ProvinceType&);
 

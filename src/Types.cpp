@@ -4,6 +4,19 @@
 #include "Util.h"
 
 /**
+ * @brief Outputs the given point to the given stream.
+ *
+ * @param stream The stream to output into.
+ * @param p The Point to output.
+ *
+ * @return The given stream after output.
+ */
+std::ostream& operator<<(std::ostream& stream, const MapNormalizer::Point2D& p)
+{
+    return (stream << '(' << p.x << ',' << p.y << ')');
+}
+
+/**
  * @brief Outputs the given color to the given stream.
  *
  * @param stream The stream to output into.
