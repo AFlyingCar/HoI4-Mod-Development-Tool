@@ -39,6 +39,10 @@ namespace MapNormalizer {
         std::vector<Pixel> pixels;
         Color color; //!< Color of the shape as it was read in
         Color unique_color; //!< Unique color we have generated just for this shape
+
+        // Used for checking to make sure the box isn't too big for HOI4
+        Point2D bottom_left; //!< Bottom-left-most point in the polygon's bounding box
+        Point2D top_right; //!< Top-right-most point in the polygon's bounding box
     };
 
     /**

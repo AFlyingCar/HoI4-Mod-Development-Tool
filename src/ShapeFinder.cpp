@@ -17,6 +17,24 @@
 
 std::vector<MapNormalizer::Pixel> MapNormalizer::problematic_pixels;
 
+
+bool MapNormalizer::isShapeTooLarge(uint32_t s_width, uint32_t s_height,
+                                    BitMap* image)
+{
+    auto i_width = image->info_header.width;
+    auto i_height = image->info_header.height;
+
+    // shape width/height >= (1/8) of the total map width/height
+    return static_cast<float>(s_width) >= (i_width / 8.0f) ||
+           static_cast<float>(s_height) >= (i_height / 8.0f);
+}
+
+std::pair<uint32_t, uint32_t> MapNormalizer::calcShapeDims(const Polygon& shape)
+{
+    return std::make_pair(static_cast<uint32_t>(std::abs(static_cast<int>(shape.top_right.x) - static_cast<int>(shape.bottom_left.x))),
+                          static_cast<uint32_t>(std::abs(static_cast<int>(shape.top_right.y) - static_cast<int>(shape.bottom_left.y))));
+}
+
 /**
  * @brief Checks if the given pixel is a boundary pixel.
  *
@@ -140,6 +158,13 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
     std::vector<bool> visited(image->info_header.width * image->info_header.height, false);
     Polygon next_shape;
 
+    // Start at the opposite corners of the image
+    next_shape.bottom_left = Point2D{
+        static_cast<uint32_t>(image->info_header.width),
+        static_cast<uint32_t>(image->info_header.height)
+    };
+    next_shape.top_right = Point2D{ 0, 0 };
+
     // A partitioned vector of pixels
     // +---------------------------------------+
     // |                     |                 |
@@ -214,6 +239,22 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
                    << MIN_SHAPE_SIZE << ". Check your input file!";
                 writeWarning(ss.str());
             }
+        }
+
+        if(auto [width, height] = calcShapeDims(shape); isShapeTooLarge(width,
+                                                                        height,
+                                                                        image))
+        {
+            std::stringstream ss;
+            ss << "Shape #" << shapes.size() << " has a bounding box of size ("
+               << width << ',' << height << "). One of these is larger than the"
+               << " allowed ratio of 1/8 * ("
+               << image->info_header.width << ',' << image->info_header.height
+               << ") => (" << (image->info_header.width / 8.0f) << ','
+               << (image->info_header.height / 8.0f) << "). Check the province "
+                                                        "borders.";
+            ss << " Bounds are: " << shape.bottom_left << " to " << shape.top_right;
+            writeWarning(ss.str());
         }
 
         // TODO: Should we check here for invalid X crossing?
@@ -298,6 +339,19 @@ findAllShapes_restart_loop:
                 points.erase(points.begin());
                 next_shape.pixels.push_back(p);
 
+                // Set up the bounding box of this shape
+                if(p.point.x > next_shape.top_right.x) {
+                    next_shape.top_right.x = p.point.x;
+                } else if(p.point.x < next_shape.bottom_left.x) {
+                    next_shape.bottom_left.x = p.point.x;
+                }
+
+                if(p.point.y > next_shape.top_right.y) {
+                    next_shape.top_right.y = p.point.y;
+                } else if(p.point.y < next_shape.bottom_left.y) {
+                    next_shape.bottom_left.y = p.point.y;
+                }
+
                 writeDebugColor(debug_data, image->info_header.width, p.point.x, p.point.y,
                                 DEBUG_COLOR);
 
@@ -372,6 +426,20 @@ findAllShapes_restart_loop:
         point_check(point.point.x, point.point.y - 1); // down
 
         next_shape.pixels.push_back(point);
+
+        // Set up the bounding box of this shape
+        if(point.point.x < next_shape.top_right.x) {
+            next_shape.top_right.x = point.point.x;
+        } else if(point.point.x > next_shape.bottom_left.x) {
+            next_shape.bottom_left.x = point.point.x;
+        }
+
+        if(point.point.y < next_shape.top_right.y) {
+            next_shape.top_right.y = point.point.y;
+        } else if(point.point.y > next_shape.bottom_left.y) {
+            next_shape.bottom_left.y = point.point.y;
+        }
+
         writeDebugColor(debug_data, image->info_header.width, point.point.x, point.point.y,
                         DEBUG_COLOR);
     }

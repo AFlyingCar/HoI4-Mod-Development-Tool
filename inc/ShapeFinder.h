@@ -7,6 +7,9 @@
 namespace MapNormalizer {
     constexpr size_t MIN_SHAPE_SIZE = 8;
 
+    bool isShapeTooLarge(uint32_t, uint32_t, BitMap*);
+    std::pair<uint32_t, uint32_t> calcShapeDims(const Polygon&);
+
     bool isAdjacent(const Pixel&, size_t, size_t);
     bool isBoundaryPixel(Pixel);
     bool doColorsMatch(Color, Color);
