@@ -45,7 +45,8 @@ std::ostream& operator<<(std::ostream& stream,
         case MapNormalizer::ProvinceType::SEA:
             return (stream << "sea");
         case MapNormalizer::ProvinceType::UNKNOWN:
-            return (stream << "UNKNOWN");
+        default:
+            return (stream << "UNKNOWN{" << static_cast<int>(prov_type) << "}");
     }
 }
 
