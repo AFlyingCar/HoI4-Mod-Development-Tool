@@ -32,3 +32,16 @@ MapNormalizer::Color MapNormalizer::RGBToColor(std::uint32_t rgb) {
                 };
 }
 
+void MapNormalizer::ltrim(std::string& str) {
+    str.erase(str.begin(), str.begin() + str.find_first_not_of(" \t\n\r"));
+}
+
+void MapNormalizer::rtrim(std::string& str) {
+    str.erase(str.begin() + str.find_last_not_of(" \t\n\r") + 1, str.end());
+}
+
+void MapNormalizer::trim(std::string& str) {
+    ltrim(str);
+    rtrim(str);
+}
+
