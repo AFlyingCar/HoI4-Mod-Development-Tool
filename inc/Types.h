@@ -55,22 +55,9 @@ namespace MapNormalizer {
         LAKE
     };
 
-    /**
-     * @brief The possible terrain types.
-     */
-    enum class Terrain {
-        UNKNOWN = 0,
-        DESERT,
-        FOREST,
-        HILLS,
-        JUNGLE,
-        MARSH,
-        MOUNTAIN,
-        PLAINS,
-        URBAN,
-        OCEAN,
-        LAKE
-    };
+    using Terrain = std::uint8_t;
+    using Continent = std::uint8_t;
+    using State = std::uint32_t;
 
     /**
      * @brief A province as HOI4 will recognize it.
@@ -78,10 +65,12 @@ namespace MapNormalizer {
     struct Province {
         size_t id;
         Color unique_color;
+
         ProvinceType type;
         bool coastal;
         Terrain terrain;
-        size_t continent;
+        Continent continent;
+        State state;
     };
 
     /**
