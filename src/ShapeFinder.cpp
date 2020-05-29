@@ -261,7 +261,7 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
 
         // Determine what the province type of this shape was based on the color
         //   it was read in as
-        auto prov_type = getProvinceType(orig_color).first;
+        auto prov_type = getProvinceType(orig_color);
 
         shape.color = RGBToColor(orig_color);
 
