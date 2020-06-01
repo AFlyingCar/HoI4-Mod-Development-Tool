@@ -9,10 +9,11 @@ static std::string program_name = "map_normalizer";
 
 void MapNormalizer::printHelp() {
     writeStdout(program_name + " [OPTIONS...] [INFILE] [OUTPATH]", false);
-    writeStdout("\t   --no-gui    Do not open or render the map GUI.", false);
-    writeStdout("\t-v,--verbose   Display all output.", false);
-    writeStdout("\t-q,--quiet     Display only errors and warnings (does not affect this message).", false);
-    writeStdout("\t-h,--help      Display this message and exit.", false);
+    writeStdout("\t   --no-gui         Do not open or render the map GUI.", false);
+    writeStdout("\t   --state-input    The input file for writing state definitions.", false);
+    writeStdout("\t-v,--verbose        Display all output.", false);
+    writeStdout("\t-q,--quiet          Display only errors and warnings (does not affect this message).", false);
+    writeStdout("\t-h,--help           Display this message and exit.", false);
 }
 
 auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
@@ -27,10 +28,11 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
         { "quiet", no_argument, NULL, 'q' },
         { "help", no_argument, NULL, 'h' },
         { "no-gui", no_argument, NULL, 1 },
+        { "state-input", required_argument, NULL, 2 },
         { nullptr, 0, nullptr, 0}
     };
 
-    ProgramOptions prog_opts { 0, "", "", false, false, false };
+    ProgramOptions prog_opts { 0, "", "", false, false, false, "" };
 
     int optindex = 0;
     int c = 0;
@@ -65,6 +67,14 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
                 break;
             case 1:
                 prog_opts.no_gui = true;
+                break;
+            case 2:
+                if(optarg == nullptr) {
+                    writeWarning("Missing argument to option 'state-input'. Assuming no option.");
+                    prog_opts.state_input_file = "";
+                } else {
+                    prog_opts.state_input_file = optarg;
+                }
                 break;
             case 'v':
                 if(prog_opts.quiet) {

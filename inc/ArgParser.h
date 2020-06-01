@@ -16,6 +16,7 @@ namespace MapNormalizer {
         bool verbose;
         bool quiet;
         bool no_gui;
+        std::string state_input_file;
     };
 
     ProgramOptions parseArgs(int, char**);
