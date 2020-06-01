@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
 
     if(!MapNormalizer::prog_opts.quiet)
         MapNormalizer::setInfoLine("Creating States List.");
-    auto states = MapNormalizer::createStatesList(provinces);
+    auto states = MapNormalizer::createStatesList(provinces, MapNormalizer::prog_opts.state_input_file);
 
     std::filesystem::path root_output_path(MapNormalizer::prog_opts.outpath);
     std::filesystem::path output_path = root_output_path / "map";
@@ -155,10 +155,13 @@ int main(int argc, char** argv) {
 
     MapNormalizer::setInfoLine("Writing state definition files...");
     for(auto&& [state_id, state] : states) {
-        auto filename = std::to_string(state_id) + " - " + state.name + ".txt";
-        std::ofstream output_state(state_output_root / filename);
+        // Don't bother to output states with no provinces in them
+        if(!state.provinces.empty()) {
+            auto filename = std::to_string(state_id) + " - " + state.name + ".txt";
+            std::ofstream output_state(state_output_root / filename);
 
-        output_state << state;
+            output_state << state;
+        }
     }
 
     if(!MapNormalizer::prog_opts.quiet)
