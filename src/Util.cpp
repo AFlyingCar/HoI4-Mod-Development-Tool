@@ -14,6 +14,12 @@ static std::uint32_t __inline __builtin_ctz(std::uint32_t value) {
     if(_BitScanForward(&trailing_zero, value)) return trailing_zero;
     return 0;
 }
+
+// https://stackoverflow.com/a/105339
+static std::uint32_t __inline __builtin_bswap32(std::uint32_t value) {
+    return _byteswap_ulong(value);
+}
+
 #endif
 
 // https://stackoverflow.com/a/31393298
@@ -21,8 +27,12 @@ std::uint32_t MapNormalizer::indexOfLSB(std::uint32_t value) {
     return __builtin_ctz(value);// + 1;
 }
 
+std::uint32_t MapNormalizer::swapBytes(std::uint32_t value) {
+    return __builtin_bswap32(value);
+}
+
 std::uint32_t MapNormalizer::colorToRGB(const Color& color) {
-    return ((color.r << 16) | (color.g << 8) | color.b) & COLOR_MASK;
+    return ((color.g << 8) | (color.r << 16) | color.b) & COLOR_MASK;
 }
 
 MapNormalizer::Color MapNormalizer::RGBToColor(std::uint32_t rgb) {
