@@ -69,22 +69,21 @@ csvParseFailure:
     }
 
     for(auto&& province : provinces) {
-        // Add 1 to the state ID, since that is not allowed to be 0
-        auto state_id = province.state + 1;
+        auto state_id = province.state;
 
-        if(states.count(state_id) != 0) {
-            states.at(state_id).provinces.push_back(province.id);
-        } else {
-            std::string state_name = "";
-            size_t manpower = 0;
-            std::string category = "";
-            // TODO: If state_info_file was loaded, get the name of this state
-            // TODO: If state_info_file was loaded, get the manpower of this state
-            // TODO: If state_info_file was loaded, get the category of this state
+        // Ignore provinces which are apart of state 0, as those are ocean provinces
+        if(state_id != 0) {
+            if(states.count(state_id) != 0) {
+                states.at(state_id).provinces.push_back(province.id);
+            } else {
+                std::string state_name = "";
+                size_t manpower = 0;
+                std::string category = "";
 
-            states[state_id] = {
-                state_id, state_name, manpower, category, std::vector<ProvinceID>()
-            };
+                states[state_id] = {
+                    state_id, state_name, manpower, category, std::vector<ProvinceID>()
+                };
+            }
         }
     }
 
