@@ -10,6 +10,7 @@
 #include "ShapeFinder.h" // findAllShapes
 #include "GraphicalDebugger.h" // graphicsWorker
 #include "ProvinceMapBuilder.h"
+#include "StateDefinitionBuilder.h"
 #include "Util.h"
 
 #include "ArgParser.h"
@@ -120,7 +121,28 @@ int main(int argc, char** argv) {
     if(!MapNormalizer::prog_opts.quiet)
         MapNormalizer::setInfoLine("Creating Provinces List.");
     auto provinces = MapNormalizer::createProvinceList(shapes);
-    std::filesystem::path output_path(MapNormalizer::prog_opts.outpath);
+
+    if(!MapNormalizer::prog_opts.quiet)
+        MapNormalizer::setInfoLine("Creating States List.");
+    auto states = MapNormalizer::createStatesList(provinces);
+
+    std::filesystem::path root_output_path(MapNormalizer::prog_opts.outpath);
+    std::filesystem::path output_path = root_output_path / "map";
+    std::filesystem::path state_output_root = root_output_path / "history";
+
+    if(!std::filesystem::exists(output_path)) {
+        using namespace std::string_literals;
+        MapNormalizer::writeStdout("Path '"s + output_path.generic_string() + "' does not exist, creating...");
+        std::filesystem::create_directories(output_path);
+    }
+
+    if(!std::filesystem::exists(state_output_root)) {
+        using namespace std::string_literals;
+        MapNormalizer::writeStdout("Path '"s + state_output_root.generic_string() + "' does not exist, creating...");
+        std::filesystem::create_directories(state_output_root);
+    }
+
+    MapNormalizer::setInfoLine("Writing province definition file...");
     std::ofstream output_csv(output_path / "definition.csv");
 
     // std::cout << "Provinces CSV:\n"
@@ -129,6 +151,14 @@ int main(int argc, char** argv) {
     for(size_t i = 0; i < provinces.size(); ++i) {
         // std::cout << std::dec << provinces[i] << std::endl;
         output_csv << std::dec << provinces[i] << std::endl;
+    }
+
+    MapNormalizer::setInfoLine("Writing state definition files...");
+    for(auto&& [state_id, state] : states) {
+        auto filename = std::to_string(state_id) + " - " + state.name + ".txt";
+        std::ofstream output_state(state_output_root / filename);
+
+        output_state << state;
     }
 
     if(!MapNormalizer::prog_opts.quiet)
