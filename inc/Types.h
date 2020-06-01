@@ -4,6 +4,7 @@
 #include <vector> // std::vector
 #include <cstdint> // uint32_t, uint8_t
 #include <ostream>
+#include <map>
 
 namespace MapNormalizer {
     /**
@@ -55,22 +56,23 @@ namespace MapNormalizer {
         LAKE
     };
 
+    using ProvinceID = std::uint32_t;
     using Terrain = std::uint8_t;
     using Continent = std::uint8_t;
-    using State = std::uint32_t;
+    using StateID = std::uint32_t;
 
     /**
      * @brief A province as HOI4 will recognize it.
      */
     struct Province {
-        size_t id;
+        ProvinceID id;
         Color unique_color;
 
         ProvinceType type;
         bool coastal;
         Terrain terrain;
         Continent continent;
-        State state;
+        StateID state;
     };
 
     /**
@@ -83,11 +85,29 @@ namespace MapNormalizer {
      * @brief A list of all provinces
      */
     using ProvinceList = std::vector<Province>;
+
+    /**
+     * @brief A state as HOI4 will recognize it.
+     */
+    struct State {
+        StateID id;
+        std::string name;
+        size_t manpower;
+        std::string category;
+        
+        std::vector<ProvinceID> provinces;
+    };
+
+    /**
+     * @brief A list of all states
+     */
+    using StateList = std::map<StateID, State>;
 }
 
 std::ostream& operator<<(std::ostream&, const MapNormalizer::Point2D&);
 std::ostream& operator<<(std::ostream&, const MapNormalizer::Color&);
 std::ostream& operator<<(std::ostream&, const MapNormalizer::ProvinceType&);
+std::ostream& operator<<(std::ostream&, const MapNormalizer::State&);
 
 #endif
 
