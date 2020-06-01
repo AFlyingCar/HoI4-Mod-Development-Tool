@@ -28,7 +28,7 @@ auto MapNormalizer::getProvinceType(const Color& color) -> ProvinceType {
 
 bool MapNormalizer::isCoastal(const Color& color) {
     // Masks the value to just have coastal bit
-    auto value = (((color.r << 16) & (color.g << 8) & color.b) & PROV_COASTAL_MASK);
+    auto value = colorToRGB(color) & PROV_COASTAL_MASK;
 
     // Shift down until the least significant bit is the first one
     //  It should be the only bit remaining
@@ -36,19 +36,19 @@ bool MapNormalizer::isCoastal(const Color& color) {
 }
 
 auto MapNormalizer::getTerrainType(const Color& color) -> Terrain {
-    auto value = ((color.r << 16) & (color.g << 8) & color.b) & PROV_TERRAIN_MASK;
+    auto value = colorToRGB(color) & PROV_TERRAIN_MASK;
 
     return static_cast<Terrain>(value >> indexOfLSB(value));
 }
 
 auto MapNormalizer::getContinent(const Color& color) -> Continent {
-    auto value = ((color.r << 16) & (color.g << 8) & color.b) & PROV_CONTINENT_ID_MASK;
+    auto value = colorToRGB(color) & PROV_CONTINENT_ID_MASK;
 
     return static_cast<Continent>(value >> indexOfLSB(value));
 }
 
-auto MapNormalizer::getState(const Color& color) -> State {
-    auto value = ((color.r << 16) & (color.g << 8) & color.b) & PROV_STATE_ID_MASK;
+auto MapNormalizer::getState(const Color& color) -> StateID {
+    auto value = colorToRGB(color) & PROV_STATE_ID_MASK;
 
     // No need for a shift, since states are already at the LSB
     return value;
@@ -58,15 +58,17 @@ MapNormalizer::ProvinceList MapNormalizer::createProvinceList(const PolygonList&
 {
     ProvinceList provinces;
 
-    for(size_t i = 0; i < shape_list.size(); ++i) {
+    for(ProvinceID i = 0; i < shape_list.size(); ++i) {
         auto&& shape = shape_list[i];
 
-        auto prov_type = getProvinceType(shape.color);
+        Color color = shape.color;
 
-        auto is_coastal = isCoastal(shape.color);
-        auto terrain_type = getTerrainType(shape.color);
-        auto continent = getContinent(shape.color);
-        auto state = getState(shape.color);
+        auto prov_type = getProvinceType(color);
+
+        auto is_coastal = isCoastal(color);
+        auto terrain_type = getTerrainType(color);
+        auto continent = getContinent(color);
+        auto state = getState(color);
 
         provinces.push_back(Province{
             i, shape.unique_color,
@@ -84,7 +86,7 @@ std::ostream& operator<<(std::ostream& stream,
            << ';' << static_cast<int>(province.unique_color.g) << ';'
            << static_cast<int>(province.unique_color.b) << ';'
            << province.type << ';' << (province.coastal ? "true" : "false")
-           << ';' << province.terrain << ';' << province.continent;
+           << ';' << province.terrain << ';' << static_cast<int>(province.continent);
 
     return stream;
 }

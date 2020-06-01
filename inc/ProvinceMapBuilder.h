@@ -42,7 +42,7 @@ namespace MapNormalizer {
     bool isCoastal(const Color&);
     Terrain getTerrainType(const Color&);
     Continent getContinent(const Color&);
-    State getState(const Color&);
+    StateID getState(const Color&);
 }
 
 #include <fstream>
