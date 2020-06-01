@@ -84,8 +84,8 @@ MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename) {
     }
 
     // Swap B and R every 3 pixels (because BitMap is a stupid format)
-    for(size_t i = 0; i < bm->info_header.sizeOfBitmap; i += bm->info_header.bitsPerPixel)
-        std::swap(bm->data[i], bm->data[i + 2]);
+    for(size_t i = 2; i < bm->info_header.sizeOfBitmap; i += 3)
+        std::swap(bm->data[i], bm->data[i - 2]);
 
     //----------------
     // Flip the entire image, because BitMap is a weird format.
