@@ -73,53 +73,6 @@ bool MapNormalizer::isInImage(BitMap* image, uint32_t x, uint32_t y) {
 }
 
 /**
- * @brief Converts the given XY coordinate to a flat index value
- *
- * @param image The image to index into
- * @param x The X coordinate to convert
- * @param y The Y coordinate to convert
- *
- * @return The given XY coordinate as a flat index
- */
-uint32_t MapNormalizer::xyToIndex(BitMap* image, uint32_t x, uint32_t y) {
-    return x + (y * image->info_header.width);
-}
-
-/**
- * @brief Converts the given XY coordinate to a flat index value
- *
- * @param w The width of the image
- * @param x The X coordinate to convert
- * @param y The Y coordinate to convert
- *
- * @return The given XY coordinate as a flat index
- */
-uint32_t MapNormalizer::xyToIndex(uint32_t w, uint32_t x, uint32_t y) {
-    return x + (y * w);
-}
-
-/**
- * @brief Gets the given XY coordinate as a Pixel from the given BitMap
- *
- * @param image The BitMap to get a pixel from
- * @param x The X coordinate to use
- * @param y The Y coordinate to use
- *
- * @return All data related to the given XY coordinate as a Pixel
- */
-MapNormalizer::Pixel MapNormalizer::getAsPixel(BitMap* image, uint32_t x,
-                                               uint32_t y)
-{
-    return Pixel {
-        { x, y },
-        { image->data[(x * 3) + (y * image->info_header.width * 3)],
-          image->data[(x * 3) + (y * image->info_header.width * 3) + 1],
-          image->data[(x * 3) + (y * image->info_header.width * 3) + 2]
-        }
-    };
-}
-
-/**
  * @brief Checks if a given Pixel is adjacent to the given XY coordinate
  *
  * @param p The pixel to check
