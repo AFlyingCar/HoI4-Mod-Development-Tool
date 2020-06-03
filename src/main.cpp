@@ -10,7 +10,6 @@
 #include "ShapeFinder.h" // findAllShapes
 #include "GraphicalDebugger.h" // graphicsWorker
 #include "ProvinceMapBuilder.h"
-#include "BlankRiverMapBuilder.h"
 #include "StateDefinitionBuilder.h"
 #include "Util.h"
 
@@ -68,9 +67,11 @@ int main(int argc, char** argv) {
     }
 
     unsigned char* graphics_data = nullptr;
+    unsigned char* river_data = nullptr;
 
     bool done = false;
     graphics_data = new unsigned char[image->info_header.width * image->info_header.height * 3];
+    river_data = new unsigned char[image->info_header.width * image->info_header.height * 3];
 
 #ifdef ENABLE_GRAPHICS
     std::thread graphics_thread;
@@ -87,11 +88,7 @@ int main(int argc, char** argv) {
 
     if(!MapNormalizer::prog_opts.quiet)
         MapNormalizer::setInfoLine("Finding all possible shapes.");
-    auto shapes = MapNormalizer::findAllShapes(image, graphics_data);
-
-    if(!MapNormalizer::prog_opts.quiet)
-        MapNormalizer::setInfoLine("Building blank river map...");
-    MapNormalizer::BitMap* blank_river = buildBlankRiverMap(provinces, image, shapes);
+    auto shapes = MapNormalizer::findAllShapes(image, graphics_data, river_data);
 
     MapNormalizer::setInfoLine("");
 
@@ -178,9 +175,9 @@ int main(int argc, char** argv) {
 
     if(!MapNormalizer::prog_opts.quiet)
         MapNormalizer::setInfoLine("Building blank river map...");
-    MapNormalizer::writeBMP(output_path / "rivers.bmp", blank_river->data,
-                            blank_river->info_header.width,
-                            blank_river->info_header.height);
+    MapNormalizer::writeBMP(output_path / "rivers.bmp", river_data,
+                            image->info_header.width,
+                            image->info_header.height);
 
     if(!MapNormalizer::prog_opts.quiet)
         MapNormalizer::setInfoLine("Press any key to exit.");
