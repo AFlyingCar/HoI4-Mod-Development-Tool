@@ -4,10 +4,12 @@
  * @brief Defines functions for creating a list of provinces from detected
  *        shapes.
  * @par Province data is stored as a 24-bit color value in the input .BMP.
- *         6 bits       1 bit        3 bits      2 bits   12 bits
- *       +---------+------------+--------------+--------+----------+
- *       | Terrain | Is Coastal | Continent ID |  Type  | State ID |
- *       +---------+------------+--------------+--------+----------+
+ * @verbatim
+           6 bits       1 bit        3 bits      2 bits   12 bits
+         +---------+------------+--------------+--------+----------+
+         | Terrain | Is Coastal | Continent ID |  Type  | State ID |
+         +---------+------------+--------------+--------+----------+
+   @endverbatim
  *
  */
 
