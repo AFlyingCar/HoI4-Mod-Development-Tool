@@ -1,3 +1,8 @@
+/**
+ * @file main.cpp
+ *
+ * @brief The starting point of the program
+ */
 
 #include <iostream>
 #include <algorithm>
@@ -18,11 +23,21 @@
 
 MapNormalizer::ProgramOptions MapNormalizer::prog_opts;
 
+/**
+ * @brief The starting point of the program.
+ *
+ * @param argc The number of arguments.
+ * @param argv The arguments.
+ *
+ * @return 1 upon failure, 0 upon success.
+ */
 int main(int argc, char** argv) {
     using namespace std::string_literals;
 
+    // Parse the command-line arguments
     MapNormalizer::prog_opts = MapNormalizer::parseArgs(argc, argv);
 
+    // Figure out if we should stop now based on the status of the parsing
     switch(MapNormalizer::prog_opts.status) {
         case 1:
             return 1;
@@ -35,6 +50,7 @@ int main(int argc, char** argv) {
 
     MapNormalizer::setInfoLine("Reading in .BMP file.");
 
+    // Read the BitMap in
     MapNormalizer::BitMap* image = MapNormalizer::readBMP(MapNormalizer::prog_opts.infilename);
 
     if(image == nullptr) {
@@ -43,27 +59,9 @@ int main(int argc, char** argv) {
     }
 
     if(MapNormalizer::prog_opts.verbose) {
-        MapNormalizer::writeDebug("BitMap = {", false);
-        MapNormalizer::writeDebug("    Header = {", false);
-        MapNormalizer::writeDebug("        filetype = "s + std::to_string(image->file_header.filetype), false);
-        MapNormalizer::writeDebug("        fileSize = "s + std::to_string(image->file_header.fileSize), false);
-        MapNormalizer::writeDebug("        reserved1 = "s + std::to_string(image->file_header.reserved1), false);
-        MapNormalizer::writeDebug("        reserved2 = "s + std::to_string(image->file_header.reserved2), false);
-        MapNormalizer::writeDebug("        bitmapOffset = "s + std::to_string(image->file_header.bitmapOffset), false);
-        MapNormalizer::writeDebug("    }", false);
-        MapNormalizer::writeDebug("    headerSize = "s + std::to_string(image->info_header.headerSize), false);
-        MapNormalizer::writeDebug("    width = "s + std::to_string(image->info_header.width), false);
-        MapNormalizer::writeDebug("    height = "s + std::to_string(image->info_header.height), false);
-        MapNormalizer::writeDebug("    bitPlanes = "s + std::to_string(image->info_header.bitPlanes), false);
-        MapNormalizer::writeDebug("    bitsPerPixel = "s + std::to_string(image->info_header.bitsPerPixel), false);
-        MapNormalizer::writeDebug("    compression = "s + std::to_string(image->info_header.compression), false);
-        MapNormalizer::writeDebug("    sizeOfBitmap = "s + std::to_string(image->info_header.sizeOfBitmap), false);
-        MapNormalizer::writeDebug("    horzResolution = "s + std::to_string(image->info_header.horzResolution), false);
-        MapNormalizer::writeDebug("    vertResolution = "s + std::to_string(image->info_header.vertResolution), false);
-        MapNormalizer::writeDebug("    colorsUsed = "s + std::to_string(image->info_header.colorsUsed), false);
-        MapNormalizer::writeDebug("    colorImportant = "s + std::to_string(image->info_header.colorImportant), false);
-        MapNormalizer::writeDebug("    data = { ... }", false);
-        MapNormalizer::writeDebug("}", false);
+        std::stringstream ss;
+        ss << *image;
+        MapNormalizer::writeDebug(ss.str(), false);
     }
 
     unsigned char* graphics_data = nullptr;
