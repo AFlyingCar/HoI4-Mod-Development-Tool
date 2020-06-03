@@ -1,18 +1,20 @@
-#ifndef PROVINCE_MAP_BUILDER
-#define PROVINCE_MAP_BUILDER
-
-#include "Types.h"
-
-
-/*
- * Province data is a 24-bit color value
+/**
+ * @file ProvinceMapBuilder.h
  *
- *   6 bits       1 bit        3 bits      2 bits   12 bits
- * +---------+------------+--------------+--------+----------+
- * | Terrain | Is Coastal | Continent ID |  Type  | State ID |
- * +---------+------------+--------------+--------+----------+
+ * @brief Defines functions for creating a list of provinces from detected
+ *        shapes.
+ * @par Province data is stored as a 24-bit color value in the input .BMP.
+ *         6 bits       1 bit        3 bits      2 bits   12 bits
+ *       +---------+------------+--------------+--------+----------+
+ *       | Terrain | Is Coastal | Continent ID |  Type  | State ID |
+ *       +---------+------------+--------------+--------+----------+
  *
  */
+
+#ifndef PROVINCE_MAP_BUILDER
+# define PROVINCE_MAP_BUILDER
+
+# include "Types.h"
 
 namespace MapNormalizer {
     /**
@@ -44,8 +46,6 @@ namespace MapNormalizer {
     Continent getContinent(const Color&);
     StateID getState(const Color&);
 }
-
-#include <fstream>
 
 std::ostream& operator<<(std::ostream&, const MapNormalizer::Province&);
 std::ostream& operator<<(std::ostream&, MapNormalizer::Terrain);

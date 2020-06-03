@@ -1,11 +1,18 @@
+/**
+ * @file Util.h
+ *
+ * @brief Defines various utility functions.
+ */
+
 #ifndef UTIL_H
-#define UTIL_H
+# define UTIL_H
 
-#include <cstdint>
+# include <cstdint>
 
-#include "Types.h"
+# include "Types.h"
 
 namespace MapNormalizer {
+    // Forward declare this, as we don't need to include the whole file yet.
     struct BitMap;
 
     std::uint32_t indexOfLSB(std::uint32_t);

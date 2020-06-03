@@ -1,3 +1,9 @@
+/**
+ * @file ArgParser.h
+ *
+ * @brief Defines the functions for parsing command-line arguments.
+ */
+
 #include "ArgParser.h"
 
 #include <iostream>
@@ -5,8 +11,12 @@
 
 #include "Logger.h"
 
+//! The name of the program executable
 static std::string program_name = "map_normalizer";
 
+/**
+ * @brief Prints help information to the console.
+ */
 void MapNormalizer::printHelp() {
     writeStdout(program_name + " [OPTIONS...] [INFILE] [OUTPATH]", false);
     writeStdout("\t   --no-gui         Do not open or render the map GUI.", false);
@@ -16,12 +26,22 @@ void MapNormalizer::printHelp() {
     writeStdout("\t-h,--help           Display this message and exit.", false);
 }
 
+/**
+ * @brief Parses command-line arguments.
+ *
+ * @param argc The number of arguments.
+ * @param argv The array of arguments.
+ *
+ * @return A structure containing global program options.
+ */
 auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
     using namespace std::string_literals;
 
+    // First, lets determine what the actual program name is
     ::program_name = argv[0];
     ::program_name = ::program_name.substr(::program_name.find_last_of('/') + 1);
 
+    // Setup data for getopt
     static const char* const short_options = "vqh";
     static option long_options[] = {
         { "verbose", no_argument, NULL, 'v' },
@@ -32,11 +52,14 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
         { nullptr, 0, nullptr, 0}
     };
 
+    // Setup default option values
     ProgramOptions prog_opts { 0, "", "", false, false, false, "" };
 
     int optindex = 0;
     int c = 0;
 
+    // We have multiple required arguments, so if we have none then just
+    //  fail immediately
     if(argc == 1) {
         printHelp();
         prog_opts.status = 1;
@@ -65,10 +88,10 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
                 else
                     writeDebug("optarg = 0x0");
                 break;
-            case 1:
+            case 1: // --no-gui
                 prog_opts.no_gui = true;
                 break;
-            case 2:
+            case 2: // --state-input
                 if(optarg == nullptr) {
                     writeWarning("Missing argument to option 'state-input'. Assuming no option.");
                     prog_opts.state_input_file = "";
@@ -76,7 +99,7 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
                     prog_opts.state_input_file = optarg;
                 }
                 break;
-            case 'v':
+            case 'v': // -v,--verbose
                 if(prog_opts.quiet) {
                     writeError("Conflicting command line arguments 'v' and 'q'");
                     prog_opts.status = 1;
@@ -85,7 +108,7 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
                 }
                 prog_opts.verbose = true;
                 break;
-            case 'q':
+            case 'q': // -q,--quiet
                 if(prog_opts.verbose) {
                     writeError("Conflicting command line arguments 'v' and 'q'");
                     prog_opts.status = 1;
@@ -94,7 +117,7 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
                 }
                 prog_opts.quiet = true;
                 break;
-            case 'h':
+            case 'h': // -h,--help
                 prog_opts.status = 2;
                 printHelp();
                 return prog_opts;

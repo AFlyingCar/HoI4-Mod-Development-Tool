@@ -1,3 +1,8 @@
+/**
+ * @file GraphicalDebugger.cpp
+ *
+ * @brief File for managing the graphical debugger window of the program.
+ */
 
 #include "GraphicalDebugger.h"
 
@@ -6,40 +11,62 @@
 #include <iostream> // std::cerr
 #include <thread> // std::this_thread
 
+// Define this to prevent the #define-ing of the min() and max() functions.
 #define NOMINMAX
 #include <cmath>
 #include <algorithm>
 
-#include "BitMap.h" // BitMap
+#include "BitMap.h"
 #include "ShapeFinder.h"
 #include "Options.h"
 #include "Logger.h"
+#include "Util.h"
 
+// Conditional macro for enabling/disabling the graphical debugger entirely
 #ifdef ENABLE_GRAPHICS
+
 # include <SDL.h> // SDL_*
-#endif
+# include <condition_variable>
+# include <atomic>
 
-#ifdef ENABLE_GRAPHICS
-#include <condition_variable>
-#include <atomic>
-
+/**
+ * @brief The mutex for preventing writeDebugColor from writing while
+ *        graphicsWorker is drawing the image.
+ */
 static std::mutex graphics_debug_mutex;
 
+//! The mutex for watching if the main thread should unpause.
 static std::mutex main_thread_should_unpause_mutex;
+
+//! The conditional variable for watching if the main thread should unpause.
 static std::condition_variable main_thread_should_unpause_cv;
+
+//! The atomic boolean for tracking if the main thread should be paused.
 static std::atomic<bool> main_thread_should_pause;
 #endif
 
-// Maximum width + height that SDL will create a window for
+//! The maximum width of the created SDL window.
 static const auto MAX_SCREEN_WIDTH = 16384;
+//! The maximum height of the created SDL window.
 static const auto MAX_SCREEN_HEIGHT = 16384;
 
-// Minimum width + height that I want to allow
+//! The minimum width of the created SDL window.
 static const auto MIN_SCREEN_WIDTH = 100;
+//! The minimum height of the created SDL window.
 static const auto MIN_SCREEN_HEIGHT = 100;
-static const auto NUM_PIX_REQ_SLEEP = 10000;
+
+/**
+ * @brief The number of pixels required before should_sleep will be false by
+ *        default.
+ * @details Value is for a 512 x 512 dimension image.
+ */
+static const auto NUM_PIX_REQ_SLEEP = 262144;
 
 #ifdef ENABLE_GRAPHICS
+/**
+ * @brief Whether or not the main thread should perform a sleep operation to
+ *        artificially slow down the program.
+ */
 static bool should_sleep = true;
 #endif
 
@@ -169,7 +196,7 @@ kill_graphics_worker:
 }
 
 /**
- * @brief Writes a color to the screen
+ * @brief Writes a color to the screen.
  *
  * @param debug_data The color data location to write into
  * @param w The width of the color data
@@ -206,7 +233,12 @@ void MapNormalizer::writeDebugColor(unsigned char* debug_data, uint32_t w,
     }
 }
 
+/**
+ * @brief Checks if the main thread should pause execution.
+ */
 void MapNormalizer::checkForPause() {
+    // If graphics aren't enabled, then there is no graphical thread to check.
+    //  So don't bother doing anything in that case then.
 #ifdef ENABLE_GRAPHICS
     if(main_thread_should_pause) {
         writeDebug("Going to sleep now!");

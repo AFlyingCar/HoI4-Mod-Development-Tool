@@ -1,10 +1,17 @@
-#ifndef SHAPEFINDER_H
-#define SHAPEFINDER_H
+/**
+ * @file ShapeFinder.h
+ *
+ * @brief Defines functions for finding and validating shapes in an input .BMP.
+ */
 
-#include "Types.h" // Pixel
-#include "BitMap.h" // BitMap
+#ifndef SHAPEFINDER_H
+# define SHAPEFINDER_H
+
+# include "Types.h"
+# include "BitMap.h"
 
 namespace MapNormalizer {
+    //! The minimum number of pixels that can be in a valid province
     constexpr size_t MIN_SHAPE_SIZE = 8;
 
     bool isShapeTooLarge(uint32_t, uint32_t, BitMap*);

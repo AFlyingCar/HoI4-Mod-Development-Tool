@@ -1,8 +1,14 @@
-#ifndef GRAPHICALDEBUGGER_H
-#define GRAPHICALDEBUGGER_H
+/**
+ * @file GraphicalDebugger.h
+ *
+ * @brief Defines various functions for the graphical debugger.
+ */
 
-#include "BitMap.h" // BitMap
-#include "Types.h" // Color
+#ifndef GRAPHICALDEBUGGER_H
+# define GRAPHICALDEBUGGER_H
+
+# include "BitMap.h"
+# include "Types.h"
 
 namespace MapNormalizer {
     void writeDebugColor(unsigned char*, uint32_t, uint32_t, uint32_t, Color);

@@ -1,7 +1,13 @@
+/**
+ * @file Logger.h
+ *
+ * @brief Defines all functions used for logging information.
+ */
+
 #ifndef LOGGER_H
 # define LOGGER_H
 
-#include <string>
+# include <string>
 
 namespace MapNormalizer {
     void deleteInfoLine();
