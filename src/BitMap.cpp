@@ -1,3 +1,8 @@
+/**
+ * @file BitMap.cpp
+ *
+ * @brief Defines all functions related to reading and writing bitmap images.
+ */
 
 #include "BitMap.h"
 
@@ -10,6 +15,13 @@
 #include "ShapeFinder.h"
 #include "Logger.h"
 
+/**
+ * @brief Reads a bitmap file.
+ *
+ * @param filename The filename to read from.
+ * @return A pointer to a bitmap struct if the bitmap was successfully read,
+ *         nullptr otherwise.
+ */
 MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename) {
     std::ifstream file(filename, std::ios::in | std::ios::binary);
 
@@ -194,5 +206,39 @@ void MapNormalizer::writeBMP(const std::string& filename, unsigned char* data,
     writeBMP(filename, bmp);
 
     delete bmp;
+}
+
+/**
+ * @brief Outputs a BitMap to an ostream
+ *
+ * @param stream The output stream to write to.
+ * @param bm The BitMap to write.
+ *
+ * @return The given stream after writing the BitMap to it.
+ */
+std::ostream& operator<<(std::ostream& stream, const MapNormalizer::BitMap& bm) {
+    stream << "BitMap = {" << std::endl
+           << "    Header = {" << std::endl
+           << "        filetype = " << bm.file_header.filetype << std::endl
+           << "        fileSize = " << bm.file_header.fileSize << std::endl
+           << "        reserved1 = " << bm.file_header.reserved1 << std::endl
+           << "        reserved2 = " << bm.file_header.reserved2 << std::endl
+           << "        bitmapOffset = " << bm.file_header.bitmapOffset << std::endl
+           << "    }" << std::endl
+           << "    headerSize = " << bm.info_header.headerSize << std::endl
+           << "    width = " << bm.info_header.width << std::endl
+           << "    height = " << bm.info_header.height << std::endl
+           << "    bitPlanes = " << bm.info_header.bitPlanes << std::endl
+           << "    bitsPerPixel = " << bm.info_header.bitsPerPixel << std::endl
+           << "    compression = " << bm.info_header.compression << std::endl
+           << "    sizeOfBitmap = " << bm.info_header.sizeOfBitmap << std::endl
+           << "    horzResolution = " << bm.info_header.horzResolution << std::endl
+           << "    vertResolution = " << bm.info_header.vertResolution << std::endl
+           << "    colorsUsed = " << bm.info_header.colorsUsed << std::endl
+           << "    colorImportant = " << bm.info_header.colorImportant << std::endl
+           << "    data = { ... }" << std::endl
+           << "}";
+
+    return stream;
 }
 

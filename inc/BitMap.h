@@ -1,10 +1,20 @@
-#ifndef _BITMAP_H_
-#define _BITMAP_H_
+/**
+ * @file BitMap.h
+ *
+ * @brief Defines all data about BitMap reading and writing
+ */
 
-#include <fstream> // std::ifstream
-#include <string> // std::string
+#ifndef _BITMAP_H_
+# define _BITMAP_H_
+
+# include <ostream> // std::ostream
+# include <fstream> // std::ifstream
+# include <string>  // std::string
 
 namespace MapNormalizer {
+    /**
+     * @brief Defines the file header section of a .BMP file.
+     */
     struct BitMapFileHeader {
         uint16_t filetype;     //! The filetype
         uint32_t fileSize;     //! The size of the file.
@@ -13,6 +23,9 @@ namespace MapNormalizer {
         uint32_t bitmapOffset; //! How far into the file the bitmap starts.
     };
 
+    /**
+     * @brief Defines the info section of a .BMP file.
+     */
     struct BitMapInfoHeader {
         unsigned int headerSize;     //! The size of the header (always 40)
         int width;                   //! The width of the file
@@ -75,33 +88,13 @@ namespace MapNormalizer {
         }
     }
 
-    /**
-     * @brief Reads a bitmap file.
-     *
-     * @param filename The filename to read from.
-     * @return A pointer to a bitmap struct if the bitmap was successfully read,
-     *         nullptr otherwise.
-     */
     BitMap* readBMP(const std::string&);
 
-    /**
-     * @brief Writes a bitmap file
-     *
-     * @param filename The filename to write to
-     * @param bmp The BitMap object to write.
-     */
     void writeBMP(const std::string&, const BitMap*);
-
-    /**
-     * @brief Writes a bitmap file
-     *
-     * @param filename The filename to write to
-     * @param data The color data to write
-     * @param width The width of the bitmap
-     * @param height The height of the bitmap
-     */
     void writeBMP(const std::string&, unsigned char*, uint32_t, uint32_t);
 }
+
+std::ostream& operator<<(std::ostream&, const MapNormalizer::BitMap&);
 
 #endif
 
