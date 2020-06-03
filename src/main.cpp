@@ -70,8 +70,11 @@ int main(int argc, char** argv) {
     unsigned char* river_data = nullptr;
 
     bool done = false;
-    graphics_data = new unsigned char[image->info_header.width * image->info_header.height * 3];
-    river_data = new unsigned char[image->info_header.width * image->info_header.height * 3];
+
+    auto data_size = image->info_header.width * image->info_header.height * 3;
+
+    graphics_data = new unsigned char[data_size];
+    river_data = new unsigned char[data_size];
 
 #ifdef ENABLE_GRAPHICS
     std::thread graphics_thread;
