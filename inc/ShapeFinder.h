@@ -17,7 +17,7 @@ namespace MapNormalizer {
 
     extern std::uint32_t error_count;
     extern std::vector<Pixel> problematic_pixels;
-    PolygonList findAllShapes(BitMap*, unsigned char* = nullptr,
+    PolygonList findAllShapes(BitMap*, unsigned char*, unsigned char*,
                               std::vector<Pixel>& = problematic_pixels);
 }
 

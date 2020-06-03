@@ -92,15 +92,16 @@ bool MapNormalizer::isAdjacent(const Pixel& p, size_t x, size_t y) {
  * @brief Finds all shapes in a given BitMap image
  *
  * @param image The image to get all shapes from
- * @param debug_data A flat array of color values to write to for debugging. May
- *                   be NULL
+ * @param province_data A flat array of color values to write to for the province map.
+ * @param river_data A flat array of color values to write to for the blank river map.
  * @param problem_pixels A vector to be filled with pixels that have caused either
  *                       an error or a warning.
  *
  * @return A list of all shapes in the BitMap image
  */
 MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
-                                                        unsigned char* debug_data,
+                                                        unsigned char* province_data,
+                                                        unsigned char* river_data,
                                                         std::vector<Pixel>& problem_pixels)
 {
     PolygonList shapes;
@@ -132,7 +133,21 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
     // Original Color -> Pixels with this color
     std::map<std::uint32_t, std::vector<Pixel>> read_color_amounts;
 
-    auto finalize_shape = [&read_color_amounts, &shapes, &problem_pixels, &debug_data, &image](Polygon& shape)
+    auto colorize_pixel = [&province_data, &river_data, &image](const Pixel& pixel,
+                                                                const Color& ucolor,
+                                                                const Color& rcolor)
+    {
+        // Redraw the shape with the new unique color into province_data
+        writeDebugColor(province_data, image->info_header.width, pixel.point.x,
+                        pixel.point.y, ucolor);
+
+        // Draw default map data for the shape into river_data
+        writeDebugColor(river_data, image->info_header.width, pixel.point.x,
+                        pixel.point.y, rcolor);
+    };
+
+    auto finalize_shape = [&read_color_amounts, &shapes, &problem_pixels,
+                           &colorize_pixel, &image](Polygon& shape)
     {
         // Determine what the original color was
         auto orig_color = read_color_amounts.begin()->first;
@@ -178,10 +193,15 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
 
                 shapes.back().pixels.push_back(pixel);
 
+                auto prov_type = getProvinceType(shapes.back().color);
+                Color river_map_color = (prov_type == ProvinceType::LAND) ? 
+                                            Color{ 0xFF, 0xFF, 0xFF } :
+                                            Color{ 0x7A, 0x7A, 0x7A };
+
                 // Finish up what the rest of the function would have done to
                 //  this one pixel
-                writeDebugColor(debug_data, image->info_header.width, pixel.point.x,
-                                pixel.point.y, shapes.back().unique_color);
+                colorize_pixel(pixel, shapes.back().unique_color, river_map_color);
+
                 shape.pixels.clear();
                 read_color_amounts.clear();
                 return;
@@ -227,12 +247,14 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
             writeDebug(ss.str());
         }
 
-        // Redraw the shape with the new unique color
-        // // Redraw the shape with the new unique color
+        Color river_map_color = (prov_type == ProvinceType::LAND) ? 
+                                    Color{ 0xFF, 0xFF, 0xFF } :
+                                    Color{ 0x7A, 0x7A, 0x7A };
+
         for(auto&& pixel : shape.pixels) {
             checkForPause();
-            writeDebugColor(debug_data, image->info_header.width, pixel.point.x,
-                            pixel.point.y, shape.unique_color);
+            colorize_pixel(pixel, shape.unique_color, river_map_color);
+
         }
 
         // Add this shape to the list of shapes and prepare it for receving
@@ -248,7 +270,7 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes(BitMap* image,
 
         // Is the pixel still viable to look at?
         if(isInImage(image, x, y) && !visited[index]) {
-            writeDebugColor(debug_data, image->info_header.width, x, y,
+            writeDebugColor(province_data, image->info_header.width, x, y,
                             Color{0, 0, 0xFF});
 
             // Mark that this pixel is no longer viable
@@ -276,7 +298,7 @@ findAllShapes_restart_loop:
 
         visited[xyToIndex(image, point.point.x, point.point.y)] = true;
 
-        writeDebugColor(debug_data, image->info_header.width, point.point.x, point.point.y,
+        writeDebugColor(province_data, image->info_header.width, point.point.x, point.point.y,
                         Color{0xFF, 0, 0});
 
         // If we find a boundary pixel, then that means that there are no
@@ -305,7 +327,7 @@ findAllShapes_restart_loop:
                     next_shape.bottom_left.y = p.point.y;
                 }
 
-                writeDebugColor(debug_data, image->info_header.width, p.point.x, p.point.y,
+                writeDebugColor(province_data, image->info_header.width, p.point.x, p.point.y,
                                 DEBUG_COLOR);
 
                 // Make sure it is marked as visited
@@ -331,13 +353,18 @@ findAllShapes_restart_loop:
                              "execution, or CTRL+C to quit.");
                 deleteInfoLine();
 
+                auto prov_type = getProvinceType(shapes.back().color);
+                Color river_map_color = (prov_type == ProvinceType::LAND) ? 
+                                            Color{ 0xFF, 0xFF, 0xFF } :
+                                            Color{ 0x7A, 0x7A, 0x7A };
+
                 std::cerr << "Pixels = {" << std::endl;
                 for(auto pix : next_shape.pixels) {
                     problem_pixels.push_back(pix);
                     shapes.back().pixels.push_back(pix);
-                    writeDebugColor(debug_data, image->info_header.width,
-                                    pix.point.x, pix.point.y,
-                                    shapes.back().unique_color);
+
+                    colorize_pixel(pix, shapes.back().unique_color, river_map_color);
+
                     std::cerr << "\t(" << pix.point.x << ',' << pix.point.y
                               << ')' << std::endl;
                 }
@@ -393,7 +420,7 @@ findAllShapes_restart_loop:
             next_shape.bottom_left.y = point.point.y;
         }
 
-        writeDebugColor(debug_data, image->info_header.width, point.point.x, point.point.y,
+        writeDebugColor(province_data, image->info_header.width, point.point.x, point.point.y,
                         DEBUG_COLOR);
     }
 
@@ -423,10 +450,16 @@ findAllShapes_restart_loop:
 
                 // Find the first shape which has a pixel adjacent to this one
                 for(auto&& s : shapes) {
+                    auto prov_type = getProvinceType(s.color);
+                    Color river_map_color = (prov_type == ProvinceType::LAND) ? 
+                                                Color{ 0xFF, 0xFF, 0xFF } :
+                                                Color{ 0x7A, 0x7A, 0x7A };
+
                     for(auto&& pix : s.pixels) {
                         if(isAdjacent(pix, x, y)) {
                             // Add this pixel that shape
-                            writeDebugColor(debug_data, image->info_header.width, x, y, s.unique_color);
+                            colorize_pixel(p, s.unique_color, river_map_color);
+
                             s.pixels.push_back(p);
                             goto end_double_for_loop;
                         }
@@ -446,7 +479,7 @@ end_double_for_loop:;
                 // Reset the state back to the beginning and jump to the top
                 partition_idx = points.insert(points.begin(), p);
 
-                writeDebugColor(debug_data, image->info_header.width, p.point.x, p.point.y,
+                writeDebugColor(province_data, image->info_header.width, p.point.x, p.point.y,
                                 DEBUG_COLOR);
 
                 goto findAllShapes_restart_loop;
