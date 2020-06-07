@@ -16,6 +16,7 @@
 #include "GraphicalDebugger.h" // graphicsWorker
 #include "ProvinceMapBuilder.h"
 #include "StateDefinitionBuilder.h"
+#include "WorldNormalBuilder.h"
 #include "Util.h"
 
 #include "ArgParser.h"
@@ -58,6 +59,13 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    MapNormalizer::BitMap* heightmap = nullptr;
+    
+    // Read in the heightmap only if we have one to read
+    if(!MapNormalizer::prog_opts.heightmap_input_file.empty()) {
+        heightmap = MapNormalizer::readBMP(MapNormalizer::prog_opts.heightmap_input_file);
+    }
+
     if(MapNormalizer::prog_opts.verbose) {
         std::stringstream ss;
         ss << *image;
@@ -66,6 +74,7 @@ int main(int argc, char** argv) {
 
     unsigned char* graphics_data = nullptr;
     unsigned char* river_data = nullptr;
+    unsigned char* normalmap_data = nullptr;
 
     bool done = false;
 
@@ -73,6 +82,7 @@ int main(int argc, char** argv) {
 
     graphics_data = new unsigned char[data_size];
     river_data = new unsigned char[data_size];
+    normalmap_data = new unsigned char[data_size];
 
 #ifdef ENABLE_GRAPHICS
     std::thread graphics_thread;
@@ -96,19 +106,6 @@ int main(int argc, char** argv) {
     if(!MapNormalizer::prog_opts.quiet)
         MapNormalizer::writeStdout("Detected "s + std::to_string(shapes.size()) + " shapes.");
 
-#if 0
-    for(size_t i = 0; i < shapes.size(); ++i) {
-        auto color = shapes.at(i).color;
-        auto c = (color.r << 16) | (color.g << 8) | color.b;
-
-        std::stringstream ss;
-        ss << std::dec << i << ": " << shapes.at(i).pixels.size();
-        ss << " pixels, color = 0x" << std::hex << c;
-
-        MapNormalizer::writeDebug(ss.str());
-    }
-#endif
-
     if(!MapNormalizer::problematic_pixels.empty())
         MapNormalizer::writeWarning("The following "s +
                                     std::to_string(MapNormalizer::problematic_pixels.size()) +
@@ -130,6 +127,10 @@ int main(int argc, char** argv) {
     if(!MapNormalizer::prog_opts.quiet)
         MapNormalizer::setInfoLine("Creating States List.");
     auto states = MapNormalizer::createStatesList(provinces, MapNormalizer::prog_opts.state_input_file);
+
+    // Generate the normal map if we have been given a height map
+    if(heightmap != nullptr)
+        MapNormalizer::generateWorldNormalMap(heightmap, normalmap_data);
 
     std::filesystem::path root_output_path(MapNormalizer::prog_opts.outpath);
     std::filesystem::path output_path = root_output_path / "map";
@@ -175,10 +176,19 @@ int main(int argc, char** argv) {
                             image->info_header.width, image->info_header.height);
 
     if(!MapNormalizer::prog_opts.quiet)
-        MapNormalizer::setInfoLine("Building blank river map...");
+        MapNormalizer::setInfoLine("Writing blank river bitmap to file...");
     MapNormalizer::writeBMP(output_path / "rivers.bmp", river_data,
                             image->info_header.width,
                             image->info_header.height);
+
+    // Write the new world_normal map to a file
+    if(heightmap != nullptr) {
+        if(!MapNormalizer::prog_opts.quiet)
+            MapNormalizer::setInfoLine("Writing normal bitmap to file...");
+        MapNormalizer::writeBMP(output_path / "world_normal.bmp", normalmap_data,
+                                heightmap->info_header.width,
+                                heightmap->info_header.height);
+    }
 
     if(!MapNormalizer::prog_opts.quiet)
         MapNormalizer::setInfoLine("Press any key to exit.");
