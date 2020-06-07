@@ -8,6 +8,7 @@
 # define UTIL_H
 
 # include <cstdint>
+# include <algorithm>
 
 # include "Types.h"
 
@@ -27,6 +28,11 @@ namespace MapNormalizer {
     void ltrim(std::string&);
     void rtrim(std::string&);
     void trim(std::string&);
+
+    template<typename T>
+    T clamp(T val, T min, T max) {
+        return std::min(std::max(val, min), max);
+    }
 }
 
 #endif
