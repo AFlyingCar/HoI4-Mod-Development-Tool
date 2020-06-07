@@ -35,6 +35,9 @@ namespace MapNormalizer {
 
         //! --state-input=
         std::string state_input_file;
+
+        //! --height-map=
+        std::string heightmap_input_file;
     };
 
     ProgramOptions parseArgs(int, char**);
