@@ -108,9 +108,10 @@ void MapNormalizer::generateWorldNormalMap(BitMap* heightmap,
             auto index = xyToIndex(width * 3, x * 3, y);
 
             // Finally, place the new color data into the output array.
-            normal_data[index] = r;
+            //  Note: Make sure that B and R are swapped (because .BMP format)
+            normal_data[index] = b;
             normal_data[index + 1] = g;
-            normal_data[index + 2] = b;
+            normal_data[index + 2] = r;
         }
     }
 }

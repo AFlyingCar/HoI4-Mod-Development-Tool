@@ -145,7 +145,7 @@ void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
     SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(disp_data, image->info_header.width,
                                                     image->info_header.height, 24,
                                                     3 * image->info_header.width,
-                                                    0xFF, 0xFF00, 0xFF0000, 0);
+                                                    0xFF0000, 0xFF00, 0xFF, 0);
 
     SDL_Rect dest = { 0, 0, image->info_header.width * 10, image->info_header.height * 10 };
 
@@ -222,9 +222,10 @@ void MapNormalizer::writeDebugColor(unsigned char* debug_data, uint32_t w,
             graphics_debug_mutex.lock();
 #endif
 
-        debug_data[index] = c.r;
+        // Make sure we swap B and R (because BMP format sucks)
+        debug_data[index] = c.b;
         debug_data[index + 1] = c.g;
-        debug_data[index + 2] = c.b;
+        debug_data[index + 2] = c.r;
 
 #ifdef ENABLE_GRAPHICS
         if(!prog_opts.no_gui)
