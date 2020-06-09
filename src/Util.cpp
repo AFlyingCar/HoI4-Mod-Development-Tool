@@ -65,7 +65,7 @@ void MapNormalizer::trim(std::string& str) {
  *
  * @return The given XY coordinate as a flat index
  */
-uint32_t MapNormalizer::xyToIndex(BitMap* image, uint32_t x, uint32_t y) {
+uint64_t MapNormalizer::xyToIndex(BitMap* image, uint32_t x, uint32_t y) {
     return x + (y * image->info_header.width);
 }
 
@@ -78,7 +78,7 @@ uint32_t MapNormalizer::xyToIndex(BitMap* image, uint32_t x, uint32_t y) {
  *
  * @return The given XY coordinate as a flat index
  */
-uint32_t MapNormalizer::xyToIndex(uint32_t w, uint32_t x, uint32_t y) {
+uint64_t MapNormalizer::xyToIndex(uint32_t w, uint32_t x, uint32_t y) {
     return x + (y * w);
 }
 
@@ -92,13 +92,15 @@ uint32_t MapNormalizer::xyToIndex(uint32_t w, uint32_t x, uint32_t y) {
  * @return All data related to the given XY coordinate as a Pixel
  */
 MapNormalizer::Pixel MapNormalizer::getAsPixel(BitMap* image, uint32_t x,
-                                               uint32_t y)
+                                               uint32_t y, uint32_t depth)
 {
+    auto index = xyToIndex(image->info_header.width * depth, x * depth, y);
+
     return Pixel {
         { x, y },
-        { image->data[(x * 3) + (y * image->info_header.width * 3)],
-          image->data[(x * 3) + (y * image->info_header.width * 3) + 1],
-          image->data[(x * 3) + (y * image->info_header.width * 3) + 2]
+        { image->data[index],
+          image->data[index + 1],
+          image->data[index + 2]
         }
     };
 }

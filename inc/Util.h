@@ -21,9 +21,9 @@ namespace MapNormalizer {
     std::uint32_t colorToRGB(const Color&);
     Color RGBToColor(std::uint32_t);
 
-    uint32_t xyToIndex(BitMap*, uint32_t, uint32_t);
-    uint32_t xyToIndex(uint32_t, uint32_t, uint32_t);
-    Pixel getAsPixel(BitMap*, uint32_t, uint32_t);
+    uint64_t xyToIndex(BitMap*, uint32_t, uint32_t);
+    uint64_t xyToIndex(uint32_t, uint32_t, uint32_t);
+    Pixel getAsPixel(BitMap*, uint32_t, uint32_t, uint32_t = 3);
 
     void ltrim(std::string&);
     void rtrim(std::string&);
