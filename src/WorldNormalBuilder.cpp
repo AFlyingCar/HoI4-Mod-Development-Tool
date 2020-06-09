@@ -69,17 +69,21 @@ void MapNormalizer::generateWorldNormalMap(BitMap* heightmap,
     auto height = heightmap->info_header.height;
 
     // For every single pixel
-    for(int x = 0; x < width; ++x) {
-        for(int y = 0; y < height; ++y) {
+    for(int y = 0; y < height; ++y) {
+        for(int x = 0; x < width; ++x) {
+            // Index into normal_data based on our current X,Y coordinate
+            // Hardcode 3 because we want the output to have a pixel-depth of 3
+            auto index = xyToIndex(width * 3, x * 3, y);
+
             // Surrounding pixels
-            Pixel top_left  = getAsPixel(heightmap, clamp(x - 1, 0, width), clamp(y - 1, 0, height));
-            Pixel top       = getAsPixel(heightmap, x, clamp(y - 1, 0, height));
-            Pixel top_right = getAsPixel(heightmap, clamp(x + 1, 0, width), clamp(y - 1, 0, height));
-            Pixel left      = getAsPixel(heightmap, clamp(x - 1, 0, width), y);
-            Pixel right     = getAsPixel(heightmap, clamp(x + 1, 0, width), y);
-            Pixel bot_left  = getAsPixel(heightmap, clamp(x - 1, 0, width), clamp(y + 1, 0, height));
-            Pixel bot       = getAsPixel(heightmap, x, clamp(y + 1, 0, height));
-            Pixel bot_right = getAsPixel(heightmap, clamp(x + 1, 0, width), clamp(y + 1, 0, height));
+            Pixel top_left  = getAsPixel(heightmap, clamp(x - 1, 0, width), clamp(y - 1, 0, height), 1);
+            Pixel top       = getAsPixel(heightmap, x, clamp(y - 1, 0, height), 1);
+            Pixel top_right = getAsPixel(heightmap, clamp(x + 1, 0, width), clamp(y - 1, 0, height), 1);
+            Pixel left      = getAsPixel(heightmap, clamp(x - 1, 0, width), y, 1);
+            Pixel right     = getAsPixel(heightmap, clamp(x + 1, 0, width), y, 1);
+            Pixel bot_left  = getAsPixel(heightmap, clamp(x - 1, 0, width), clamp(y + 1, 0, height), 1);
+            Pixel bot       = getAsPixel(heightmap, x, clamp(y + 1, 0, height), 1);
+            Pixel bot_right = getAsPixel(heightmap, clamp(x + 1, 0, width), clamp(y + 1, 0, height), 1);
 
             // Get intensities of surrounding pixels
             double tl_intensity = intensity(top_left.color);
@@ -103,9 +107,6 @@ void MapNormalizer::generateWorldNormalMap(BitMap* heightmap,
             auto r = static_cast<std::uint8_t>((nX + 1.0) * (255.0 / 2.0));
             auto g = static_cast<std::uint8_t>((nY + 1.0) * (255.0 / 2.0));
             auto b = static_cast<std::uint8_t>((nZ + 1.0) * (255.0 / 2.0));
-
-            // Index into normal_data based on our current X,Y coordinate
-            auto index = xyToIndex(width * 3, x * 3, y);
 
             // Finally, place the new color data into the output array.
             //  Note: Make sure that B and R are swapped (because .BMP format)
