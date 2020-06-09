@@ -58,7 +58,7 @@ MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename) {
 
     // Calculate how many bytes make up one line
     size_t orig_pitch = bm->info_header.width * bm->info_header.bitsPerPixel;
-    size_t new_pitch = bm->info_header.width * 3; // This is how many we _want_ each line to take up.
+    size_t new_pitch = bm->info_header.width * (bm->info_header.bitsPerPixel / 8); // This is how many we _want_ each line to take up.
 
     // Allocate space for our new image data
     bm->data = new unsigned char[new_pitch * bm->info_header.height];
