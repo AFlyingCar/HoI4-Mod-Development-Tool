@@ -80,6 +80,12 @@ int main(int argc, char** argv) {
 
     auto data_size = image->info_header.width * image->info_header.height * 3;
 
+    {
+        std::stringstream ss;
+        ss << "Allocating " << data_size << " bytes of space for each output image.";
+        MapNormalizer::writeDebug(ss.str());
+    }
+
     graphics_data = new unsigned char[data_size];
     river_data = new unsigned char[data_size];
     normalmap_data = new unsigned char[data_size];
