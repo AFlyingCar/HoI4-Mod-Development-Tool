@@ -20,9 +20,10 @@ static std::string program_name = "map_normalizer";
 void MapNormalizer::printHelp() {
     writeStdout(program_name + " [OPTIONS...] [INFILE] [OUTPATH]", false);
     writeStdout("\t   --no-gui                Do not open or render the map GUI.", false);
-    writeStdout("\t   --no-skip-no-name-state Do not open or render the map GUI.", false);
+    writeStdout("\t   --no-skip-no-name-state Do not skip states with no name.", false);
     writeStdout("\t   --state-input           The input file for writing state definitions.", false);
     writeStdout("\t   --height-map            The input file for writing the normal map.", false);
+    writeStdout("\t   --hoi4-install-path     The installation path for Hearts of Iron 4.", false);
     writeStdout("\t-v,--verbose               Display all output.", false);
     writeStdout("\t-q,--quiet                 Display only errors and warnings (does not affect this message).", false);
     writeStdout("\t-h,--help                  Display this message and exit.", false);
@@ -53,11 +54,12 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
         { "state-input", required_argument, NULL, 2 },
         { "height-map", required_argument, NULL, 3 },
         { "no-skip-no-name-state", no_argument, NULL, 4 },
+        { "hoi4-install-path", required_argument, NULL, 5 },
         { nullptr, 0, nullptr, 0}
     };
 
     // Setup default option values
-    ProgramOptions prog_opts { 0, "", "", false, false, false, "", "", false };
+    ProgramOptions prog_opts { 0, "", "", false, false, false, "", "", false, "" };
 
     int optindex = 0;
     int c = 0;
@@ -113,6 +115,14 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
                 break;
             case 4: // --no-skip-no-name-state
                 prog_opts.no_skip_no_name_state = true;
+                break;
+            case 5: // --hoi4-install-path
+                if(optarg == nullptr) {
+                    writeWarning("Missing argument to option 'hoi4-install-path'. Assuming no option.");
+                    prog_opts.hoi4_install_path = "";
+                } else {
+                    prog_opts.hoi4_install_path = optarg;
+                }
                 break;
             case 'v': // -v,--verbose
                 if(prog_opts.quiet) {

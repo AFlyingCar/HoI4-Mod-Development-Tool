@@ -41,6 +41,9 @@ namespace MapNormalizer {
 
         //! --no-skip-no-name-state
         bool no_skip_no_name_state;
+
+        //! --hoi4-install-path=
+        std::string hoi4_install_path;
     };
 
     ProgramOptions parseArgs(int, char**);
