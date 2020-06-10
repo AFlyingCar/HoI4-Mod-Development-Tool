@@ -24,6 +24,62 @@
 
 MapNormalizer::ProgramOptions MapNormalizer::prog_opts;
 
+// TODO: This should probably be moved into a different file
+namespace MapNormalizer {
+    /**
+     * @brief Writes empty override files.
+     *
+     * @param root_output_path The root path to write the override files.
+     * @param hoi4_install_path The root path to where HoI4 files are installed.
+     * @param relative_path The path to where the files are stored that should
+     *        be overridden, relative to both root_output_path and
+     *        hoi4_install_path.
+     */
+    void writeOverrideFiles(const std::filesystem::path& root_output_path,
+                            const std::filesystem::path& hoi4_install_path,
+                            const std::filesystem::path& relative_path)
+    {
+        if(!std::filesystem::exists(root_output_path / relative_path))
+            std::filesystem::create_directories(root_output_path / relative_path);
+
+        std::filesystem::directory_iterator hoi4_di(hoi4_install_path / relative_path);
+        for(auto&& dentry : hoi4_di) {
+            // Do not do this for directories
+            if(!dentry.is_directory()) {
+                auto new_path = root_output_path / relative_path / dentry.path().filename();
+                std::stringstream ss;
+                ss << "Writing override file '" << new_path << '\'';
+                MapNormalizer::writeDebug(ss.str());
+                std::ofstream _(new_path);
+            }
+        }
+    }
+
+    /**
+     * @brief Writes empty override files from the HoI4 install directory.
+     *
+     * @param root_output_path The root path to write the override files.
+     * @param hoi4_install_path The root path to where HoI4 files are installed.
+     */
+    void writeOverrideFiles(const std::filesystem::path& root_output_path,
+                            const std::filesystem::path& hoi4_install_path)
+    {
+        std::filesystem::path history = "history";
+        std::filesystem::path map = "map";
+
+        writeOverrideFiles(root_output_path, hoi4_install_path,
+                           history / "states");
+        writeOverrideFiles(root_output_path, hoi4_install_path,
+                           history / "countries");
+        writeOverrideFiles(root_output_path, hoi4_install_path,
+                           history / "units");
+        writeOverrideFiles(root_output_path, hoi4_install_path,
+                           map / "strategicregions");
+        writeOverrideFiles(root_output_path, hoi4_install_path,
+                           map / "supplyareas");
+    }
+}
+
 /**
  * @brief The starting point of the program.
  *
@@ -47,6 +103,20 @@ int main(int argc, char** argv) {
         case 0:
         default:
             break;
+    }
+
+    std::filesystem::path root_output_path(MapNormalizer::prog_opts.outpath);
+    std::filesystem::path output_path = root_output_path / "map";
+    std::filesystem::path history_root = root_output_path / "history";
+    std::filesystem::path state_output_root = history_root / "states";
+
+    // If we were given a HoI4 install path, then generate override files
+    //  Do this before anything else, in case we are asked to generate more state
+    //  files that share a name with any vanilla ones
+    if(!MapNormalizer::prog_opts.hoi4_install_path.empty()) {
+        MapNormalizer::setInfoLine("Writing blank override files.");
+        MapNormalizer::writeOverrideFiles(root_output_path,
+                                          MapNormalizer::prog_opts.hoi4_install_path);
     }
 
     MapNormalizer::setInfoLine("Reading in .BMP file.");
@@ -143,11 +213,6 @@ int main(int argc, char** argv) {
     if(heightmap != nullptr)
         MapNormalizer::generateWorldNormalMap(heightmap, normalmap_data);
 
-    std::filesystem::path root_output_path(MapNormalizer::prog_opts.outpath);
-    std::filesystem::path output_path = root_output_path / "map";
-    std::filesystem::path history_root = root_output_path / "history";
-    std::filesystem::path state_output_root = history_root / "states";
-
     if(!std::filesystem::exists(output_path)) {
         using namespace std::string_literals;
         MapNormalizer::writeStdout("Path '"s + output_path.generic_string() + "' does not exist, creating...");
@@ -188,7 +253,7 @@ int main(int argc, char** argv) {
 
             // Don't bother to output states with no provinces in them
             if(!state.provinces.empty()) {
-                auto filename = std::to_string(state_id) + " - " + state.name + ".txt";
+                auto filename = std::to_string(state_id) + "-" + state.name + ".txt";
                 std::ofstream output_state(state_output_root / filename);
 
                 output_state << state;
