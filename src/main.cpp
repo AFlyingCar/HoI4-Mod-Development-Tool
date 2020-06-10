@@ -145,7 +145,8 @@ int main(int argc, char** argv) {
 
     std::filesystem::path root_output_path(MapNormalizer::prog_opts.outpath);
     std::filesystem::path output_path = root_output_path / "map";
-    std::filesystem::path state_output_root = root_output_path / "history";
+    std::filesystem::path history_root = root_output_path / "history";
+    std::filesystem::path state_output_root = history_root / "states";
 
     if(!std::filesystem::exists(output_path)) {
         using namespace std::string_literals;
@@ -175,6 +176,20 @@ int main(int argc, char** argv) {
     if(!states.empty()) {
         MapNormalizer::setInfoLine("Writing state definition files...");
         for(auto&& [state_id, state] : states) {
+            // Do not write states that do not have a name unless --no-skip-no-name-state was passed
+            if(state.name.empty()) {
+                std::stringstream ss;
+                ss << "State " << state_id << " does not have a name defined.";
+
+                if(MapNormalizer::prog_opts.no_skip_no_name_state) {
+                    MapNormalizer::writeWarning(ss.str());
+                } else {
+                    ss << " Skipping...";
+                    MapNormalizer::writeError(ss.str());
+                    continue;
+                }
+            }
+
             // Don't bother to output states with no provinces in them
             if(!state.provinces.empty()) {
                 auto filename = std::to_string(state_id) + " - " + state.name + ".txt";
