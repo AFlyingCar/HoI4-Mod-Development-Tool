@@ -38,6 +38,9 @@ namespace MapNormalizer {
 
         //! --height-map=
         std::string heightmap_input_file;
+
+        //! --no-skip-no-name-state
+        bool no_skip_no_name_state;
     };
 
     ProgramOptions parseArgs(int, char**);
