@@ -130,9 +130,14 @@ int main(int argc, char** argv) {
         MapNormalizer::setInfoLine("Creating Provinces List.");
     auto provinces = MapNormalizer::createProvinceList(shapes);
 
-    if(!MapNormalizer::prog_opts.quiet)
-        MapNormalizer::setInfoLine("Creating States List.");
-    auto states = MapNormalizer::createStatesList(provinces, MapNormalizer::prog_opts.state_input_file);
+    MapNormalizer::StateList states;
+
+    // Only produce a states list if we were given a state input file
+    if(auto sif = MapNormalizer::prog_opts.state_input_file; !sif.empty()) {
+        if(!MapNormalizer::prog_opts.quiet)
+            MapNormalizer::setInfoLine("Creating States List.");
+        states = MapNormalizer::createStatesList(provinces, sif);
+    }
 
     // Generate the normal map if we have been given a height map
     if(heightmap != nullptr)
@@ -165,14 +170,18 @@ int main(int argc, char** argv) {
         output_csv << std::dec << provinces[i] << std::endl;
     }
 
-    MapNormalizer::setInfoLine("Writing state definition files...");
-    for(auto&& [state_id, state] : states) {
-        // Don't bother to output states with no provinces in them
-        if(!state.provinces.empty()) {
-            auto filename = std::to_string(state_id) + " - " + state.name + ".txt";
-            std::ofstream output_state(state_output_root / filename);
+    // Only produce each state definition file if there are actually states to
+    //  produce
+    if(!states.empty()) {
+        MapNormalizer::setInfoLine("Writing state definition files...");
+        for(auto&& [state_id, state] : states) {
+            // Don't bother to output states with no provinces in them
+            if(!state.provinces.empty()) {
+                auto filename = std::to_string(state_id) + " - " + state.name + ".txt";
+                std::ofstream output_state(state_output_root / filename);
 
-            output_state << state;
+                output_state << state;
+            }
         }
     }
 
