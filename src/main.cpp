@@ -163,11 +163,7 @@ int main(int argc, char** argv) {
     MapNormalizer::setInfoLine("Writing province definition file...");
     std::ofstream output_csv(output_path / "definition.csv");
 
-    // std::cout << "Provinces CSV:\n"
-    //              "=============="
-    //           << std::endl;
     for(size_t i = 0; i < provinces.size(); ++i) {
-        // std::cout << std::dec << provinces[i] << std::endl;
         output_csv << std::dec << provinces[i] << std::endl;
     }
 
