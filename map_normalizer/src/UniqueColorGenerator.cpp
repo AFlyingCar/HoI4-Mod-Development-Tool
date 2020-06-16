@@ -1,6 +1,5 @@
 
 #include "UniqueColorGenerator.h"
-#include "Constants.h"
 #include "ColorArray.h"
 #include "Logger.h"
 

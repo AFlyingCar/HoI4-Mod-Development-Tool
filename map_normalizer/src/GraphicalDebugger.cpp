@@ -22,7 +22,6 @@
 #include "Util.h"
 
 // Conditional macro for enabling/disabling the graphical debugger entirely
-#ifdef ENABLE_GRAPHICS
 
 # include <SDL.h> // SDL_*
 # include <condition_variable>
@@ -42,7 +41,6 @@ static std::condition_variable main_thread_should_unpause_cv;
 
 //! The atomic boolean for tracking if the main thread should be paused.
 static std::atomic<bool> main_thread_should_pause;
-#endif
 
 //! The maximum width of the created SDL window.
 static const auto MAX_SCREEN_WIDTH = 16384;
@@ -61,13 +59,11 @@ static const auto MIN_SCREEN_HEIGHT = 100;
  */
 static const auto NUM_PIX_REQ_SLEEP = 262144;
 
-#ifdef ENABLE_GRAPHICS
 /**
  * @brief Whether or not the main thread should perform a sleep operation to
  *        artificially slow down the program.
  */
 static bool should_sleep = true;
-#endif
 
 MapNormalizer::GraphicsWorker& MapNormalizer::GraphicsWorker::getInstance() {
     static GraphicsWorker instance;
@@ -95,10 +91,6 @@ void MapNormalizer::GraphicsWorker::init(BitMap* image,
  */
 void MapNormalizer::GraphicsWorker::work(bool& done)
 {
-#ifndef ENABLE_GRAPHICS
-    (void)done;
-#else
-
     // Initialize SDL
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "Failed to initialize SDL! " << SDL_GetError() << std::endl;
@@ -214,7 +206,6 @@ void MapNormalizer::GraphicsWorker::work(bool& done)
 kill_graphics_worker:
     SDL_DestroyWindow(window);
     SDL_Quit();
-#endif
 }
 
 void MapNormalizer::GraphicsWorker::writeDebugColor(uint32_t x, uint32_t y,
@@ -281,27 +272,21 @@ void MapNormalizer::writeDebugColor(unsigned char* debug_data, uint32_t w,
     if(debug_data != nullptr) {
         using namespace std::chrono_literals;
 
-#ifdef ENABLE_GRAPHICS
         if(!prog_opts.no_gui && should_sleep)
             std::this_thread::sleep_for(0.01s);
-#endif
 
         uint32_t index = xyToIndex(w * 3, x * 3, y);
 
-#ifdef ENABLE_GRAPHICS
         if(!prog_opts.no_gui)
             graphics_debug_mutex.lock();
-#endif
 
         // Make sure we swap B and R (because BMP format sucks)
         debug_data[index] = c.b;
         debug_data[index + 1] = c.g;
         debug_data[index + 2] = c.r;
 
-#ifdef ENABLE_GRAPHICS
         if(!prog_opts.no_gui)
             graphics_debug_mutex.unlock();
-#endif
     }
 }
 
@@ -311,12 +296,10 @@ void MapNormalizer::writeDebugColor(unsigned char* debug_data, uint32_t w,
 void MapNormalizer::checkForPause() {
     // If graphics aren't enabled, then there is no graphical thread to check.
     //  So don't bother doing anything in that case then.
-#ifdef ENABLE_GRAPHICS
     if(main_thread_should_pause) {
         writeDebug("Going to sleep now!");
         std::unique_lock<std::mutex> lk(main_thread_should_unpause_mutex);
         main_thread_should_unpause_cv.wait(lk, []() -> bool { return !main_thread_should_pause; });
     }
-#endif
 }
 

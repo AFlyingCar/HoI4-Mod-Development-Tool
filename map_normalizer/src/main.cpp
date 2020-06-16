@@ -159,7 +159,6 @@ int main(int argc, char** argv) {
 
     auto& worker = MapNormalizer::GraphicsWorker::getInstance();
 
-#ifdef ENABLE_GRAPHICS
     graphics_data = new unsigned char[data_size];
 
     std::thread graphics_thread;
@@ -177,7 +176,6 @@ int main(int argc, char** argv) {
                 //   displaying the blank river map builder
         });
     }
-#endif
 
     if(!MapNormalizer::prog_opts.quiet)
         MapNormalizer::setInfoLine("Finding all possible shapes.");
@@ -301,13 +299,11 @@ int main(int argc, char** argv) {
     std::getchar();
     done = true;
 
-#ifdef ENABLE_GRAPHICS
     if(!MapNormalizer::prog_opts.no_gui) {
         if(!MapNormalizer::prog_opts.quiet)
             MapNormalizer::setInfoLine("Waiting for graphical debugger thread to join...");
         graphics_thread.join();
     }
-#endif
 
     // One last newline so that the command line isn't horrible at the end of
     //   all this
