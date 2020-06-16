@@ -178,6 +178,17 @@ void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
                         case 's':
                             should_sleep = !should_sleep;
                             break;
+                        case SDLK_ESCAPE:
+                            // Notify the calling thread that we are done
+                            done = true;
+
+                            // Make sure that we still kill everything even if the main thread is paused.
+                            main_thread_should_pause = false;
+                            main_thread_should_unpause_cv.notify_all();
+
+                            std::exit(0); // No need to break here
+
+                            break;
                     }
             }
         }
