@@ -62,7 +62,7 @@ std::ostream& operator<<(std::ostream& stream, const MapNormalizer::State& state
 {
     stream << "state = {" << std::endl;
     stream << "    id = " << state.id << std::endl;
-    stream << "    name = " << state.name << std::endl;
+    stream << "    name = \"" << state.name << '"' << std::endl;
     stream << "    manpower = " << state.manpower << std::endl;
     stream << "    state_category = " << state.category << std::endl;
     stream << "    provinces = {" << std::endl << "        ";
@@ -74,10 +74,12 @@ std::ostream& operator<<(std::ostream& stream, const MapNormalizer::State& state
     stream << "    history = {" << std::endl;
     // TODO: Effects? Should we load these in, or let the user input them?
 
+#if 0
     stream << "        victory_points = {" << std::endl;
     // TODO: Same for victory points. Should we try loading them in from somewhere?
     // For future reference, format is <province id> <points>
     stream << "        }" << std::endl;
+#endif
 
     stream << "        buildings = {" << std::endl;
     // TODO: Finally, same for buildings. Should we try loading them in from somewhere?
