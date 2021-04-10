@@ -25,6 +25,9 @@ namespace MapNormalizer {
 
     //! The debug color for finding shapes.
     const Color DEBUG_COLOR = Color{ 255, 255, 255 };
+
+    //! The minimum number of pixels that can be in a valid province
+    constexpr size_t MIN_SHAPE_SIZE = 8;
 }
 
 #endif

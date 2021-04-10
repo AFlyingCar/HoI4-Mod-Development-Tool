@@ -20,6 +20,7 @@ namespace MapNormalizer {
     std::uint32_t swapBytes(std::uint32_t);
     std::uint32_t colorToRGB(const Color&);
     Color RGBToColor(std::uint32_t);
+    bool doColorsMatch(const Color&, const Color&);
 
     uint64_t xyToIndex(BitMap*, uint32_t, uint32_t);
     uint64_t xyToIndex(uint32_t, uint32_t, uint32_t);

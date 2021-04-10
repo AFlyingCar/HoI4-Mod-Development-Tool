@@ -45,19 +45,6 @@ bool MapNormalizer::isBoundaryPixel(Pixel p) {
     return p.color.r == 0 && p.color.g == 0 && p.color.b == 0;
 }
 
-
-/**
- * @brief Checks if two colors match
- *
- * @param c1 The first color
- * @param c2 The second color
- *
- * @return True if c1 matches c2
- */
-bool MapNormalizer::doColorsMatch(Color c1, Color c2) {
-    return c1.r == c2.r && c1.g == c2.g && c1.b == c2.b;
-}
-
 /**
  * @brief Checks if a given point is within the bounds of the image.
  *

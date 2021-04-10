@@ -105,3 +105,16 @@ MapNormalizer::Pixel MapNormalizer::getAsPixel(BitMap* image, uint32_t x,
     };
 }
 
+/**
+ * @brief Checks if two colors match
+ *
+ * @param c1 The first color
+ * @param c2 The second color
+ *
+ * @return True if c1 matches c2
+ */
+bool MapNormalizer::doColorsMatch(const Color& c1, const Color& c2) {
+    return c1.r == c2.r && c1.g == c2.g && c1.b == c2.b;
+}
+
+
