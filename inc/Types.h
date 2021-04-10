@@ -109,5 +109,7 @@ std::ostream& operator<<(std::ostream&, const MapNormalizer::Color&);
 std::ostream& operator<<(std::ostream&, const MapNormalizer::ProvinceType&);
 std::ostream& operator<<(std::ostream&, const MapNormalizer::State&);
 
+bool operator==(const MapNormalizer::Color&, const MapNormalizer::Color&);
+
 #endif
 

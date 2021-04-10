@@ -92,3 +92,8 @@ std::ostream& operator<<(std::ostream& stream, const MapNormalizer::State& state
     return stream;
 }
 
+bool operator==(const MapNormalizer::Color& c1, const MapNormalizer::Color& c2)
+{
+    return doColorsMatch(c1, c2);
+}
+
