@@ -1,6 +1,8 @@
 
 #include "Types.h"
 
+#include <sstream>
+
 #include "Util.h"
 
 /**
@@ -92,8 +94,27 @@ std::ostream& operator<<(std::ostream& stream, const MapNormalizer::State& state
     return stream;
 }
 
+std::string operator+(const std::string& s, const MapNormalizer::Point2D& point)
+{
+    std::stringstream ss;
+    ss << s << point;
+    return ss.str();
+}
+
+std::string operator+(const std::string& s, const MapNormalizer::Color& color)
+{
+    std::stringstream ss;
+    ss << s << color;
+    return ss.str();
+}
+
 bool operator==(const MapNormalizer::Color& c1, const MapNormalizer::Color& c2)
 {
     return doColorsMatch(c1, c2);
+}
+
+bool operator!=(const MapNormalizer::Color& c1, const MapNormalizer::Color& c2)
+{
+    return !(c1 == c2);
 }
 

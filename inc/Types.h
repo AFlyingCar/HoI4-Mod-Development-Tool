@@ -32,6 +32,14 @@ namespace MapNormalizer {
         Color color;
     };
 
+    enum class Direction {
+        NONE = 0,
+        LEFT,
+        UP,
+        RIGHT,
+        DOWN
+    };
+
     /**
      * @brief A polygon, which may be a solid color shape and a vector of all
      *        pixels which make it up
@@ -109,7 +117,11 @@ std::ostream& operator<<(std::ostream&, const MapNormalizer::Color&);
 std::ostream& operator<<(std::ostream&, const MapNormalizer::ProvinceType&);
 std::ostream& operator<<(std::ostream&, const MapNormalizer::State&);
 
+std::string operator+(const std::string&, const MapNormalizer::Point2D&);
+std::string operator+(const std::string&, const MapNormalizer::Color&);
+
 bool operator==(const MapNormalizer::Color&, const MapNormalizer::Color&);
+bool operator!=(const MapNormalizer::Color&, const MapNormalizer::Color&);
 
 #endif
 
