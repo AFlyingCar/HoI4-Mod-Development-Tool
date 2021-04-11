@@ -24,7 +24,13 @@ namespace MapNormalizer {
 
     uint64_t xyToIndex(BitMap*, uint32_t, uint32_t);
     uint64_t xyToIndex(uint32_t, uint32_t, uint32_t);
+    Color getColorAt(BitMap*, uint32_t, uint32_t, uint32_t = 3);
     Pixel getAsPixel(BitMap*, uint32_t, uint32_t, uint32_t = 3);
+
+    bool isInImage(BitMap*, uint32_t, uint32_t);
+
+    bool isShapeTooLarge(uint32_t, uint32_t, BitMap*);
+    std::pair<uint32_t, uint32_t> calcShapeDims(const Polygon&);
 
     void ltrim(std::string&);
     void rtrim(std::string&);

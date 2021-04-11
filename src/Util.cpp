@@ -83,6 +83,27 @@ uint64_t MapNormalizer::xyToIndex(uint32_t w, uint32_t x, uint32_t y) {
 }
 
 /**
+ * @brief Gets the color at the given XY coordinate from the given BitMap
+ *
+ * @paramm image The BitMap to get a color from
+ * @param x The X coordinate to use
+ * @param y The Y coordinate to use
+ * @param depth The BitMap's color depth
+ *
+ * @return An RGB color from image at (x,y)
+ */
+MapNormalizer::Color MapNormalizer::getColorAt(BitMap* image, uint32_t x,
+                                               uint32_t y, uint32_t depth)
+{
+    auto index = xyToIndex(image->info_header.width * depth, x * depth, y);
+
+    return { image->data[index],
+             image->data[index + 1],
+             image->data[index + 2]
+           };
+}
+
+/**
  * @brief Gets the given XY coordinate as a Pixel from the given BitMap
  *
  * @param image The BitMap to get a pixel from
@@ -94,14 +115,9 @@ uint64_t MapNormalizer::xyToIndex(uint32_t w, uint32_t x, uint32_t y) {
 MapNormalizer::Pixel MapNormalizer::getAsPixel(BitMap* image, uint32_t x,
                                                uint32_t y, uint32_t depth)
 {
-    auto index = xyToIndex(image->info_header.width * depth, x * depth, y);
-
     return Pixel {
         { x, y },
-        { image->data[index],
-          image->data[index + 1],
-          image->data[index + 2]
-        }
+        getColorAt(image, x, y, depth)
     };
 }
 
@@ -116,5 +132,37 @@ MapNormalizer::Pixel MapNormalizer::getAsPixel(BitMap* image, uint32_t x,
 bool MapNormalizer::doColorsMatch(const Color& c1, const Color& c2) {
     return c1.r == c2.r && c1.g == c2.g && c1.b == c2.b;
 }
+
+/**
+ * @brief Checks if a given point is within the bounds of the image.
+ *
+ * @param image The image
+ * @param x The x coordinate to check
+ * @param y The y coordinate to check
+ *
+ * @return True if the point is within the bounds of the image, false otherwise
+ */
+bool MapNormalizer::isInImage(BitMap* image, uint32_t x, uint32_t y) {
+    return x >= 0 && x < static_cast<uint32_t>(image->info_header.width) &&
+           y >= 0 && y < static_cast<uint32_t>(image->info_header.height);
+}
+
+bool MapNormalizer::isShapeTooLarge(uint32_t s_width, uint32_t s_height,
+                                    BitMap* image)
+{
+    auto i_width = image->info_header.width;
+    auto i_height = image->info_header.height;
+
+    // shape width/height >= (1/8) of the total map width/height
+    return static_cast<float>(s_width) >= (i_width / 8.0f) ||
+           static_cast<float>(s_height) >= (i_height / 8.0f);
+}
+
+std::pair<uint32_t, uint32_t> MapNormalizer::calcShapeDims(const Polygon& shape)
+{
+    return std::make_pair(static_cast<uint32_t>(std::abs(static_cast<int>(shape.top_right.x) - static_cast<int>(shape.bottom_left.x))),
+                          static_cast<uint32_t>(std::abs(static_cast<int>(shape.top_right.y) - static_cast<int>(shape.bottom_left.y))));
+}
+
 
 

@@ -17,24 +17,6 @@
 
 std::vector<MapNormalizer::Pixel> MapNormalizer::problematic_pixels;
 
-
-bool MapNormalizer::isShapeTooLarge(uint32_t s_width, uint32_t s_height,
-                                    BitMap* image)
-{
-    auto i_width = image->info_header.width;
-    auto i_height = image->info_header.height;
-
-    // shape width/height >= (1/8) of the total map width/height
-    return static_cast<float>(s_width) >= (i_width / 8.0f) ||
-           static_cast<float>(s_height) >= (i_height / 8.0f);
-}
-
-std::pair<uint32_t, uint32_t> MapNormalizer::calcShapeDims(const Polygon& shape)
-{
-    return std::make_pair(static_cast<uint32_t>(std::abs(static_cast<int>(shape.top_right.x) - static_cast<int>(shape.bottom_left.x))),
-                          static_cast<uint32_t>(std::abs(static_cast<int>(shape.top_right.y) - static_cast<int>(shape.bottom_left.y))));
-}
-
 /**
  * @brief Checks if the given pixel is a boundary pixel.
  *
@@ -43,20 +25,6 @@ std::pair<uint32_t, uint32_t> MapNormalizer::calcShapeDims(const Polygon& shape)
  */
 bool MapNormalizer::isBoundaryPixel(Pixel p) {
     return p.color.r == 0 && p.color.g == 0 && p.color.b == 0;
-}
-
-/**
- * @brief Checks if a given point is within the bounds of the image.
- *
- * @param image The image
- * @param x The x coordinate to check
- * @param y The y coordinate to check
- *
- * @return True if the point is within the bounds of the image, false otherwise
- */
-bool MapNormalizer::isInImage(BitMap* image, uint32_t x, uint32_t y) {
-    return x >= 0 && x < static_cast<uint32_t>(image->info_header.width) &&
-           y >= 0 && y < static_cast<uint32_t>(image->info_header.height);
 }
 
 /**
