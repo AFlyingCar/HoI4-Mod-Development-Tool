@@ -13,6 +13,7 @@
 #include "Types.h" // Point, Color, Polygon, Pixel
 #include "Logger.h" // writeError
 #include "ShapeFinder.h" // findAllShapes
+#include "ShapeFinder2.h" // findAllShapes2
 #include "GraphicalDebugger.h" // graphicsWorker
 #include "ProvinceMapBuilder.h"
 #include "StateDefinitionBuilder.h"
@@ -163,6 +164,8 @@ int main(int argc, char** argv) {
 #ifdef ENABLE_GRAPHICS
     std::thread graphics_thread;
     if(!MapNormalizer::prog_opts.no_gui) {
+        std::copy(image->data, image->data + data_size, graphics_data);
+
         if(MapNormalizer::prog_opts.verbose)
             MapNormalizer::writeDebug("Graphical debugger enabled.");
         graphics_thread = std::thread([&image, &done, &graphics_data]() {
@@ -175,7 +178,18 @@ int main(int argc, char** argv) {
 
     if(!MapNormalizer::prog_opts.quiet)
         MapNormalizer::setInfoLine("Finding all possible shapes.");
-    auto shapes = MapNormalizer::findAllShapes(image, graphics_data, river_data);
+    // auto shapes = MapNormalizer::findAllShapes(image, graphics_data, river_data);
+    auto shapes = MapNormalizer::findAllShapes2(image);
+
+    if(!MapNormalizer::prog_opts.quiet)
+        MapNormalizer::setInfoLine("Drawing new graphical image");
+    for(auto&& shape : shapes) {
+        for(auto&& pixel : shape.pixels) {
+            MapNormalizer::writeDebugColor(graphics_data, image->info_header.width,
+                                           pixel.point.x, pixel.point.y,
+                                           shape.unique_color);
+        }
+    }
 
     MapNormalizer::setInfoLine("");
 
