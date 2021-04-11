@@ -28,6 +28,9 @@ namespace MapNormalizer {
 
     //! The minimum number of pixels that can be in a valid province
     constexpr size_t MIN_SHAPE_SIZE = 8;
+
+    //! The color of boundary pixels
+    const Color BORDER_COLOR = Color{ 0, 0, 0 };
 }
 
 #endif
