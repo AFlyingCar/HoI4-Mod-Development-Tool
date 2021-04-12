@@ -164,5 +164,14 @@ std::pair<uint32_t, uint32_t> MapNormalizer::calcShapeDims(const Polygon& shape)
                           static_cast<uint32_t>(std::abs(static_cast<int>(shape.top_right.y) - static_cast<int>(shape.bottom_left.y))));
 }
 
+void MapNormalizer::writeColorTo(unsigned char* color_data, uint32_t w,
+                                 uint32_t x, uint32_t y, Color c)
+{
+    uint32_t index = xyToIndex(w * 3, x * 3, y);
 
+    // Make sure we swap B and R (because BMP format sucks)
+    color_data[index] = c.b;
+    color_data[index + 1] = c.g;
+    color_data[index + 2] = c.r;
+}
 

@@ -40,6 +40,8 @@ namespace MapNormalizer {
     T clamp(T val, T min, T max) {
         return std::min(std::max(val, min), max);
     }
+
+    void writeColorTo(unsigned char*, uint32_t, uint32_t, uint32_t, Color);
 }
 
 #endif
