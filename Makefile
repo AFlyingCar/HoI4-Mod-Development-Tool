@@ -72,6 +72,9 @@ $(OUT): $(ASMOBJECTS) $(CXXOBJECTS) |$(OUT_DIR)/
 clean:
 	$(RM) $(OBJECTS) $(OUT)
 
+$(BUILD_DIR)/ShapeFinder.o: $(SRC_DIR)/ShapeFinder.cpp $(INC_DIR)/ShapeFinder.h
+	$(CXX) $(CXXFLAGS) -Wno-deprecated-declarations -c $< -o $@
+
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp $(INC_DIR)/%.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
