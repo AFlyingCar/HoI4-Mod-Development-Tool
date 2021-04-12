@@ -110,18 +110,19 @@ namespace MapNormalizer {
      * @brief A list of all states
      */
     using StateList = std::map<StateID, State>;
+
+    std::ostream& operator<<(std::ostream&, const Point2D&);
+    std::ostream& operator<<(std::ostream&, const Color&);
+
+    std::ostream& operator<<(std::ostream&, const ProvinceType&);
+    std::ostream& operator<<(std::ostream&, const State&);
+
+    std::string operator+(const std::string&, const Point2D&);
+    std::string operator+(const std::string&, const Color&);
+
+    bool operator==(const Color&, const Color&);
+    bool operator!=(const Color&, const Color&);
 }
-
-std::ostream& operator<<(std::ostream&, const MapNormalizer::Point2D&);
-std::ostream& operator<<(std::ostream&, const MapNormalizer::Color&);
-std::ostream& operator<<(std::ostream&, const MapNormalizer::ProvinceType&);
-std::ostream& operator<<(std::ostream&, const MapNormalizer::State&);
-
-std::string operator+(const std::string&, const MapNormalizer::Point2D&);
-std::string operator+(const std::string&, const MapNormalizer::Color&);
-
-bool operator==(const MapNormalizer::Color&, const MapNormalizer::Color&);
-bool operator!=(const MapNormalizer::Color&, const MapNormalizer::Color&);
 
 #endif
 

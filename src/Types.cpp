@@ -13,7 +13,7 @@
  *
  * @return The given stream after output.
  */
-std::ostream& operator<<(std::ostream& stream, const MapNormalizer::Point2D& p)
+std::ostream& MapNormalizer::operator<<(std::ostream& stream, const Point2D& p)
 {
     return (stream << '(' << p.x << ',' << p.y << ')');
 }
@@ -25,7 +25,7 @@ std::ostream& operator<<(std::ostream& stream, const MapNormalizer::Point2D& p)
  * @param c The Color to output.
  * @return The given stream after output.
  */
-std::ostream& operator<<(std::ostream& stream, const MapNormalizer::Color& c) {
+std::ostream& MapNormalizer::operator<<(std::ostream& stream, const Color& c) {
     return (stream << std::hex << colorToRGB(c));
 }
 
@@ -36,17 +36,17 @@ std::ostream& operator<<(std::ostream& stream, const MapNormalizer::Color& c) {
  * @param prov_type The ProvinceType to output.
  * @return The given stream after output.
  */
-std::ostream& operator<<(std::ostream& stream,
-                         const MapNormalizer::ProvinceType& prov_type)
+std::ostream& MapNormalizer::operator<<(std::ostream& stream,
+                                        const ProvinceType& prov_type)
 {
     switch(prov_type) {
-        case MapNormalizer::ProvinceType::LAND:
+        case ProvinceType::LAND:
             return (stream << "land");
-        case MapNormalizer::ProvinceType::LAKE:
+        case ProvinceType::LAKE:
             return (stream << "lake");
-        case MapNormalizer::ProvinceType::SEA:
+        case ProvinceType::SEA:
             return (stream << "sea");
-        case MapNormalizer::ProvinceType::UNKNOWN:
+        case ProvinceType::UNKNOWN:
         default:
             return (stream << "UNKNOWN{" << static_cast<int>(prov_type) << "}");
     }
@@ -60,7 +60,7 @@ std::ostream& operator<<(std::ostream& stream,
  *
  * @return The given stream after output.
  */
-std::ostream& operator<<(std::ostream& stream, const MapNormalizer::State& state)
+std::ostream& MapNormalizer::operator<<(std::ostream& stream, const State& state)
 {
     stream << "state = {" << std::endl;
     stream << "    id = " << state.id << std::endl;
@@ -94,26 +94,22 @@ std::ostream& operator<<(std::ostream& stream, const MapNormalizer::State& state
     return stream;
 }
 
-std::string operator+(const std::string& s, const MapNormalizer::Point2D& point)
+std::string MapNormalizer::operator+(const std::string& s, const Point2D& point)
 {
-    std::stringstream ss;
-    ss << s << point;
-    return ss.str();
+    return s + "(" + std::to_string(point.x) + ", " + std::to_string(point.y) + ")";
 }
 
-std::string operator+(const std::string& s, const MapNormalizer::Color& color)
+std::string MapNormalizer::operator+(const std::string& s, const Color& color)
 {
-    std::stringstream ss;
-    ss << s << color;
-    return ss.str();
+    return s + "[" + std::to_string(color.r) + ", " + std::to_string(color.g) + ", " + std::to_string(color.b) + "]";
 }
 
-bool operator==(const MapNormalizer::Color& c1, const MapNormalizer::Color& c2)
+bool MapNormalizer::operator==(const Color& c1, const Color& c2)
 {
     return doColorsMatch(c1, c2);
 }
 
-bool operator!=(const MapNormalizer::Color& c1, const MapNormalizer::Color& c2)
+bool MapNormalizer::operator!=(const Color& c1, const Color& c2)
 {
     return !(c1 == c2);
 }
