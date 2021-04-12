@@ -157,19 +157,25 @@ int main(int argc, char** argv) {
         MapNormalizer::writeDebug(ss.str());
     }
 
-    graphics_data = new unsigned char[data_size];
     river_data = new unsigned char[data_size];
     normalmap_data = new unsigned char[data_size];
 
+    auto& worker = MapNormalizer::GraphicsWorker::getInstance();
+
 #ifdef ENABLE_GRAPHICS
+    graphics_data = new unsigned char[data_size];
+
     std::thread graphics_thread;
     if(!MapNormalizer::prog_opts.no_gui) {
-        std::copy(image->data, image->data + data_size, graphics_data);
-
         if(MapNormalizer::prog_opts.verbose)
             MapNormalizer::writeDebug("Graphical debugger enabled.");
-        graphics_thread = std::thread([&image, &done, &graphics_data]() {
-                MapNormalizer::graphicsWorker(image, graphics_data, done);
+
+
+        worker.init(image, graphics_data);
+        worker.resetDebugData();
+
+        graphics_thread = std::thread([&done, &worker]() {
+                worker.work(done);
                 // TODO: We should somehow switch the graphicsWorker over to
                 //   displaying the blank river map builder
         });
@@ -178,16 +184,21 @@ int main(int argc, char** argv) {
 
     if(!MapNormalizer::prog_opts.quiet)
         MapNormalizer::setInfoLine("Finding all possible shapes.");
-    // auto shapes = MapNormalizer::findAllShapes(image, graphics_data, river_data);
+
     auto shapes = MapNormalizer::findAllShapes2(image);
+    worker.resetDebugData();
 
     if(!MapNormalizer::prog_opts.quiet)
         MapNormalizer::setInfoLine("Drawing new graphical image");
     for(auto&& shape : shapes) {
         for(auto&& pixel : shape.pixels) {
-            MapNormalizer::writeDebugColor(graphics_data, image->info_header.width,
-                                           pixel.point.x, pixel.point.y,
-                                           shape.unique_color);
+            // Write to both the output data and into the displayed data
+            MapNormalizer::writeColorTo(image->data, image->info_header.width,
+                                        pixel.point.x, pixel.point.y,
+                                        shape.unique_color);
+
+            worker.writeDebugColor(pixel.point.x, pixel.point.y,
+                                   shape.unique_color);
         }
     }
 
@@ -277,7 +288,7 @@ int main(int argc, char** argv) {
 
     if(!MapNormalizer::prog_opts.quiet)
         MapNormalizer::setInfoLine("Writing province bitmap to file...");
-    MapNormalizer::writeBMP(output_path / "provinces.bmp", graphics_data,
+    MapNormalizer::writeBMP(output_path / "provinces.bmp", image->data,
                             image->info_header.width, image->info_header.height);
 
     if(!MapNormalizer::prog_opts.quiet)
