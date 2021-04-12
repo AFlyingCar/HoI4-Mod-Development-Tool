@@ -72,7 +72,7 @@ void MapNormalizer::deleteInfoLine() {
  *
  * @param line The next textual string to use for the information line.
  */
-void MapNormalizer::setInfoLine(const std::string& line) {
+void MapNormalizer::setInfoLineImpl(const std::string& line) {
     info_line = line;
 
     deleteInfoLine();
@@ -86,7 +86,8 @@ void MapNormalizer::setInfoLine(const std::string& line) {
  * @param message The message to write.
  * @param write_prefix Whether a prefix should be attached to this message.
  */
-void MapNormalizer::writeWarning(const std::string& message, bool write_prefix)
+void MapNormalizer::writeWarningImpl(const std::string& message,
+                                     bool write_prefix)
 {
     deleteInfoLine();
     std::cerr << (isErrAnsiEnabled() ? "\33[33m" : "")
@@ -103,7 +104,9 @@ void MapNormalizer::writeWarning(const std::string& message, bool write_prefix)
  * @param message The message to write.
  * @param write_prefix Whether a prefix should be attached to this message.
  */
-void MapNormalizer::writeError(const std::string& message, bool write_prefix) {
+void MapNormalizer::writeErrorImpl(const std::string& message,
+                                   bool write_prefix)
+{
     deleteInfoLine();
     std::cerr << (isErrAnsiEnabled() ? "\33[31m" : "")
               << (write_prefix ? "[ERR] ~ " : "") << message
@@ -119,7 +122,9 @@ void MapNormalizer::writeError(const std::string& message, bool write_prefix) {
  * @param message The message to write.
  * @param write_prefix Whether a prefix should be attached to this message.
  */
-void MapNormalizer::writeStdout(const std::string& message, bool write_prefix) {
+void MapNormalizer::writeStdoutImpl(const std::string& message,
+                                    bool write_prefix)
+{
     if(prog_opts.quiet) return;
 
     deleteInfoLine();
@@ -137,7 +142,9 @@ void MapNormalizer::writeStdout(const std::string& message, bool write_prefix) {
  * @param message The message to write.
  * @param write_prefix Whether a prefix should be attached to this message.
  */
-void MapNormalizer::writeDebug(const std::string& message, bool write_prefix) {
+void MapNormalizer::writeDebugImpl(const std::string& message,
+                                   bool write_prefix)
+{
     // Do nothing if we don't have verbose output.
     if(!prog_opts.verbose) return;
 
