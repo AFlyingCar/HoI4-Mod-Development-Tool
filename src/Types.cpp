@@ -26,7 +26,7 @@ std::ostream& MapNormalizer::operator<<(std::ostream& stream, const Point2D& p)
  * @return The given stream after output.
  */
 std::ostream& MapNormalizer::operator<<(std::ostream& stream, const Color& c) {
-    return (stream << std::hex << colorToRGB(c));
+    return (stream << std::hex << colorToRGB(c) << std::dec);
 }
 
 /**
