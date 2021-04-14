@@ -24,6 +24,7 @@ void MapNormalizer::printHelp() {
     writeStdout("\t   --state-input           The input file for writing state definitions.", false);
     writeStdout("\t   --height-map            The input file for writing the normal map.", false);
     writeStdout("\t   --hoi4-install-path     The installation path for Hearts of Iron 4.", false);
+    writeStdout("\t   --output-stages         Output every stage of the shape detection algorithm.", false);
     writeStdout("\t-v,--verbose               Display all output.", false);
     writeStdout("\t-q,--quiet                 Display only errors and warnings (does not affect this message).", false);
     writeStdout("\t-h,--help                  Display this message and exit.", false);
@@ -55,11 +56,12 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
         { "height-map", required_argument, NULL, 3 },
         { "no-skip-no-name-state", no_argument, NULL, 4 },
         { "hoi4-install-path", required_argument, NULL, 5 },
+        { "output-stages", no_argument, NULL, 6 },
         { nullptr, 0, nullptr, 0}
     };
 
     // Setup default option values
-    ProgramOptions prog_opts { 0, "", "", false, false, false, "", "", false, "" };
+    ProgramOptions prog_opts { 0, "", "", false, false, false, "", "", false, "", false };
 
     int optindex = 0;
     int c = 0;
@@ -123,6 +125,10 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
                 } else {
                     prog_opts.hoi4_install_path = optarg;
                 }
+                break;
+            case 6: // --output-stages
+                std::cout << "--output-stages" << std::endl;
+                prog_opts.output_stages = true;
                 break;
             case 'v': // -v,--verbose
                 if(prog_opts.quiet) {

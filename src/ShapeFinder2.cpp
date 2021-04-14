@@ -465,7 +465,49 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes2(BitMap* image)
     std::map<uint32_t, uint32_t> label_parents;
 
     CCLPass1(image, label_matrix, label_parents);
+
+    if(MapNormalizer::prog_opts.output_stages) {
+        unsigned char* label_data = new unsigned char[label_matrix_size * 3];
+        std::map<uint32_t, Color> label_to_color;
+
+        for(uint32_t i = 0; i < label_matrix_size; ++i) {
+            uint32_t label = label_matrix[i];
+            if(label_to_color.count(label) == 0)
+                label_to_color[label] = generateUniqueColor(ProvinceType::UNKNOWN);
+            const Color& c = label_to_color[label];
+            label_data[i * 3] = c.b;
+            label_data[(i * 3) + 1] = c.g;
+            label_data[(i * 3) + 2] = c.r;
+        }
+
+        writeBMP("labels1.bmp", label_data,
+                 image->info_header.width, image->info_header.height);
+
+        delete[] label_data;
+    }
+
     CCLPass2(image, label_matrix, label_parents);
+
+    if(MapNormalizer::prog_opts.output_stages) {
+        unsigned char* label_data = new unsigned char[label_matrix_size * 3];
+        std::map<uint32_t, Color> label_to_color;
+
+        for(uint32_t i = 0; i < label_matrix_size; ++i) {
+            uint32_t label = label_matrix[i];
+            if(label_to_color.count(label) == 0)
+                label_to_color[label] = generateUniqueColor(ProvinceType::UNKNOWN);
+            const Color& c = label_to_color[label];
+            label_data[i * 3] = c.b;
+            label_data[(i * 3) + 1] = c.g;
+            label_data[(i * 3) + 2] = c.r;
+        }
+
+        writeBMP("labels2.bmp", label_data,
+                 image->info_header.width, image->info_header.height);
+
+        delete[] label_data;
+    }
+
     return CCLPass3(image, label_matrix);
 }
 

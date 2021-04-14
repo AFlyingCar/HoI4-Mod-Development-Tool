@@ -44,6 +44,9 @@ namespace MapNormalizer {
 
         //! --hoi4-install-path=
         std::string hoi4_install_path;
+
+        //! --output-stages
+        bool output_stages;
     };
 
     ProgramOptions parseArgs(int, char**);
