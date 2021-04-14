@@ -10,10 +10,17 @@
 # include <string>
 # include <sstream>
 
+# include "Options.h"
+
+namespace {
+    std::stringstream s_log_builder;
+}
 
 namespace MapNormalizer {
+    void init();
+
     void deleteInfoLine();
-    void setInfoLineImpl(const std::string&);
+    void setInfoLineImpl(std::string&&);
     void writeErrorImpl(const std::string&, bool = true);
     void writeWarningImpl(const std::string&, bool = true);
     void writeStdoutImpl(const std::string&, bool = true);
@@ -21,37 +28,43 @@ namespace MapNormalizer {
 
     template<typename... Args>
     void setInfoLine(const Args&... args) {
-        std::stringstream ss;
-        (ss << ... << args);
-        setInfoLineImpl(ss.str());
+        if(MapNormalizer::prog_opts.quiet) return;
+
+        s_log_builder.str(std::string{});
+        (s_log_builder << ... << args);
+        setInfoLineImpl(s_log_builder.str());
     }
 
     template<bool WritePrefix = true, typename... Args>
     void writeError(const Args&... args) {
-        std::stringstream ss;
-        (ss << ... << args);
-        writeErrorImpl(ss.str(), WritePrefix);
+        s_log_builder.str(std::string{});
+        (s_log_builder << ... << args);
+        writeErrorImpl(s_log_builder.str(), WritePrefix);
     }
 
     template<bool WritePrefix = true, typename... Args>
     void writeWarning(const Args&... args) {
-        std::stringstream ss;
-        (ss << ... << args);
-        writeWarningImpl(ss.str(), WritePrefix);
+        s_log_builder.str(std::string{});
+        (s_log_builder << ... << args);
+        writeWarningImpl(s_log_builder.str(), WritePrefix);
     }
 
     template<bool WritePrefix = true, typename... Args>
     void writeStdout(const Args&... args) {
-        std::stringstream ss;
-        (ss << ... << args);
-        writeStdoutImpl(ss.str(), WritePrefix);
+        if(prog_opts.quiet) return;
+
+        s_log_builder.str(std::string{});
+        (s_log_builder << ... << args);
+        writeStdoutImpl(s_log_builder.str(), WritePrefix);
     }
 
     template<bool WritePrefix = true, typename... Args>
     void writeDebug(const Args&... args) {
-        std::stringstream ss;
-        (ss << ... << args);
-        writeDebugImpl(ss.str(), WritePrefix);
+        if(!prog_opts.verbose) return;
+
+        s_log_builder.str(std::string{});
+        (s_log_builder << ... << args);
+        writeDebugImpl(s_log_builder.str(), WritePrefix);
     }
 }
 
