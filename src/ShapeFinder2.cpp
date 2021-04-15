@@ -126,13 +126,15 @@ auto MapNormalizer::getAdjacentPixel(BitMap* image, Point2D point,
     }
 }
 
-void MapNormalizer::CCLPass1(BitMap* image, uint32_t* label_matrix,
-                             std::map<uint32_t, uint32_t>& label_parents)
+uint32_t MapNormalizer::CCLPass1(BitMap* image, uint32_t* label_matrix,
+                                 std::map<uint32_t, uint32_t>& label_parents)
 {
     uint32_t width = image->info_header.width;
     uint32_t height = image->info_header.height;
 
     uint32_t next_label = 1;
+
+    uint32_t num_border_pixels = 0;
 
     if(!MapNormalizer::prog_opts.quiet)
         writeStdout("Performing Pass #1 of CCL.");
@@ -151,6 +153,7 @@ void MapNormalizer::CCLPass1(BitMap* image, uint32_t* label_matrix,
             // Skip this pixel if it is part of a border
             if(color == BORDER_COLOR) {
                 label_matrix[index] = 0; // Reset the label back to 0
+                ++num_border_pixels;
                 continue;
             }
 
@@ -258,185 +261,213 @@ void MapNormalizer::CCLPass1(BitMap* image, uint32_t* label_matrix,
 
     if(!MapNormalizer::prog_opts.quiet)
         setInfoLine("");
+
+    return num_border_pixels;
 }
 
-void MapNormalizer::CCLPass2(BitMap* image, uint32_t* label_matrix,
-                             const std::map<uint32_t, uint32_t>& label_parents)
+void buildShape(uint32_t label, const MapNormalizer::Color& color,
+                MapNormalizer::PolygonList& shapes,
+                const MapNormalizer::Point2D& point,
+                std::map<uint32_t, uint32_t>& label_to_shapeidx)
 {
-    uint32_t width = image->info_header.width;
-    uint32_t height = image->info_header.height;
+    uint32_t shapeidx = -1;
 
-    if(!MapNormalizer::prog_opts.quiet)
-        writeStdout("Performing Pass #2 of CCL.");
+    // Do we have an entry for this label yet?
+    if(label_to_shapeidx.count(label) == 0) {
+        label_to_shapeidx[label] = shapes.size();
 
-    auto& worker = GraphicsWorker::getInstance();
+        // Create a new shape
+        auto prov_type = getProvinceType(color);
+        auto unique_color = generateUniqueColor(prov_type);
 
-    for(uint32_t y = 0; y < height; ++y) {
-        for(uint32_t x = 0; x < width; ++x) {
-            uint32_t index = xyToIndex(image, x, y);
-            uint32_t& label = label_matrix[index];
+        shapes.push_back(MapNormalizer::Polygon{
+            { },
+            color,
+            unique_color,
+            { 0, 0 }, { 0, 0 }
+        });
+    }
 
-            // Will return itself if this label is already a root
-            label = getRootLabel(label, label_parents);
+    shapeidx = label_to_shapeidx[label];
 
-            worker.writeDebugColor(x, y, label_to_color[label]);
-        }
+    auto& shape = shapes.at(shapeidx);
+
+    shape.pixels.push_back(MapNormalizer::Pixel{ point, color });
+
+    // We calculate the bounding box of the shape incrementally
+    if(point.x > shape.top_right.x) {
+        shape.top_right.x = point.x;
+    } else if(point.x < shape.bottom_left.x) {
+        shape.bottom_left.x = point.x;
+    }
+
+    if(point.y > shape.top_right.y) {
+        shape.top_right.y = point.y;
+    } else if(point.y < shape.bottom_left.y) {
+        shape.bottom_left.y = point.y;
     }
 }
 
-MapNormalizer::PolygonList MapNormalizer::CCLPass3(BitMap* image,
-                                                   uint32_t* label_matrix)
+std::optional<uint32_t> errorCheckAllShapes(MapNormalizer::BitMap* image,
+                                            const MapNormalizer::PolygonList& shapes)
+{
+    uint32_t problematic_shapes = 0;
+
+    // Perform error-checking on shapes
+    uint32_t index = 0;
+    for(const MapNormalizer::Polygon& shape : shapes) {
+        ++index;
+
+        // Check for minimum province size.
+        //  See: https://hoi4.paradoxwikis.com/Map_modding
+        if(shape.pixels.size() <= MapNormalizer::MIN_SHAPE_SIZE) {
+            MapNormalizer::writeWarning("Shape ", index, " has only ",
+                                        shape.pixels.size(),
+                                        " pixels. All provinces are required to have more than ",
+                                        MapNormalizer::MIN_SHAPE_SIZE,
+                                        " pixels. See: https://hoi4.paradoxwikis.com/Map_modding");
+            ++problematic_shapes;
+        }
+
+        //  Check to make sure bounding boxes aren't too large
+        if(auto [width, height] = MapNormalizer::calcShapeDims(shape);
+           MapNormalizer::isShapeTooLarge(width, height, image))
+        {
+            MapNormalizer::writeWarning("Shape #", index,
+                                        " has a bounding box of size ",
+                                        MapNormalizer::Point2D{width, height},
+                                        ". One of these is larger than the allowed ratio of 1/8 * (",
+                                        image->info_header.width, ',', image->info_header.height,
+                                        ") => (", (image->info_header.width / 8.0f), ',',
+                                                  (image->info_header.height / 8.0f),
+                                        "). Check the province borders. Bounds are: ",
+                                        shape.bottom_left, " to ", shape.top_right);
+        }
+    }
+
+    if(problematic_shapes == 0) {
+        return std::nullopt;
+    } else {
+        return problematic_shapes;
+    }
+}
+
+auto MapNormalizer::CCLPass2(BitMap* image, uint32_t* label_matrix,
+                             std::map<uint32_t, uint32_t>& label_to_shapeidx,
+                             const std::map<uint32_t, uint32_t>& label_parents,
+                             std::vector<Pixel>& border_pixels)
+    -> PolygonList
 {
     uint32_t width = image->info_header.width;
     uint32_t height = image->info_header.height;
 
     PolygonList shapes;
-    std::map<uint32_t, uint32_t> label_to_shapeidx;
+
+    auto& worker = GraphicsWorker::getInstance();
 
     if(!MapNormalizer::prog_opts.quiet)
-        writeStdout("Performing Pass #3 of CCL.");
+        writeStdout("Performing Pass #2 of CCL.");
 
     for(uint32_t y = 0; y < height; ++y) {
         for(uint32_t x = 0; x < width; ++x) {
             uint32_t index = xyToIndex(image, x, y);
+            uint32_t& label = label_matrix[index];
             Color color = getColorAt(image, x, y);
-            uint32_t label = label_matrix[index];
             Point2D point{x, y};
 
             if(color == BORDER_COLOR) {
-                // If we are a border pixel, then merge with the closest shape
-                // First, check anything to our upper-left, as those will be
-                //  non-borders if they exist
-                std::optional<Point2D> opt_adjacent;
-
-                if(opt_adjacent = getAdjacentPixel(image, point,
-                                                   Direction::LEFT);
-                   opt_adjacent)
-                {
-                    index = xyToIndex(image, opt_adjacent->x, opt_adjacent->y);
-                    color = getColorAt(image, opt_adjacent->x, opt_adjacent->y);
-                    label = label_matrix[index];
-                } else if(opt_adjacent = getAdjacentPixel(image, point,
-                                                          Direction::UP);
-                          opt_adjacent)
-                {
-                    index = xyToIndex(image, opt_adjacent->x, opt_adjacent->y);
-                    color = getColorAt(image, opt_adjacent->x, opt_adjacent->y);
-                    label = label_matrix[index];
-#if 0
-                } else if(opt_adjacent = getAdjacentPixel(image, point,
-                                                          Direction::UP,
-                                                          Direction::LEFT);
-                          opt_adjacent)
-                {
-                    index = xyToIndex(image, opt_adjacent->x, opt_adjacent->y);
-                    color = getColorAt(image, opt_adjacent->x, opt_adjacent->y);
-                    label = label_matrix[index];
-#endif
-                } else {
-                    // If that fails, start walking left->right, top->bottom for the
-                    //  first pixel that is not a border and merge with that
-                    for(uint32_t y2 = y; y2 < height; ++y2) {
-                        for(uint32_t x2 = x; x2 < width; ++x2) {
-                            index = xyToIndex(image, x2, y2);
-                            color = getColorAt(image, x2, y2);
-                            label = label_matrix[index];
-
-                            // Skip any further border pixels, then will be
-                            //  picked up by the earlier adjacency checks
-                            if(color == BORDER_COLOR) {
-                                continue;
-                            }
-                        }
-                    }
-
-                    // If we _still_ have a border color, then that means we are
-                    //  in a worst case scenario of the entire image being
-                    //  (0,0,0)
-                    if(color == BORDER_COLOR) {
-                        writeError("No further color pixels found from "s + point + ". Terminating now! Check your input image!");
-                        return PolygonList{}; // Return 0 shapes to indicate an error
-                    }
-                }
+                border_pixels.push_back(Pixel{ point, color });
+                continue;
             }
 
-            uint32_t shapeidx = -1;
+            // Will return itself if this label is already a root
+            label = getRootLabel(label, label_parents);
 
-            // Do we have an entry for this label yet?
-            if(label_to_shapeidx.count(label) == 0) {
-                label_to_shapeidx[label] = shapes.size();
+            worker.writeDebugColor(x, y, label_to_color[label]);
 
-                // Create a new shape
-                auto prov_type = getProvinceType(color);
-                Color unique_color = generateUniqueColor(prov_type);
-
-                shapes.push_back(Polygon{
-                    { },
-                    color,
-                    unique_color,
-                    { 0, 0 }, { 0, 0 }
-                });
-            }
-
-            shapeidx = label_to_shapeidx[label];
-
-            Polygon& shape = shapes.at(shapeidx);
-
-            shape.pixels.push_back(Pixel{ point, color });
-
-            // We calculate the bounding box of the shape incrementally
-            if(point.x > shape.top_right.x) {
-                shape.top_right.x = point.x;
-            } else if(point.x < shape.bottom_left.x) {
-                shape.bottom_left.x = point.x;
-            }
-
-            if(point.y > shape.top_right.y) {
-                shape.top_right.y = point.y;
-            } else if(point.y < shape.bottom_left.y) {
-                shape.bottom_left.y = point.y;
-            }
+            buildShape(label, color, shapes, point, label_to_shapeidx);
         }
     }
 
     if(!MapNormalizer::prog_opts.quiet)
-        writeStdout("Generated "s + std::to_string(shapes.size()) + " shapes.");
-
-    // Perform error-checking on shapes
-    uint32_t index = 0;
-    for(Polygon& shape : shapes) {
-        ++index;
-
-        // Check for minimum province size.
-        //  See: https://hoi4.paradoxwikis.com/Map_modding
-        if(shape.pixels.size() <= MIN_SHAPE_SIZE) {
-            std::stringstream ss;
-            ss << "Shape " << index << " has only " << shape.pixels.size()
-               << " pixels. All provinces are required to have more than "
-               << MIN_SHAPE_SIZE
-               << " pixels. See: https://hoi4.paradoxwikis.com/Map_modding";
-            writeWarning(ss.str());
-        }
-
-        //  Check to make sure bounding boxes aren't too large
-        if(auto [width, height] = calcShapeDims(shape); isShapeTooLarge(width,
-                                                                        height,
-                                                                        image))
-        {
-            std::stringstream ss;
-            ss << "Shape #" << index << " has a bounding box of size "
-               << Point2D{width, height} << ". One of these is larger than the"
-               << " allowed ratio of 1/8 * ("
-               << image->info_header.width << ',' << image->info_header.height
-               << ") => (" << (image->info_header.width / 8.0f) << ','
-                          << (image->info_header.height / 8.0f)
-               << "). Check the province borders.";
-            ss << " Bounds are: " << shape.bottom_left << " to " << shape.top_right;
-            writeWarning(ss.str());
-        }
-    }
+        writeStdout("Generated ", shapes.size(), " shapes.");
 
     return shapes;
+}
+
+bool MapNormalizer::CCLPass3(BitMap* image, MapNormalizer::PolygonList& shapes,
+                             uint32_t* label_matrix,
+                             const std::map<uint32_t, uint32_t>& label_to_shapeidx,
+                             const std::vector<Pixel>& border_pixels)
+{
+    uint32_t width = image->info_header.width;
+    uint32_t height = image->info_header.height;
+
+    auto& worker = GraphicsWorker::getInstance();
+
+    if(!MapNormalizer::prog_opts.quiet)
+        writeStdout("Performing Pass #3 of CCL.");
+
+    for(const Pixel& pixel : border_pixels) {
+        auto&& [x, y] = pixel.point;
+        const Point2D& point = pixel.point;
+
+        // Copy it because we will need to change its value later
+        Point2D merge_with;
+
+        // Merge with the closest shape
+        // First, check anything to our upper-left, as those will be
+        //  non-borders if they exist
+        std::optional<Point2D> opt_adjacent;
+
+        if(opt_adjacent = getAdjacentPixel(image, point,
+                                           Direction::LEFT);
+           opt_adjacent)
+        {
+            merge_with = *opt_adjacent;
+        } else if(opt_adjacent = getAdjacentPixel(image, point,
+                                                  Direction::UP);
+                  opt_adjacent)
+        {
+            merge_with = *opt_adjacent;
+        } else {
+            bool found = false;
+            // If that fails, start walking left->right, top->bottom for the
+            //  first pixel that is not a border and merge with that
+            for(uint32_t y2 = y; !found && y2 < height; ++y2) {
+                for(uint32_t x2 = x; !found && x2 < width; ++x2) {
+                    // Skip any further border pixels, then will be
+                    //  picked up by the earlier adjacency checks
+                    if(getColorAt(image, x2, y2) == BORDER_COLOR) {
+                        continue;
+                    } else {
+                        merge_with = Point2D{ x2, y2 };
+                        found = true;
+                    }
+                }
+            }
+
+            // If we _still_ have a border color, then that means we are
+            //  in a worst case scenario of the entire image being
+            //  (0,0,0)
+            if(!found) {
+                writeError("No further color pixels found from "s + point + ". Terminating now! Check your input image!");
+                return false;
+            }
+        }
+
+        uint32_t index = xyToIndex(image, merge_with.x, merge_with.y);
+        uint32_t label = label_matrix[index];
+
+        Polygon& shape = shapes[label_to_shapeidx.at(label)];
+        shape.pixels.push_back(pixel);
+
+        label_matrix[xyToIndex(image, x, y)] = label;
+
+        worker.writeDebugColor(x, y, shape.unique_color);
+    }
+
+    return true;
 }
 
 /**
@@ -482,7 +513,7 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes2(BitMap* image)
     uint32_t* label_matrix = new uint32_t[label_matrix_size];
     std::map<uint32_t, uint32_t> label_parents;
 
-    CCLPass1(image, label_matrix, label_parents);
+    uint32_t num_border_pixels = CCLPass1(image, label_matrix, label_parents);
 
     if(MapNormalizer::prog_opts.output_stages) {
         unsigned char* label_data = new unsigned char[label_matrix_size * 3];
@@ -503,7 +534,12 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes2(BitMap* image)
         delete[] label_data;
     }
 
-    CCLPass2(image, label_matrix, label_parents);
+    std::map<uint32_t, uint32_t> label_to_shapeidx;
+    std::vector<Pixel> border_pixels;
+    border_pixels.reserve(num_border_pixels);
+
+    PolygonList shapes = CCLPass2(image, label_matrix, label_to_shapeidx,
+                                  label_parents, border_pixels);
 
     if(MapNormalizer::prog_opts.output_stages) {
         unsigned char* label_data = new unsigned char[label_matrix_size * 3];
@@ -524,6 +560,13 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes2(BitMap* image)
 
     resetUniqueColorGenerator();
 
-    return CCLPass3(image, label_matrix);
+    if(!CCLPass3(image, shapes, label_matrix, label_to_shapeidx, border_pixels))
+    {
+        return PolygonList{};
+    }
+
+    errorCheckAllShapes(image, shapes);
+
+    return shapes;
 }
 

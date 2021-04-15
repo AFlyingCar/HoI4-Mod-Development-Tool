@@ -21,9 +21,13 @@ namespace MapNormalizer {
     std::optional<Point2D> getAdjacentPixel(BitMap*, Point2D, Direction,
                                             Direction = Direction::NONE);
 
-    void CCLPass1(BitMap*, uint32_t*, std::map<uint32_t, std::uint32_t>&);
-    void CCLPass2(BitMap*, uint32_t*, const std::map<uint32_t, std::uint32_t>&);
-    PolygonList CCLPass3(BitMap*, uint32_t*);
+    uint32_t CCLPass1(BitMap*, uint32_t*, std::map<uint32_t, std::uint32_t>&);
+    PolygonList CCLPass2(BitMap*, uint32_t*, std::map<uint32_t, std::uint32_t>&,
+                         const std::map<uint32_t, std::uint32_t>&,
+                         std::vector<Pixel>&);
+    bool CCLPass3(BitMap*, PolygonList&, uint32_t*,
+                  const std::map<uint32_t, uint32_t>&,
+                  const std::vector<Pixel>&);
 
     PolygonList findAllShapes2(BitMap*);
 }
