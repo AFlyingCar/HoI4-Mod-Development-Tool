@@ -9,6 +9,11 @@
 #include "ProvinceMapBuilder.h" // getProvinceType
 #include "UniqueColorGenerator.h" // generateUniqueColor
 #include "Options.h"
+#include "GraphicalDebugger.h"
+
+namespace {
+    std::map<uint32_t, MapNormalizer::Color> label_to_color;
+}
 
 using namespace std::string_literals;
 
@@ -132,6 +137,8 @@ void MapNormalizer::CCLPass1(BitMap* image, uint32_t* label_matrix,
     if(!MapNormalizer::prog_opts.quiet)
         writeStdout("Performing Pass #1 of CCL.");
 
+    auto& worker = GraphicsWorker::getInstance();
+
     for(uint32_t y = 0; y < height; ++y) {
         for(uint32_t x = 0; x < width; ++x) {
             Color color = getColorAt(image, x, y);
@@ -239,6 +246,13 @@ void MapNormalizer::CCLPass1(BitMap* image, uint32_t* label_matrix,
             if(label == next_label) {
                 ++next_label;
             }
+
+            // Only write the color if we are expected to output this stage or
+            //  if we are expected to display the stage graphically
+            if((MapNormalizer::prog_opts.output_stages || !MapNormalizer::prog_opts.no_gui) && label_to_color.count(label) == 0)
+                label_to_color[label] = (label == 0 ? BORDER_COLOR : generateUniqueColor(ProvinceType::UNKNOWN));
+
+            worker.writeDebugColor(x, y, label_to_color[label]);
         }
     }
 
@@ -255,6 +269,8 @@ void MapNormalizer::CCLPass2(BitMap* image, uint32_t* label_matrix,
     if(!MapNormalizer::prog_opts.quiet)
         writeStdout("Performing Pass #2 of CCL.");
 
+    auto& worker = GraphicsWorker::getInstance();
+
     for(uint32_t y = 0; y < height; ++y) {
         for(uint32_t x = 0; x < width; ++x) {
             uint32_t index = xyToIndex(image, x, y);
@@ -262,6 +278,8 @@ void MapNormalizer::CCLPass2(BitMap* image, uint32_t* label_matrix,
 
             // Will return itself if this label is already a root
             label = getRootLabel(label, label_parents);
+
+            worker.writeDebugColor(x, y, label_to_color[label]);
         }
     }
 }
@@ -468,12 +486,11 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes2(BitMap* image)
 
     if(MapNormalizer::prog_opts.output_stages) {
         unsigned char* label_data = new unsigned char[label_matrix_size * 3];
-        std::map<uint32_t, Color> label_to_color;
+
+        label_to_color[0] = BORDER_COLOR;
 
         for(uint32_t i = 0; i < label_matrix_size; ++i) {
             uint32_t label = label_matrix[i];
-            if(label_to_color.count(label) == 0)
-                label_to_color[label] = generateUniqueColor(ProvinceType::UNKNOWN);
             const Color& c = label_to_color[label];
             label_data[i * 3] = c.b;
             label_data[(i * 3) + 1] = c.g;
@@ -490,12 +507,9 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes2(BitMap* image)
 
     if(MapNormalizer::prog_opts.output_stages) {
         unsigned char* label_data = new unsigned char[label_matrix_size * 3];
-        std::map<uint32_t, Color> label_to_color;
 
         for(uint32_t i = 0; i < label_matrix_size; ++i) {
             uint32_t label = label_matrix[i];
-            if(label_to_color.count(label) == 0)
-                label_to_color[label] = generateUniqueColor(ProvinceType::UNKNOWN);
             const Color& c = label_to_color[label];
             label_data[i * 3] = c.b;
             label_data[(i * 3) + 1] = c.g;
@@ -507,6 +521,8 @@ MapNormalizer::PolygonList MapNormalizer::findAllShapes2(BitMap* image)
 
         delete[] label_data;
     }
+
+    resetUniqueColorGenerator();
 
     return CCLPass3(image, label_matrix);
 }
