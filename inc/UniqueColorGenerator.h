@@ -11,6 +11,9 @@
 
 namespace MapNormalizer {
     Color generateUniqueColor(ProvinceType);
+
+    void resetUniqueColorGenerator(ProvinceType);
+    void resetUniqueColorGenerator();
 }
 
 #endif

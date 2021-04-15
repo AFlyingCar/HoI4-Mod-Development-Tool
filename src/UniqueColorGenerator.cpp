@@ -10,6 +10,67 @@
 
 #include <iostream> // std::cerr
 
+namespace {
+    using UniqueColorPtr = const unsigned char*;
+
+    UniqueColorPtr getUniqueColorPtrStart(MapNormalizer::ProvinceType bias) {
+        switch(bias) {
+            case MapNormalizer::ProvinceType::LAND:
+                return MN_ALL_LANDS;
+            case MapNormalizer::ProvinceType::SEA:
+                return MN_ALL_SEAS;
+            case MapNormalizer::ProvinceType::LAKE:
+                return MN_ALL_LAKES;
+            default:
+                return MN_ALL_UNKNOWNS;
+        }
+    }
+
+    unsigned int getUniqueColorPtrSize(MapNormalizer::ProvinceType bias) {
+        switch(bias) {
+            case MapNormalizer::ProvinceType::LAND:
+                return MN_ALL_LANDS_SIZE;
+            case MapNormalizer::ProvinceType::SEA:
+                return MN_ALL_SEAS_SIZE;
+            case MapNormalizer::ProvinceType::LAKE:
+                return MN_ALL_LAKES_SIZE;
+            default:
+                return MN_ALL_UNKNOWNS_SIZE;
+        }
+    }
+
+    UniqueColorPtr& getUniqueColorPtr(MapNormalizer::ProvinceType bias) {
+        static const unsigned char* land_ptr = MN_ALL_LANDS;
+        static const unsigned char* sea_ptr = MN_ALL_SEAS;
+        static const unsigned char* lake_ptr = MN_ALL_LAKES;
+        static const unsigned char* unknown_ptr = MN_ALL_UNKNOWNS;
+
+        switch(bias) {
+            case MapNormalizer::ProvinceType::LAND:
+                return land_ptr;
+            case MapNormalizer::ProvinceType::SEA:
+                return sea_ptr;
+            case MapNormalizer::ProvinceType::LAKE:
+                return lake_ptr;
+            default:
+                return unknown_ptr;
+        }
+    }
+
+    bool verifyColorsRemain(MapNormalizer::ProvinceType bias) {
+        UniqueColorPtr color_ptr = getUniqueColorPtr(bias);
+        UniqueColorPtr start_ptr = getUniqueColorPtrStart(bias);
+        unsigned int size = getUniqueColorPtrSize(bias);
+
+        if(color_ptr >= start_ptr + size) {
+            MapNormalizer::writeWarning("NO VALUES LEFT!");
+            return false;
+        }
+
+        return true;
+    }
+}
+
 /**
  * @brief Generates a unique color value.
  * @details If there are no more color values for the given bias, then give out
@@ -22,60 +83,45 @@
  *         unknown.
  */
 MapNormalizer::Color MapNormalizer::generateUniqueColor(ProvinceType bias) {
-    static const unsigned char* land_ptr = MN_ALL_LANDS;
-    static const unsigned char* sea_ptr = MN_ALL_SEAS;
-    static const unsigned char* lake_ptr = MN_ALL_LAKES;
-    static const unsigned char* unknown_ptr = MN_ALL_UNKNOWNS;
+    UniqueColorPtr& color_ptr = getUniqueColorPtr(bias);
 
-    bool err = false;
+    bool err = (bias == ProvinceType::UNKNOWN);
     Color c;
 
-    if(land_ptr >= MN_ALL_LANDS + MN_ALL_LANDS_SIZE) {
-        writeWarning("NO LAND VALUES LEFT!");
+    if(err) {
+        goto unknown_color_label;
+    }
+
+    if(!verifyColorsRemain(bias)) {
         err = true;
         goto unknown_color_label;
     }
 
-    if(sea_ptr >= MN_ALL_SEAS + MN_ALL_SEAS_SIZE) {
-        writeWarning("NO SEA VALUES LEFT!");
-        err = true;
-        goto unknown_color_label;
-    }
-
-    if(lake_ptr >= MN_ALL_LAKES + MN_ALL_LAKES_SIZE) {
-        writeWarning("NO LAKE VALUES LEFT!");
-        err = true;
-        goto unknown_color_label;
-    }
-
-    switch(bias) {
-        case ProvinceType::LAND:
-            c = Color { land_ptr[0], land_ptr[1], land_ptr[2] };
-            land_ptr += 3;
-            break;
-        case ProvinceType::LAKE:
-            c = Color { lake_ptr[0], lake_ptr[1], lake_ptr[2] };
-            lake_ptr += 3;
-            break;
-        case ProvinceType::SEA:
-            c = Color { sea_ptr[0], sea_ptr[1], sea_ptr[2] };
-            sea_ptr += 3;
-            break;
-        default:
-            err = true;
-    }
+    c = Color { color_ptr[0], color_ptr[1], color_ptr[2] };
+    color_ptr += 3;
 
 unknown_color_label:
     if(err) {
-        if(unknown_ptr >= MN_ALL_UNKNOWNS + MN_ALL_UNKNOWNS_SIZE) {
-            writeError("NO UNKNOWN COLOR VALUES LEFT!");
+        color_ptr = getUniqueColorPtr(ProvinceType::UNKNOWN);
+        if(!verifyColorsRemain(ProvinceType::UNKNOWN)) {
             return Color { 0, 0, 0 }; // Last possible resort
         }
 
-        c = Color { unknown_ptr[0], unknown_ptr[1], unknown_ptr[2] };
-        unknown_ptr += 3;
+        c = Color { color_ptr[0], color_ptr[1], color_ptr[2] };
+        color_ptr += 3;
     }
 
     return c;
+}
+
+void MapNormalizer::resetUniqueColorGenerator() {
+    getUniqueColorPtr(ProvinceType::LAND) = getUniqueColorPtrStart(ProvinceType::LAND);
+    getUniqueColorPtr(ProvinceType::LAKE) = getUniqueColorPtrStart(ProvinceType::LAKE);
+    getUniqueColorPtr(ProvinceType::SEA) = getUniqueColorPtrStart(ProvinceType::SEA);
+    getUniqueColorPtr(ProvinceType::UNKNOWN) = getUniqueColorPtrStart(ProvinceType::UNKNOWN);
+}
+
+void MapNormalizer::resetUniqueColorGenerator(ProvinceType bias) {
+    getUniqueColorPtr(bias) = getUniqueColorPtrStart(bias);
 }
 
