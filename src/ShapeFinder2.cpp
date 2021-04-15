@@ -265,6 +265,25 @@ uint32_t MapNormalizer::CCLPass1(BitMap* image, uint32_t* label_matrix,
     return num_border_pixels;
 }
 
+void addPixelToShape(MapNormalizer::Polygon& shape,
+                     const MapNormalizer::Pixel& pixel)
+{
+    shape.pixels.push_back(pixel);
+
+    // We calculate the bounding box of the shape incrementally
+    if(pixel.point.x > shape.top_right.x) {
+        shape.top_right.x = pixel.point.x;
+    } else if(pixel.point.x < shape.bottom_left.x) {
+        shape.bottom_left.x = pixel.point.x;
+    }
+
+    if(pixel.point.y > shape.top_right.y) {
+        shape.top_right.y = pixel.point.y;
+    } else if(pixel.point.y < shape.bottom_left.y) {
+        shape.bottom_left.y = pixel.point.y;
+    }
+}
+
 void buildShape(uint32_t label, const MapNormalizer::Color& color,
                 MapNormalizer::PolygonList& shapes,
                 const MapNormalizer::Point2D& point,
@@ -290,22 +309,7 @@ void buildShape(uint32_t label, const MapNormalizer::Color& color,
 
     shapeidx = label_to_shapeidx[label];
 
-    auto& shape = shapes.at(shapeidx);
-
-    shape.pixels.push_back(MapNormalizer::Pixel{ point, color });
-
-    // We calculate the bounding box of the shape incrementally
-    if(point.x > shape.top_right.x) {
-        shape.top_right.x = point.x;
-    } else if(point.x < shape.bottom_left.x) {
-        shape.bottom_left.x = point.x;
-    }
-
-    if(point.y > shape.top_right.y) {
-        shape.top_right.y = point.y;
-    } else if(point.y < shape.bottom_left.y) {
-        shape.bottom_left.y = point.y;
-    }
+    addPixelToShape(shapes.at(shapeidx), MapNormalizer::Pixel{ point, color });
 }
 
 std::optional<uint32_t> errorCheckAllShapes(MapNormalizer::BitMap* image,
@@ -460,7 +464,8 @@ bool MapNormalizer::CCLPass3(BitMap* image, MapNormalizer::PolygonList& shapes,
         uint32_t label = label_matrix[index];
 
         Polygon& shape = shapes[label_to_shapeidx.at(label)];
-        shape.pixels.push_back(pixel);
+
+        addPixelToShape(shape, pixel);
 
         label_matrix[xyToIndex(image, x, y)] = label;
 
