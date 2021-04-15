@@ -7,27 +7,59 @@
 #ifndef SHAPEFINDER2_H
 # define SHAPEFINDER2_H
 
+# include <map>
+# include <optional>
+
 # include "Types.h"
 # include "BitMap.h"
 
-# include <optional>
-
 namespace MapNormalizer {
-    std::pair<uint32_t, Color> getLabelAndColor(BitMap* image,
-                                                const Point2D& point,
-                                                uint32_t* label_matrix,
-                                                const Color&);
+    /**
+     * @brief Holds all state information about connected component labeling.
+     */
+    class ShapeFinder {
+        public:
+            ShapeFinder(BitMap*);
 
-    std::optional<Point2D> getAdjacentPixel(BitMap*, Point2D, Direction,
-                                            Direction = Direction::NONE);
+            PolygonList findAllShapes();
+            
+        protected:
+            uint32_t pass1();
+            PolygonList pass2(std::map<uint32_t, uint32_t>&);
 
-    uint32_t CCLPass1(BitMap*, uint32_t*, std::map<uint32_t, std::uint32_t>&);
-    PolygonList CCLPass2(BitMap*, uint32_t*, std::map<uint32_t, std::uint32_t>&,
-                         const std::map<uint32_t, std::uint32_t>&,
-                         std::vector<Pixel>&);
-    bool CCLPass3(BitMap*, PolygonList&, uint32_t*,
-                  const std::map<uint32_t, uint32_t>&,
-                  const std::vector<Pixel>&);
+            std::pair<uint32_t, Color> getLabelAndColor(const Point2D&, const Color&);
+
+            bool mergeBorders(PolygonList&, const std::map<uint32_t, uint32_t>&);
+
+            std::optional<uint32_t> errorCheckAllShapes(const PolygonList&);
+
+            void outputStage(const std::string&);
+
+            uint32_t getRootLabel(uint32_t);
+
+            std::optional<Point2D> getAdjacentPixel(Point2D, Direction,
+                                                    Direction = Direction::NONE);
+
+
+        private:
+            //! The image to find shapes on
+            BitMap* m_image;
+
+            //! The size of the label matrix
+            uint32_t m_label_matrix_size;
+
+            //! A flat array containing the label for each pixel
+            uint32_t* m_label_matrix;
+
+            //! A mapping of each label -> that label's root (key == value => key is already the root)
+            std::map<uint32_t, uint32_t> m_label_parents;
+
+            //! A vector of every border pixel
+            std::vector<Pixel> m_border_pixels;
+
+            //! The color of each label
+            std::map<uint32_t, Color> m_label_to_color;
+    };
 
     PolygonList findAllShapes2(BitMap*);
 }
