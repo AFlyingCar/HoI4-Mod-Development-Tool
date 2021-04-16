@@ -17,7 +17,6 @@
 #include <algorithm>
 
 #include "BitMap.h"
-#include "ShapeFinder.h"
 #include "Options.h"
 #include "Logger.h"
 #include "Util.h"
@@ -207,9 +206,7 @@ void MapNormalizer::GraphicsWorker::work(bool& done)
             }
         }
 
-        graphics_debug_mutex.lock();
         SDL_BlitScaled(surface, nullptr, win_surface, &dest);
-        graphics_debug_mutex.unlock();
 
         SDL_UpdateWindowSurface(window);
     }
@@ -223,56 +220,40 @@ kill_graphics_worker:
 void MapNormalizer::GraphicsWorker::writeDebugColor(uint32_t x, uint32_t y,
                                                     Color c)
 {
-#ifdef ENABLE_GRAPHICS
-    uint32_t w = m_image->info_header.width;
-
-    if(m_debug_data != nullptr) {
+    if(m_debug_data != nullptr && !prog_opts.no_gui) {
         using namespace std::chrono_literals;
 
-        if(!prog_opts.no_gui && should_sleep)
-            std::this_thread::sleep_for(0.01s);
+        uint32_t w = m_image->info_header.width;
+
+        // if(should_sleep)
+        //     std::this_thread::sleep_for(0.01s);
 
         uint32_t index = xyToIndex(w * 3, x * 3, y);
 
-        if(!prog_opts.no_gui)
-            graphics_debug_mutex.lock();
+        // graphics_debug_mutex.lock();
 
         // Make sure we swap B and R (because BMP format sucks)
         m_debug_data[index] = c.b;
         m_debug_data[index + 1] = c.g;
         m_debug_data[index + 2] = c.r;
 
-        if(!prog_opts.no_gui)
-            graphics_debug_mutex.unlock();
+        // graphics_debug_mutex.unlock();
     }
-#else
-    (void)x;
-    (void)y;
-    (void)c;
-#endif
 }
 
 void MapNormalizer::GraphicsWorker::resetDebugData() {
-    auto data_size = m_image->info_header.width * m_image->info_header.height * 3;
-
-    if(!prog_opts.no_gui) {
-        graphics_debug_mutex.lock();
+    if(m_debug_data != nullptr && !prog_opts.no_gui) {
+        auto data_size = m_image->info_header.width * m_image->info_header.height * 3;
 
         std::copy(m_image->data, m_image->data + data_size, m_debug_data);
-
-        graphics_debug_mutex.unlock();
     }
 }
 
 void MapNormalizer::GraphicsWorker::resetDebugDataAt(const Point2D& point) {
-    if(!prog_opts.no_gui) {
+    if(m_debug_data != nullptr && !prog_opts.no_gui) {
         uint32_t index = xyToIndex(m_image, point.x, point.y);
 
-        graphics_debug_mutex.lock();
-
         m_debug_data[index] = m_image->data[index];
-
-        graphics_debug_mutex.unlock();
     }
 }
 
