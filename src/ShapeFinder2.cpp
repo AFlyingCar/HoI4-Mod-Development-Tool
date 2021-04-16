@@ -58,19 +58,12 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
                                                            Direction::LEFT);
             std::optional<Point2D> up = getAdjacentPixel(Point2D{x, y},
                                                          Direction::UP);
-#if 0
-            std::optional<Point2D> up_left = getAdjacentPixel(Point2D{x, y},
-                                                              Direction::UP,
-                                                              Direction::LEFT);
-#endif
 
             uint32_t label_left = 0;
             uint32_t label_up = 0;
-            // uint32_t label_up_left = 0;
 
             Color color_left = BORDER_COLOR;
             Color color_up = BORDER_COLOR;
-            // Color color_up_left = BORDER_COLOR;
 
             // Get the label and color of adjacent pixels that we have already
             //  visited
@@ -81,12 +74,6 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
             if(up) {
                 std::tie(label_up, color_up) = getLabelAndColor(*up, color);
             }
-
-#if 0
-            if(up_left) {
-                std::tie(label_up_left, color_up_left) = getLabelAndColor(*up_left, color);
-            }
-#endif
 
             // Compare the color of the adjacent pixels to ourself
             // getLabelAndColor will auto-convert all colors to BORDER_COLOR if
@@ -114,27 +101,6 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
                     label = label_up;
                 }
             }
-
-#if 0
-            if(color_up_left != BORDER_COLOR) {
-                // If we have already chosen an adjacent label
-                if(label != next_label) {
-                    // If the adjacent label does not match, then pick the
-                    //   smaller one and mark the larger one as a child
-                    if(label != label_up_left) {
-                        uint32_t smaller = std::min(label, label_up_left);
-                        uint32_t larger = std::max(label, label_up_left);
-
-                        label = smaller;
-                        // Mark who the parent of the label is
-                        // TODO: Do we have to worry about if the label already has a parent?
-                        label_parents[larger] = smaller;
-                    }
-                } else {
-                    label = label_up_left;
-                }
-            }
-#endif
 
             if(prog_opts.verbose)
                 writeDebug("Pixel "s + Point2D{x, y} + " [" + color + "] => " + std::to_string(label),
@@ -489,7 +455,7 @@ uint32_t MapNormalizer::ShapeFinder::getRootLabel(uint32_t label)
  */
 auto MapNormalizer::ShapeFinder::getAdjacentPixel(Point2D point,
                                                   Direction dir1,
-                                                  Direction dir2)
+                                                  Direction dir2) const
     -> std::optional<Point2D>
 {
     Point2D adjacent = point;
@@ -545,8 +511,6 @@ auto MapNormalizer::ShapeFinder::getAdjacentPixel(Point2D point,
     }
 }
 
-
-
 /**
  * @brief Finds all shapes in a given BitMap image 
  *
@@ -554,8 +518,7 @@ auto MapNormalizer::ShapeFinder::getAdjacentPixel(Point2D point,
  *
  * @return A list of all shapes in the BitMap image
  */
-MapNormalizer::PolygonList MapNormalizer::findAllShapes2(BitMap* image)
-{
+MapNormalizer::PolygonList MapNormalizer::findAllShapes2(BitMap* image) {
     ShapeFinder shapeFinder(image);
 
     return shapeFinder.findAllShapes();

@@ -27,9 +27,9 @@ namespace MapNormalizer {
             uint32_t pass1();
             PolygonList pass2(std::map<uint32_t, uint32_t>&);
 
-            std::pair<uint32_t, Color> getLabelAndColor(const Point2D&, const Color&);
-
             bool mergeBorders(PolygonList&, const std::map<uint32_t, uint32_t>&);
+
+            std::pair<uint32_t, Color> getLabelAndColor(const Point2D&, const Color&);
 
             std::optional<uint32_t> errorCheckAllShapes(const PolygonList&);
 
@@ -38,7 +38,7 @@ namespace MapNormalizer {
             uint32_t getRootLabel(uint32_t);
 
             std::optional<Point2D> getAdjacentPixel(Point2D, Direction,
-                                                    Direction = Direction::NONE);
+                                                    Direction = Direction::NONE) const;
 
 
         private:
