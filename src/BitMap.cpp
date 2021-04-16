@@ -12,7 +12,6 @@
 #include <iostream>
 
 #include "Constants.h"
-#include "ShapeFinder.h"
 #include "Logger.h"
 
 /**
