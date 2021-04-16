@@ -127,7 +127,6 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
                 }
                 break;
             case 6: // --output-stages
-                std::cout << "--output-stages" << std::endl;
                 prog_opts.output_stages = true;
                 break;
             case 'v': // -v,--verbose
