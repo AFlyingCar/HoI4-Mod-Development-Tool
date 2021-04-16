@@ -11,8 +11,6 @@
 #include "Options.h"
 #include "GraphicalDebugger.h"
 
-using namespace std::string_literals;
-
 MapNormalizer::ShapeFinder::ShapeFinder(BitMap* image):
     m_image(image),
     m_label_matrix_size(m_image->info_header.width *
@@ -44,7 +42,7 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
             uint32_t& label = m_label_matrix[index] = next_label;
 
             if(!prog_opts.quiet)
-                setInfoLine("Pixel "s + Point2D{x, y} + " [" + color + "]");
+                setInfoLine("Pixel ", Point2D{x, y}," [", color, "]");
 
             // Skip this pixel if it is part of a border
             if(color == BORDER_COLOR) {
@@ -103,8 +101,8 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
             }
 
             if(prog_opts.verbose)
-                writeDebug("Pixel "s + Point2D{x, y} + " [" + color + "] => " + std::to_string(label),
-                           false);
+                writeDebug<false>("Pixel ", Point2D{x, y}, " [", color, "] => ",
+                                  std::to_string(label));
 
             // Only increment to the next label if we actually used this one
             if(label == next_label) {
@@ -265,7 +263,8 @@ bool MapNormalizer::ShapeFinder::mergeBorders(PolygonList& shapes,
             //  in a worst case scenario of the entire m_image being
             //  (0,0,0)
             if(!found) {
-                writeError("No further color pixels found from "s + point + ". Terminating now! Check your input m_image!");
+                writeError("No further color pixels found from ", point,
+                           ". Terminating now! Check your input m_image!");
                 return false;
             }
         }
@@ -420,7 +419,7 @@ auto MapNormalizer::ShapeFinder::getLabelAndColor(const Point2D& point,
     Color color_at = getColorAt(m_image, point.x, point.y);
 
     if(color_at != BORDER_COLOR && color_at != color) {
-        writeWarning("Multiple colors found in shape! See pixel at "s + point);
+        writeWarning("Multiple colors found in shape! See pixel at ", point);
 
         // Set to the default values
         label = 0;
