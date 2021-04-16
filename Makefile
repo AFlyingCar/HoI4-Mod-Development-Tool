@@ -12,7 +12,7 @@ OUT=$(OUT_DIR)/map_normalizer
 
 CXXSOURCES=$(wildcard $(SRC_DIR)/*.cpp)
 CXXOBJECTS=$(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(CXXSOURCES))
-INCLUDES=$(INC_DIR)/BitMap.h $(INC_DIR)/ShapeFinder.h $(INC_DIR)/GraphicalDebugger.h $(INC_DIR)/UniqueColorGenerator.h $(INC_DIR)/ProvinceMapBuilder.h $(INC_DIR)/Util.h $(INC_DIR)/Logger.h $(INC_DIR)/Terrain.h $(INC_DIR)/StateDefinitionBuilder.h $(INC_DIR)/ShapeFinder2.h
+INCLUDES=$(INC_DIR)/BitMap.h $(INC_DIR)/GraphicalDebugger.h $(INC_DIR)/UniqueColorGenerator.h $(INC_DIR)/ProvinceMapBuilder.h $(INC_DIR)/Util.h $(INC_DIR)/Logger.h $(INC_DIR)/Terrain.h $(INC_DIR)/StateDefinitionBuilder.h $(INC_DIR)/ShapeFinder2.h
 COLOR_BINS=lakes.bin lands.bin unknowns.bin seas.bin
 
 # TODO: Add support for other architectures
@@ -71,9 +71,6 @@ $(OUT): $(ASMOBJECTS) $(CXXOBJECTS) |$(OUT_DIR)/
 
 clean:
 	$(RM) $(OBJECTS) $(OUT)
-
-$(BUILD_DIR)/ShapeFinder.o: $(SRC_DIR)/ShapeFinder.cpp $(INC_DIR)/ShapeFinder.h
-	$(CXX) $(CXXFLAGS) -Wno-deprecated-declarations -c $< -o $@
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp $(INC_DIR)/%.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
