@@ -40,8 +40,7 @@ namespace MapNormalizer {
 
             uint32_t getRootLabel(uint32_t);
 
-            std::optional<Point2D> getAdjacentPixel(Point2D, Direction,
-                                                    Direction = Direction::NONE) const;
+            std::optional<Point2D> getAdjacentPixel(Point2D, Direction) const;
 
         private:
             //! The image to find shapes on

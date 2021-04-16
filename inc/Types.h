@@ -32,8 +32,10 @@ namespace MapNormalizer {
         Color color;
     };
 
+    /**
+     * @brief Represents a direction along a 2D plane
+     */
     enum class Direction {
-        NONE = 0,
         LEFT,
         UP,
         RIGHT,

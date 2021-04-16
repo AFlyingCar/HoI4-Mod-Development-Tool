@@ -445,27 +445,17 @@ uint32_t MapNormalizer::ShapeFinder::getRootLabel(uint32_t label)
  *
  * @param image The image the point is from
  * @param point The point to get an adjacent pixel for.
- * @param dir1 The first direction. Cannot be NONE
- * @param dir2 The second direction. Cannot be along the same axis
- *             (LEFT->RIGHT, UP->DOWN) as dir1
+ * @param dir1 The direction.
  *
  * @return The point adjacent to 'point', std::nullopt if there is no pixel
  *         adjacent to 'point' in the directions specified
  */
 auto MapNormalizer::ShapeFinder::getAdjacentPixel(Point2D point,
-                                                  Direction dir1,
-                                                  Direction dir2) const
+                                                  Direction dir1) const
     -> std::optional<Point2D>
 {
     Point2D adjacent = point;
 
-    // If the directions are along the same axis then we have bad inputs
-    if(dir2 != Direction::NONE && ((int)dir1 % 2 == (int)dir2 % 2)) {
-        writeWarning("Invalid input to getAdjacentPixel! dir1 cannot be along the same axis as dir2!");
-
-        return std::nullopt;
-    }
-
     switch(dir1) {
         case Direction::LEFT:
             adjacent.x = point.x - 1;
@@ -479,26 +469,6 @@ auto MapNormalizer::ShapeFinder::getAdjacentPixel(Point2D point,
         case Direction::DOWN:
             adjacent.y = point.y + 1;
             break;
-        case Direction::NONE:
-            writeWarning("Invalid input to getAdjacentPixel! dir1 cannot be NONE");
-
-            return std::nullopt;
-    }
-
-    switch(dir1) {
-        case Direction::LEFT:
-            adjacent.x = point.x - 1;
-            break;
-        case Direction::RIGHT:
-            adjacent.x = point.x + 1;
-            break;
-        case Direction::UP:
-            adjacent.y = point.y - 1;
-            break;
-        case Direction::DOWN:
-            adjacent.y = point.y + 1;
-            break;
-        default:;
     }
 
     if(isInImage(m_image, adjacent.x, adjacent.y) &&
