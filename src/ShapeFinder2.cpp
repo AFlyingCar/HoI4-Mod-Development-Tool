@@ -92,7 +92,7 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
                         uint32_t smaller = std::min(label, label_up);
                         uint32_t larger = std::max(label, label_up);
 
-                        label = smaller;
+                        label = getRootLabel(smaller);
                         // Mark who the parent of the label is
                         // TODO: Do we have to worry about if the label already has a parent?
                         m_label_parents[larger] = smaller;

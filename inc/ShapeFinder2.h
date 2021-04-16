@@ -8,6 +8,7 @@
 # define SHAPEFINDER2_H
 
 # include <map>
+# include <unordered_map>
 # include <optional>
 
 # include "Types.h"
@@ -52,7 +53,7 @@ namespace MapNormalizer {
             uint32_t* m_label_matrix;
 
             //! A mapping of each label -> that label's root (key == value => key is already the root)
-            std::map<uint32_t, uint32_t> m_label_parents;
+            std::unordered_map<uint32_t, uint32_t> m_label_parents;
 
             //! A vector of every border pixel
             std::vector<Pixel> m_border_pixels;
