@@ -12,7 +12,6 @@
 #include "BitMap.h" // BitMap
 #include "Types.h" // Point, Color, Polygon, Pixel
 #include "Logger.h" // writeError
-#include "ShapeFinder.h" // findAllShapes
 #include "ShapeFinder2.h" // findAllShapes2
 #include "GraphicalDebugger.h" // graphicsWorker
 #include "ProvinceMapBuilder.h"
@@ -90,8 +89,6 @@ namespace MapNormalizer {
  * @return 1 upon failure, 0 upon success.
  */
 int main(int argc, char** argv) {
-    using namespace std::string_literals;
-
     // Parse the command-line arguments
     MapNormalizer::prog_opts = MapNormalizer::parseArgs(argc, argv);
 
@@ -185,9 +182,15 @@ int main(int argc, char** argv) {
     if(!MapNormalizer::prog_opts.quiet)
         MapNormalizer::setInfoLine("Finding all possible shapes.");
 
-    auto shapes = MapNormalizer::findAllShapes2(image);
+    // Find every shape
+    MapNormalizer::ShapeFinder shape_finder(image);
+    auto shapes = shape_finder.findAllShapes();
+
+    // Reset the graphical image data
     worker.resetDebugData();
 
+    // Redraw the new image so we can properly show how it should look in the
+    //  final output
     if(!MapNormalizer::prog_opts.quiet)
         MapNormalizer::setInfoLine("Drawing new graphical image");
     for(auto&& shape : shapes) {
@@ -202,24 +205,10 @@ int main(int argc, char** argv) {
         }
     }
 
-    MapNormalizer::setInfoLine("");
+    MapNormalizer::deleteInfoLine();
 
     if(!MapNormalizer::prog_opts.quiet)
-        MapNormalizer::writeStdout("Detected "s + std::to_string(shapes.size()) + " shapes.");
-
-    if(!MapNormalizer::problematic_pixels.empty())
-        MapNormalizer::writeWarning("The following "s +
-                                    std::to_string(MapNormalizer::problematic_pixels.size()) +
-                                    " pixels had problems. This could be a bug "
-                                    "with the program, or a problem with y our "
-                                    "input file. Please check these pixels in "
-                                    "your input in case of any problems.");
-    for(auto& problem_pixel : MapNormalizer::problematic_pixels) {
-        std::stringstream ss;
-        ss << "\t{ (" << problem_pixel.point.x << ',' << problem_pixel.point.y
-           << ") -> 0x" << std::hex << colorToRGB(problem_pixel.color) << " }";
-        MapNormalizer::writeWarning(ss.str(), false);
-    }
+        MapNormalizer::writeStdout("Detected ", std::to_string(shapes.size()), " shapes.");
 
     if(!MapNormalizer::prog_opts.quiet)
         MapNormalizer::setInfoLine("Creating Provinces List.");
@@ -240,13 +229,13 @@ int main(int argc, char** argv) {
 
     if(!std::filesystem::exists(output_path)) {
         using namespace std::string_literals;
-        MapNormalizer::writeStdout("Path '"s + output_path.generic_string() + "' does not exist, creating...");
+        MapNormalizer::writeStdout("Path '", output_path.generic_string(), "' does not exist, creating...");
         std::filesystem::create_directories(output_path);
     }
 
     if(!std::filesystem::exists(state_output_root)) {
         using namespace std::string_literals;
-        MapNormalizer::writeStdout("Path '"s + state_output_root.generic_string() + "' does not exist, creating...");
+        MapNormalizer::writeStdout("Path '", state_output_root.generic_string(), "' does not exist, creating...");
         std::filesystem::create_directories(state_output_root);
     }
 

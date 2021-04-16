@@ -28,9 +28,11 @@ namespace MapNormalizer {
             uint32_t pass1();
             PolygonList pass2(std::map<uint32_t, uint32_t>&);
 
-            bool mergeBorders(PolygonList&, const std::map<uint32_t, uint32_t>&);
+            bool mergeBorders(PolygonList&,
+                              const std::map<uint32_t, uint32_t>&);
 
-            std::pair<uint32_t, Color> getLabelAndColor(const Point2D&, const Color&);
+            std::pair<uint32_t, Color> getLabelAndColor(const Point2D&,
+                                                        const Color&);
 
             std::optional<uint32_t> errorCheckAllShapes(const PolygonList&);
 
@@ -40,7 +42,6 @@ namespace MapNormalizer {
 
             std::optional<Point2D> getAdjacentPixel(Point2D, Direction,
                                                     Direction = Direction::NONE) const;
-
 
         private:
             //! The image to find shapes on
@@ -61,8 +62,6 @@ namespace MapNormalizer {
             //! The color of each label
             std::map<uint32_t, Color> m_label_to_color;
     };
-
-    PolygonList findAllShapes2(BitMap*);
 }
 
 #endif

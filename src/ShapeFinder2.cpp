@@ -510,16 +510,3 @@ auto MapNormalizer::ShapeFinder::getAdjacentPixel(Point2D point,
     }
 }
 
-/**
- * @brief Finds all shapes in a given BitMap image 
- *
- * @param image The image to get all shapes from
- *
- * @return A list of all shapes in the BitMap image
- */
-MapNormalizer::PolygonList MapNormalizer::findAllShapes2(BitMap* image) {
-    ShapeFinder shapeFinder(image);
-
-    return shapeFinder.findAllShapes();
-}
-
