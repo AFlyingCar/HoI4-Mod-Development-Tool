@@ -172,7 +172,7 @@ auto MapNormalizer::ShapeFinder::pass2(std::map<uint32_t, uint32_t>& label_to_sh
 
             worker.writeDebugColor(x, y, m_label_to_color[label]);
 
-            buildShape(label, color, shapes, point, label_to_shapeidx);
+            buildShape(label, Pixel{ point, color }, shapes, label_to_shapeidx);
         }
     }
 
@@ -506,9 +506,8 @@ void MapNormalizer::ShapeFinder::addPixelToShape(Polygon& shape,
  * @param point The point to add to a shape
  * @param label_to_shapeidx The mapping of labels to their corresponding shapes
  */
-void MapNormalizer::ShapeFinder::buildShape(uint32_t label, const Color& color,
+void MapNormalizer::ShapeFinder::buildShape(uint32_t label, const Pixel& pixel,
                                             PolygonList& shapes,
-                                            const Point2D& point,
                                             std::map<uint32_t, uint32_t>& label_to_shapeidx)
 {
     uint32_t shapeidx = -1;
@@ -518,12 +517,12 @@ void MapNormalizer::ShapeFinder::buildShape(uint32_t label, const Color& color,
         label_to_shapeidx[label] = shapes.size();
 
         // Create a new shape
-        auto prov_type = getProvinceType(color);
+        auto prov_type = getProvinceType(pixel.color);
         auto unique_color = generateUniqueColor(prov_type);
 
-        shapes.push_back(MapNormalizer::Polygon{
+        shapes.push_back(Polygon{
             { },
-            color,
+            pixel.color,
             unique_color,
             { 0, 0 }, { 0, 0 }
         });
@@ -531,6 +530,6 @@ void MapNormalizer::ShapeFinder::buildShape(uint32_t label, const Color& color,
 
     shapeidx = label_to_shapeidx[label];
 
-    addPixelToShape(shapes.at(shapeidx), MapNormalizer::Pixel{ point, color });
+    addPixelToShape(shapes.at(shapeidx), pixel);
 }
 

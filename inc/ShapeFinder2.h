@@ -42,8 +42,8 @@ namespace MapNormalizer {
 
             std::optional<Point2D> getAdjacentPixel(Point2D, Direction) const;
 
-            void buildShape(uint32_t, const Color&, PolygonList&,
-                            const Point2D&, std::map<uint32_t, uint32_t>&);
+            void buildShape(uint32_t, const Pixel&, PolygonList&,
+                            std::map<uint32_t, uint32_t>&);
 
             void addPixelToShape(Polygon&, const Pixel&);
 
