@@ -42,6 +42,11 @@ namespace MapNormalizer {
 
             std::optional<Point2D> getAdjacentPixel(Point2D, Direction) const;
 
+            void buildShape(uint32_t, const Color&, PolygonList&,
+                            const Point2D&, std::map<uint32_t, uint32_t>&);
+
+            void addPixelToShape(Polygon&, const Pixel&);
+
         private:
             //! The image to find shapes on
             BitMap* m_image;

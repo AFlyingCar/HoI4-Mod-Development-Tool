@@ -11,6 +11,11 @@
 #include "Options.h"
 #include "GraphicalDebugger.h"
 
+/**
+ * @brief Constructs a ShapeFinder
+ *
+ * @param image The image to detect shapes from
+ */
 MapNormalizer::ShapeFinder::ShapeFinder(BitMap* image):
     m_image(image),
     m_label_matrix_size(m_image->info_header.width *
@@ -22,6 +27,11 @@ MapNormalizer::ShapeFinder::ShapeFinder(BitMap* image):
 {
 }
 
+/**
+ * @brief Performs the first pass of the Connected-Component-Labeling (CCL) algorithm
+ *
+ * @return The total number of border pixels found.
+ */
 uint32_t MapNormalizer::ShapeFinder::pass1() {
     uint32_t width = m_image->info_header.width;
     uint32_t height = m_image->info_header.height;
@@ -35,6 +45,7 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
 
     auto& worker = GraphicsWorker::getInstance();
 
+    // Go over every pixel of the image
     for(uint32_t y = 0; y < height; ++y) {
         for(uint32_t x = 0; x < width; ++x) {
             Color color = getColorAt(m_image, x, y);
@@ -118,59 +129,19 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
         }
     }
 
-    if(!prog_opts.quiet)
-        setInfoLine("");
+    deleteInfoLine();
 
     return num_border_pixels;
 }
 
-void addPixelToShape(MapNormalizer::Polygon& shape,
-                     const MapNormalizer::Pixel& pixel)
-{
-    shape.pixels.push_back(pixel);
-
-    // We calculate the bounding box of the shape incrementally
-    if(pixel.point.x > shape.top_right.x) {
-        shape.top_right.x = pixel.point.x;
-    } else if(pixel.point.x < shape.bottom_left.x) {
-        shape.bottom_left.x = pixel.point.x;
-    }
-
-    if(pixel.point.y > shape.top_right.y) {
-        shape.top_right.y = pixel.point.y;
-    } else if(pixel.point.y < shape.bottom_left.y) {
-        shape.bottom_left.y = pixel.point.y;
-    }
-}
-
-void buildShape(uint32_t label, const MapNormalizer::Color& color,
-                MapNormalizer::PolygonList& shapes,
-                const MapNormalizer::Point2D& point,
-                std::map<uint32_t, uint32_t>& label_to_shapeidx)
-{
-    uint32_t shapeidx = -1;
-
-    // Do we have an entry for this label yet?
-    if(label_to_shapeidx.count(label) == 0) {
-        label_to_shapeidx[label] = shapes.size();
-
-        // Create a new shape
-        auto prov_type = getProvinceType(color);
-        auto unique_color = generateUniqueColor(prov_type);
-
-        shapes.push_back(MapNormalizer::Polygon{
-            { },
-            color,
-            unique_color,
-            { 0, 0 }, { 0, 0 }
-        });
-    }
-
-    shapeidx = label_to_shapeidx[label];
-
-    addPixelToShape(shapes.at(shapeidx), MapNormalizer::Pixel{ point, color });
-}
-
+/**
+ * @brief Performs the second pass of the CCL algorithm
+ *
+ * @param label_to_shapeidx A mapping which maps every label to the index of the
+ *                          shape it will be a part of in the returned list
+ *
+ * @return A list of all detected shapes
+ */
 auto MapNormalizer::ShapeFinder::pass2(std::map<uint32_t, uint32_t>& label_to_shapeidx)
     -> PolygonList
 {
@@ -211,6 +182,16 @@ auto MapNormalizer::ShapeFinder::pass2(std::map<uint32_t, uint32_t>& label_to_sh
     return shapes;
 }
 
+/**
+ * @brief Merges all border pixels into the nearest shapes.
+ *
+ * @param shapes The list of shapes to merge border pixels into
+ * @param label_to_shapeidx A mapping of which labels correspond to which shapes
+ *                          in the provided list
+ *
+ * @return true if all borders were able to be successfully merged, false
+ *         otherwise.
+ */
 bool MapNormalizer::ShapeFinder::mergeBorders(PolygonList& shapes,
                                               const std::map<uint32_t, uint32_t>& label_to_shapeidx)
 {
@@ -284,37 +265,17 @@ bool MapNormalizer::ShapeFinder::mergeBorders(PolygonList& shapes,
     return true;
 }
 
+/**
+ * @brief Finds every shape in the image
+ * @details Performs a 2-pass implementation of the Connected-Component Labeling
+ *          (CCL) algorithm. The particular is adapted from the example here:
+ *          https://www.aishack.in/tutorials/labelling-connected-components-example/
+ *
+ * @return A list of every shape in the image.
+ */
 MapNormalizer::PolygonList MapNormalizer::ShapeFinder::findAllShapes() {
-    // Unlike findAllShapes, we will do a Connected-Component Labeling (CCL)
-    //  algorithm here
-    // We also do not accept arrays to fill in. Those will be filled in _after_
-    //  this algorithm completes using only the PolygonList, which will make
-    //  error-checking easier
-
-    // Algorithm adapted from:
-    //   https://www.aishack.in/tutorials/labelling-connected-components-example/
-    // Pseudo-code to perform Connected Component Labeling in 3 passes
-    //
-    // First Pass:
-    //   for every pixel (left->right, top->bottom):
-    //     Check left pixel, up pixel, up-left pixel:
-    //      Are any of them not a border pixel (0,0,0)
-    //        Is the color the same as this pixel?
-    //            use the same label
-    //            If any of them disagree on labels, then choose the smaller one
-    //             also, mark that '2' (the larger label) is a "child" of '1'
-    //        else warn/error (put into the same shape?)
-    //      If they are (0,0,0) pixels then skip and ignore
-    // Second Pass:
-    //   for every pixel [label] (left->right, top->bottom):
-    //     If the label is a "child":
-    //       Get the "root" label (child->parent->parent->...->parent->root)
-    //       Replace label with "root"
-    // Third Pass:
-    //   Add all (0,0,0) pixels to their nearest shape, generate 'Polygon's for
-    //    each label
-
-
+    // Do pass 1, and reserve enough space in the m_border_pixels vector for all
+    //   border pixels in the image
     uint32_t num_border_pixels = pass1();
     m_border_pixels.reserve(num_border_pixels);
 
@@ -325,23 +286,41 @@ MapNormalizer::PolygonList MapNormalizer::ShapeFinder::findAllShapes() {
 
     std::map<uint32_t, uint32_t> label_to_shapeidx;
 
+    // Make sure that any unique colors consumed will go back to the beginning
+    resetUniqueColorGenerator();
+
+    // Do pass 1, we now have all of the shapes in the image, though there are
+    //  still the border pixels left over to deal with
     PolygonList shapes = pass2(label_to_shapeidx);
 
     if(prog_opts.output_stages) {
         outputStage("labels2.bmp");
     }
 
+    // Again, we want to end this function by not consuming any unique colors
     resetUniqueColorGenerator();
 
+    // Merge all of the border pixels together into surrounding shapes
+    //  If this fails, then we return an empty-list of shapes to denote failure
     if(!mergeBorders(shapes, label_to_shapeidx)) {
         return PolygonList{};
     }
 
+    // Perform error checking. This doesn't actually cause us to fail, just spit
+    //   out warnings about the input image (as there isn't much for us to do to
+    //   fix any errors ourselves
     errorCheckAllShapes(shapes);
 
     return shapes;
 }
 
+/**
+ * @brief Performs error checking on the input image.
+ *
+ * @param shapes The list of shapes to error check
+ *
+ * @return The number of problematic shapes detected.
+ */
 std::optional<uint32_t> MapNormalizer::ShapeFinder::errorCheckAllShapes(const PolygonList& shapes)
 {
     uint32_t problematic_shapes = 0;
@@ -384,6 +363,11 @@ std::optional<uint32_t> MapNormalizer::ShapeFinder::errorCheckAllShapes(const Po
     }
 }
 
+/**
+ * @brief Outputs the current stage of labels as an image
+ *
+ * @param filename The filename to output the stage to.
+ */
 void MapNormalizer::ShapeFinder::outputStage(const std::string& filename) {
     unsigned char* label_data = new unsigned char[m_label_matrix_size * 3];
 
@@ -429,6 +413,13 @@ auto MapNormalizer::ShapeFinder::getLabelAndColor(const Point2D& point,
     return {label, color_at};
 }
 
+/**
+ * @brief Gets the root label for the given label
+ *
+ * @param label The label to get the root for
+ *
+ * @return The root of label
+ */
 uint32_t MapNormalizer::ShapeFinder::getRootLabel(uint32_t label)
 {
     uint32_t root = label;
@@ -478,5 +469,68 @@ auto MapNormalizer::ShapeFinder::getAdjacentPixel(Point2D point,
     } else {
         return std::nullopt;
     }
+}
+
+/**
+ * @brief Adds a pixel to the given shape.
+ * @details As a side-effect, will also expand the shape's bounding box.
+ *
+ * @param shape The shape to add the pixel to.
+ * @param pixel The pixel to add to the shape.
+ */
+void MapNormalizer::ShapeFinder::addPixelToShape(Polygon& shape,
+                                                 const Pixel& pixel)
+{
+    shape.pixels.push_back(pixel);
+
+    // We calculate the bounding box of the shape incrementally
+    if(pixel.point.x > shape.top_right.x) {
+        shape.top_right.x = pixel.point.x;
+    } else if(pixel.point.x < shape.bottom_left.x) {
+        shape.bottom_left.x = pixel.point.x;
+    }
+
+    if(pixel.point.y > shape.top_right.y) {
+        shape.top_right.y = pixel.point.y;
+    } else if(pixel.point.y < shape.bottom_left.y) {
+        shape.bottom_left.y = pixel.point.y;
+    }
+}
+
+/**
+ * @brief Builds a shape up.
+ *
+ * @param label The label of the shape being built
+ * @param color The color of the original shape
+ * @param shapes The list of shapes
+ * @param point The point to add to a shape
+ * @param label_to_shapeidx The mapping of labels to their corresponding shapes
+ */
+void MapNormalizer::ShapeFinder::buildShape(uint32_t label, const Color& color,
+                                            PolygonList& shapes,
+                                            const Point2D& point,
+                                            std::map<uint32_t, uint32_t>& label_to_shapeidx)
+{
+    uint32_t shapeidx = -1;
+
+    // Do we have an entry for this label yet?
+    if(label_to_shapeidx.count(label) == 0) {
+        label_to_shapeidx[label] = shapes.size();
+
+        // Create a new shape
+        auto prov_type = getProvinceType(color);
+        auto unique_color = generateUniqueColor(prov_type);
+
+        shapes.push_back(MapNormalizer::Polygon{
+            { },
+            color,
+            unique_color,
+            { 0, 0 }, { 0, 0 }
+        });
+    }
+
+    shapeidx = label_to_shapeidx[label];
+
+    addPixelToShape(shapes.at(shapeidx), MapNormalizer::Pixel{ point, color });
 }
 
