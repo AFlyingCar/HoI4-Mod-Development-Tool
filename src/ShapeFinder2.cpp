@@ -142,7 +142,7 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
  *
  * @return A list of all detected shapes
  */
-auto MapNormalizer::ShapeFinder::pass2(std::map<uint32_t, uint32_t>& label_to_shapeidx)
+auto MapNormalizer::ShapeFinder::pass2(LabelShapeIdxMap& label_to_shapeidx)
     -> PolygonList
 {
     uint32_t width = m_image->info_header.width;
@@ -193,7 +193,7 @@ auto MapNormalizer::ShapeFinder::pass2(std::map<uint32_t, uint32_t>& label_to_sh
  *         otherwise.
  */
 bool MapNormalizer::ShapeFinder::mergeBorders(PolygonList& shapes,
-                                              const std::map<uint32_t, uint32_t>& label_to_shapeidx)
+                                              const LabelShapeIdxMap& label_to_shapeidx)
 {
     uint32_t width = m_image->info_header.width;
     uint32_t height = m_image->info_header.height;
@@ -284,7 +284,7 @@ MapNormalizer::PolygonList MapNormalizer::ShapeFinder::findAllShapes() {
         outputStage("labels1.bmp");
     }
 
-    std::map<uint32_t, uint32_t> label_to_shapeidx;
+    LabelShapeIdxMap label_to_shapeidx;
 
     // Make sure that any unique colors consumed will go back to the beginning
     resetUniqueColorGenerator();
@@ -388,9 +388,7 @@ void MapNormalizer::ShapeFinder::outputStage(const std::string& filename) {
 /**
  * @brief Gets the label and the color for the given point.
  *
- * @param image The image to get the color from.
  * @param point The point to get the color and label for.
- * @param label_matrix The matrix to get the labels from
  * @param color The current color to compare the gotten color against
  *
  * @return A pair containing both the label and the color
@@ -420,8 +418,7 @@ auto MapNormalizer::ShapeFinder::getLabelAndColor(const Point2D& point,
  *
  * @return The root of label
  */
-uint32_t MapNormalizer::ShapeFinder::getRootLabel(uint32_t label)
-{
+uint32_t MapNormalizer::ShapeFinder::getRootLabel(uint32_t label) {
     uint32_t root = label;
 
     while(m_label_parents.count(root) != 0) {
@@ -434,14 +431,13 @@ uint32_t MapNormalizer::ShapeFinder::getRootLabel(uint32_t label)
 /**
  * @brief Gets a pixel adjacent to point
  *
- * @param image The image the point is from
  * @param point The point to get an adjacent pixel for.
  * @param dir1 The direction.
  *
  * @return The point adjacent to 'point', std::nullopt if there is no pixel
  *         adjacent to 'point' in the directions specified
  */
-auto MapNormalizer::ShapeFinder::getAdjacentPixel(Point2D point,
+auto MapNormalizer::ShapeFinder::getAdjacentPixel(const Point2D& point,
                                                   Direction dir1) const
     -> std::optional<Point2D>
 {
@@ -501,14 +497,13 @@ void MapNormalizer::ShapeFinder::addPixelToShape(Polygon& shape,
  * @brief Builds a shape up.
  *
  * @param label The label of the shape being built
- * @param color The color of the original shape
+ * @param pixel The pixel to add to a shape
  * @param shapes The list of shapes
- * @param point The point to add to a shape
  * @param label_to_shapeidx The mapping of labels to their corresponding shapes
  */
 void MapNormalizer::ShapeFinder::buildShape(uint32_t label, const Pixel& pixel,
                                             PolygonList& shapes,
-                                            std::map<uint32_t, uint32_t>& label_to_shapeidx)
+                                            LabelShapeIdxMap& label_to_shapeidx)
 {
     uint32_t shapeidx = -1;
 

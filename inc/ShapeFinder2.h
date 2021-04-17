@@ -25,11 +25,13 @@ namespace MapNormalizer {
             PolygonList findAllShapes();
             
         protected:
+            using LabelShapeIdxMap = std::unordered_map<uint32_t, uint32_t>;
+
             uint32_t pass1();
-            PolygonList pass2(std::map<uint32_t, uint32_t>&);
+            PolygonList pass2(LabelShapeIdxMap&);
 
             bool mergeBorders(PolygonList&,
-                              const std::map<uint32_t, uint32_t>&);
+                              const LabelShapeIdxMap&);
 
             std::pair<uint32_t, Color> getLabelAndColor(const Point2D&,
                                                         const Color&);
@@ -40,10 +42,10 @@ namespace MapNormalizer {
 
             uint32_t getRootLabel(uint32_t);
 
-            std::optional<Point2D> getAdjacentPixel(Point2D, Direction) const;
+            std::optional<Point2D> getAdjacentPixel(const Point2D&, Direction) const;
 
             void buildShape(uint32_t, const Pixel&, PolygonList&,
-                            std::map<uint32_t, uint32_t>&);
+                            LabelShapeIdxMap&);
 
             void addPixelToShape(Polygon&, const Pixel&);
 
