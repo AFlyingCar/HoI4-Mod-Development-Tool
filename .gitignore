@@ -6,10 +6,13 @@
 *.P
 *.bmp
 *.xcf
+*.swo
+callgrind.out.*
 
 compile_commands.json
 valout.txt
 
+Binaries/
 build/
 bin/
 run/
