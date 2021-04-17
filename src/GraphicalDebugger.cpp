@@ -17,7 +17,6 @@
 #include <algorithm>
 
 #include "BitMap.h"
-#include "ShapeFinder.h"
 #include "Options.h"
 #include "Logger.h"
 #include "Util.h"
@@ -70,19 +69,33 @@ static const auto NUM_PIX_REQ_SLEEP = 262144;
 static bool should_sleep = true;
 #endif
 
+MapNormalizer::GraphicsWorker& MapNormalizer::GraphicsWorker::getInstance() {
+    static GraphicsWorker instance;
+
+    return instance;
+}
+
+/*
+ * @brief Initializes the GraphicsWorker
+ *
+ * @param image The image being debugged
+ * @param debug_data The pixel data to display
+ */
+void MapNormalizer::GraphicsWorker::init(BitMap* image,
+                                         unsigned char* debug_data)
+{
+    m_image = image;
+    m_debug_data = debug_data;
+}
+
 /**
  * @brief Worker function which manages displaying graphical debugging data.
  *
- * @param image The image being debugged
- * @param disp_data The pixel data to display
  * @param done A boolean for this to know when the algorithm is done.
  */
-void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
-                                   bool& done)
+void MapNormalizer::GraphicsWorker::work(bool& done)
 {
 #ifndef ENABLE_GRAPHICS
-    (void)image;
-    (void)disp_data;
     (void)done;
 #else
 
@@ -103,8 +116,8 @@ void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
     const auto MAX_SCREEN_WIDTH = (8 * current.w) / 10;
     const auto MAX_SCREEN_HEIGHT = (8 * current.h) / 10;
 
-    auto width = std::min(image->info_header.width, MAX_SCREEN_WIDTH);
-    auto height = std::min(image->info_header.height, MAX_SCREEN_HEIGHT);
+    auto width = std::min(m_image->info_header.width, MAX_SCREEN_WIDTH);
+    auto height = std::min(m_image->info_header.height, MAX_SCREEN_HEIGHT);
 
     if(width < MIN_SCREEN_WIDTH)
         width *= 10;
@@ -116,7 +129,7 @@ void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
     writeDebug("Creating a window of size ("s + std::to_string(width) + ',' +
                std::to_string(height) + ")");
 
-    ::should_sleep = (image->info_header.width * image->info_header.height) < NUM_PIX_REQ_SLEEP;
+    ::should_sleep = (m_image->info_header.width * m_image->info_header.height) < NUM_PIX_REQ_SLEEP;
 
     // Create SDL window to write to
     SDL_Window* window = SDL_CreateWindow("Shape Finder Debugger",
@@ -142,12 +155,12 @@ void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
     }
 
     // Create initial RGB surface
-    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(disp_data, image->info_header.width,
-                                                    image->info_header.height, 24,
-                                                    3 * image->info_header.width,
+    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(m_debug_data, m_image->info_header.width,
+                                                    m_image->info_header.height, 24,
+                                                    3 * m_image->info_header.width,
                                                     0xFF0000, 0xFF00, 0xFF, 0);
 
-    SDL_Rect dest = { 0, 0, image->info_header.width * 10, image->info_header.height * 10 };
+    SDL_Rect dest = { 0, 0, m_image->info_header.width * 10, m_image->info_header.height * 10 };
 
     SDL_Event event;
 
@@ -178,13 +191,22 @@ void MapNormalizer::graphicsWorker(BitMap* image, unsigned char* disp_data,
                         case 's':
                             should_sleep = !should_sleep;
                             break;
+                        case SDLK_ESCAPE:
+                            // Notify the calling thread that we are done
+                            done = true;
+
+                            // Make sure that we still kill everything even if the main thread is paused.
+                            main_thread_should_pause = false;
+                            main_thread_should_unpause_cv.notify_all();
+
+                            std::exit(0); // No need to break here
+
+                            break;
                     }
             }
         }
 
-        graphics_debug_mutex.lock();
         SDL_BlitScaled(surface, nullptr, win_surface, &dest);
-        graphics_debug_mutex.unlock();
 
         SDL_UpdateWindowSurface(window);
     }
@@ -193,6 +215,54 @@ kill_graphics_worker:
     SDL_DestroyWindow(window);
     SDL_Quit();
 #endif
+}
+
+void MapNormalizer::GraphicsWorker::writeDebugColor(uint32_t x, uint32_t y,
+                                                    Color c)
+{
+    if(m_debug_data != nullptr && !prog_opts.no_gui) {
+        using namespace std::chrono_literals;
+
+        uint32_t w = m_image->info_header.width;
+
+        // if(should_sleep)
+        //     std::this_thread::sleep_for(0.01s);
+
+        uint32_t index = xyToIndex(w * 3, x * 3, y);
+
+        // graphics_debug_mutex.lock();
+
+        // Make sure we swap B and R (because BMP format sucks)
+        m_debug_data[index] = c.b;
+        m_debug_data[index + 1] = c.g;
+        m_debug_data[index + 2] = c.r;
+
+        // graphics_debug_mutex.unlock();
+    }
+}
+
+void MapNormalizer::GraphicsWorker::resetDebugData() {
+    if(m_debug_data != nullptr && !prog_opts.no_gui) {
+        auto data_size = m_image->info_header.width * m_image->info_header.height * 3;
+
+        std::copy(m_image->data, m_image->data + data_size, m_debug_data);
+    }
+}
+
+void MapNormalizer::GraphicsWorker::resetDebugDataAt(const Point2D& point) {
+    if(m_debug_data != nullptr && !prog_opts.no_gui) {
+        uint32_t index = xyToIndex(m_image, point.x, point.y);
+
+        m_debug_data[index] = m_image->data[index];
+    }
+}
+
+const unsigned char* MapNormalizer::GraphicsWorker::getDebugData() const {
+    return m_debug_data;
+}
+
+const MapNormalizer::BitMap* MapNormalizer::GraphicsWorker::getImage() const {
+    return m_image;
 }
 
 /**
@@ -204,6 +274,7 @@ kill_graphics_worker:
  * @param y The y coordinate to write to
  * @param c The color to write
  */
+[[deprecated]]
 void MapNormalizer::writeDebugColor(unsigned char* debug_data, uint32_t w,
                                     uint32_t x, uint32_t y, Color c)
 {

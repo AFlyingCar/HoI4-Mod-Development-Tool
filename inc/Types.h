@@ -33,6 +33,16 @@ namespace MapNormalizer {
     };
 
     /**
+     * @brief Represents a direction along a 2D plane
+     */
+    enum class Direction {
+        LEFT,
+        UP,
+        RIGHT,
+        DOWN
+    };
+
+    /**
      * @brief A polygon, which may be a solid color shape and a vector of all
      *        pixels which make it up
      */
@@ -102,12 +112,19 @@ namespace MapNormalizer {
      * @brief A list of all states
      */
     using StateList = std::map<StateID, State>;
-}
 
-std::ostream& operator<<(std::ostream&, const MapNormalizer::Point2D&);
-std::ostream& operator<<(std::ostream&, const MapNormalizer::Color&);
-std::ostream& operator<<(std::ostream&, const MapNormalizer::ProvinceType&);
-std::ostream& operator<<(std::ostream&, const MapNormalizer::State&);
+    std::ostream& operator<<(std::ostream&, const Point2D&);
+    std::ostream& operator<<(std::ostream&, const Color&);
+
+    std::ostream& operator<<(std::ostream&, const ProvinceType&);
+    std::ostream& operator<<(std::ostream&, const State&);
+
+    std::string operator+(const std::string&, const Point2D&);
+    std::string operator+(const std::string&, const Color&);
+
+    bool operator==(const Color&, const Color&);
+    bool operator!=(const Color&, const Color&);
+}
 
 #endif
 

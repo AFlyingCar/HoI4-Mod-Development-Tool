@@ -43,12 +43,17 @@ static void writeInfoLine() {
 
     if(!info_line.empty()) {
         std::cout << (isOutAnsiEnabled() ? "\33[32m" : "") << "==> " << info_line
-                  << (isOutAnsiEnabled() ? "\33[0m" : "");
-
-        // Only print a newline if we don't have ANSI escape codes.
-        if(!isOutAnsiEnabled()) std::cout << std::endl;
-        std::cout.flush();
+                  << (isOutAnsiEnabled() ? "\33[0m" : "")
+                  << (!isOutAnsiEnabled() ? "\n" : "");
     }
+}
+
+/**
+ * @brief Initializes the logging system
+ */
+void MapNormalizer::init() {
+    // https://stackoverflow.com/a/61854612
+    std::ios_base::sync_with_stdio(false);
 }
 
 /**
@@ -60,10 +65,9 @@ void MapNormalizer::deleteInfoLine() {
     if(prog_opts.quiet) return;
 
     if(!info_line.empty() && isOutAnsiEnabled()) {
-        std::cout << "\33[1000D"; // Go to start of line
-        std::cout << "\33[0K";    // Clear the line
-        std::cout << "\33[1000D"; // Go to start of line
-        std::cout.flush();
+        std::cout << "\33[1000D"  // Go to start of line
+                     "\33[0K"     // Clear the line
+                     "\33[1000D"; // Go to start of line
     }
 }
 
@@ -72,11 +76,19 @@ void MapNormalizer::deleteInfoLine() {
  *
  * @param line The next textual string to use for the information line.
  */
-void MapNormalizer::setInfoLine(const std::string& line) {
-    info_line = line;
+void MapNormalizer::setInfoLineImpl(std::string&& line) {
+    if(MapNormalizer::prog_opts.quiet) return;
 
-    deleteInfoLine();
-    writeInfoLine();
+    info_line = std::move(line);
+
+    if(!info_line.empty() && isOutAnsiEnabled()) {
+        std::cout << "\33[1000D" // Go to start of line
+                     "\33[0K"    // Clear the line
+                     "\33[1000D" // Go to start of line
+                     "\33[32m==> " << info_line; // Write the line
+    } else {
+        std::cout << info_line << "\n";
+    }
 }
 
 /**
@@ -86,13 +98,13 @@ void MapNormalizer::setInfoLine(const std::string& line) {
  * @param message The message to write.
  * @param write_prefix Whether a prefix should be attached to this message.
  */
-void MapNormalizer::writeWarning(const std::string& message, bool write_prefix)
+void MapNormalizer::writeWarningImpl(const std::string& message,
+                                     bool write_prefix)
 {
     deleteInfoLine();
     std::cerr << (isErrAnsiEnabled() ? "\33[33m" : "")
               << (write_prefix ? "[WRN] ~ " : "") << message
               << (isErrAnsiEnabled() ? "\33[0m" : "") << std::endl;
-    std::cerr.flush();
     writeInfoLine();
 }
 
@@ -103,12 +115,13 @@ void MapNormalizer::writeWarning(const std::string& message, bool write_prefix)
  * @param message The message to write.
  * @param write_prefix Whether a prefix should be attached to this message.
  */
-void MapNormalizer::writeError(const std::string& message, bool write_prefix) {
+void MapNormalizer::writeErrorImpl(const std::string& message,
+                                   bool write_prefix)
+{
     deleteInfoLine();
     std::cerr << (isErrAnsiEnabled() ? "\33[31m" : "")
               << (write_prefix ? "[ERR] ~ " : "") << message
               << (isErrAnsiEnabled() ? "\33[0m" : "") << std::endl;
-    std::cerr.flush();
     writeInfoLine();
 }
 
@@ -119,14 +132,15 @@ void MapNormalizer::writeError(const std::string& message, bool write_prefix) {
  * @param message The message to write.
  * @param write_prefix Whether a prefix should be attached to this message.
  */
-void MapNormalizer::writeStdout(const std::string& message, bool write_prefix) {
+void MapNormalizer::writeStdoutImpl(const std::string& message,
+                                    bool write_prefix)
+{
     if(prog_opts.quiet) return;
 
     deleteInfoLine();
     std::cout << (isOutAnsiEnabled() ? "\33[37m" : "")
               << (write_prefix ? "[OUT] ~ " : "") << message
               << (isOutAnsiEnabled() ? "\33[0m" : "") << std::endl;
-    std::cout.flush();
     writeInfoLine();
 }
 
@@ -137,7 +151,9 @@ void MapNormalizer::writeStdout(const std::string& message, bool write_prefix) {
  * @param message The message to write.
  * @param write_prefix Whether a prefix should be attached to this message.
  */
-void MapNormalizer::writeDebug(const std::string& message, bool write_prefix) {
+void MapNormalizer::writeDebugImpl(const std::string& message,
+                                   bool write_prefix)
+{
     // Do nothing if we don't have verbose output.
     if(!prog_opts.verbose) return;
 
@@ -145,7 +161,6 @@ void MapNormalizer::writeDebug(const std::string& message, bool write_prefix) {
     std::cout << (isOutAnsiEnabled() ? "\33[34m" : "")
               << (write_prefix ? "[DBG] ~ " : "") << message
               << (isOutAnsiEnabled() ? "\33[0m" : "") << std::endl;
-    std::cout.flush();
     writeInfoLine();
 }
 
