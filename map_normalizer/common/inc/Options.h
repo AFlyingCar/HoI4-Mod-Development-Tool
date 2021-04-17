@@ -1,14 +1,11 @@
 /**
- * @file ArgParser.h
+ * @file Options.h
  *
- * @brief Defines the structure for storing global program options, and the
- *        functions for parsing command-line arguments.
+ * @brief Defines the global prog_opts variable
  */
 
-#ifndef ARG_PARSER_H
-# define ARG_PARSER_H
-
-# include <string>
+#ifndef OPTIONS_H
+# define OPTIONS_H
 
 namespace MapNormalizer {
     /**
@@ -49,9 +46,8 @@ namespace MapNormalizer {
         bool output_stages;
     };
 
-    ProgramOptions parseArgs(int, char**);
-
-    void printHelp();
+    //! Global variable for storing program options.
+    extern ProgramOptions prog_opts;
 }
 
 #endif

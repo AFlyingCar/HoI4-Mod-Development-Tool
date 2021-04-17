@@ -22,5 +22,4 @@ if(WIN32 AND NOT MSVC)
 endif()
 
 add_subdirectory(map_normalizer)
-add_subdirectory(unique_colors)
 
