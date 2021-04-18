@@ -88,13 +88,14 @@ namespace MapNormalizer {
         }
     }
 
+    BitMap* readBMP(const std::string&, BitMap*);
     BitMap* readBMP(const std::string&);
 
     void writeBMP(const std::string&, const BitMap*);
     void writeBMP(const std::string&, unsigned char*, uint32_t, uint32_t);
-}
 
-std::ostream& operator<<(std::ostream&, const MapNormalizer::BitMap&);
+    std::ostream& operator<<(std::ostream&, const MapNormalizer::BitMap&);
+}
 
 #endif
 

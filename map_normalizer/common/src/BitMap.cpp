@@ -21,14 +21,34 @@
  * @return A pointer to a bitmap struct if the bitmap was successfully read,
  *         nullptr otherwise.
  */
-MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename) {
+MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename)
+{
+    BitMap* bm = new BitMap();
+
+    if(readBMP(filename, bm) == nullptr) {
+        delete bm;
+        return nullptr;
+    }
+
+    return bm;
+}
+
+/**
+ * @brief Reads a bitmap file.
+ *
+ * @param filename The filename to read from.
+ * @param bm The BitMap structure to write into
+ * @return A pointer to a bitmap struct if the bitmap was successfully read,
+ *         nullptr otherwise.
+ */
+MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename,
+                                              BitMap* bm)
+{
     std::ifstream file(filename, std::ios::in | std::ios::binary);
 
     if(!file.is_open()) {
         return nullptr;
     }
-
-    BitMap* bm = new BitMap();
 
     // bm->filename = filename.c_str();
 
@@ -50,8 +70,6 @@ MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename) {
        !safeRead(&(bm->info_header.colorsUsed), file)      ||
        !safeRead(&(bm->info_header.colorImportant), file))
     {
-        // Uh oh, one of the reads failed, delete the buffer and return nullptr
-        delete bm;
         return nullptr;
     }
 
@@ -66,25 +84,9 @@ MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename) {
     //  assume that the data starts after the header (it doesn't always do that)
     file.seekg(bm->file_header.bitmapOffset, file.beg);
 
-#if 0
-    for(size_t i = 0; i < bm->info_header.sizeOfBitmap; i += 3) {
-        unsigned char bgr[3];
-        if(!safeRead(bgr, 3, file)) {
-            // Uh oh, couldn't read the whole thing, this means the bitmap's
-            //  header is wrong, or something else happened when reading.
-            delete bm->data;
-            delete bm;
-            return nullptr;
-        }
-
-        bm->data[i]     = bgr[2];
-        bm->data[i + 1] = bgr[1];
-        bm->data[i + 2] = bgr[0];
-    }
-#else
     if(!safeRead(bm->data, bm->info_header.sizeOfBitmap, file)) {
         delete bm->data;
-        delete bm;
+
         return nullptr;
     }
 
@@ -115,7 +117,6 @@ MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename) {
         idx_s += new_pitch;
         idx_t -= new_pitch;
     }
-#endif
 
     return bm;
 }
@@ -172,8 +173,8 @@ void MapNormalizer::writeBMP(const std::string& filename, const BitMap* bmp) {
 void MapNormalizer::writeBMP(const std::string& filename, unsigned char* data,
                              uint32_t width, uint32_t height)
 {
-    BitMap* bmp = new BitMap();
-    std::memset(bmp, 0, sizeof(BitMap));
+    BitMap bmp;
+    std::memset(&bmp, 0, sizeof(BitMap));
 
     // Just hard-code these, they (should) never change
     constexpr auto fheader_size = 14;
@@ -184,27 +185,25 @@ void MapNormalizer::writeBMP(const std::string& filename, unsigned char* data,
     auto num_pixels = width * height;
 
     // bmp->filename = filename.c_str();
-    bmp->file_header.filetype = BM_TYPE;
-    bmp->file_header.fileSize = fiheader_size + num_pixels * 3;
-    bmp->file_header.reserved1 = 0;
-    bmp->file_header.reserved2 = 0;
-    bmp->file_header.bitmapOffset = static_cast<uint32_t>(fiheader_size);
-    bmp->info_header.headerSize = iheader_size;
-    bmp->info_header.width = static_cast<int>(width);
-    bmp->info_header.height = static_cast<int>(height);
-    bmp->info_header.bitPlanes = 1;
-    bmp->info_header.bitsPerPixel = 24; // 3 color values, 8 bits each
-    bmp->info_header.compression = 0; // For Win32 systems, this is BI_RGB
-    bmp->info_header.sizeOfBitmap = num_pixels * 3; // 3 bytes per pixel
-    bmp->info_header.horzResolution = 0; // TODO: Do we need to set this?
-    bmp->info_header.vertResolution = 0; // TODO: Do we need to set this?
-    bmp->info_header.colorsUsed = 0;
-    bmp->info_header.colorImportant = 0;
-    bmp->data = data;
+    bmp.file_header.filetype = BM_TYPE;
+    bmp.file_header.fileSize = fiheader_size + num_pixels * 3;
+    bmp.file_header.reserved1 = 0;
+    bmp.file_header.reserved2 = 0;
+    bmp.file_header.bitmapOffset = static_cast<uint32_t>(fiheader_size);
+    bmp.info_header.headerSize = iheader_size;
+    bmp.info_header.width = static_cast<int>(width);
+    bmp.info_header.height = static_cast<int>(height);
+    bmp.info_header.bitPlanes = 1;
+    bmp.info_header.bitsPerPixel = 24; // 3 color values, 8 bits each
+    bmp.info_header.compression = 0; // For Win32 systems, this is BI_RGB
+    bmp.info_header.sizeOfBitmap = num_pixels * 3; // 3 bytes per pixel
+    bmp.info_header.horzResolution = 0; // TODO: Do we need to set this?
+    bmp.info_header.vertResolution = 0; // TODO: Do we need to set this?
+    bmp.info_header.colorsUsed = 0;
+    bmp.info_header.colorImportant = 0;
+    bmp.data = data;
 
-    writeBMP(filename, bmp);
-
-    delete bmp;
+    writeBMP(filename, &bmp);
 }
 
 /**
@@ -215,7 +214,9 @@ void MapNormalizer::writeBMP(const std::string& filename, unsigned char* data,
  *
  * @return The given stream after writing the BitMap to it.
  */
-std::ostream& operator<<(std::ostream& stream, const MapNormalizer::BitMap& bm) {
+std::ostream& MapNormalizer::operator<<(std::ostream& stream,
+                                        const MapNormalizer::BitMap& bm)
+{
     stream << "BitMap = {" << std::endl
            << "    Header = {" << std::endl
            << "        filetype = " << bm.file_header.filetype << std::endl
