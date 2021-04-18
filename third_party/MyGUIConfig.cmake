@@ -33,3 +33,12 @@ FetchContent_Populate(MyGUI
 
 add_subdirectory(${CMAKE_BINARY_DIR}/MyGUI-src ${CMAKE_BINARY_DIR}/MyGUI-build)
 
+# Set up an INTERFACE target for MyGUI to simplify dependencies on it
+if(NOT TARGET MyGUI)
+    add_library(MyGUI INTERFACE)
+    target_include_directories(MyGUI INTERFACE $<TARGET_PROPERTY:MyGUIEngine,INCLUDE_DIRECTORIES> $<TARGET_PROPERTY:MyGUI.OpenGLPlatform,INCLUDE_DIRECTORIES>)
+    target_link_libraries(MyGUI INTERFACE MyGUIEngine MyGUI.OpenGLPlatform)
+endif(NOT TARGET MyGUI)
+
+
+
