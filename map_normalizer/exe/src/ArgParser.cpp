@@ -25,6 +25,7 @@ void MapNormalizer::printHelp() {
     writeStdout("\t   --height-map            The input file for writing the normal map.", false);
     writeStdout("\t   --hoi4-install-path     The installation path for Hearts of Iron 4.", false);
     writeStdout("\t   --output-stages         Output every stage of the shape detection algorithm.", false);
+    writeStdout("\t   --headless              Should the application run in headless mode (without the GUI)?.", false);
     writeStdout("\t-v,--verbose               Display all output.", false);
     writeStdout("\t-q,--quiet                 Display only errors and warnings (does not affect this message).", false);
     writeStdout("\t-h,--help                  Display this message and exit.", false);
@@ -57,11 +58,12 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
         { "no-skip-no-name-state", no_argument, NULL, 4 },
         { "hoi4-install-path", required_argument, NULL, 5 },
         { "output-stages", no_argument, NULL, 6 },
+        { "headless", no_argument, NULL, 7 },
         { nullptr, 0, nullptr, 0}
     };
 
     // Setup default option values
-    ProgramOptions prog_opts { 0, "", "", false, false, false, "", "", false, "", false };
+    ProgramOptions prog_opts { 0, "", "", false, false, false, "", "", false, "", false, false };
 
     int optindex = 0;
     int c = 0;
@@ -128,6 +130,9 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
                 break;
             case 6: // --output-stages
                 prog_opts.output_stages = true;
+                break;
+            case 7:
+                prog_opts.headless = true;
                 break;
             case 'v': // -v,--verbose
                 if(prog_opts.quiet) {

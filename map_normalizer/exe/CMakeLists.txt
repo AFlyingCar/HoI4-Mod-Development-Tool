@@ -11,6 +11,7 @@ add_library(map_normalizer_lib OBJECT
     src/Terrain.cpp
     src/UniqueColorGenerator.cpp
     src/WorldNormalBuilder.cpp
+    src/Interfaces.cpp
     src/main.cpp
 )
 
