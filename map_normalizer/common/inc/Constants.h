@@ -34,6 +34,10 @@ namespace MapNormalizer {
 
     //! The color of boundary pixels
     const Color BORDER_COLOR = Color{ 0, 0, 0 };
+
+    const std::string APPLICATION_NAME = "HoI4 Map Normalizer Tool";
+
+    const std::string APPLICATION_ID = "com.aflyingcar.tool.hoi4_map_normalizer";
 }
 
 #endif
