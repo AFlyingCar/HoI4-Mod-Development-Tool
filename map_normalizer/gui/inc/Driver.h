@@ -3,24 +3,30 @@
 
 # include <memory>
 
-# include "MyGUI.h"
-# include "MyGUI_OpenGLPlatform.h"
-
-# include "ImageLoader.h"
+# include "MapNormalizerApplication.h"
+# include "Window.h"
 
 namespace MapNormalizer::GUI {
+    enum class State {
+        NORMAL
+    };
+
     class Driver {
         public:
             Driver();
             ~Driver();
 
-            void initialize();
+            bool initialize();
+
+            void run();
+
+            State getState();
+            void setState(State);
 
         private:
-            std::unique_ptr<MyGUI::OpenGLPlatform> m_platform;
-            std::unique_ptr<MyGUI::Gui> m_gui;
+            Glib::RefPtr<MapNormalizerApplication> m_app;
 
-            ImageLoader m_image_loader;
+            State m_state;
     };
 }
 

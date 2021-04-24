@@ -1,27 +1,24 @@
 
 #include "Driver.h"
 
-MapNormalizer::GUI::Driver::Driver(): m_platform(nullptr),
-                                      m_gui(nullptr),
-                                      m_image_loader()
-{
-}
+#include "gtkmm.h"
+
+#include "MapNormalizerApplication.h"
+#include "MainWindow.h"
+
+MapNormalizer::GUI::Driver::Driver(): m_app()
+{ }
 
 MapNormalizer::GUI::Driver::~Driver() {
-    if(m_gui != nullptr) {
-        m_platform->shutdown();
-        m_gui->shutdown();
-    }
 }
 
-void MapNormalizer::GUI::Driver::initialize() {
-    // Do nothing if we are already initialized
-    if(m_gui != nullptr) return;
+bool MapNormalizer::GUI::Driver::initialize() {
+    m_app = Glib::RefPtr<MapNormalizerApplication>(new MapNormalizerApplication());
 
-    m_platform.reset(new MyGUI::OpenGLPlatform());
-    m_platform->initialise(&m_image_loader);
+    return true;
+}
 
-    m_gui.reset(new MyGUI::Gui());
-    m_gui->initialise();
+void MapNormalizer::GUI::Driver::run() {
+    m_app->run();
 }
 
