@@ -296,6 +296,8 @@ int MapNormalizer::runGUIApplication() {
 
     driver.initialize();
 
+    driver.run();
+
     return 0;
 }
 
