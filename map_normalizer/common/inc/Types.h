@@ -16,6 +16,16 @@ namespace MapNormalizer {
     };
 
     /**
+     * @brief A 2D Rectangle
+     */
+    struct Rectangle {
+        uint32_t x;
+        uint32_t y;
+        uint32_t w;
+        uint32_t h;
+    };
+
+    /**
      * @brief An RGB color value
      */
     struct Color {
