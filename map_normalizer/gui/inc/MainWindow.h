@@ -32,6 +32,9 @@ namespace MapNormalizer::GUI {
                 return std::get<W*>(m_active_child = addWidget<W>(std::forward<Args>(args)...));
             }
 
+            void buildViewPane();
+            Gtk::Frame* buildPropertiesPane();
+
         private:
             template<typename... Args>
             using ActiveChildVariant = std::variant<std::monostate, Args*...>;
