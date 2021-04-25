@@ -5,18 +5,14 @@ cmake_minimum_required(VERSION 3.0)
 #  all the sub-projects are laid out
 add_library(map_normalizer_lib OBJECT
     src/ArgParser.cpp
-    src/ProvinceMapBuilder.cpp
-    src/ShapeFinder2.cpp
     src/StateDefinitionBuilder.cpp
-    src/Terrain.cpp
-    src/UniqueColorGenerator.cpp
     src/WorldNormalBuilder.cpp
     src/Interfaces.cpp
     src/main.cpp
 )
 
-target_include_directories(map_normalizer_lib PRIVATE inc)
+target_include_directories(map_normalizer_lib PUBLIC inc)
 
 # Link against local libraries
-target_link_libraries(map_normalizer_lib unique_colors common gui)
+target_link_libraries(map_normalizer_lib common gui province_utils)
 

@@ -21,5 +21,5 @@ target_link_libraries(gui ${SDL2_LIBRARIES})
 target_link_libraries(gui gtkmm)
 
 # Link against local libraries
-target_link_libraries(gui common)
+target_link_libraries(gui common province_utils)
 
