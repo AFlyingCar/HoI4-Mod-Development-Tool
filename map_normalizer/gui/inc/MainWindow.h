@@ -11,6 +11,7 @@
 # include "BitMap.h"
 
 # include "Window.h"
+# include "MapDrawingArea.h"
 
 namespace MapNormalizer::GUI {
     class MainWindow: public Window {
@@ -46,6 +47,7 @@ namespace MapNormalizer::GUI {
 
             //! The main pane where all child widgets will be inside
             Gtk::Paned* m_paned;
+            MapDrawingArea* m_drawing_area;
     };
 }
 

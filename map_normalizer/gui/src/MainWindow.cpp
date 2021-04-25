@@ -1,7 +1,7 @@
 
 #include "MainWindow.h"
 
-#include <iostream>
+#include <thread>
 
 #include "gtkmm.h"
 #include "gtkmm/filechooserdialog.h"
@@ -11,9 +11,10 @@
 #include "Logger.h"
 #include "Util.h" // overloaded
 
+#include "ShapeFinder2.h" // findAllShapes2
+
 #include "GraphicalDebugger.h"
 #include "MapNormalizerApplication.h"
-#include "MapDrawingArea.h"
 
 MapNormalizer::GUI::MainWindow::MainWindow(Gtk::Application& application):
     Window(APPLICATION_NAME, application),
@@ -26,12 +27,8 @@ MapNormalizer::GUI::MainWindow::MainWindow(Gtk::Application& application):
 MapNormalizer::GUI::MainWindow::~MainWindow() { }
 
 bool MapNormalizer::GUI::MainWindow::initializeActions() {
-    // TODO
-#if 0
     add_action("new", []() {
-        std::cout << "new" << std::endl;
     });
-#endif
 
     auto ipm_action = add_action("import_provincemap", [this]() {
         // Allocate this on the stack so that it gets automatically cleaned up
@@ -47,6 +44,7 @@ bool MapNormalizer::GUI::MainWindow::initializeActions() {
 
         switch(result) {
             case Gtk::RESPONSE_ACCEPT:
+                dialog.hide(); // Hide ourselves immediately
                 if(!openInputMap(dialog.get_filename())) {
                     Gtk::MessageDialog dialog("Failed to open file.", false,
                                               Gtk::MESSAGE_ERROR);
@@ -105,18 +103,18 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
     m_paned->pack1(*std::get<Gtk::Frame*>(m_active_child = new Gtk::Frame()), true, false);
 
     // Setup the box+area for the map image to render
-    auto drawingWindow = addWidget<Gtk::ScrolledWindow>();
-    auto drawingArea = new MapDrawingArea();
+    auto drawing_window = addWidget<Gtk::ScrolledWindow>();
+    auto drawing_area = m_drawing_area = new MapDrawingArea();
 
     // Set pointers on drawingArea so that it knows where to go for image
     //  data that may get updated at any time (also means we don't have to
     //  worry about finding the widget and updating it ourselves)
-    drawingArea->setGraphicsDataPtr(&m_graphics_data);
-    drawingArea->setImagePtr(&m_image);
+    drawing_area->setGraphicsDataPtr(&m_graphics_data);
+    drawing_area->setImagePtr(&m_image);
 
     // Place the drawing area in a scrollable window
-    drawingWindow->add(*drawingArea);
-    drawingWindow->show_all();
+    drawing_window->add(*drawing_area);
+    drawing_window->show_all();
 }
 
 Gtk::Frame* MapNormalizer::GUI::MainWindow::buildPropertiesPane() {
@@ -172,9 +170,94 @@ bool MapNormalizer::GUI::MainWindow::openInputMap(const Glib::ustring& filename)
     //  exit, or when the next value is loaded
     worker.init(m_image, m_graphics_data);
     worker.resetDebugData();
+    worker.updateCallback({0, 0, static_cast<uint32_t>(m_image->info_header.width),
+                                 static_cast<uint32_t>(m_image->info_header.height)});
 
-    // TODO: Spawwn a thread and begin loading the data
+    m_drawing_area->get_window()->resize(m_image->info_header.width,
+                                         m_image->info_header.height);
+
+    ShapeFinder shape_finder(m_image);
+
+    // TODO: Open up a progress bar here
+    using namespace std::string_literals;
+    Gtk::MessageDialog progress_dialog(*this, "Loading \n"s + filename, false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_NONE);
+
+    Gtk::ProgressBar progress_bar;
+    reinterpret_cast<Gtk::Bin*>(progress_dialog.get_child())->add(progress_bar);
+    progress_bar.set_show_text(true);
+
+    Gtk::Button* done_button = progress_dialog.add_button("OK", Gtk::RESPONSE_OK);
+    done_button->set_sensitive(false);
+
+    Gtk::Button* cancel_button = progress_dialog.add_button("Cancel", Gtk::RESPONSE_CANCEL);
+
+    progress_dialog.show_all();
+
+    // Set up the callback
+    worker.setWriteCallback([this, &shape_finder, &progress_bar](const Rectangle& r)
+    {
+        m_drawing_area->graphicsUpdateCallback(r);
+
+        auto stage = shape_finder.getStage();
+        float fstage = static_cast<uint32_t>(stage);
+        float fraction = fstage / static_cast<uint32_t>(ShapeFinder::Stage::DONE);
+
+        // TODO: Do we want to calculate a more precise fraction based on
+        //   progress during a given stage?
+
+        progress_bar.set_text(toString(stage));
+        progress_bar.set_fraction(fraction);
+    });
+
+    // Start processing the data
+    std::thread sf_worker([this, &shape_finder, done_button, cancel_button]() {
+        auto& worker = GraphicsWorker::getInstance();
+
+        auto shapes = shape_finder.findAllShapes();
+
+        // Redraw the new image so we can properly show how it should look in the
+        //  final output
+        if(!prog_opts.quiet)
+            setInfoLine("Drawing new graphical image");
+        for(auto&& shape : shapes) {
+            for(auto&& pixel : shape.pixels) {
+                // Write to both the output data and into the displayed data
+                writeColorTo(m_image->data, m_image->info_header.width,
+                             pixel.point.x, pixel.point.y,
+                             shape.unique_color);
+
+                worker.writeDebugColor(pixel.point.x, pixel.point.y,
+                                       shape.unique_color);
+            }
+        }
+
+        worker.updateCallback({0, 0, static_cast<uint32_t>(m_image->info_header.width),
+                                     static_cast<uint32_t>(m_image->info_header.height)});
+
+        deleteInfoLine();
+
+        if(!prog_opts.quiet)
+            writeStdout("Detected ", std::to_string(shapes.size()), " shapes.");
+
+        done_button->set_sensitive(true);
+        cancel_button->set_sensitive(false);
+    });
+
+    // Run the progress bar dialog
+    // If the user cancels the action, then we need to kill sf_worker ASAP
+    if(auto response = progress_dialog.run();
+            response == Gtk::RESPONSE_DELETE_EVENT ||
+            response == Gtk::RESPONSE_CANCEL)
+    {
+        shape_finder.estop();
+    }
+
+    // Wait for the worker to join back up
+    sf_worker.join();
+
+    worker.resetWriteCallback();
 
     return true;
 }
+
 
