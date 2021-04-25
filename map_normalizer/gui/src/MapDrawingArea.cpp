@@ -59,13 +59,21 @@ bool MapNormalizer::GUI::MapDrawingArea::on_button_press_event(GdkEventButton* e
         auto x = event->x;
         auto y = event->y;
 
-        // TODO: Remove this
-        writeDebug("Got mouse button at (", x, ',', y, ")!");
+        if(event->state & GDK_SHIFT_MASK) {
+            writeDebug("Got shift+click!");
+            // TODO: Mark which shape we are actually selecting rather than just
+            //  drawing a pixel at the point where we click
+            writeDebugColor(x, y, Color{0, 255, 255});
+            queue_draw_area(x, y, 1, 1);
+        } else {
+            // TODO: Remove this
+            writeDebug("Got mouse button at (", x, ',', y, ")!");
 
-        // TODO: Mark which shape we are actually selecting rather than just
-        //  drawing a pixel at the point where we click
-        writeDebugColor(x, y, CURSOR_COLOR);
-        queue_draw_area(x, y, 1, 1);
+            // TODO: Mark which shape we are actually selecting rather than just
+            //  drawing a pixel at the point where we click
+            writeDebugColor(x, y, CURSOR_COLOR);
+            queue_draw_area(x, y, 1, 1);
+        }
     }
 
     return true;
