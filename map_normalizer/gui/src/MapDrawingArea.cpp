@@ -4,17 +4,26 @@
 #include "cairomm/context.h"
 #include "gdkmm/general.h"
 
-MapNormalizer::GUI::MapDrawingArea::MapDrawingArea()
-{ }
+#include "Logger.h"
+#include "Constants.h"
 
-#include <iostream>
+#include "GraphicalDebugger.h"
+
+MapNormalizer::GUI::MapDrawingArea::MapDrawingArea()
+{
+    // Mark that we want to receive button presses
+    add_events(Gdk::BUTTON_PRESS_MASK);
+}
+
+bool MapNormalizer::GUI::MapDrawingArea::hasData() const {
+    return m_graphics_data_ptr != nullptr && *m_graphics_data_ptr != nullptr &&
+           m_image_ptr != nullptr && *m_image_ptr != nullptr;
+}
 
 bool MapNormalizer::GUI::MapDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
     // Do nothing if we have no graphics data to actually render
-    if(m_graphics_data_ptr == nullptr || *m_graphics_data_ptr == nullptr ||
-       m_image_ptr == nullptr || *m_image_ptr == nullptr)
-    {
+    if(!hasData()) {
         return true;
     }
 
@@ -39,6 +48,29 @@ bool MapNormalizer::GUI::MapDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Cont
     return true;
 }
 
+bool MapNormalizer::GUI::MapDrawingArea::on_button_press_event(GdkEventButton* event)
+{
+    if(!hasData()) {
+        return true;
+    }
+
+    // Is it a left-click?
+    if(event->type == GDK_BUTTON_PRESS && event->button == 1) {
+        auto x = event->x;
+        auto y = event->y;
+
+        // TODO: Remove this
+        writeDebug("Got mouse button at (", x, ',', y, ")!");
+
+        // TODO: Mark which shape we are actually selecting rather than just
+        //  drawing a pixel at the point where we click
+        writeDebugColor(x, y, CURSOR_COLOR);
+        queue_draw_area(x, y, 1, 1);
+    }
+
+    return true;
+}
+
 void MapNormalizer::GUI::MapDrawingArea::setGraphicsDataPtr(unsigned char* const* data_ptr)
 {
     m_graphics_data_ptr = data_ptr;
@@ -47,5 +79,14 @@ void MapNormalizer::GUI::MapDrawingArea::setGraphicsDataPtr(unsigned char* const
 void MapNormalizer::GUI::MapDrawingArea::setImagePtr(BitMap* const* image_ptr)
 {
     m_image_ptr = image_ptr;
+}
+
+void MapNormalizer::GUI::MapDrawingArea::graphicsUpdateCallback(const Rectangle& rectangle)
+{
+    if(rectangle.w == 0 && rectangle.h == 0) {
+        return;
+    }
+
+    queue_draw_area(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
 }
 
