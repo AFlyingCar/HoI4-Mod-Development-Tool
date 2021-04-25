@@ -48,6 +48,10 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
     // Go over every pixel of the image
     for(uint32_t y = 0; y < height; ++y) {
         for(uint32_t x = 0; x < width; ++x) {
+            if(m_do_estop) {
+                return 0;
+            }
+
             Color color = getColorAt(m_image, x, y);
             uint32_t index = xyToIndex(m_image, x, y);
             uint32_t& label = m_label_matrix[index] = next_label;
@@ -127,6 +131,8 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
 
             worker.writeDebugColor(x, y, m_label_to_color[label]);
         }
+
+        worker.updateCallback({0, y, width, 1});
     }
 
     deleteInfoLine();
@@ -157,6 +163,10 @@ auto MapNormalizer::ShapeFinder::pass2(LabelShapeIdxMap& label_to_shapeidx)
 
     for(uint32_t y = 0; y < height; ++y) {
         for(uint32_t x = 0; x < width; ++x) {
+            if(m_do_estop) {
+                return PolygonList{};
+            }
+
             uint32_t index = xyToIndex(m_image, x, y);
             uint32_t& label = m_label_matrix[index];
             Color color = getColorAt(m_image, x, y);
@@ -174,6 +184,8 @@ auto MapNormalizer::ShapeFinder::pass2(LabelShapeIdxMap& label_to_shapeidx)
 
             buildShape(label, Pixel{ point, color }, shapes, label_to_shapeidx);
         }
+
+        worker.updateCallback({0, y, width, 1});
     }
 
     if(!prog_opts.quiet)
@@ -204,6 +216,10 @@ bool MapNormalizer::ShapeFinder::mergeBorders(PolygonList& shapes,
         writeStdout("Performing Pass #3 of CCL.");
 
     for(const Pixel& pixel : m_border_pixels) {
+        if(m_do_estop) {
+            return false;
+        }
+
         auto&& [x, y] = pixel.point;
         const Point2D& point = pixel.point;
 
@@ -229,6 +245,10 @@ bool MapNormalizer::ShapeFinder::mergeBorders(PolygonList& shapes,
             //  first pixel that is not a border and merge with that
             for(uint32_t y2 = y; !found && y2 < height; ++y2) {
                 for(uint32_t x2 = x; !found && x2 < width; ++x2) {
+                    if(m_do_estop) {
+                        return false;
+                    }
+
                     // Skip any further border pixels, then will be
                     //  picked up by the earlier adjacency checks
                     if(getColorAt(m_image, x2, y2) == BORDER_COLOR) {
@@ -262,6 +282,8 @@ bool MapNormalizer::ShapeFinder::mergeBorders(PolygonList& shapes,
         worker.writeDebugColor(x, y, shape.unique_color);
     }
 
+    worker.updateCallback({0, 0, width, height});
+
     return true;
 }
 
@@ -274,14 +296,30 @@ bool MapNormalizer::ShapeFinder::mergeBorders(PolygonList& shapes,
  * @return A list of every shape in the image.
  */
 MapNormalizer::PolygonList MapNormalizer::ShapeFinder::findAllShapes() {
+    auto& worker = GraphicsWorker::getInstance();
+
+    m_stage = Stage::PASS1;
+
     // Do pass 1, and reserve enough space in the m_border_pixels vector for all
     //   border pixels in the image
     uint32_t num_border_pixels = pass1();
+    if(m_do_estop) {
+        m_do_estop = false;
+        return PolygonList{};
+    }
+
     m_border_pixels.reserve(num_border_pixels);
+
+    m_stage = Stage::OUTPUT_PASS1;
 
     if(prog_opts.output_stages) {
         m_label_to_color[0] = BORDER_COLOR;
+        worker.updateCallback({0, 0, 0, 0});
         outputStage("labels1.bmp");
+        if(m_do_estop) {
+            m_do_estop = false;
+            return PolygonList{};
+        }
     }
 
     LabelShapeIdxMap label_to_shapeidx;
@@ -289,27 +327,48 @@ MapNormalizer::PolygonList MapNormalizer::ShapeFinder::findAllShapes() {
     // Make sure that any unique colors consumed will go back to the beginning
     resetUniqueColorGenerator();
 
+    m_stage = Stage::PASS2;
     // Do pass 1, we now have all of the shapes in the image, though there are
     //  still the border pixels left over to deal with
     PolygonList shapes = pass2(label_to_shapeidx);
+    if(m_do_estop) {
+        m_do_estop = false;
+        return PolygonList{};
+    }
 
+    m_stage = Stage::OUTPUT_PASS2;
     if(prog_opts.output_stages) {
+        worker.updateCallback({0, 0, 0, 0});
         outputStage("labels2.bmp");
+        if(m_do_estop) {
+            m_do_estop = false;
+            return PolygonList{};
+        }
+    }
+
+    if(m_do_estop) {
+        m_do_estop = false;
+        return PolygonList{};
     }
 
     // Again, we want to end this function by not consuming any unique colors
     resetUniqueColorGenerator();
 
+    m_stage = Stage::MERGE_BORDERS;
     // Merge all of the border pixels together into surrounding shapes
     //  If this fails, then we return an empty-list of shapes to denote failure
-    if(!mergeBorders(shapes, label_to_shapeidx)) {
+    if(!mergeBorders(shapes, label_to_shapeidx) || m_do_estop) {
         return PolygonList{};
     }
 
+    m_stage = Stage::ERROR_CHECK;
     // Perform error checking. This doesn't actually cause us to fail, just spit
     //   out warnings about the input image (as there isn't much for us to do to
     //   fix any errors ourselves
     errorCheckAllShapes(shapes);
+
+    m_do_estop = false;
+    m_stage = Stage::DONE;
 
     return shapes;
 }
@@ -328,6 +387,10 @@ std::optional<uint32_t> MapNormalizer::ShapeFinder::errorCheckAllShapes(const Po
     // Perform error-checking on shapes
     uint32_t index = 0;
     for(const Polygon& shape : shapes) {
+        if(m_do_estop) {
+            return std::nullopt;
+        }
+
         ++index;
 
         // Check for minimum province size.
@@ -526,5 +589,32 @@ void MapNormalizer::ShapeFinder::buildShape(uint32_t label, const Pixel& pixel,
     shapeidx = label_to_shapeidx[label];
 
     addPixelToShape(shapes.at(shapeidx), pixel);
+}
+
+void MapNormalizer::ShapeFinder::estop() {
+    m_do_estop = true;
+}
+
+MapNormalizer::ShapeFinder::Stage MapNormalizer::ShapeFinder::getStage() const {
+    return m_stage;
+}
+
+std::string MapNormalizer::toString(const ShapeFinder::Stage& stage) {
+    switch(stage) {
+        case ShapeFinder::Stage::PASS1:
+            return "Pass 1";
+        case ShapeFinder::Stage::OUTPUT_PASS1:
+            return "Output Pass 1";
+        case ShapeFinder::Stage::PASS2:
+            return "Pass 2";
+        case ShapeFinder::Stage::OUTPUT_PASS2:
+            return "Output Pass 2";
+        case ShapeFinder::Stage::MERGE_BORDERS:
+            return "Merge Borders";
+        case ShapeFinder::Stage::ERROR_CHECK:
+            return "Error Checking";
+        case ShapeFinder::Stage::DONE:
+            return "Done";
+    }
 }
 
