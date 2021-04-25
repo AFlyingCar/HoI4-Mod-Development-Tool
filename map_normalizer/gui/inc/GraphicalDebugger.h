@@ -35,8 +35,8 @@ namespace MapNormalizer {
         private:
             GraphicsWorker() = default;
 
-            BitMap* m_image;
-            unsigned char* m_debug_data;
+            BitMap* m_image = nullptr;
+            unsigned char* m_debug_data = nullptr;
     };
 
     void checkForPause();
