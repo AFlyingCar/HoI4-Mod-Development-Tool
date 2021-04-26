@@ -23,7 +23,9 @@ MapNormalizer::ShapeFinder::ShapeFinder(BitMap* image):
     m_label_matrix(new uint32_t[m_label_matrix_size]),
     m_label_parents(),
     m_border_pixels(),
-    m_label_to_color()
+    m_label_to_color(),
+    m_do_estop(false),
+    m_stage(Stage::START)
 {
 }
 
@@ -601,6 +603,8 @@ MapNormalizer::ShapeFinder::Stage MapNormalizer::ShapeFinder::getStage() const {
 
 std::string MapNormalizer::toString(const ShapeFinder::Stage& stage) {
     switch(stage) {
+        case ShapeFinder::Stage::START:
+            return "Start";
         case ShapeFinder::Stage::PASS1:
             return "Pass 1";
         case ShapeFinder::Stage::OUTPUT_PASS1:

@@ -21,6 +21,7 @@ namespace MapNormalizer {
     class ShapeFinder {
         public:
             enum class Stage {
+                START,
                 PASS1,
                 OUTPUT_PASS1,
                 PASS2,
