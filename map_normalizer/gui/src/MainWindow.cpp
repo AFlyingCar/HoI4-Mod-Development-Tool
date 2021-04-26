@@ -1,4 +1,3 @@
-
 #include "MainWindow.h"
 
 #include <thread>
@@ -11,12 +10,17 @@
 #include "Logger.h"
 #include "Util.h" // overloaded
 
-#include "ShapeFinder2.h" // findAllShapes2
+#include "ShapeFinder2.h" // ShapeFinder
 
 #include "GraphicalDebugger.h"
 #include "MapNormalizerApplication.h"
 #include "ProgressBarDialog.h"
 
+/**
+ * @brief Constructs the main window.
+ *
+ * @param application The application that this window is a part of
+ */
 MapNormalizer::GUI::MainWindow::MainWindow(Gtk::Application& application):
     Window(APPLICATION_NAME, application),
     m_image(nullptr),
@@ -27,6 +31,11 @@ MapNormalizer::GUI::MainWindow::MainWindow(Gtk::Application& application):
 
 MapNormalizer::GUI::MainWindow::~MainWindow() { }
 
+/**
+ * @brief Initializes every action for the menubar
+ *
+ * @return true
+ */
 bool MapNormalizer::GUI::MainWindow::initializeActions() {
     initializeFileActions();
     initializeEditActions();
@@ -36,6 +45,9 @@ bool MapNormalizer::GUI::MainWindow::initializeActions() {
     return true;
 }
 
+/**
+ * @brief Initializes every action in the File menu
+ */
 void MapNormalizer::GUI::MainWindow::initializeFileActions() {
     add_action("new", []() {
         // TODO
@@ -46,9 +58,15 @@ void MapNormalizer::GUI::MainWindow::initializeFileActions() {
     });
 }
 
+/**
+ * @brief Initializes every action in the Edit menu
+ */
 void MapNormalizer::GUI::MainWindow::initializeEditActions() {
 }
 
+/**
+ * @brief Initializes every action in the View menu
+ */
 void MapNormalizer::GUI::MainWindow::initializeViewActions() {
     add_action_bool("properties", [this]() {
         auto self = lookup_action("properties");
@@ -65,6 +83,9 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
     }, false);
 }
 
+/**
+ * @brief Initializes every action in the Project menu
+ */
 void MapNormalizer::GUI::MainWindow::initializeProjectActions() {
     auto ipm_action = add_action("import_provincemap", [this]() {
         // Allocate this on the stack so that it gets automatically cleaned up
@@ -98,6 +119,11 @@ void MapNormalizer::GUI::MainWindow::initializeProjectActions() {
     ipm_action->set_enabled(false);
 }
 
+/**
+ * @brief Initializes every widget used by this window
+ *
+ * @return true
+ */
 bool MapNormalizer::GUI::MainWindow::initializeWidgets() {
     m_paned = addWidget<Gtk::Paned>();
     
@@ -107,6 +133,7 @@ bool MapNormalizer::GUI::MainWindow::initializeWidgets() {
     // Make sure that we take up all of the available vertical space
     m_paned->set_vexpand();
 
+    // The view pane will always be loaded, so load it now
     buildViewPane();
 
     m_active_child = std::monostate{};
@@ -114,6 +141,9 @@ bool MapNormalizer::GUI::MainWindow::initializeWidgets() {
     return true;
 }
 
+/**
+ * @brief Builds the view pane, which is where the map gets rendered to.
+ */
 void MapNormalizer::GUI::MainWindow::buildViewPane() {
     m_paned->pack1(*std::get<Gtk::Frame*>(m_active_child = new Gtk::Frame()), true, false);
 
@@ -132,6 +162,12 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
     drawing_window->show_all();
 }
 
+/**
+ * @brief Builds the properties pane, which is where properties about a selected
+ *        province/state will go.
+ *
+ * @return The frame that the properties will be placed into
+ */
 Gtk::Frame* MapNormalizer::GUI::MainWindow::buildPropertiesPane() {
     Gtk::Frame* properties_frame = new Gtk::Frame();
     m_active_child = properties_frame;
@@ -153,6 +189,11 @@ Gtk::Orientation MapNormalizer::GUI::MainWindow::getDisplayOrientation() const {
     return Gtk::Orientation::ORIENTATION_VERTICAL;
 }
 
+/**
+ * @brief Adds the given widget to the currently active widget
+ *
+ * @param widget The widget to add
+ */
 void MapNormalizer::GUI::MainWindow::addWidgetToParent(Gtk::Widget& widget) {
     std::visit(overloaded {
         [&widget](auto&& child) {
@@ -164,6 +205,13 @@ void MapNormalizer::GUI::MainWindow::addWidgetToParent(Gtk::Widget& widget) {
     }, m_active_child);
 }
 
+/**
+ * @brief Opens the province input map.
+ *
+ * @param filename The full path to the input map to open.
+ *
+ * @return true if the input was successfully opened, false otherwise
+ */
 bool MapNormalizer::GUI::MainWindow::openInputMap(const Glib::ustring& filename)
 {
     // First, load the image into memory
