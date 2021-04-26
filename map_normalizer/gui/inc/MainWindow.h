@@ -36,6 +36,11 @@ namespace MapNormalizer::GUI {
             void buildViewPane();
             Gtk::Frame* buildPropertiesPane();
 
+            void initializeFileActions();
+            void initializeEditActions();
+            void initializeViewActions();
+            void initializeProjectActions();
+
         private:
             template<typename... Args>
             using ActiveChildVariant = std::variant<std::monostate, Args*...>;

@@ -28,9 +28,44 @@ MapNormalizer::GUI::MainWindow::MainWindow(Gtk::Application& application):
 MapNormalizer::GUI::MainWindow::~MainWindow() { }
 
 bool MapNormalizer::GUI::MainWindow::initializeActions() {
+    initializeFileActions();
+    initializeEditActions();
+    initializeViewActions();
+    initializeProjectActions();
+
+    return true;
+}
+
+void MapNormalizer::GUI::MainWindow::initializeFileActions() {
     add_action("new", []() {
+        // TODO
     });
 
+    add_action("close", [this]() {
+        hide();
+    });
+}
+
+void MapNormalizer::GUI::MainWindow::initializeEditActions() {
+}
+
+void MapNormalizer::GUI::MainWindow::initializeViewActions() {
+    add_action_bool("properties", [this]() {
+        auto self = lookup_action("properties");
+        bool active = false;
+        self->get_state(active);
+        self->change_state(!active);
+
+        if(m_paned->get_child2() == nullptr) {
+            buildPropertiesPane();
+            m_paned->show_all();
+        } else {
+            m_paned->remove(*m_paned->get_child2());
+        }
+    }, false);
+}
+
+void MapNormalizer::GUI::MainWindow::initializeProjectActions() {
     auto ipm_action = add_action("import_provincemap", [this]() {
         // Allocate this on the stack so that it gets automatically cleaned up
         //  when we finish
@@ -61,27 +96,6 @@ bool MapNormalizer::GUI::MainWindow::initializeActions() {
 
     // This action should be disabled by default, until a project gets opened
     ipm_action->set_enabled(false);
-
-    add_action("close", [this]() {
-        writeStdout("Quitting now!");
-        hide();
-    });
-
-    add_action_bool("properties", [this]() {
-        auto self = lookup_action("properties");
-        bool active = false;
-        self->get_state(active);
-        self->change_state(!active);
-
-        if(m_paned->get_child2() == nullptr) {
-            buildPropertiesPane();
-            m_paned->show_all();
-        } else {
-            m_paned->remove(*m_paned->get_child2());
-        }
-    }, false);
-
-    return true;
 }
 
 bool MapNormalizer::GUI::MainWindow::initializeWidgets() {
