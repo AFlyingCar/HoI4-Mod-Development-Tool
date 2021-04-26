@@ -15,6 +15,7 @@
 
 #include "GraphicalDebugger.h"
 #include "MapNormalizerApplication.h"
+#include "ProgressBarDialog.h"
 
 MapNormalizer::GUI::MainWindow::MainWindow(Gtk::Application& application):
     Window(APPLICATION_NAME, application),
@@ -151,6 +152,7 @@ void MapNormalizer::GUI::MainWindow::addWidgetToParent(Gtk::Widget& widget) {
 
 bool MapNormalizer::GUI::MainWindow::openInputMap(const Glib::ustring& filename)
 {
+    // First, load the image into memory
     m_image = readBMP(filename);
 
     if(m_image == nullptr) {
@@ -160,11 +162,10 @@ bool MapNormalizer::GUI::MainWindow::openInputMap(const Glib::ustring& filename)
 
     auto& worker = GraphicsWorker::getInstance();
 
+    // We now need a new array that the graphics worker can use to display the
+    //  rendered image
     auto data_size = m_image->info_header.width * m_image->info_header.height * 3;
-
     m_graphics_data = new unsigned char[data_size];
-
-    // std::thread graphics_thread;
 
     // No memory leak here, since the data will get deleted either at program
     //  exit, or when the next value is loaded
@@ -173,19 +174,22 @@ bool MapNormalizer::GUI::MainWindow::openInputMap(const Glib::ustring& filename)
     worker.updateCallback({0, 0, static_cast<uint32_t>(m_image->info_header.width),
                                  static_cast<uint32_t>(m_image->info_header.height)});
 
+    // Make sure that the drawing area is sized correctly to draw the entire
+    //  image
     m_drawing_area->get_window()->resize(m_image->info_header.width,
                                          m_image->info_header.height);
 
     ShapeFinder shape_finder(m_image);
 
-    // TODO: Open up a progress bar here
-    using namespace std::string_literals;
-    Gtk::MessageDialog progress_dialog(*this, "Loading \n"s + filename, false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_NONE);
+    // Open a progress bar dialog to show the user that we are actually doing
+    //  something
+    ProgressBarDialog progress_dialog(*this, "Loading...", "", true);
+    progress_dialog.setShowText(true);
 
-    Gtk::ProgressBar progress_bar;
-    reinterpret_cast<Gtk::Bin*>(progress_dialog.get_child())->add(progress_bar);
-    progress_bar.set_show_text(true);
-
+    // We add the buttons manually here because we need to be able to set their
+    //  sensitivity manually
+    // TODO: Do we even want a Done button? Or should we just close the
+    //  dialog when we're done?
     Gtk::Button* done_button = progress_dialog.add_button("OK", Gtk::RESPONSE_OK);
     done_button->set_sensitive(false);
 
@@ -193,8 +197,9 @@ bool MapNormalizer::GUI::MainWindow::openInputMap(const Glib::ustring& filename)
 
     progress_dialog.show_all();
 
-    // Set up the callback
-    worker.setWriteCallback([this, &shape_finder, &progress_bar](const Rectangle& r)
+    // Set up the graphics worker callback
+    auto last_stage = shape_finder.getStage();
+    worker.setWriteCallback([this, &shape_finder, &progress_dialog, &last_stage](const Rectangle& r)
     {
         m_drawing_area->graphicsUpdateCallback(r);
 
@@ -205,8 +210,11 @@ bool MapNormalizer::GUI::MainWindow::openInputMap(const Glib::ustring& filename)
         // TODO: Do we want to calculate a more precise fraction based on
         //   progress during a given stage?
 
-        progress_bar.set_text(toString(stage));
-        progress_bar.set_fraction(fraction);
+        if(stage != last_stage) {
+            last_stage = stage;
+            progress_dialog.setText(toString(stage));
+        }
+        progress_dialog.setFraction(fraction);
     });
 
     // Start processing the data
@@ -217,6 +225,8 @@ bool MapNormalizer::GUI::MainWindow::openInputMap(const Glib::ustring& filename)
 
         // Redraw the new image so we can properly show how it should look in the
         //  final output
+        // TODO: Do we still want to do this here? Would it not be better to do
+        //  it later on?
         if(!prog_opts.quiet)
             setInfoLine("Drawing new graphical image");
         for(auto&& shape : shapes) {
@@ -231,6 +241,8 @@ bool MapNormalizer::GUI::MainWindow::openInputMap(const Glib::ustring& filename)
             }
         }
 
+        // One final callback update so that the map drawer has the latest
+        //  graphical information
         worker.updateCallback({0, 0, static_cast<uint32_t>(m_image->info_header.width),
                                      static_cast<uint32_t>(m_image->info_header.height)});
 
@@ -239,6 +251,8 @@ bool MapNormalizer::GUI::MainWindow::openInputMap(const Glib::ustring& filename)
         if(!prog_opts.quiet)
             writeStdout("Detected ", std::to_string(shapes.size()), " shapes.");
 
+        // Disable the cancel button (we've already finished), and enable the
+        //  done button so that the user can close the box and move on
         done_button->set_sensitive(true);
         cancel_button->set_sensitive(false);
     });
@@ -259,5 +273,4 @@ bool MapNormalizer::GUI::MainWindow::openInputMap(const Glib::ustring& filename)
 
     return true;
 }
-
 

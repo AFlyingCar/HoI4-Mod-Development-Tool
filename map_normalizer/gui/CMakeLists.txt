@@ -11,6 +11,7 @@ add_library(gui STATIC
     src/Window.cpp
     src/WidgetContainer.cpp
     src/MapDrawingArea.cpp
+    src/ProgressBarDialog.cpp
 )
 
 target_include_directories(gui PUBLIC inc)
