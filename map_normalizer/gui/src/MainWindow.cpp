@@ -174,13 +174,37 @@ Gtk::Frame* MapNormalizer::GUI::MainWindow::buildPropertiesPane() {
 
     m_paned->pack2(*properties_frame, false, false);
 
-    // We want to possibly be able to scroll in the properties window
-    auto propertiesWindow = addActiveWidget<Gtk::ScrolledWindow>();
-    propertiesWindow->set_size_request(MINIMUM_PROPERTIES_PANE_WIDTH, -1);
+    auto properties_tab = addWidget<Gtk::Notebook>();
 
-    // TODO: Add all of the properties stuff
-    //   We may want a custom widget that knows what is currently selected?
-    addWidget<Gtk::Label>("Properties");
+    {
+        // We want to possibly be able to scroll in the properties window
+        auto properties_window = new Gtk::ScrolledWindow();
+        properties_window->set_size_request(MINIMUM_PROPERTIES_PANE_WIDTH, -1);
+
+        properties_tab->append_page(*properties_window, "Province");
+
+        // Do this so all future widgets we add get put into this one
+        m_active_child = properties_window;
+
+        // TODO: Add all of the properties stuff
+        //   We may want a custom widget that knows what is currently selected?
+        addWidget<Gtk::Label>("Province Properties");
+    }
+
+    {
+        // We want to possibly be able to scroll in the properties window
+        auto properties_window = new Gtk::ScrolledWindow();
+        properties_window->set_size_request(MINIMUM_PROPERTIES_PANE_WIDTH, -1);
+
+        properties_tab->append_page(*properties_window, "State");
+
+        // Do this so all future widgets we add get put into this one
+        m_active_child = properties_window;
+
+        // TODO: Add all of the properties stuff
+        //   We may want a custom widget that knows what is currently selected?
+        addWidget<Gtk::Label>("State Properties");
+    }
 
     return properties_frame;
 }
