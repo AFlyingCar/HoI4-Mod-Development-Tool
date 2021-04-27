@@ -6,6 +6,9 @@
 # include "gtkmm/label.h"
 
 namespace MapNormalizer::GUI {
+    /**
+     * @brief A simple dialog box which shows a progress bar
+     */
     class ProgressBarDialog: public Gtk::Dialog {
         public:
             ProgressBarDialog(Gtk::Window&, const std::string&, const std::string& = "", bool = false);
@@ -16,7 +19,10 @@ namespace MapNormalizer::GUI {
             void setFraction(double);
 
         private:
+            //! The label for the progress bar
             Gtk::Label m_label;
+
+            //! The progress bar widget
             Gtk::ProgressBar m_progress_bar;
     };
 }

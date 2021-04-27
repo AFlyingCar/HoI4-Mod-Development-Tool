@@ -9,6 +9,7 @@ MapNormalizer::GUI::ProgressBarDialog::ProgressBarDialog(Gtk::Window& parent,
     m_label(message),
     m_progress_bar()
 {
+    // Add the label and progress bar widgets
     reinterpret_cast<Gtk::Bin*>(get_child())->add(m_label);
     reinterpret_cast<Gtk::Bin*>(get_child())->add(m_progress_bar);
 }
