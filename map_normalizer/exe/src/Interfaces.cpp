@@ -292,7 +292,7 @@ int MapNormalizer::runHeadless() {
 }
 
 int MapNormalizer::runGUIApplication() {
-    GUI::Driver driver;
+    auto& driver = GUI::Driver::getInstance();
 
     driver.initialize();
 

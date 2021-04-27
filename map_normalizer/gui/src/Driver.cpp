@@ -1,10 +1,13 @@
 
 #include "Driver.h"
 
-#include "gtkmm.h"
-
 #include "MapNormalizerApplication.h"
-#include "MainWindow.h"
+
+MapNormalizer::GUI::Driver& MapNormalizer::GUI::Driver::getInstance() {
+    static Driver instance;
+
+    return instance;
+}
 
 MapNormalizer::GUI::Driver::Driver(): m_app()
 { }
