@@ -9,7 +9,6 @@ add_library(gui STATIC
     src/Driver.cpp
     src/MainWindow.cpp
     src/Window.cpp
-    src/WidgetContainer.cpp
     src/MapDrawingArea.cpp
     src/ProgressBarDialog.cpp
 )
