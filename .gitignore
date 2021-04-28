@@ -7,6 +7,9 @@
 *.bmp
 *.xcf
 *.swo
+*.log
+*.srctrl*
+
 callgrind.out.*
 
 compile_commands.json

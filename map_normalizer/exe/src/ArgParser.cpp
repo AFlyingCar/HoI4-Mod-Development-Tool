@@ -18,16 +18,17 @@ static std::string program_name = "map_normalizer";
  * @brief Prints help information to the console.
  */
 void MapNormalizer::printHelp() {
-    writeStdout(program_name + " [OPTIONS...] [INFILE] [OUTPATH]", false);
-    writeStdout("\t   --no-gui                Do not open or render the map GUI.", false);
-    writeStdout("\t   --no-skip-no-name-state Do not skip states with no name.", false);
-    writeStdout("\t   --state-input           The input file for writing state definitions.", false);
-    writeStdout("\t   --height-map            The input file for writing the normal map.", false);
-    writeStdout("\t   --hoi4-install-path     The installation path for Hearts of Iron 4.", false);
-    writeStdout("\t   --output-stages         Output every stage of the shape detection algorithm.", false);
-    writeStdout("\t-v,--verbose               Display all output.", false);
-    writeStdout("\t-q,--quiet                 Display only errors and warnings (does not affect this message).", false);
-    writeStdout("\t-h,--help                  Display this message and exit.", false);
+    writeStdout<false>(program_name + " [OPTIONS...] {[INFILE] [OUTPATH]}");
+    writeStdout<false>("\t   --no-gui                Do not open or render the map GUI.");
+    writeStdout<false>("\t   --no-skip-no-name-state Do not skip states with no name.");
+    writeStdout<false>("\t   --state-input           The input file for writing state definitions.");
+    writeStdout<false>("\t   --height-map            The input file for writing the normal map.");
+    writeStdout<false>("\t   --hoi4-install-path     The installation path for Hearts of Iron 4.");
+    writeStdout<false>("\t   --output-stages         Output every stage of the shape detection algorithm.");
+    writeStdout<false>("\t   --headless              Should the application run in headless mode (without the GUI). Note that this requires [INFIILE] and [OUTPATH] to be provided.");
+    writeStdout<false>("\t-v,--verbose               Display all output.");
+    writeStdout<false>("\t-q,--quiet                 Display only errors and warnings (does not affect this message).");
+    writeStdout<false>("\t-h,--help                  Display this message and exit.");
 }
 
 /**
@@ -57,11 +58,12 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
         { "no-skip-no-name-state", no_argument, NULL, 4 },
         { "hoi4-install-path", required_argument, NULL, 5 },
         { "output-stages", no_argument, NULL, 6 },
+        { "headless", no_argument, NULL, 7 },
         { nullptr, 0, nullptr, 0}
     };
 
     // Setup default option values
-    ProgramOptions prog_opts { 0, "", "", false, false, false, "", "", false, "", false };
+    ProgramOptions prog_opts { 0, "", "", false, false, false, "", "", false, "", false, false };
 
     int optindex = 0;
     int c = 0;
@@ -129,6 +131,9 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
             case 6: // --output-stages
                 prog_opts.output_stages = true;
                 break;
+            case 7:
+                prog_opts.headless = true;
+                break;
             case 'v': // -v,--verbose
                 if(prog_opts.quiet) {
                     writeError("Conflicting command line arguments 'v' and 'q'");
@@ -168,7 +173,8 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
     if(auto i = optind; i < argc - 1) {
         prog_opts.infilename = argv[i];
         prog_opts.outpath = argv[i + 1];
-    } else {
+    } else if(prog_opts.headless) {
+        // We only require the file options if we are in headless mode
         writeError("Missing required argument(s)");
         prog_opts.status = 1;
         printHelp();

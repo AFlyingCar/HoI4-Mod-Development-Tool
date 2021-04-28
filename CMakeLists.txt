@@ -9,6 +9,11 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
+# Set up cmake prefix path to search for .cmake files
+set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/third_party
+    ${CMAKE_PREFIX_PATH}
+)
+
 # TODO: What other MSVC options should we pass?
 if(MSVC)
     add_compile_options(/W4 /WX)

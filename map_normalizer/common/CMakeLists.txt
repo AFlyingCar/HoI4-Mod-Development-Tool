@@ -5,7 +5,10 @@ add_library(common STATIC
     src/Types.cpp
     src/Util.cpp
     src/Logger.cpp
+    src/UniqueColorGenerator.cpp
 )
 
 target_include_directories(common PUBLIC inc)
+
+target_link_libraries(common unique_colors)
 

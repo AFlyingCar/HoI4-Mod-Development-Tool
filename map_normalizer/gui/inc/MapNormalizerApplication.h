@@ -1,0 +1,49 @@
+#ifndef MAPNORMALIZER_APPLICATION_H
+# define MAPNORMALIZER_APPLICATION_H
+
+# include <map>
+# include <queue>
+# include <string>
+# include <memory>
+# include <optional>
+# include <functional>
+# include <initializer_list>
+
+# include "gtkmm.h"
+
+# include "Window.h"
+# include "MenuItemWrapper.h"
+
+namespace MapNormalizer::GUI {
+    class MapNormalizerApplication: public Gtk::Application {
+        public:
+            MapNormalizerApplication();
+            virtual ~MapNormalizerApplication() = default;
+
+        protected:
+            void on_activate() override;
+            void on_startup() override;
+
+            std::optional<std::reference_wrapper<MenuItemWrapper>> getMenuItem(const std::string&);
+            std::optional<std::reference_wrapper<MenuItemInfo>> getMenuItemInfo(const std::string&);
+
+            MenuItemWrapper& addMenuItem(const MenuItemInfo&);
+            MenuItemWrapper& addMenuItem(const std::string&, const MenuItemInfo&);
+
+
+            MenuWrapper createMenu(const std::string&,
+                                   std::initializer_list<MenuItemInfo>);
+
+            MenuWrapper createMenu(const std::string&, const std::string&,
+                                   std::initializer_list<MenuItemInfo>);
+
+        private:
+            std::unique_ptr<Window> m_window;
+
+            std::map<std::string, MenuItemWrapper> m_menu_items;
+            std::map<std::string, MenuWrapper> m_menus;
+    };
+}
+
+#endif
+

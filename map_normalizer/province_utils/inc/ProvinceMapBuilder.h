@@ -47,10 +47,10 @@ namespace MapNormalizer {
     Terrain getTerrainType(const Color&);
     Continent getContinent(const Color&);
     StateID getState(const Color&);
-}
 
-std::ostream& operator<<(std::ostream&, const MapNormalizer::Province&);
-std::ostream& operator<<(std::ostream&, MapNormalizer::Terrain);
+    std::ostream& operator<<(std::ostream&, const MapNormalizer::Province&);
+    std::ostream& operator<<(std::ostream&, MapNormalizer::Terrain);
+}
 
 #endif
 

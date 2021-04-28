@@ -79,8 +79,8 @@ MapNormalizer::ProvinceList MapNormalizer::createProvinceList(const PolygonList&
     return provinces;
 }
 
-std::ostream& operator<<(std::ostream& stream,
-                         const MapNormalizer::Province& province)
+std::ostream& MapNormalizer::operator<<(std::ostream& stream,
+                                        const MapNormalizer::Province& province)
 {
     stream << province.id << ';' << static_cast<int>(province.unique_color.r)
            << ';' << static_cast<int>(province.unique_color.g) << ';'
@@ -91,7 +91,9 @@ std::ostream& operator<<(std::ostream& stream,
     return stream;
 }
 
-std::ostream& operator<<(std::ostream& stream, MapNormalizer::Terrain terrain) {
+std::ostream& MapNormalizer::operator<<(std::ostream& stream,
+                                        MapNormalizer::Terrain terrain)
+{
     stream << MapNormalizer::getTerrainIdentifier(terrain);
 
     return stream;

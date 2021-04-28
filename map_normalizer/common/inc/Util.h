@@ -42,6 +42,15 @@ namespace MapNormalizer {
     }
 
     void writeColorTo(unsigned char*, uint32_t, uint32_t, uint32_t, Color);
+
+    // Taken from https://en.cppreference.com/w/cpp/utility/variant/visit
+    template<typename... Ts>
+    struct overloaded: Ts... {
+        using Ts::operator()...;
+    };
+
+    template<typename... Ts>
+    overloaded(Ts...) -> overloaded<Ts...>;
 }
 
 #endif

@@ -44,6 +44,9 @@ namespace MapNormalizer {
 
         //! --output-stages
         bool output_stages;
+
+        //! --headless
+        bool headless;
     };
 
     //! Global variable for storing program options.

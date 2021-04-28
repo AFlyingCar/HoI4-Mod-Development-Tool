@@ -80,6 +80,15 @@ MapNormalizer::GraphicsWorker& MapNormalizer::GraphicsWorker::getInstance() {
 void MapNormalizer::GraphicsWorker::init(BitMap* image,
                                          unsigned char* debug_data)
 {
+    // Make sure we delete the old data first if we have any
+    if(m_debug_data != nullptr) {
+        delete[] m_debug_data;
+    }
+
+    if(m_image != nullptr) {
+        delete m_image;
+    }
+
     m_image = image;
     m_debug_data = debug_data;
 }
@@ -256,6 +265,26 @@ const MapNormalizer::BitMap* MapNormalizer::GraphicsWorker::getImage() const {
     return m_image;
 }
 
+void MapNormalizer::GraphicsWorker::updateCallback(const Rectangle& rectangle) {
+    m_write_callback(rectangle);
+}
+
+
+auto MapNormalizer::GraphicsWorker::getWriteCallback() const
+    -> const UpdateCallback&
+{
+    return m_write_callback;
+}
+
+void MapNormalizer::GraphicsWorker::setWriteCallback(const std::function<void(const Rectangle&)>& callback)
+{
+    m_write_callback = callback;
+}
+
+void MapNormalizer::GraphicsWorker::resetWriteCallback() {
+    m_write_callback = [](const Rectangle&) { };
+}
+
 /**
  * @brief Writes a color to the screen.
  *
@@ -288,6 +317,12 @@ void MapNormalizer::writeDebugColor(unsigned char* debug_data, uint32_t w,
         if(!prog_opts.no_gui)
             graphics_debug_mutex.unlock();
     }
+}
+
+void MapNormalizer::writeDebugColor(uint32_t x, uint32_t y, Color c) {
+    GraphicsWorker& worker = GraphicsWorker::getInstance();
+
+    worker.writeDebugColor(x, y, c);
 }
 
 /**

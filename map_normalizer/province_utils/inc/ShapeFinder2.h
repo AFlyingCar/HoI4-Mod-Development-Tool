@@ -20,10 +20,25 @@ namespace MapNormalizer {
      */
     class ShapeFinder {
         public:
+            enum class Stage {
+                START,
+                PASS1,
+                OUTPUT_PASS1,
+                PASS2,
+                OUTPUT_PASS2,
+                MERGE_BORDERS,
+                ERROR_CHECK,
+                DONE
+            };
+
             ShapeFinder(BitMap*);
 
             PolygonList findAllShapes();
-            
+
+            void estop();
+
+            Stage getStage() const;
+
         protected:
             using LabelShapeIdxMap = std::unordered_map<uint32_t, uint32_t>;
 
@@ -67,7 +82,15 @@ namespace MapNormalizer {
 
             //! The color of each label
             std::map<uint32_t, Color> m_label_to_color;
+
+            //! Whether or not the find algorithm should stop
+            bool m_do_estop;
+
+            //! The stage the findAllShapes() algorithm is at.
+            Stage m_stage;
     };
+
+    std::string toString(const ShapeFinder::Stage&);
 }
 
 #endif
