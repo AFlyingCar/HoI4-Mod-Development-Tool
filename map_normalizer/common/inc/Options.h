@@ -7,6 +7,8 @@
 #ifndef OPTIONS_H
 # define OPTIONS_H
 
+# include <string>
+
 namespace MapNormalizer {
     /**
      * @brief The structure for storing global program options.
