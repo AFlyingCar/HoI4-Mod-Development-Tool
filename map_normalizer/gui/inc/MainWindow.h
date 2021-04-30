@@ -35,7 +35,7 @@ namespace MapNormalizer::GUI {
             virtual Gtk::Orientation getDisplayOrientation() const override;
             virtual void addWidgetToParent(Gtk::Widget&) override;
 
-            bool openInputMap(const Glib::ustring&);
+            bool importProvinceMap(const Glib::ustring&);
 
             /**
              * @brief Adds a widget to this window and marks that it is now the
@@ -53,6 +53,14 @@ namespace MapNormalizer::GUI {
             void initializeEditActions();
             void initializeViewActions();
             void initializeProjectActions();
+
+            void newProject();
+
+            void onProjectOpened();
+            void onProjectClosed();
+
+            void saveProject();
+            void saveProjectAs(const std::string& = "Save As...");
 
         private:
             template<typename... Args>

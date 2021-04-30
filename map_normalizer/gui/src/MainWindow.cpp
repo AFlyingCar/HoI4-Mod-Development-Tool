@@ -15,6 +15,8 @@
 #include "GraphicalDebugger.h"
 #include "MapNormalizerApplication.h"
 #include "ProgressBarDialog.h"
+#include "NewProjectDialog.h"
+#include "Driver.h"
 
 /**
  * @brief Constructs the main window.
@@ -49,12 +51,72 @@ bool MapNormalizer::GUI::MainWindow::initializeActions() {
  * @brief Initializes every action in the File menu
  */
 void MapNormalizer::GUI::MainWindow::initializeFileActions() {
-    add_action("new", []() {
-        // TODO
+    add_action("new", [this]() {
+        newProject();
     });
 
-    add_action("close", [this]() {
-        hide();
+    add_action("open", [this]() {
+        Driver::UniqueProject project(new Driver::HProject);
+
+        // Allocate this on the stack so that it gets automatically cleaned up
+        //  when we finish
+        Gtk::FileChooserDialog dialog(*this, "Choose a project file.");
+        dialog.set_select_multiple(false);
+        // dialog.add_filter(); // TODO: Filter only for supported file types
+
+        dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+        dialog.add_button("Select", Gtk::RESPONSE_ACCEPT);
+
+        const int result = dialog.run();
+
+        switch(result) {
+            case Gtk::RESPONSE_ACCEPT:
+                dialog.hide(); // Hide ourselves immediately
+
+                project->setPath(dialog.get_filename());
+                if(!project->load()) {
+                    Gtk::MessageDialog dialog("Failed to open file.", false,
+                                              Gtk::MESSAGE_ERROR);
+                    dialog.run();
+                    return;
+                }
+                break;
+            case Gtk::RESPONSE_CANCEL:
+            case Gtk::RESPONSE_DELETE_EVENT:
+            default:
+                return;
+        }
+
+        Driver::getInstance().setProject(std::move(project));
+
+        onProjectOpened();
+    });
+
+    auto save_action = add_action("save", [this]() {
+        if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+            auto& project = opt_project->get();
+
+            if(!std::filesystem::exists(project.getPath())) {
+                writeDebug("SaveProjectAs(", project.getPath(), ")");
+                saveProjectAs();
+            } else {
+                writeDebug("SaveProject(", project.getPath(), ")");
+                saveProject();
+            }
+        }
+    });
+    save_action->set_enabled(false);
+
+    auto close_action = add_action("close", [this]() {
+        Driver::getInstance().setProject();
+
+        onProjectClosed();
+    });
+    close_action->set_enabled(false);
+
+    add_action("quit", []() {
+        // TODO: Confirmation menu first
+        std::exit(0);
     });
 }
 
@@ -102,7 +164,7 @@ void MapNormalizer::GUI::MainWindow::initializeProjectActions() {
         switch(result) {
             case Gtk::RESPONSE_ACCEPT:
                 dialog.hide(); // Hide ourselves immediately
-                if(!openInputMap(dialog.get_filename())) {
+                if(!importProvinceMap(dialog.get_filename())) {
                     Gtk::MessageDialog dialog("Failed to open file.", false,
                                               Gtk::MESSAGE_ERROR);
                     dialog.run();
@@ -236,7 +298,7 @@ void MapNormalizer::GUI::MainWindow::addWidgetToParent(Gtk::Widget& widget) {
  *
  * @return true if the input was successfully opened, false otherwise
  */
-bool MapNormalizer::GUI::MainWindow::openInputMap(const Glib::ustring& filename)
+bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& filename)
 {
     // First, load the image into memory
     m_image = readBMP(filename);
@@ -357,6 +419,114 @@ bool MapNormalizer::GUI::MainWindow::openInputMap(const Glib::ustring& filename)
 
     worker.resetWriteCallback();
 
+    // We will assume that the project is there, this action should not be
+    //  able to be executed if it doesn't exist
+    if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+        auto& project = opt_project->get();
+
+        project.getMapProject().setShapeFinder(std::move(shape_finder));
+    }
+
     return true;
+}
+
+/**
+ * @brief Creates a dialog box and, if successful, will create and set a new
+ *        project on the Driver
+ */
+void MapNormalizer::GUI::MainWindow::newProject() {
+    NewProjectDialog npd(*this);
+
+    const int result = npd.run();
+
+    Driver::UniqueProject project(nullptr);
+    switch(result) {
+        case Gtk::RESPONSE_ACCEPT:
+            npd.hide();
+            project.reset(new Driver::HProject);
+            project->setName(npd.getProjectName());
+            project->setPath(npd.getProjectPath());
+
+            // TODO: If a project is already open, make sure we close it first
+
+            Driver::getInstance().setProject(std::move(project));
+
+            // We are technically "opening" the project by creating it
+            onProjectOpened();
+            break;
+        case Gtk::RESPONSE_CANCEL:
+        default:
+            break;
+    }
+}
+
+/**
+ * @brief Called when a project is opened or created
+ */
+void MapNormalizer::GUI::MainWindow::onProjectOpened() {
+    // Enable all actions that can only be done on an opened project
+    getAction<Gio::SimpleAction>("import_provincemap")->set_enabled(true);
+    getAction<Gio::SimpleAction>("save")->set_enabled(true);
+    getAction<Gio::SimpleAction>("close")->set_enabled(true);
+}
+
+/**
+ * @brief Called when a project is closed
+ */
+void MapNormalizer::GUI::MainWindow::onProjectClosed() {
+    // Disable all actions that can only be done on an opened project
+    getAction<Gio::SimpleAction>("import_provincemap")->set_enabled(false);
+    getAction<Gio::SimpleAction>("save")->set_enabled(false);
+    getAction<Gio::SimpleAction>("close")->set_enabled(false);
+}
+
+/**
+ * @brief Saves the currently set Driver project (if one is in fact set)
+ */
+void MapNormalizer::GUI::MainWindow::saveProject() {
+    if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+        auto& project = opt_project->get();
+
+        // Make sure the user is notified if we failed to save the project
+        if(!project.save()) {
+            Gtk::MessageDialog dialog(*this, "Failed to save file.", false,
+                                      Gtk::MESSAGE_ERROR);
+            dialog.run();
+            return;
+        }
+    }
+}
+
+/**
+ * @brief Performs a saveAs operation, asking the user for a new file location
+ *        to save to before calling saveProject()
+ */
+void MapNormalizer::GUI::MainWindow::saveProjectAs(const std::string& dtitle) {
+    if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+        auto& project = opt_project->get();
+
+        // Allocate this on the stack so that it gets automatically cleaned up
+        //  when we finish
+        Gtk::FileChooserDialog dialog(*this, dtitle,
+                                      Gtk::FILE_CHOOSER_ACTION_SAVE);
+        dialog.set_select_multiple(false);
+
+        dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+        dialog.add_button("Select", Gtk::RESPONSE_ACCEPT);
+
+        const int result = dialog.run();
+        switch(result) {
+            case Gtk::RESPONSE_ACCEPT:
+                dialog.hide(); // Hide ourselves immediately
+
+                project.setPathAndName(dialog.get_filename());
+                saveProject();
+                break;
+            case Gtk::RESPONSE_CANCEL:
+            case Gtk::RESPONSE_DELETE_EVENT:
+            default:
+                return;
+        }
+    }
 }
 
