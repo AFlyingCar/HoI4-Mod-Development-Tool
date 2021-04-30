@@ -134,6 +134,12 @@ namespace MapNormalizer {
 
     bool operator==(const Color&, const Color&);
     bool operator!=(const Color&, const Color&);
+
+    /**
+     * @brief A helper alias
+     */
+    template<typename T>
+    using OptionalReference = std::optional<std::reference_wrapper<T>>;
 }
 
 #endif
