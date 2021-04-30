@@ -3,6 +3,7 @@
 
 # include <vector>
 # include <string>
+# include <type_traits>
 
 # include <gtkmm/applicationwindow.h>
 # include <gtkmm/widget.h>
@@ -29,6 +30,13 @@ namespace MapNormalizer::GUI {
             Gtk::Box* getBox();
 
             Gtk::Application* getApplication();
+
+            template<typename T,
+                     typename = std::enable_if_t<std::is_base_of_v<Gio::Action, T>, T>>
+            T* getAction(const Glib::ustring& action_name) {
+                auto action = lookup_action(action_name);
+                return dynamic_cast<Gio::SimpleAction*>(&(*action.get()));
+            }
 
         private:
             std::string m_window_name;
