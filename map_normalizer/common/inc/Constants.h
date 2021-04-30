@@ -44,6 +44,9 @@ namespace MapNormalizer {
 
     const size_t MINIMUM_WINDOW_W = 512;
     const size_t MINIMUM_WINDOW_H = 512;
+
+    const std::string PROJ_EXTENSION = ".hoi4proj";
+    const std::string PROJ_META_FOLDER = ".projmeta";
 }
 
 #endif
