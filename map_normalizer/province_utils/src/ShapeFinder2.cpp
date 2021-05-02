@@ -433,18 +433,25 @@ std::optional<uint32_t> MapNormalizer::ShapeFinder::errorCheckAllShapes(const Po
     uint32_t problematic_shapes = 0;
 
     // Perform error-checking on shapes
-    uint32_t index = 0;
+    uint32_t label = 0;
     for(const Polygon& shape : shapes) {
         if(m_do_estop) {
             return std::nullopt;
         }
 
-        ++index;
+        ++label;
+
+        // Make sure that the label matrix is updated to reflect the correct
+        //  shape labels
+        for(auto&& pixel : shape.pixels) {
+            auto index = xyToIndex(m_image, pixel.point.x, pixel.point.y);
+            m_label_matrix[index] = label;
+        }
 
         // Check for minimum province size.
         //  See: https://hoi4.paradoxwikis.com/Map_modding
         if(shape.pixels.size() <= MIN_SHAPE_SIZE) {
-            writeWarning("Shape ", index, " has only ",
+            writeWarning("Shape ", label, " has only ",
                          shape.pixels.size(),
                          " pixels. All provinces are required to have more than ",
                          MIN_SHAPE_SIZE,
@@ -456,7 +463,7 @@ std::optional<uint32_t> MapNormalizer::ShapeFinder::errorCheckAllShapes(const Po
         if(auto [width, height] = calcShapeDims(shape);
            isShapeTooLarge(width, height, m_image))
         {
-            writeWarning("Shape #", index, " has a bounding box of size ",
+            writeWarning("Shape #", label, " has a bounding box of size ",
                          Point2D{width, height},
                          ". One of these is larger than the allowed ratio of 1/8 * (",
                          m_image->info_header.width, ',', m_image->info_header.height,
@@ -579,32 +586,6 @@ auto MapNormalizer::ShapeFinder::getAdjacentPixel(const Point2D& point,
 }
 
 /**
- * @brief Adds a pixel to the given shape.
- * @details As a side-effect, will also expand the shape's bounding box.
- *
- * @param shape The shape to add the pixel to.
- * @param pixel The pixel to add to the shape.
- */
-void MapNormalizer::ShapeFinder::addPixelToShape(Polygon& shape,
-                                                 const Pixel& pixel)
-{
-    shape.pixels.push_back(pixel);
-
-    // We calculate the bounding box of the shape incrementally
-    if(pixel.point.x > shape.top_right.x) {
-        shape.top_right.x = pixel.point.x;
-    } else if(pixel.point.x < shape.bottom_left.x) {
-        shape.bottom_left.x = pixel.point.x;
-    }
-
-    if(pixel.point.y > shape.top_right.y) {
-        shape.top_right.y = pixel.point.y;
-    } else if(pixel.point.y < shape.bottom_left.y) {
-        shape.bottom_left.y = pixel.point.y;
-    }
-}
-
-/**
  * @brief Builds a shape up.
  *
  * @param label The label of the shape being built
@@ -671,6 +652,94 @@ auto MapNormalizer::ShapeFinder::getLabelToColorMap() -> const std::map<uint32_t
 
 auto MapNormalizer::ShapeFinder::getShapes() const -> const PolygonList& {
     return m_shapes;
+}
+
+/**
+ * @brief Adds a pixel to the given shape.
+ * @details As a side-effect, will also expand the shape's bounding box.
+ *
+ * @param shape The shape to add the pixel to.
+ * @param pixel The pixel to add to the shape.
+ */
+void MapNormalizer::addPixelToShape(Polygon& shape, const Pixel& pixel) {
+    shape.pixels.push_back(pixel);
+
+    // We calculate the bounding box of the shape incrementally
+    if(pixel.point.x > shape.top_right.x) {
+        shape.top_right.x = pixel.point.x;
+    } else if(pixel.point.x < shape.bottom_left.x) {
+        shape.bottom_left.x = pixel.point.x;
+    }
+
+    if(pixel.point.y > shape.top_right.y) {
+        shape.top_right.y = pixel.point.y;
+    } else if(pixel.point.y < shape.bottom_left.y) {
+        shape.bottom_left.y = pixel.point.y;
+    }
+}
+
+auto MapNormalizer::createPolygonListFromLabels(uint32_t* label_matrix,
+                                                uint32_t width, uint32_t height,
+                                                const ShapeFinder::LabelToColorMap& label_to_color,
+                                                const BitMap* src_image)
+    -> PolygonList
+{
+    uint32_t label_matrix_size = width * height;
+
+    std::map<uint32_t, Polygon> shape_map;
+    uint32_t max_label = 1;
+
+    writeDebug("CreatePolygonListFromLabels()");
+    for(uint32_t i = 0; i < label_matrix_size; ++i) {
+        uint32_t label = label_matrix[i];
+
+        if(label == 0) {
+            writeWarning("Found label with value of 0! This should not happen.");
+        }
+
+        Color unique_color = BORDER_COLOR;
+        if(label_to_color.count(label) != 0) {
+            unique_color = label_to_color.at(label);
+        }
+
+        Point2D xy{ i / width, i % height };
+        Color src_color = getColorAt(src_image, xy.x, xy.y);
+
+        // Find what the largest label is
+        max_label = std::max(max_label, label);
+
+        // If we don't already have a shapee for that index, create it
+        if(shape_map.count(label) == 0) {
+            writeDebug("Found new label ", label);
+
+            shape_map[label] = Polygon {
+                {}, 
+                src_color,
+                unique_color,
+                {0, 0},
+                {0, 0}
+            };
+        }
+
+        auto& shape = shape_map.at(label);
+        if(shape.color == BORDER_COLOR && src_color != BORDER_COLOR) {
+            shape.color = src_color;
+        }
+
+        addPixelToShape(shape, Pixel{xy, src_color});
+    }
+
+    writeDebug("Converting polygon map into list.");
+    // Put the data back into a vector
+    PolygonList shapes;
+    shapes.reserve(max_label);
+    for(uint32_t i = 1; i < max_label; ++i) {
+        shapes.push_back(shape_map.at(i));
+    }
+
+    writeDebug("Done.");
+
+    return shapes;
 }
 
 std::string MapNormalizer::toString(const ShapeFinder::Stage& stage) {

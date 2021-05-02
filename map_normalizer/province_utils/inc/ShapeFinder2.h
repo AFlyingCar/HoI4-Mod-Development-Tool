@@ -20,6 +20,8 @@ namespace MapNormalizer {
      */
     class ShapeFinder {
         public:
+            using LabelToColorMap = std::map<uint32_t, Color>;
+
             enum class Stage {
                 START,
                 PASS1,
@@ -73,8 +75,6 @@ namespace MapNormalizer {
             void buildShape(uint32_t, const Pixel&, PolygonList&,
                             LabelShapeIdxMap&);
 
-            void addPixelToShape(Polygon&, const Pixel&);
-
         private:
             //! The image to find shapes on
             BitMap* m_image;
@@ -92,7 +92,7 @@ namespace MapNormalizer {
             std::vector<Pixel> m_border_pixels;
 
             //! The color of each label
-            std::map<uint32_t, Color> m_label_to_color;
+            LabelToColorMap m_label_to_color;
 
             //! Whether or not the find algorithm should stop
             bool m_do_estop;
@@ -103,6 +103,12 @@ namespace MapNormalizer {
             //! The last list of shapes that were found
             PolygonList m_shapes;
     };
+
+    void addPixelToShape(Polygon&, const Pixel&);
+
+    PolygonList createPolygonListFromLabels(uint32_t*, uint32_t, uint32_t,
+                                            const ShapeFinder::LabelToColorMap&,
+                                            const BitMap*);
 
     std::string toString(const ShapeFinder::Stage&);
 }
