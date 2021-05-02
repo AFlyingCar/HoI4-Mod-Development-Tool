@@ -13,7 +13,7 @@ namespace MapNormalizer::Project {
      */
     class MapProject: public IProject {
         public:
-            MapProject();
+            MapProject(IProject&);
             virtual ~MapProject();
 
             virtual bool save(const std::filesystem::path&) override;
@@ -21,9 +21,19 @@ namespace MapNormalizer::Project {
 
             void setShapeFinder(ShapeFinder&&);
 
-            // TODO: Provinces, Rivers, etc...
+        protected:
+            bool saveShapeLabels(const std::filesystem::path&);
+            bool saveProvinceData(const std::filesystem::path&);
+
+            bool loadShapeLabels(const std::filesystem::path&);
+            bool loadProvinceData(const std::filesystem::path&);
+
         private:
-            ShapeFinder m_shape_finder;
+            std::unique_ptr<ShapeFinder> m_shape_finder;
+
+            BitMap* m_image;
+
+            IProject& m_parent_project;
     };
 }
 
