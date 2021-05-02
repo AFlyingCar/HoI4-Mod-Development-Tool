@@ -405,6 +405,8 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
         cancel_button->set_sensitive(false);
     });
 
+    bool did_estop = false;
+
     // Run the progress bar dialog
     // If the user cancels the action, then we need to kill sf_worker ASAP
     if(auto response = progress_dialog.run();
@@ -412,6 +414,7 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
             response == Gtk::RESPONSE_CANCEL)
     {
         shape_finder.estop();
+        did_estop = true;
     }
 
     // Wait for the worker to join back up
@@ -419,12 +422,29 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
 
     worker.resetWriteCallback();
 
-    // We will assume that the project is there, this action should not be
-    //  able to be executed if it doesn't exist
+    // Don't finish importing if we stopped early
+    if(did_estop) {
+        return true;
+    }
+
+    // We are checking if the project exists, even though this action should
+    //  never be able to be called if theere is no project loaded
     if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
         auto& project = opt_project->get();
 
         project.getMapProject().setShapeFinder(std::move(shape_finder));
+
+        std::filesystem::path imported(filename);
+        std::filesystem::path input_root = project.getInputsRoot();
+
+        if(!std::filesystem::exists(input_root)) {
+            std::filesystem::create_directory(input_root);
+        }
+
+        std::filesystem::copy_file(imported, input_root / INPUT_PROVINCEMAP_FILENAME);
+    } else {
+        writeError("Unable to complete importing '", filename, "'. Reason: There is no project currently loaded.");
+        return false;
     }
 
     return true;
@@ -445,7 +465,20 @@ void MapNormalizer::GUI::MainWindow::newProject() {
             npd.hide();
             project.reset(new Driver::HProject);
             project->setName(npd.getProjectName());
-            project->setPath(npd.getProjectPath());
+
+            {
+                std::filesystem::path root_path = npd.getProjectPath();
+                project->setPath((root_path / project->getName()).replace_extension(PROJ_EXTENSION));
+            }
+
+            // Attempt to save just the root project (this will set up the
+            //  initial metadata we will need for later)
+            if(!project->save(false)) {
+                Gtk::MessageDialog dialog(*this, "Failed to save project.", false,
+                                          Gtk::MESSAGE_ERROR);
+                dialog.run();
+                return;
+            }
 
             // TODO: If a project is already open, make sure we close it first
 
