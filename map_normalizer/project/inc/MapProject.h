@@ -2,12 +2,23 @@
 # define MAPPROJECT_H
 
 # include <string>
+# include <filesystem>
 
 # include "ShapeFinder2.h"
+
+# include "Types.h"
+# include "BitMap.h"
 
 # include "IProject.h"
 
 namespace MapNormalizer::Project {
+    struct ShapeDetectionInfo {
+        ProvinceList provinces;
+        BitMap* image;
+        uint32_t* label_matrix;
+        uint32_t label_matrix_size;
+    };
+
     /**
      * @brief Defines a map project for HoI4
      */
@@ -29,9 +40,7 @@ namespace MapNormalizer::Project {
             bool loadProvinceData(const std::filesystem::path&);
 
         private:
-            std::unique_ptr<ShapeFinder> m_shape_finder;
-
-            BitMap* m_image;
+            ShapeDetectionInfo m_shape_detection_info;
 
             IProject& m_parent_project;
     };
