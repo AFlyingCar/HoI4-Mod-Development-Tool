@@ -1,10 +1,11 @@
 #ifndef TYPES_H
-#define TYPES_H
+# define TYPES_H
 
-#include <vector> // std::vector
-#include <cstdint> // uint32_t, uint8_t
-#include <ostream>
-#include <map>
+# include <vector> // std::vector
+# include <cstdint> // uint32_t, uint8_t
+# include <ostream>
+# include <map>
+# include <variant>
 
 namespace MapNormalizer {
     /**
@@ -77,7 +78,7 @@ namespace MapNormalizer {
     };
 
     using ProvinceID = std::uint32_t;
-    using Terrain = std::uint8_t;
+    using Terrain = std::variant<std::uint8_t, std::string>;
     using Continent = std::uint8_t;
     using StateID = std::uint32_t;
 
