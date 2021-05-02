@@ -107,14 +107,100 @@ namespace MapNormalizer {
         return (safeRead(destinations, stream) && ...);
     }
 
+    /**
+     * @brief Writes a value directly to an ostream
+     *
+     * @tparam T The type of data to write
+     * @param stream The stream to write to
+     * @param data The data to write
+     */
     template<typename T>
     void writeData(std::ostream& stream, const T& data) {
         stream.write(reinterpret_cast<const char*>(&data), sizeof(T));
     }
 
+    /**
+     * @brief Writes multiple values directly to an ostream
+     *
+     * @tparam Ts The types of data to write
+     * @param stream The stream to write to
+     * @param datas The data values to write
+     */
     template<typename... Ts>
     void writeData(std::ostream& stream, const Ts&... datas) {
         (writeData(stream, datas), ...);
+    }
+
+    /**
+     * @brief Converts a string to a type
+     *
+     * @tparam T The type to convert to
+     * @param s The string to convert
+     *
+     * @return The converted type
+     */
+    template<typename T>
+    T fromString(const std::string& s) {
+        if constexpr(std::is_same_v<T, std::string>) {
+            return s;
+        } else if constexpr(std::is_integral_v<T>) {
+            return static_cast<T>(std::stoi(s));
+        } else if constexpr(std::is_floating_point_v<T>) {
+            return static_cast<T>(std::stof(s));
+        } else if constexpr(std::is_same_v<T, bool>) {
+            if(s == "true" || s == "1") return true;
+            else if(s == "false" || s == "0") return false;
+        } else if constexpr(std::is_same_v<T, ProvinceType>) {
+            if(s == "land") {
+                return ProvinceType::LAND;
+            } else if(s == "sea") {
+                return ProvinceType::SEA;
+            } else if(s == "sea") {
+                return ProvinceType::LAKE;
+            } else {
+                return ProvinceType::UNKNOWN;
+            }
+        } else {
+            static_assert("Unsupported type!");
+
+            return std::declval<T>();
+        }
+    }
+
+    /**
+     * @brief Parses a type out of a string, with a known delimiter
+     *
+     * @tparam T The type to parse out
+     * @param stream The stream to parse from
+     * @param result The location to place the parsed value
+     * @param delim The delimiter to use when parsing out the string
+     *
+     * @return True if the value was successfully parsed, false otherwise
+     */
+    template<typename T>
+    bool parseValue(std::istream& stream, T& result, char delim = ' ') {
+        if(std::string s; std::getline(stream, s, delim)) {
+            result = fromString<T>(s);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @brief Parses multiple types out of a string, with a known delimiter
+     *
+     * @tparam Delim The delimiter to use when parsing out the string
+     * @tparam Ts The types to parse out in the order they should be in
+     * @param stream The stream to parse from
+     * @param results The locations to place the parsed values
+     *
+     * @return True if the value was successfully parsed, false otherwise
+     */
+    template<char Delim = ' ', typename... Ts>
+    bool parseValues(std::istream& stream, Ts&... results) {
+        return (parseValue(stream, results) && ...);
     }
 }
 
