@@ -51,6 +51,9 @@ namespace MapNormalizer {
     //! The filename for storing shape data
     const std::string SHAPEDATA_FILENAME = "shapedata.bin";
 
+    //! The filename for storing data about provinces
+    const std::string PROVINCEDATA_FILENAME = "definition.csv";
+
     //! The filename for the imported province maps
     const std::string INPUT_PROVINCEMAP_FILENAME = "import_provincemap.bmp";
 
