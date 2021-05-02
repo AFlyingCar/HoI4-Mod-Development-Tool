@@ -85,7 +85,12 @@ void MapNormalizer::loadDefaultTerrainInfo() {
 	terrain_id_map[13] = "water_deep_ocean";
 }
 
-const std::string& MapNormalizer::getTerrainIdentifier(Terrain terrain) {
+const std::string& MapNormalizer::getTerrainIdentifier(Terrain terrain_legacy) {
+    if(std::holds_alternative<std::string>(terrain_legacy)) {
+        return std::get<std::string>(terrain_legacy);
+    }
+    auto terrain = std::get<std::uint8_t>(terrain_legacy);
+
     // Go ahead and load the default info if we never were asked to load the real info
     if(terrain_id_map.empty()) {
         loadDefaultTerrainInfo();
