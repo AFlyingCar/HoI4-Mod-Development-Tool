@@ -9,6 +9,7 @@
 
 # include <cstdint>
 # include <algorithm>
+# include <istream>
 
 # include "Types.h"
 
@@ -24,8 +25,8 @@ namespace MapNormalizer {
 
     uint64_t xyToIndex(BitMap*, uint32_t, uint32_t);
     uint64_t xyToIndex(uint32_t, uint32_t, uint32_t);
-    Color getColorAt(BitMap*, uint32_t, uint32_t, uint32_t = 3);
-    Pixel getAsPixel(BitMap*, uint32_t, uint32_t, uint32_t = 3);
+    Color getColorAt(const BitMap*, uint32_t, uint32_t, uint32_t = 3);
+    Pixel getAsPixel(const BitMap*, uint32_t, uint32_t, uint32_t = 3);
 
     bool isInImage(BitMap*, uint32_t, uint32_t);
 
@@ -51,6 +52,70 @@ namespace MapNormalizer {
 
     template<typename... Ts>
     overloaded(Ts...) -> overloaded<Ts...>;
+
+    /**
+     * @brief Safely reads from stream if and only if the stream has not reached eof
+     *        and is still good.
+     *
+     * @tparam T The type of data to read.
+     * @param destination A pointer to the data location to read into.
+     * @param stream The stream to read from.
+     * @return True if the read was successful, false otherwise.
+     */
+    template<typename T>
+    bool safeRead(T* destination, std::istream& stream) {
+        if(!stream.eof() && stream.good()) {
+            stream.read(reinterpret_cast<char*>(destination), sizeof(T));
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @brief Safely reads from stream if and only if the stream has not reached eof
+     *        and is still good.
+     *
+     * @tparam T The type of data to read.
+     * @param destination A pointer to the data location to read into.
+     * @param size The total number of bytes to read.
+     * @param stream The stream to read from.
+     * @return True if the read was successful, false otherwise.
+     */
+    template<typename T>
+    bool safeRead(T* destination, size_t size, std::istream& stream) {
+        if(!stream.eof() && stream.good()) {
+            stream.read(reinterpret_cast<char*>(destination), size);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @brief Safely reads from a stream if and only if the stream has not
+     *        reached eof and is still good.
+     *
+     * @tparam Ts All types of data to read.
+     * @param stream The stream to read from.
+     * @param destinations Each pointer to data locations to read into.
+     *
+     * @return True if the reads were successful, false otherwise.
+     */
+    template<typename... Ts>
+    bool safeRead(std::istream& stream, Ts*... destinations) {
+        return (safeRead(destinations, stream) && ...);
+    }
+
+    template<typename T>
+    void writeData(std::ostream& stream, const T& data) {
+        stream.write(reinterpret_cast<const char*>(&data), sizeof(T));
+    }
+
+    template<typename... Ts>
+    void writeData(std::ostream& stream, const Ts&... datas) {
+        (writeData(stream, datas), ...);
+    }
 }
 
 #endif

@@ -92,7 +92,7 @@ uint64_t MapNormalizer::xyToIndex(uint32_t w, uint32_t x, uint32_t y) {
  *
  * @return An RGB color from image at (x,y)
  */
-MapNormalizer::Color MapNormalizer::getColorAt(BitMap* image, uint32_t x,
+MapNormalizer::Color MapNormalizer::getColorAt(const BitMap* image, uint32_t x,
                                                uint32_t y, uint32_t depth)
 {
     auto index = xyToIndex(image->info_header.width * depth, x * depth, y);
@@ -112,7 +112,7 @@ MapNormalizer::Color MapNormalizer::getColorAt(BitMap* image, uint32_t x,
  *
  * @return All data related to the given XY coordinate as a Pixel
  */
-MapNormalizer::Pixel MapNormalizer::getAsPixel(BitMap* image, uint32_t x,
+MapNormalizer::Pixel MapNormalizer::getAsPixel(const BitMap* image, uint32_t x,
                                                uint32_t y, uint32_t depth)
 {
     return Pixel {

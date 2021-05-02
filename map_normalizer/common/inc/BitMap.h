@@ -8,7 +8,6 @@
 # define _BITMAP_H_
 
 # include <ostream> // std::ostream
-# include <fstream> // std::ifstream
 # include <string>  // std::string
 
 namespace MapNormalizer {
@@ -48,45 +47,6 @@ namespace MapNormalizer {
         BitMapInfoHeader info_header; //! The info header of the BitMap
         unsigned char* data;          //! The image data
     };
-
-    /**
-     * @brief Safely reads from stream if and only if the stream has not reached eof
-     *        and is still good.
-     *
-     * @tparam T The type of data to read.
-     * @param destination A pointer to the data location to read into.
-     * @param stream The stream to read from.
-     * @return True if the read was successful, false otherwise.
-     */
-    template<typename T>
-    bool safeRead(T* destination, std::ifstream& stream) {
-        if(!stream.eof() && stream.good()) {
-            stream.read(reinterpret_cast<char*>(destination), sizeof(T));
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * @brief Safely reads from stream if and only if the stream has not reached eof
-     *        and is still good.
-     *
-     * @tparam T The type of data to read.
-     * @param destination A pointer to the data location to read into.
-     * @param size The total number of bytes to read.
-     * @param stream The stream to read from.
-     * @return True if the read was successful, false otherwise.
-     */
-    template<typename T>
-    bool safeRead(T* destination, size_t size, std::ifstream& stream) {
-        if(!stream.eof() && stream.good()) {
-            stream.read(reinterpret_cast<char*>(destination), size);
-            return true;
-        } else {
-            return false;
-        }
-    }
 
     BitMap* readBMP(const std::string&, BitMap*);
     BitMap* readBMP(const std::string&);
