@@ -18,16 +18,19 @@ namespace MapNormalizer::Project {
         public:
             HoI4Project();
 
-            HoI4Project(const HoI4Project&);
             HoI4Project(HoI4Project&&);
 
             HoI4Project(const std::filesystem::path&);
 
             virtual ~HoI4Project() = default;
 
-            HoI4Project& operator=(const HoI4Project&);
-
             const std::filesystem::path& getPath() const;
+            std::filesystem::path getRoot() const;
+
+            std::filesystem::path getMetaRoot() const;
+            std::filesystem::path getInputsRoot() const;
+            std::filesystem::path getMapRoot() const;
+
             const std::string& getName() const;
             const Version& getToolVersion() const;
             const Version& getHoI4Version() const;
@@ -37,7 +40,7 @@ namespace MapNormalizer::Project {
             MapProject& getMapProject();
 
             bool load();
-            bool save();
+            bool save(bool = true);
 
             void setPath(const std::filesystem::path&);
             void setName(const std::string&);
@@ -47,10 +50,15 @@ namespace MapNormalizer::Project {
             void importFile(const std::filesystem::path&);
 
         protected:
+            bool save(const std::filesystem::path&, bool);
+
             virtual bool save(const std::filesystem::path&) override;
             virtual bool load(const std::filesystem::path&) override;
 
         private:
+            //! The path to the project file
+            std::filesystem::path m_path;
+
             //! The root of the project (where the project file goes)
             std::filesystem::path m_root;
 

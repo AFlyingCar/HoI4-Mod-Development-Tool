@@ -12,58 +12,58 @@
 #include "Constants.h"
 
 MapNormalizer::Project::HoI4Project::HoI4Project():
+    m_path(),
     m_root(),
     m_name(),
     m_tool_version(),
     m_hoi4_version(),
     m_tags(),
-    m_overrides()
+    m_overrides(),
+    m_map_project(*this)
 { }
 
 MapNormalizer::Project::HoI4Project::HoI4Project(const std::filesystem::path& path):
-    m_root(path),
+    m_path(path),
+    m_root(path.parent_path()),
     m_name(),
     m_tool_version(),
     m_hoi4_version(),
     m_tags(),
-    m_overrides()
+    m_overrides(),
+    m_map_project(*this)
 {
-    load();
 }
 
-MapNormalizer::Project::HoI4Project::HoI4Project(const HoI4Project& other):
-    m_root(other.m_root),
-    m_name(other.m_name),
-    m_tool_version(other.m_tool_version),
-    m_hoi4_version(other.m_hoi4_version),
-    m_tags(other.m_tags),
-    m_overrides(other.m_overrides)
-{ }
-
 MapNormalizer::Project::HoI4Project::HoI4Project(HoI4Project&& other):
+    m_path(std::move(other.m_path)),
     m_root(std::move(other.m_root)),
     m_name(std::move(other.m_name)),
     m_tool_version(std::move(other.m_tool_version)),
     m_hoi4_version(std::move(other.m_hoi4_version)),
     m_tags(std::move(other.m_tags)),
-    m_overrides(std::move(other.m_overrides))
+    m_overrides(std::move(other.m_overrides)),
+    m_map_project(*this)
 { }
 
-auto MapNormalizer::Project::HoI4Project::operator=(const HoI4Project& other)
-    -> HoI4Project&
-{
-    m_root = other.m_root;
-    m_name = other.m_name;
-    m_tool_version = other.m_tool_version;
-    m_hoi4_version = other.m_hoi4_version;
-    m_tags = other.m_tags;
-    m_overrides = other.m_overrides;
-
-    return *this;
+const std::filesystem::path& MapNormalizer::Project::HoI4Project::getPath() const {
+    return m_path;
 }
 
-const std::filesystem::path& MapNormalizer::Project::HoI4Project::getPath() const {
+std::filesystem::path MapNormalizer::Project::HoI4Project::getRoot() const {
     return m_root;
+}
+
+std::filesystem::path MapNormalizer::Project::HoI4Project::getMetaRoot() const {
+    return getRoot() / PROJ_META_FOLDER;
+}
+
+std::filesystem::path MapNormalizer::Project::HoI4Project::getInputsRoot() const
+{
+    return getMetaRoot() / "inputs";
+}
+
+std::filesystem::path MapNormalizer::Project::HoI4Project::getMapRoot() const {
+    return getMetaRoot() / "map";
 }
 
 const std::string& MapNormalizer::Project::HoI4Project::getName() const {
@@ -159,9 +159,8 @@ bool MapNormalizer::Project::HoI4Project::load(const std::filesystem::path& path
     // If the data isn't there, we can still finish successfully loading, but we
     //  will not have any of the actual project's data
     // So just log a warning that the data might be missing and move on
-    auto projmeta_path = path.parent_path() / PROJ_META_FOLDER;
-    if(!std::filesystem::exists(projmeta_path)) {
-        writeWarning("Project meta directory ", projmeta_path,
+    if(!std::filesystem::exists(getMetaRoot())) {
+        writeWarning("Project meta directory ", getMetaRoot(),
                      " is missing. This folder contains the actual project "
                      "data, so it missing could imply a loss of data. Please "
                      "verify this path.");
@@ -169,10 +168,17 @@ bool MapNormalizer::Project::HoI4Project::load(const std::filesystem::path& path
     }
 
     // Load in sub-projects
-    return m_map_project.load(projmeta_path / "map");
+    return m_map_project.load(getMapRoot());
 }
 
-bool MapNormalizer::Project::HoI4Project::save(const std::filesystem::path& path) {
+bool MapNormalizer::Project::HoI4Project::save(const std::filesystem::path& path)
+{
+    return save(path, true);
+}
+
+bool MapNormalizer::Project::HoI4Project::save(const std::filesystem::path& path,
+                                               bool do_save_subprojects)
+{
     using json = nlohmann::json;
 
     if(std::ofstream out(path); out) {
@@ -190,26 +196,31 @@ bool MapNormalizer::Project::HoI4Project::save(const std::filesystem::path& path
         return false;
     }
 
-    auto projmeta_path = path.parent_path() / PROJ_META_FOLDER;
-
     // Make the directory that the sub-projects will get saved to
-    std::filesystem::create_directory(projmeta_path);
+    if(!std::filesystem::exists(getMetaRoot())) {
+        std::filesystem::create_directory(getMetaRoot());
+    }
+
+    if(!do_save_subprojects) {
+        return true;
+    }
 
     // Save sub-projects
-    return m_map_project.save(projmeta_path / "map");
+    return m_map_project.save(getMapRoot());
 }
 
 bool MapNormalizer::Project::HoI4Project::load() {
-    return load(m_root);
+    return load(m_path);
 }
 
-bool MapNormalizer::Project::HoI4Project::save() {
-    return save(m_root);
+bool MapNormalizer::Project::HoI4Project::save(bool do_save_subprojects) {
+    return save(m_path, do_save_subprojects);
 }
 
 void MapNormalizer::Project::HoI4Project::setPath(const std::filesystem::path& path)
 {
-    m_root = path;
+    m_path = path;
+    m_root = path.parent_path();
 }
 
 void MapNormalizer::Project::HoI4Project::setName(const std::string& name) {
@@ -223,7 +234,7 @@ void MapNormalizer::Project::HoI4Project::setPathAndName(const std::filesystem::
 
     auto path = full_path;
     if(!path.has_extension()) {
-        path.replace_extension(".hoi4proj");
+        path.replace_extension(PROJ_EXTENSION);
     }
 
     setPath(path);
