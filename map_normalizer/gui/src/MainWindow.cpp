@@ -24,9 +24,7 @@
  * @param application The application that this window is a part of
  */
 MapNormalizer::GUI::MainWindow::MainWindow(Gtk::Application& application):
-    Window(APPLICATION_NAME, application),
-    m_image(nullptr),
-    m_graphics_data(nullptr)
+    Window(APPLICATION_NAME, application)
 {
     set_size_request(512, 512);
 }
@@ -56,40 +54,7 @@ void MapNormalizer::GUI::MainWindow::initializeFileActions() {
     });
 
     add_action("open", [this]() {
-        Driver::UniqueProject project(new Driver::HProject);
-
-        // Allocate this on the stack so that it gets automatically cleaned up
-        //  when we finish
-        Gtk::FileChooserDialog dialog(*this, "Choose a project file.");
-        dialog.set_select_multiple(false);
-        // dialog.add_filter(); // TODO: Filter only for supported file types
-
-        dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
-        dialog.add_button("Select", Gtk::RESPONSE_ACCEPT);
-
-        const int result = dialog.run();
-
-        switch(result) {
-            case Gtk::RESPONSE_ACCEPT:
-                dialog.hide(); // Hide ourselves immediately
-
-                project->setPath(dialog.get_filename());
-                if(!project->load()) {
-                    Gtk::MessageDialog dialog("Failed to open file.", false,
-                                              Gtk::MESSAGE_ERROR);
-                    dialog.run();
-                    return;
-                }
-                break;
-            case Gtk::RESPONSE_CANCEL:
-            case Gtk::RESPONSE_DELETE_EVENT:
-            default:
-                return;
-        }
-
-        Driver::getInstance().setProject(std::move(project));
-
-        onProjectOpened();
+        openProject();
     });
 
     auto save_action = add_action("save", [this]() {
@@ -213,12 +178,6 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
     auto drawing_window = addWidget<Gtk::ScrolledWindow>();
     auto drawing_area = m_drawing_area = new MapDrawingArea();
 
-    // Set pointers on drawingArea so that it knows where to go for image
-    //  data that may get updated at any time (also means we don't have to
-    //  worry about finding the widget and updating it ourselves)
-    drawing_area->setGraphicsDataPtr(&m_graphics_data);
-    drawing_area->setImagePtr(&m_image);
-
     // Place the drawing area in a scrollable window
     drawing_window->add(*drawing_area);
     drawing_window->show_all();
@@ -301,9 +260,9 @@ void MapNormalizer::GUI::MainWindow::addWidgetToParent(Gtk::Widget& widget) {
 bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& filename)
 {
     // First, load the image into memory
-    m_image = readBMP(filename);
+    BitMap* image = readBMP(filename);
 
-    if(m_image == nullptr) {
+    if(image == nullptr) {
         writeError("Reading bitmap failed.");
         return false;
     }
@@ -312,22 +271,25 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
 
     // We now need a new array that the graphics worker can use to display the
     //  rendered image
-    auto data_size = m_image->info_header.width * m_image->info_header.height * 3;
-    m_graphics_data = new unsigned char[data_size];
+    auto data_size = image->info_header.width * image->info_header.height * 3;
+    unsigned char* graphics_data = new unsigned char[data_size];
 
     // No memory leak here, since the data will get deleted either at program
     //  exit, or when the next value is loaded
-    worker.init(m_image, m_graphics_data);
+    worker.init(image, graphics_data);
     worker.resetDebugData();
-    worker.updateCallback({0, 0, static_cast<uint32_t>(m_image->info_header.width),
-                                 static_cast<uint32_t>(m_image->info_header.height)});
+    worker.updateCallback({0, 0, static_cast<uint32_t>(image->info_header.width),
+                                 static_cast<uint32_t>(image->info_header.height)});
 
     // Make sure that the drawing area is sized correctly to draw the entire
     //  image
-    m_drawing_area->get_window()->resize(m_image->info_header.width,
-                                         m_image->info_header.height);
+    m_drawing_area->get_window()->resize(image->info_header.width,
+                                         image->info_header.height);
 
-    ShapeFinder shape_finder(m_image);
+    m_drawing_area->setGraphicsData(graphics_data);
+    m_drawing_area->setImage(image);
+
+    ShapeFinder shape_finder(image);
 
     // Open a progress bar dialog to show the user that we are actually doing
     //  something
@@ -366,10 +328,12 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
     });
 
     // Start processing the data
-    std::thread sf_worker([this, &shape_finder, done_button, cancel_button]() {
+    std::thread sf_worker([&shape_finder, done_button, cancel_button]() {
         auto& worker = GraphicsWorker::getInstance();
 
         auto shapes = shape_finder.findAllShapes();
+
+        auto* image = shape_finder.getImage();
 
         // Redraw the new image so we can properly show how it should look in the
         //  final output
@@ -380,7 +344,7 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
         for(auto&& shape : shapes) {
             for(auto&& pixel : shape.pixels) {
                 // Write to both the output data and into the displayed data
-                writeColorTo(m_image->data, m_image->info_header.width,
+                writeColorTo(image->data, image->info_header.width,
                              pixel.point.x, pixel.point.y,
                              shape.unique_color);
 
@@ -391,8 +355,8 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
 
         // One final callback update so that the map drawer has the latest
         //  graphical information
-        worker.updateCallback({0, 0, static_cast<uint32_t>(m_image->info_header.width),
-                                     static_cast<uint32_t>(m_image->info_header.height)});
+        worker.updateCallback({0, 0, static_cast<uint32_t>(image->info_header.width),
+                                     static_cast<uint32_t>(image->info_header.height)});
 
         deleteInfoLine();
 
@@ -433,6 +397,7 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
         auto& project = opt_project->get();
 
         project.getMapProject().setShapeFinder(std::move(shape_finder));
+        project.getMapProject().setGraphicsData(graphics_data);
 
         std::filesystem::path imported(filename);
         std::filesystem::path input_root = project.getInputsRoot();
@@ -491,6 +456,51 @@ void MapNormalizer::GUI::MainWindow::newProject() {
         default:
             break;
     }
+}
+
+void MapNormalizer::GUI::MainWindow::openProject() {
+    Driver::UniqueProject project(new Driver::HProject);
+
+    // Allocate this on the stack so that it gets automatically cleaned up
+    //  when we finish
+    Gtk::FileChooserDialog dialog(*this, "Choose a project file.");
+    dialog.set_select_multiple(false);
+    // dialog.add_filter(); // TODO: Filter only for supported file types
+
+    dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+    dialog.add_button("Select", Gtk::RESPONSE_ACCEPT);
+
+    const int result = dialog.run();
+
+    switch(result) {
+        case Gtk::RESPONSE_ACCEPT:
+            dialog.hide(); // Hide ourselves immediately
+
+            project->setPath(dialog.get_filename());
+            if(!project->load()) {
+                Gtk::MessageDialog dialog("Failed to open file.", false,
+                                          Gtk::MESSAGE_ERROR);
+                dialog.run();
+                return;
+            }
+            break;
+        case Gtk::RESPONSE_CANCEL:
+        case Gtk::RESPONSE_DELETE_EVENT:
+        default:
+            return;
+    }
+
+    // Set up the drawing area
+    const auto& map_project = project->getMapProject();
+
+    m_drawing_area->setGraphicsData(map_project.getGraphicsData());
+    m_drawing_area->setImage(map_project.getImage());
+    m_drawing_area->queue_draw();
+
+    // We no longer need to own the project, so give it to the Driver
+    Driver::getInstance().setProject(std::move(project));
+
+    onProjectOpened();
 }
 
 /**

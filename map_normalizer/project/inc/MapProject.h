@@ -14,9 +14,12 @@
 namespace MapNormalizer::Project {
     struct ShapeDetectionInfo {
         ProvinceList provinces;
-        BitMap* image;
-        uint32_t* label_matrix;
-        uint32_t label_matrix_size;
+        BitMap* image = nullptr;
+        uint32_t* label_matrix = nullptr;
+        uint32_t label_matrix_size = 0;
+
+        // TODO: This should really be a smart pointer
+        unsigned char* graphics_data = nullptr;
     };
 
     /**
@@ -31,6 +34,13 @@ namespace MapNormalizer::Project {
             virtual bool load(const std::filesystem::path&) override;
 
             void setShapeFinder(ShapeFinder&&);
+            void setGraphicsData(unsigned char*);
+
+            BitMap* getImage();
+            const BitMap* getImage() const;
+
+            unsigned char* getGraphicsData();
+            const unsigned char* getGraphicsData() const;
 
         protected:
             bool saveShapeLabels(const std::filesystem::path&);

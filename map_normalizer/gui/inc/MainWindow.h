@@ -55,6 +55,7 @@ namespace MapNormalizer::GUI {
             void initializeProjectActions();
 
             void newProject();
+            void openProject();
 
             void onProjectOpened();
             void onProjectClosed();
@@ -68,12 +69,6 @@ namespace MapNormalizer::GUI {
 
             //! The currently active widget to be added to
             ActiveChildVariant<Gtk::Box, Gtk::Frame, Gtk::ScrolledWindow> m_active_child;
-
-            //! The currently loaded province image
-            BitMap* m_image;
-
-            //! The current graphics data to be rendered to
-            unsigned char* m_graphics_data;
 
             //! The main pane where all child widgets will be inside
             Gtk::Paned* m_paned;

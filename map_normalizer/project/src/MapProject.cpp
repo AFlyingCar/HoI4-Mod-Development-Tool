@@ -14,6 +14,7 @@
 #include "Project.h"
 
 MapNormalizer::Project::MapProject::MapProject(IProject& parent_project):
+    m_shape_detection_info(),
     m_parent_project(parent_project)
 {
 }
@@ -66,6 +67,11 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path)
         writeWarning("Source import image does not exist, unable to finish loading data.");
         return false;
     } else {
+        // Memory leak prevention
+        if(m_shape_detection_info.image != nullptr) {
+            delete m_shape_detection_info.image;
+        }
+
         m_shape_detection_info.image = readBMP(input_provincemap_path);
         if(m_shape_detection_info.image == nullptr) {
             writeWarning("Failed to read imported image.");
@@ -74,7 +80,52 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path)
     }
 
     // Now load the other related data
-    return loadProvinceData(path) && loadShapeLabels(path);
+    if(!loadProvinceData(path) || !loadShapeLabels(path)) {
+        return false;
+    }
+
+    // Rebuild the graphics data
+    auto* image = m_shape_detection_info.image;
+    auto*& graphics_data = m_shape_detection_info.graphics_data;
+
+    // Do this to prevent a memory leak
+    if(graphics_data != nullptr) delete[] graphics_data;
+
+    auto width = image->info_header.width;
+    auto height = image->info_header.height;
+
+    auto data_size = width * height * 3;
+    graphics_data = new unsigned char[data_size];
+
+    for(uint32_t x = 0; x < width; ++x) {
+        for(uint32_t y = 0; y < height; ++y) {
+            // Get the index into the label matrix
+            auto lindex = xyToIndex(image, x, y);
+
+            // Get the index into the graphics data
+            //  3 == the depth
+            auto gindex = xyToIndex(image->info_header.width * 3, x * 3, y);
+
+            auto label = m_shape_detection_info.label_matrix[lindex];
+
+            // Error check
+            if(label <= 0 || label > m_shape_detection_info.provinces.size()) {
+                writeWarning("Label matrix has label ", label,
+                             " at position (", x, ',', y, "), which is out of "
+                             "the range of valid labels [1,",
+                             m_shape_detection_info.provinces.size(), "]");
+                continue;
+            }
+
+            auto& province = m_shape_detection_info.provinces[label - 1];
+
+            graphics_data[gindex] = province.unique_color.r;
+            graphics_data[gindex + 1] = province.unique_color.g;
+            graphics_data[gindex + 2] = province.unique_color.b;
+        }
+    }
+
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -164,18 +215,27 @@ bool MapNormalizer::Project::MapProject::loadShapeLabels(const std::filesystem::
             return false;
         }
 
-        auto lm_size = m_shape_detection_info.label_matrix_size = width * height;
-        auto lm = m_shape_detection_info.label_matrix = new uint32_t[lm_size];
+        auto& label_matrix_size = m_shape_detection_info.label_matrix_size;
+        auto& label_matrix = m_shape_detection_info.label_matrix;
 
-        if(!safeRead(lm, lm_size * sizeof(uint32_t), in)) {
+        if(label_matrix != nullptr) {
+            delete[] label_matrix;
+        }
+
+        label_matrix_size = width * height;
+        label_matrix = new uint32_t[label_matrix_size];
+
+        if(!safeRead(label_matrix, label_matrix_size * sizeof(uint32_t), in)) {
             writeError("Failed to read full label matrix. Reason: ", std::strerror(errno));
 
-            delete[] m_shape_detection_info.label_matrix;
+            delete[] label_matrix;
+            label_matrix = nullptr;
             return false;
         }
 
         // TODO: Do we actually need to do this?
-        PolygonList shapes = createPolygonListFromLabels(lm, width, height,
+        PolygonList shapes = createPolygonListFromLabels(label_matrix,
+                                                         width, height,
                                                          {},
                                                          m_shape_detection_info.image);
     } else {
@@ -256,5 +316,27 @@ void MapNormalizer::Project::MapProject::setShapeFinder(ShapeFinder&& shape_find
     m_shape_detection_info.image = sf.getImage();
     m_shape_detection_info.label_matrix = sf.getLabelMatrix();
     m_shape_detection_info.label_matrix_size = sf.getLabelMatrixSize();
+    m_shape_detection_info.graphics_data = nullptr;
+}
+
+void MapNormalizer::Project::MapProject::setGraphicsData(unsigned char* data) {
+    m_shape_detection_info.graphics_data = data;
+}
+
+auto MapNormalizer::Project::MapProject::getImage() -> BitMap* {
+    return m_shape_detection_info.image;
+}
+
+auto MapNormalizer::Project::MapProject::getImage() const -> const BitMap* {
+    return m_shape_detection_info.image;
+}
+
+unsigned char* MapNormalizer::Project::MapProject::getGraphicsData() {
+    return m_shape_detection_info.graphics_data;
+}
+
+const unsigned char* MapNormalizer::Project::MapProject::getGraphicsData() const
+{
+    return m_shape_detection_info.graphics_data;
 }
 

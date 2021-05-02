@@ -17,8 +17,8 @@ namespace MapNormalizer::GUI {
             MapDrawingArea();
             virtual ~MapDrawingArea() = default;
 
-            void setGraphicsDataPtr(unsigned char* const*);
-            void setImagePtr(BitMap* const*);
+            void setGraphicsData(const unsigned char*);
+            void setImage(const BitMap*);
 
             bool hasData() const;
 
@@ -30,8 +30,8 @@ namespace MapNormalizer::GUI {
             virtual bool on_button_press_event(GdkEventButton*) override;
 
         private:
-            unsigned char* const* m_graphics_data_ptr;
-            BitMap* const* m_image_ptr;
+            const unsigned char* m_graphics_data;
+            const BitMap* m_image;
     };
 }
 
