@@ -47,6 +47,15 @@ namespace MapNormalizer {
 
     const std::string PROJ_EXTENSION = ".hoi4proj";
     const std::string PROJ_META_FOLDER = ".projmeta";
+
+    //! The filename for storing shape data
+    const std::string SHAPEDATA_FILENAME = "shapedata.bin";
+
+    //! The filename for the imported province maps
+    const std::string INPUT_PROVINCEMAP_FILENAME = "import_provincemap.bmp";
+
+    //! The 4 magic bytes 
+    const std::string SHAPEDATA_MAGIC = "SDAT";
 }
 
 #endif
