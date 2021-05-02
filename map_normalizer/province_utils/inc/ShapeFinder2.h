@@ -45,11 +45,18 @@ namespace MapNormalizer {
 
             Stage getStage() const;
 
+            BitMap* getImage();
+            uint32_t getLabelMatrixSize();
+            uint32_t* getLabelMatrix();
+            std::vector<Pixel>& getBorderPixels();
+            std::map<uint32_t, Color>& getLabelToColorMap();
+            PolygonList& getShapes();
+
             const BitMap* getImage() const;
             uint32_t getLabelMatrixSize() const;
             const uint32_t* getLabelMatrix() const;
-            const std::vector<Pixel>& getBorderPixels();
-            const std::map<uint32_t, Color>& getLabelToColorMap();
+            const std::vector<Pixel>& getBorderPixels() const;
+            const std::map<uint32_t, Color>& getLabelToColorMap() const;
             const PolygonList& getShapes() const;
 
         protected:

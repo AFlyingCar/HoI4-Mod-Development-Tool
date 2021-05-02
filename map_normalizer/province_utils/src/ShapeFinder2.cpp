@@ -628,6 +628,34 @@ MapNormalizer::ShapeFinder::Stage MapNormalizer::ShapeFinder::getStage() const {
     return m_stage;
 }
 
+MapNormalizer::BitMap* MapNormalizer::ShapeFinder::getImage() {
+    return m_image;
+}
+
+uint32_t MapNormalizer::ShapeFinder::getLabelMatrixSize() {
+    return m_label_matrix_size;
+}
+
+uint32_t* MapNormalizer::ShapeFinder::getLabelMatrix() {
+    return m_label_matrix;
+}
+
+auto MapNormalizer::ShapeFinder::getBorderPixels() 
+    -> std::vector<Pixel>&
+{
+    return m_border_pixels;
+}
+
+auto MapNormalizer::ShapeFinder::getLabelToColorMap() 
+    -> std::map<uint32_t, Color>&
+{
+    return m_label_to_color;
+}
+
+auto MapNormalizer::ShapeFinder::getShapes() -> PolygonList& {
+    return m_shapes;
+}
+
 const MapNormalizer::BitMap* MapNormalizer::ShapeFinder::getImage() const {
     return m_image;
 }
@@ -640,12 +668,14 @@ const uint32_t* MapNormalizer::ShapeFinder::getLabelMatrix() const {
     return m_label_matrix;
 }
 
-auto MapNormalizer::ShapeFinder::getBorderPixels() -> const std::vector<Pixel>&
+auto MapNormalizer::ShapeFinder::getBorderPixels() const
+    -> const std::vector<Pixel>&
 {
     return m_border_pixels;
 }
 
-auto MapNormalizer::ShapeFinder::getLabelToColorMap() -> const std::map<uint32_t, Color>&
+auto MapNormalizer::ShapeFinder::getLabelToColorMap() const
+    -> const std::map<uint32_t, Color>&
 {
     return m_label_to_color;
 }
