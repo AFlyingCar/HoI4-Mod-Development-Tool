@@ -175,3 +175,38 @@ void MapNormalizer::writeColorTo(unsigned char* color_data, uint32_t w,
     color_data[index + 2] = c.r;
 }
 
+// Forward declaration
+namespace MapNormalizer {
+    ProvinceType getProvinceType(const Color&);
+}
+
+auto MapNormalizer::createProvincesFromShapeList(const PolygonList& shapes)
+    -> ProvinceList
+{
+    ProvinceList provinces;
+    provinces.reserve(shapes.size());
+    for(uint32_t i = 0; i < shapes.size(); ++i) {
+        auto&& shape = shapes[i];
+
+        Color color = shape.color;
+
+        auto prov_type = getProvinceType(color);
+
+        // auto is_coastal = isCoastal(color);
+        // auto terrain_type = getTerrainType(color);
+        // auto continent = getContinent(color);
+        // auto state = getState(color);
+
+        provinces.push_back(Province{
+            i + 1, shape.unique_color,
+            prov_type,
+            false,
+            "",
+            0,
+            0
+        });
+    }
+
+    return provinces;
+}
+

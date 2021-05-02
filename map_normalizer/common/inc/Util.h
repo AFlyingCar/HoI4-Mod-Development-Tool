@@ -140,16 +140,29 @@ namespace MapNormalizer {
      * @return The converted type
      */
     template<typename T>
-    T fromString(const std::string& s) {
+    std::optional<T> fromString(const std::string& s) noexcept {
         if constexpr(std::is_same_v<T, std::string>) {
             return s;
-        } else if constexpr(std::is_integral_v<T>) {
-            return static_cast<T>(std::stoi(s));
-        } else if constexpr(std::is_floating_point_v<T>) {
-            return static_cast<T>(std::stof(s));
         } else if constexpr(std::is_same_v<T, bool>) {
-            if(s == "true" || s == "1") return true;
-            else if(s == "false" || s == "0") return false;
+            if(s == "true" || s == "1") {
+                return true;
+            } else if(s == "false" || s == "0") {
+                return false;
+            } else {
+                return std::nullopt;
+            }
+        } else if constexpr(std::is_integral_v<T>) {
+            try {
+                return static_cast<T>(std::stoi(s));
+            } catch(const std::invalid_argument&) {
+                return std::nullopt; // TODO: print error
+            }
+        } else if constexpr(std::is_floating_point_v<T>) {
+            try {
+                return static_cast<T>(std::stof(s));
+            } catch(const std::invalid_argument&) {
+                return std::nullopt;
+            }
         } else if constexpr(std::is_same_v<T, ProvinceType>) {
             if(s == "land") {
                 return ProvinceType::LAND;
@@ -160,10 +173,12 @@ namespace MapNormalizer {
             } else {
                 return ProvinceType::UNKNOWN;
             }
+        } else if constexpr(std::is_same_v<T, Terrain>) {
+            return s;
         } else {
             static_assert("Unsupported type!");
 
-            return std::declval<T>();
+            return std::nullopt;
         }
     }
 
@@ -178,11 +193,12 @@ namespace MapNormalizer {
      * @return True if the value was successfully parsed, false otherwise
      */
     template<typename T>
-    bool parseValue(std::istream& stream, T& result, char delim = ' ') {
+    bool parseValue(std::istream& stream, T& result, char delim = ' ') noexcept {
         if(std::string s; std::getline(stream, s, delim)) {
-            result = fromString<T>(s);
-
-            return true;
+            if(auto opt_result = fromString<T>(s); opt_result) {
+                result = *opt_result;
+                return true;
+            }
         }
 
         return false;
@@ -199,9 +215,11 @@ namespace MapNormalizer {
      * @return True if the value was successfully parsed, false otherwise
      */
     template<char Delim = ' ', typename... Ts>
-    bool parseValues(std::istream& stream, Ts&... results) {
-        return (parseValue(stream, results) && ...);
+    bool parseValues(std::istream& stream, Ts&... results) noexcept {
+        return (parseValue(stream, results, Delim) && ...);
     }
+
+    ProvinceList createProvincesFromShapeList(const PolygonList&);
 }
 
 #endif
