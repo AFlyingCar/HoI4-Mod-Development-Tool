@@ -6,7 +6,7 @@
 
 # include "glibmm/refptr.h"
 
-# include "Project.h"
+# include "HoI4Project.h"
 
 # include "Types.h"
 

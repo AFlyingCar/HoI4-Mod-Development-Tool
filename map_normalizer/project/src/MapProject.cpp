@@ -11,7 +11,7 @@
 
 #include "ProvinceMapBuilder.h"
 
-#include "Project.h"
+#include "HoI4Project.h"
 
 MapNormalizer::Project::MapProject::MapProject(IProject& parent_project):
     m_shape_detection_info(),

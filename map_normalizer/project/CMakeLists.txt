@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.0)
 find_package(json REQUIRED)
 
 add_library(project STATIC
-    src/Project.cpp
+    src/HoI4Project.cpp
     src/MapProject.cpp
 )
 
