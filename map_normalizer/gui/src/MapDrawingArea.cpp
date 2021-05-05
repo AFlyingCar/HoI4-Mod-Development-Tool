@@ -9,7 +9,9 @@
 
 #include "GraphicalDebugger.h"
 
-MapNormalizer::GUI::MapDrawingArea::MapDrawingArea()
+MapNormalizer::GUI::MapDrawingArea::MapDrawingArea():
+    m_graphics_data(nullptr),
+    m_image(nullptr)
 {
     // Mark that we want to receive button presses
     add_events(Gdk::BUTTON_PRESS_MASK);
