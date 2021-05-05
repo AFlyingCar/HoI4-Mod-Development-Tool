@@ -77,7 +77,7 @@ MapNormalizer::GraphicsWorker& MapNormalizer::GraphicsWorker::getInstance() {
  * @param image The image being debugged
  * @param debug_data The pixel data to display
  */
-void MapNormalizer::GraphicsWorker::init(BitMap* image,
+void MapNormalizer::GraphicsWorker::init(const BitMap* image,
                                          unsigned char* debug_data)
 {
     // Make sure we delete the old data first if we have any

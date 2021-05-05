@@ -24,7 +24,7 @@ namespace MapNormalizer {
 
             static GraphicsWorker& getInstance();
 
-            void init(BitMap*, unsigned char*);
+            void init(const BitMap*, unsigned char*);
 
             void work(bool&);
 
@@ -45,7 +45,7 @@ namespace MapNormalizer {
         private:
             GraphicsWorker() = default;
 
-            BitMap* m_image = nullptr;
+            const BitMap* m_image = nullptr;
             unsigned char* m_debug_data = nullptr;
 
             UpdateCallback m_write_callback = [](auto) { };
