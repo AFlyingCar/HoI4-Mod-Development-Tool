@@ -31,11 +31,24 @@ namespace MapNormalizer::GUI {
 
             Gtk::Application* getApplication();
 
-            template<typename T,
+            /**
+             * @brief Helper function to get an action of a specific type
+             *
+             * @tparam T The type of action to get.
+             * @param action_name The name of the action to get
+             *
+             * @return The action, or nullptr if no action was found of that
+             *         name or type
+             */
+            template<typename T = Gio::SimpleAction,
                      typename = std::enable_if_t<std::is_base_of_v<Gio::Action, T>, T>>
             T* getAction(const Glib::ustring& action_name) {
                 auto action = lookup_action(action_name);
-                return dynamic_cast<Gio::SimpleAction*>(&(*action.get()));
+
+                if(action.get() == nullptr)
+                    return nullptr;
+
+                return dynamic_cast<T*>(&(*action.get()));
             }
 
         private:
