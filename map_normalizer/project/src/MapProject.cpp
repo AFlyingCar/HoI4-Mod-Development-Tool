@@ -97,6 +97,7 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path)
     auto data_size = width * height * 3;
     graphics_data = new unsigned char[data_size];
 
+    // Rebuild the graphics_data array
     for(uint32_t x = 0; x < width; ++x) {
         for(uint32_t y = 0; y < height; ++y) {
             // Get the index into the label matrix

@@ -12,16 +12,6 @@
 # include "IProject.h"
 
 namespace MapNormalizer::Project {
-    struct ShapeDetectionInfo {
-        ProvinceList provinces;
-        BitMap* image = nullptr;
-        uint32_t* label_matrix = nullptr;
-        uint32_t label_matrix_size = 0;
-
-        // TODO: This should really be a smart pointer
-        unsigned char* graphics_data = nullptr;
-    };
-
     /**
      * @brief Defines a map project for HoI4
      */
@@ -51,8 +41,20 @@ namespace MapNormalizer::Project {
             bool loadProvinceData(const std::filesystem::path&);
 
         private:
-            ShapeDetectionInfo m_shape_detection_info;
+            /**
+             * @brief A struct which holds information about shape detection
+             */
+            struct ShapeDetectionInfo {
+                ProvinceList provinces;
+                BitMap* image = nullptr;
+                uint32_t* label_matrix = nullptr;
+                uint32_t label_matrix_size = 0;
 
+                // TODO: This should really be a smart pointer
+                unsigned char* graphics_data = nullptr;
+            } m_shape_detection_info;
+
+            //! The parent project that this MapProject belongs to
             IProject& m_parent_project;
     };
 }
