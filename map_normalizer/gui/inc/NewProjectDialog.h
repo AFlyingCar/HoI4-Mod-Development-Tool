@@ -28,13 +28,19 @@ namespace MapNormalizer::GUI {
             void buildBlankRow();
 
         private:
+            //! The current row of the grid being built
             uint32_t m_row;
 
+            //! The grid which holds all internal elements
             Gtk::Grid m_grid;
 
+            //! The text entry field for the project name
             Gtk::Entry m_name_field;
+
+            //! The text entry field for the project path
             Gtk::Entry m_path_field;
 
+            //! The confirmation button
             Gtk::Button* m_confirm_button;
     };
 }
