@@ -259,142 +259,149 @@ void MapNormalizer::GUI::MainWindow::addWidgetToParent(Gtk::Widget& widget) {
  */
 bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& filename)
 {
-    // First, load the image into memory
-    BitMap* image = readBMP(filename);
-
-    if(image == nullptr) {
-        writeError("Reading bitmap failed.");
-        return false;
-    }
-
-    auto& worker = GraphicsWorker::getInstance();
-
-    // We now need a new array that the graphics worker can use to display the
-    //  rendered image
-    auto data_size = image->info_header.width * image->info_header.height * 3;
-    unsigned char* graphics_data = new unsigned char[data_size];
-
-    // No memory leak here, since the data will get deleted either at program
-    //  exit, or when the next value is loaded
-    worker.init(image, graphics_data);
-    worker.resetDebugData();
-    worker.updateCallback({0, 0, static_cast<uint32_t>(image->info_header.width),
-                                 static_cast<uint32_t>(image->info_header.height)});
-
-    // Make sure that the drawing area is sized correctly to draw the entire
-    //  image
-    m_drawing_area->get_window()->resize(image->info_header.width,
-                                         image->info_header.height);
-
-    m_drawing_area->setGraphicsData(graphics_data);
-    m_drawing_area->setImage(image);
-
-    ShapeFinder shape_finder(image);
-
-    // Open a progress bar dialog to show the user that we are actually doing
-    //  something
-    ProgressBarDialog progress_dialog(*this, "Loading...", "", true);
-    progress_dialog.setShowText(true);
-
-    // We add the buttons manually here because we need to be able to set their
-    //  sensitivity manually
-    // TODO: Do we even want a Done button? Or should we just close the
-    //  dialog when we're done?
-    Gtk::Button* done_button = progress_dialog.add_button("OK", Gtk::RESPONSE_OK);
-    done_button->set_sensitive(false);
-
-    Gtk::Button* cancel_button = progress_dialog.add_button("Cancel", Gtk::RESPONSE_CANCEL);
-
-    progress_dialog.show_all();
-
-    // Set up the graphics worker callback
-    auto last_stage = shape_finder.getStage();
-    worker.setWriteCallback([this, &shape_finder, &progress_dialog, &last_stage](const Rectangle& r)
-    {
-        m_drawing_area->graphicsUpdateCallback(r);
-
-        auto stage = shape_finder.getStage();
-        float fstage = static_cast<uint32_t>(stage);
-        float fraction = fstage / static_cast<uint32_t>(ShapeFinder::Stage::DONE);
-
-        // TODO: Do we want to calculate a more precise fraction based on
-        //   progress during a given stage?
-
-        if(stage != last_stage) {
-            last_stage = stage;
-            progress_dialog.setText(toString(stage));
-        }
-        progress_dialog.setFraction(fraction);
-    });
-
-    // Start processing the data
-    std::thread sf_worker([&shape_finder, done_button, cancel_button]() {
-        auto& worker = GraphicsWorker::getInstance();
-
-        auto shapes = shape_finder.findAllShapes();
-
-        auto* image = shape_finder.getImage();
-
-        // Redraw the new image so we can properly show how it should look in the
-        //  final output
-        // TODO: Do we still want to do this here? Would it not be better to do
-        //  it later on?
-        if(!prog_opts.quiet)
-            setInfoLine("Drawing new graphical image");
-        for(auto&& shape : shapes) {
-            for(auto&& pixel : shape.pixels) {
-                // Write to both the output data and into the displayed data
-                writeColorTo(image->data, image->info_header.width,
-                             pixel.point.x, pixel.point.y,
-                             shape.unique_color);
-
-                worker.writeDebugColor(pixel.point.x, pixel.point.y,
-                                       shape.unique_color);
-            }
-        }
-
-        // One final callback update so that the map drawer has the latest
-        //  graphical information
-        worker.updateCallback({0, 0, static_cast<uint32_t>(image->info_header.width),
-                                     static_cast<uint32_t>(image->info_header.height)});
-
-        deleteInfoLine();
-
-        if(!prog_opts.quiet)
-            writeStdout("Detected ", std::to_string(shapes.size()), " shapes.");
-
-        // Disable the cancel button (we've already finished), and enable the
-        //  done button so that the user can close the box and move on
-        done_button->set_sensitive(true);
-        cancel_button->set_sensitive(false);
-    });
-
-    bool did_estop = false;
-
-    // Run the progress bar dialog
-    // If the user cancels the action, then we need to kill sf_worker ASAP
-    if(auto response = progress_dialog.run();
-            response == Gtk::RESPONSE_DELETE_EVENT ||
-            response == Gtk::RESPONSE_CANCEL)
-    {
-        shape_finder.estop();
-        did_estop = true;
-    }
-
-    // Wait for the worker to join back up
-    sf_worker.join();
-
-    worker.resetWriteCallback();
-
-    // Don't finish importing if we stopped early
-    if(did_estop) {
-        return true;
-    }
-
     // We are checking if the project exists, even though this action should
     //  never be able to be called if theere is no project loaded
     if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
         auto& project = opt_project->get();
+
+        // First, load the image into memory
+        if(BitMap* image = readBMP(filename); image != nullptr) {
+            project.getMapProject().setImage(image);
+        } else {
+            writeError("Failed to read bitmap from ", filename);
+            return false;
+        }
+
+        const auto* image = project.getMapProject().getImage();
+
+        if(image == nullptr) {
+            writeError("Reading bitmap failed.");
+            return false;
+        }
+
+        auto& worker = GraphicsWorker::getInstance();
+
+        // We now need a new array that the graphics worker can use to display the
+        //  rendered image
+        auto data_size = image->info_header.width * image->info_header.height * 3;
+        unsigned char* graphics_data = new unsigned char[data_size];
+
+        // No memory leak here, since the data will get deleted either at program
+        //  exit, or when the next value is loaded
+        worker.init(image, graphics_data);
+        worker.resetDebugData();
+        worker.updateCallback({0, 0, static_cast<uint32_t>(image->info_header.width),
+                                     static_cast<uint32_t>(image->info_header.height)});
+
+        // Make sure that the drawing area is sized correctly to draw the entire
+        //  image
+        m_drawing_area->get_window()->resize(image->info_header.width,
+                                             image->info_header.height);
+
+        m_drawing_area->setGraphicsData(graphics_data);
+        m_drawing_area->setImage(image);
+
+        ShapeFinder shape_finder(image);
+
+        // Open a progress bar dialog to show the user that we are actually doing
+        //  something
+        ProgressBarDialog progress_dialog(*this, "Loading...", "", true);
+        progress_dialog.setShowText(true);
+
+        // We add the buttons manually here because we need to be able to set their
+        //  sensitivity manually
+        // TODO: Do we even want a Done button? Or should we just close the
+        //  dialog when we're done?
+        Gtk::Button* done_button = progress_dialog.add_button("OK", Gtk::RESPONSE_OK);
+        done_button->set_sensitive(false);
+
+        Gtk::Button* cancel_button = progress_dialog.add_button("Cancel", Gtk::RESPONSE_CANCEL);
+
+        progress_dialog.show_all();
+
+        // Set up the graphics worker callback
+        auto last_stage = shape_finder.getStage();
+        worker.setWriteCallback([this, &shape_finder, &progress_dialog, &last_stage](const Rectangle& r)
+        {
+            m_drawing_area->graphicsUpdateCallback(r);
+
+            auto stage = shape_finder.getStage();
+            float fstage = static_cast<uint32_t>(stage);
+            float fraction = fstage / static_cast<uint32_t>(ShapeFinder::Stage::DONE);
+
+            // TODO: Do we want to calculate a more precise fraction based on
+            //   progress during a given stage?
+
+            if(stage != last_stage) {
+                last_stage = stage;
+                progress_dialog.setText(toString(stage));
+            }
+            progress_dialog.setFraction(fraction);
+        });
+
+        // Start processing the data
+        std::thread sf_worker([&shape_finder, done_button, cancel_button]() {
+            auto& worker = GraphicsWorker::getInstance();
+
+            auto shapes = shape_finder.findAllShapes();
+
+            auto* image = shape_finder.getImage();
+
+            // Redraw the new image so we can properly show how it should look in the
+            //  final output
+            // TODO: Do we still want to do this here? Would it not be better to do
+            //  it later on?
+            if(!prog_opts.quiet)
+                setInfoLine("Drawing new graphical image");
+            for(auto&& shape : shapes) {
+                for(auto&& pixel : shape.pixels) {
+                    // Write to both the output data and into the displayed data
+                    writeColorTo(image->data, image->info_header.width,
+                                 pixel.point.x, pixel.point.y,
+                                 shape.unique_color);
+
+                    worker.writeDebugColor(pixel.point.x, pixel.point.y,
+                                           shape.unique_color);
+                }
+            }
+
+            // One final callback update so that the map drawer has the latest
+            //  graphical information
+            worker.updateCallback({0, 0, static_cast<uint32_t>(image->info_header.width),
+                                         static_cast<uint32_t>(image->info_header.height)});
+
+            deleteInfoLine();
+
+            if(!prog_opts.quiet)
+                writeStdout("Detected ", std::to_string(shapes.size()), " shapes.");
+
+            // Disable the cancel button (we've already finished), and enable the
+            //  done button so that the user can close the box and move on
+            done_button->set_sensitive(true);
+            cancel_button->set_sensitive(false);
+        });
+
+        bool did_estop = false;
+
+        // Run the progress bar dialog
+        // If the user cancels the action, then we need to kill sf_worker ASAP
+        if(auto response = progress_dialog.run();
+                response == Gtk::RESPONSE_DELETE_EVENT ||
+                response == Gtk::RESPONSE_CANCEL)
+        {
+            shape_finder.estop();
+            did_estop = true;
+        }
+
+        // Wait for the worker to join back up
+        sf_worker.join();
+
+        worker.resetWriteCallback();
+
+        // Don't finish importing if we stopped early
+        if(did_estop) {
+            return true;
+        }
 
         project.getMapProject().setShapeFinder(std::move(shape_finder));
         project.getMapProject().setGraphicsData(graphics_data);
@@ -406,7 +413,14 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
             std::filesystem::create_directory(input_root);
         }
 
-        std::filesystem::copy_file(imported, input_root / INPUT_PROVINCEMAP_FILENAME);
+        // TODO: We should actually do two things here:
+        //  1) If filename == input_full_path: do nothing
+        //  2) Otherwise ask if they want to overrite/replace the imported province map
+        if(auto input_full_path = input_root / INPUT_PROVINCEMAP_FILENAME;
+           !std::filesystem::exists(input_full_path))
+        {
+            std::filesystem::copy_file(imported, input_full_path);
+        }
     } else {
         writeError("Unable to complete importing '", filename, "'. Reason: There is no project currently loaded.");
         return false;
