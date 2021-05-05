@@ -65,7 +65,7 @@ void MapNormalizer::trim(std::string& str) {
  *
  * @return The given XY coordinate as a flat index
  */
-uint64_t MapNormalizer::xyToIndex(BitMap* image, uint32_t x, uint32_t y) {
+uint64_t MapNormalizer::xyToIndex(const BitMap* image, uint32_t x, uint32_t y) {
     return x + (y * image->info_header.width);
 }
 
@@ -142,13 +142,13 @@ bool MapNormalizer::doColorsMatch(const Color& c1, const Color& c2) {
  *
  * @return True if the point is within the bounds of the image, false otherwise
  */
-bool MapNormalizer::isInImage(BitMap* image, uint32_t x, uint32_t y) {
+bool MapNormalizer::isInImage(const BitMap* image, uint32_t x, uint32_t y) {
     return x >= 0 && x < static_cast<uint32_t>(image->info_header.width) &&
            y >= 0 && y < static_cast<uint32_t>(image->info_header.height);
 }
 
 bool MapNormalizer::isShapeTooLarge(uint32_t s_width, uint32_t s_height,
-                                    BitMap* image)
+                                    const BitMap* image)
 {
     auto i_width = image->info_header.width;
     auto i_height = image->info_header.height;

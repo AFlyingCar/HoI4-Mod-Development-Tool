@@ -23,14 +23,14 @@ namespace MapNormalizer {
     Color RGBToColor(std::uint32_t);
     bool doColorsMatch(const Color&, const Color&);
 
-    uint64_t xyToIndex(BitMap*, uint32_t, uint32_t);
+    uint64_t xyToIndex(const BitMap*, uint32_t, uint32_t);
     uint64_t xyToIndex(uint32_t, uint32_t, uint32_t);
     Color getColorAt(const BitMap*, uint32_t, uint32_t, uint32_t = 3);
     Pixel getAsPixel(const BitMap*, uint32_t, uint32_t, uint32_t = 3);
 
-    bool isInImage(BitMap*, uint32_t, uint32_t);
+    bool isInImage(const BitMap*, uint32_t, uint32_t);
 
-    bool isShapeTooLarge(uint32_t, uint32_t, BitMap*);
+    bool isShapeTooLarge(uint32_t, uint32_t, const BitMap*);
     std::pair<uint32_t, uint32_t> calcShapeDims(const Polygon&);
 
     void ltrim(std::string&);
