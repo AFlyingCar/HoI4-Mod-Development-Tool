@@ -112,10 +112,6 @@ namespace MapNormalizer {
 
     void addPixelToShape(Polygon&, const Pixel&);
 
-    PolygonList createPolygonListFromLabels(uint32_t*, uint32_t, uint32_t,
-                                            const ShapeFinder::LabelToColorMap&,
-                                            const BitMap*);
-
     std::string toString(const ShapeFinder::Stage&);
 }
 
