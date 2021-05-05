@@ -56,7 +56,7 @@ namespace MapNormalizer::Project {
             virtual bool load(const std::filesystem::path&) override;
 
         private:
-            //! The path to the project file
+            //! The path to the project file (The .hoi4proj file)
             std::filesystem::path m_path;
 
             //! The root of the project (where the project file goes)

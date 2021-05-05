@@ -92,6 +92,23 @@ auto MapNormalizer::Project::HoI4Project::getMapProject() -> MapProject& {
     return m_map_project;
 }
 
+/**
+ * @brief Loads a json file referenced by 'path'
+ * @details Format of the project file should be as follows:
+ * @code
+ *     {
+ *         "name": "NameOfProject",
+ *         "tool_version": "VersionOfTool",
+ *         "hoi4_version": "VersionOfHoI4",
+ *         "tags": [ "tag1", "tag2", ... ],
+ *         "overrides": [ "relative/path/to/override1", "relative/path/to/override2", ... ]
+ *     }
+ * @endcode
+ *
+ * @param path The path to load the project file from
+ *
+ * @return True if the project file could be loaded correctly, false otherwise.
+ */
 bool MapNormalizer::Project::HoI4Project::load(const std::filesystem::path& path) {
     using json = nlohmann::json;
 
@@ -100,6 +117,8 @@ bool MapNormalizer::Project::HoI4Project::load(const std::filesystem::path& path
 
         in >> proj;
 
+        // This map is for error-checking to make sure we got each property we
+        //  are expecting
         std::unordered_map<std::string, bool> complete = {
             { "name", true },
             { "tool_version", true },
@@ -138,6 +157,7 @@ bool MapNormalizer::Project::HoI4Project::load(const std::filesystem::path& path
             complete["overrides"] = false;
         }
 
+        // Make sure we got each property that we expect
         if(std::any_of(complete.begin(), complete.end(),
                         [](auto& pair) { return !pair.second; }))
         {
@@ -171,11 +191,36 @@ bool MapNormalizer::Project::HoI4Project::load(const std::filesystem::path& path
     return m_map_project.load(getMapRoot());
 }
 
+/**
+ * @brief Saves a project to the file specified by path.
+ *
+ * @param path
+ *
+ * @return True if the project was successfully saved, false otherwise.
+ */
 bool MapNormalizer::Project::HoI4Project::save(const std::filesystem::path& path)
 {
     return save(path, true);
 }
 
+/**
+ * @brief Saves a project to the file specified by path.
+ * @details Format of the project file should be as follows:
+ * @code
+ *     {
+ *         "name": "NameOfProject",
+ *         "tool_version": "VersionOfTool",
+ *         "hoi4_version": "VersionOfHoI4",
+ *         "tags": [ "tag1", "tag2", ... ],
+ *         "overrides": [ "relative/path/to/override1", "relative/path/to/override2", ... ]
+ *     }
+ * @endcode
+ *
+ * @param path
+ * @param do_save_subprojects Should subprojects get saved recursively as well?
+ *
+ * @return 
+ */
 bool MapNormalizer::Project::HoI4Project::save(const std::filesystem::path& path,
                                                bool do_save_subprojects)
 {
@@ -217,6 +262,11 @@ bool MapNormalizer::Project::HoI4Project::save(bool do_save_subprojects) {
     return save(m_path, do_save_subprojects);
 }
 
+/**
+ * @brief Sets m_path and m_root
+ *
+ * @param path
+ */
 void MapNormalizer::Project::HoI4Project::setPath(const std::filesystem::path& path)
 {
     m_path = path;
@@ -227,6 +277,11 @@ void MapNormalizer::Project::HoI4Project::setName(const std::string& name) {
     m_name = name;
 }
 
+/**
+ * @brief Parses out a project name and path
+ *
+ * @param full_path
+ */
 void MapNormalizer::Project::HoI4Project::setPathAndName(const std::filesystem::path& full_path) {
     if(full_path.has_filename()) {
         setName(full_path.filename().replace_extension());
