@@ -25,6 +25,11 @@ void MapNormalizer::GUI::Driver::run() {
     m_app->run();
 }
 
+/**
+ * @brief Gets the main project object, if one has been loaded
+ *
+ * @return The main project object, or std::nullopt if one has not been loaded.
+ */
 auto MapNormalizer::GUI::Driver::getProject() const
     -> OptionalReference<const HProject>
 {
@@ -35,6 +40,11 @@ auto MapNormalizer::GUI::Driver::getProject() const
     }
 }
 
+/**
+ * @brief Gets the main project object, if one has been loaded
+ *
+ * @return The main project object, or std::nullopt if one has not been loaded.
+ */
 auto MapNormalizer::GUI::Driver::getProject() 
     -> OptionalReference<HProject>
 {
@@ -45,10 +55,18 @@ auto MapNormalizer::GUI::Driver::getProject()
     }
 }
 
+/**
+ * @brief Sets the main project object.
+ *
+ * @param project 
+ */
 void MapNormalizer::GUI::Driver::setProject(UniqueProject&& project) {
     m_project = std::move(project);
 }
 
+/**
+ * @brief Unloads the main project object.
+ */
 void MapNormalizer::GUI::Driver::setProject() {
     m_project = nullptr;
 }
