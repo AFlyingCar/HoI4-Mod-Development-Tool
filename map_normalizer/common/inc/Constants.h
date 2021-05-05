@@ -35,17 +35,25 @@ namespace MapNormalizer {
     //! The color of boundary pixels
     const Color BORDER_COLOR = Color{ 0, 0, 0 };
 
+    //! The name of the application
     const std::string APPLICATION_NAME = "HoI4 Map Normalizer Tool";
 
+    //! The Gtk ID of the application
     const std::string APPLICATION_ID = "com.aflyingcar.tool.hoi4_map_normalizer";
 
     //! Default width of the properties pane, 30% of the minimum window width of 512
     const size_t MINIMUM_PROPERTIES_PANE_WIDTH = 153;
 
+    //! The minimum width of the window
     const size_t MINIMUM_WINDOW_W = 512;
+
+    //! The minimum height of the window
     const size_t MINIMUM_WINDOW_H = 512;
 
+    //! The extension for project files
     const std::string PROJ_EXTENSION = ".hoi4proj";
+
+    //! The folder name for metadata files about a project
     const std::string PROJ_META_FOLDER = ".projmeta";
 
     //! The filename for storing shape data
