@@ -33,7 +33,7 @@ namespace MapNormalizer {
                 DONE
             };
 
-            ShapeFinder(BitMap*);
+            ShapeFinder(const BitMap*);
             ShapeFinder();
             ShapeFinder(ShapeFinder&&);
 
@@ -45,7 +45,6 @@ namespace MapNormalizer {
 
             Stage getStage() const;
 
-            BitMap* getImage();
             uint32_t getLabelMatrixSize();
             uint32_t* getLabelMatrix();
             std::vector<Pixel>& getBorderPixels();
@@ -84,7 +83,7 @@ namespace MapNormalizer {
 
         private:
             //! The image to find shapes on
-            BitMap* m_image;
+            const BitMap* m_image;
 
             //! The size of the label matrix
             uint32_t m_label_matrix_size;

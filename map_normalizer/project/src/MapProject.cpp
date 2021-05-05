@@ -232,12 +232,6 @@ bool MapNormalizer::Project::MapProject::loadShapeLabels(const std::filesystem::
             label_matrix = nullptr;
             return false;
         }
-
-        // TODO: Do we actually need to do this?
-        PolygonList shapes = createPolygonListFromLabels(label_matrix,
-                                                         width, height,
-                                                         {},
-                                                         m_shape_detection_info.image);
     } else {
         writeError("Failed to open file ", path, ". Reason: ", std::strerror(errno));
         return false;
@@ -313,14 +307,21 @@ void MapNormalizer::Project::MapProject::setShapeFinder(ShapeFinder&& shape_find
     ShapeFinder sf(std::move(shape_finder));
 
     m_shape_detection_info.provinces = createProvincesFromShapeList(sf.getShapes());
-    m_shape_detection_info.image = sf.getImage();
     m_shape_detection_info.label_matrix = sf.getLabelMatrix();
     m_shape_detection_info.label_matrix_size = sf.getLabelMatrixSize();
     m_shape_detection_info.graphics_data = nullptr;
 }
 
 void MapNormalizer::Project::MapProject::setGraphicsData(unsigned char* data) {
+    if(m_shape_detection_info.graphics_data != nullptr) {
+        delete[] m_shape_detection_info.graphics_data;
+    }
+
     m_shape_detection_info.graphics_data = data;
+}
+
+void MapNormalizer::Project::MapProject::setImage(BitMap* image) {
+    m_shape_detection_info.image = image;
 }
 
 auto MapNormalizer::Project::MapProject::getImage() -> BitMap* {

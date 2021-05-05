@@ -35,6 +35,7 @@ namespace MapNormalizer::Project {
 
             void setShapeFinder(ShapeFinder&&);
             void setGraphicsData(unsigned char*);
+            void setImage(BitMap*);
 
             BitMap* getImage();
             const BitMap* getImage() const;

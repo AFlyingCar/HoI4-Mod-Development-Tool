@@ -16,7 +16,7 @@
  *
  * @param image The image to detect shapes from
  */
-MapNormalizer::ShapeFinder::ShapeFinder(BitMap* image):
+MapNormalizer::ShapeFinder::ShapeFinder(const BitMap* image):
     m_image(image),
     m_label_matrix_size(m_image->info_header.width *
                         m_image->info_header.height),
@@ -626,10 +626,6 @@ void MapNormalizer::ShapeFinder::estop() {
 
 MapNormalizer::ShapeFinder::Stage MapNormalizer::ShapeFinder::getStage() const {
     return m_stage;
-}
-
-MapNormalizer::BitMap* MapNormalizer::ShapeFinder::getImage() {
-    return m_image;
 }
 
 uint32_t MapNormalizer::ShapeFinder::getLabelMatrixSize() {
