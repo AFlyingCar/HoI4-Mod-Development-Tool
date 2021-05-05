@@ -3,21 +3,46 @@
 
 #include <sstream>
 
+/**
+ * @brief Constructs an empty Version
+ */
 MapNormalizer::Version::Version(): m_version()
 { }
 
+/**
+ * @brief Copies an existing Version.
+ *
+ * @param other The other version.
+ */
 MapNormalizer::Version::Version(const Version& other):
     m_version(other.m_version)
 { }
 
+/**
+ * @brief Moves another version into this one.
+ *
+ * @param other The other version.
+ */
 MapNormalizer::Version::Version(Version&& other):
     m_version(std::move(other.m_version))
 { }
 
+/**
+ * @brief Constructs a new Version
+ *
+ * @param version The string-representation to construct this Version with
+ */
 MapNormalizer::Version::Version(const std::string& version):
     m_version(version)
 { }
 
+/**
+ * @brief Assigns another Version to this Version
+ *
+ * @param other The other version
+ *
+ * @return This version
+ */
 MapNormalizer::Version& MapNormalizer::Version::operator=(const Version& other)
 {
     m_version = other.m_version;
@@ -25,26 +50,68 @@ MapNormalizer::Version& MapNormalizer::Version::operator=(const Version& other)
     return *this;
 }
 
+/**
+ * @brief Compares if this version is equal to another
+ *
+ * @param other The other version
+ *
+ * @return True if this version is equal to the other version
+ */
 bool MapNormalizer::Version::operator==(const Version& other) const {
     return compare(other) == 0;
 }
 
+/**
+ * @brief Compares if this version is not equal another.
+ *
+ * @param other The other version
+ *
+ * @return True if this version is not equal to the other version
+ */
 bool MapNormalizer::Version::operator!=(const Version& other) const {
     return compare(other) != 0;
 }
 
+/**
+ * @brief Compares if this version is smaller than other
+ *
+ * @param other The other version
+ *
+ * @return True if this version is smaller than other
+ */
 bool MapNormalizer::Version::operator<(const Version& other) const {
     return compare(other) < 0;
 }
 
+/**
+ * @brief Compares if this version is greater than other
+ *
+ * @param other The other version
+ *
+ * @return True if this version is greater than other
+ */
 bool MapNormalizer::Version::operator>(const Version& other) const {
     return compare(other) > 0;
 }
 
+/**
+ * @brief Compares if this version is smaller or equal to than other
+ *
+ * @param other The other version
+ *
+ * @return True if this version is smaller or equal to other
+ */
 bool MapNormalizer::Version::operator<=(const Version& other) const {
     return compare(other) <= 0;
 }
 
+/**
+ * @brief Compares if this version is greater or equal to than other
+ *
+ * @param other The other version
+ *
+ * @return True if this version is greater or equal to other
+ */
 bool MapNormalizer::Version::operator>=(const Version& other) const {
     return compare(other) >= 0;
 }
@@ -103,5 +170,19 @@ int MapNormalizer::Version::compare(const Version& other) const {
     //  never be the case (version number parts cannot be negative)
 
     return 1;
+}
+
+/**
+ * @brief Outputs a Version
+ *
+ * @param stream The stream to output to
+ * @param version The version to output
+ *
+ * @return stream
+ */
+std::ostream& MapNormalizer::operator<<(std::ostream& stream,
+                                        const Version& version)
+{
+    return (stream << version.str());
 }
 
