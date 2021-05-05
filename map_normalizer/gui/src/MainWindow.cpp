@@ -522,9 +522,9 @@ void MapNormalizer::GUI::MainWindow::openProject() {
  */
 void MapNormalizer::GUI::MainWindow::onProjectOpened() {
     // Enable all actions that can only be done on an opened project
-    getAction<Gio::SimpleAction>("import_provincemap")->set_enabled(true);
-    getAction<Gio::SimpleAction>("save")->set_enabled(true);
-    getAction<Gio::SimpleAction>("close")->set_enabled(true);
+    getAction("import_provincemap")->set_enabled(true);
+    getAction("save")->set_enabled(true);
+    getAction("close")->set_enabled(true);
 }
 
 /**
@@ -532,9 +532,9 @@ void MapNormalizer::GUI::MainWindow::onProjectOpened() {
  */
 void MapNormalizer::GUI::MainWindow::onProjectClosed() {
     // Disable all actions that can only be done on an opened project
-    getAction<Gio::SimpleAction>("import_provincemap")->set_enabled(false);
-    getAction<Gio::SimpleAction>("save")->set_enabled(false);
-    getAction<Gio::SimpleAction>("close")->set_enabled(false);
+    getAction("import_provincemap")->set_enabled(false);
+    getAction("save")->set_enabled(false);
+    getAction("close")->set_enabled(false);
 }
 
 /**
