@@ -16,6 +16,8 @@ MapNormalizer::GUI::NewProjectDialog::NewProjectDialog(Gtk::Window& window,
 
     buildNameField();
 
+    // Put a blank row here to space the fields apart and make the dialog look
+    //   nicer
     buildBlankRow();
 
     buildPathField();
@@ -28,14 +30,27 @@ MapNormalizer::GUI::NewProjectDialog::NewProjectDialog(Gtk::Window& window,
     show_all_children();
 }
 
+/**
+ * @brief Gets the name of the project
+ *
+ * @return 
+ */
 std::string MapNormalizer::GUI::NewProjectDialog::getProjectName() {
     return m_name_field.get_text();
 }
 
+/**
+ * @brief Gets the path for the project
+ *
+ * @return 
+ */
 std::string MapNormalizer::GUI::NewProjectDialog::getProjectPath() {
     return m_path_field.get_text();
 }
 
+/**
+ * @brief Builds the name field for the dialog
+ */
 void MapNormalizer::GUI::NewProjectDialog::buildNameField() {
     {
         m_grid.attach(*manage(new Gtk::Label("Name: ")), 0, m_row, 1, 1);
@@ -51,6 +66,9 @@ void MapNormalizer::GUI::NewProjectDialog::buildNameField() {
     ++m_row;
 }
 
+/**
+ * @brief Builds the path field for the dialog
+ */
 void MapNormalizer::GUI::NewProjectDialog::buildPathField() {
     {
         m_grid.attach(*manage(new Gtk::Label("Path: ")), 0, m_row, 1, 1);
@@ -98,6 +116,9 @@ void MapNormalizer::GUI::NewProjectDialog::buildPathField() {
     ++m_row;
 }
 
+/**
+ * @brief Builds a blank row for spacing
+ */
 void MapNormalizer::GUI::NewProjectDialog::buildBlankRow() {
     {
         m_grid.attach(*manage(new Gtk::Label("")), 0, m_row, 1, 1);
