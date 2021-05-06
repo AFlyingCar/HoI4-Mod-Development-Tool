@@ -11,5 +11,7 @@ add_library(common STATIC
 
 target_include_directories(common PUBLIC inc)
 
-target_link_libraries(common unique_colors)
+target_link_libraries(common PUBLIC unique_colors)
+
+target_link_libraries(common PRIVATE tool_version)
 
