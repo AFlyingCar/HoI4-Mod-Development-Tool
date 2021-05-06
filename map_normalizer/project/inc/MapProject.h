@@ -20,8 +20,10 @@ namespace MapNormalizer::Project {
             MapProject(IProject&);
             virtual ~MapProject();
 
-            virtual bool save(const std::filesystem::path&) override;
-            virtual bool load(const std::filesystem::path&) override;
+            virtual bool save(const std::filesystem::path&,
+                              std::error_code& = last_error) override;
+            virtual bool load(const std::filesystem::path&,
+                              std::error_code& = last_error) override;
 
             void setShapeFinder(ShapeFinder&&);
             void setGraphicsData(unsigned char*);
@@ -34,11 +36,15 @@ namespace MapNormalizer::Project {
             const unsigned char* getGraphicsData() const;
 
         protected:
-            bool saveShapeLabels(const std::filesystem::path&);
-            bool saveProvinceData(const std::filesystem::path&);
+            bool saveShapeLabels(const std::filesystem::path&,
+                                 std::error_code&);
+            bool saveProvinceData(const std::filesystem::path&,
+                                 std::error_code&);
 
-            bool loadShapeLabels(const std::filesystem::path&);
-            bool loadProvinceData(const std::filesystem::path&);
+            bool loadShapeLabels(const std::filesystem::path&,
+                                 std::error_code&);
+            bool loadProvinceData(const std::filesystem::path&,
+                                 std::error_code&);
 
         private:
             /**

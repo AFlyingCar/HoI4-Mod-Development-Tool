@@ -109,7 +109,9 @@ auto MapNormalizer::Project::HoI4Project::getMapProject() -> MapProject& {
  *
  * @return True if the project file could be loaded correctly, false otherwise.
  */
-bool MapNormalizer::Project::HoI4Project::load(const std::filesystem::path& path) {
+bool MapNormalizer::Project::HoI4Project::load(const std::filesystem::path& path,
+                                               std::error_code& ec)
+{
     using json = nlohmann::json;
 
     if(std::ifstream in(path); in) {
@@ -173,6 +175,7 @@ bool MapNormalizer::Project::HoI4Project::load(const std::filesystem::path& path
             writeWarning<false>("\t", ss.str());
         }
     } else {
+        ec = std::error_code(static_cast<int>(errno), std::generic_category());
         return false;
     }
 
@@ -188,7 +191,17 @@ bool MapNormalizer::Project::HoI4Project::load(const std::filesystem::path& path
     }
 
     // Load in sub-projects
-    return m_map_project.load(getMapRoot());
+    m_map_project.load(getMapRoot(), ec);
+
+    // Force a return true if there is no error code, as subprojects can load
+    //  nothing without that necessarily being a failure
+    if(ec.value() == 0) {
+        return true;
+    }
+
+    // If any of them have a non-0 error code though, then that means something
+    //  _must_ have gone wrong
+    return false;
 }
 
 /**
@@ -198,9 +211,10 @@ bool MapNormalizer::Project::HoI4Project::load(const std::filesystem::path& path
  *
  * @return True if the project was successfully saved, false otherwise.
  */
-bool MapNormalizer::Project::HoI4Project::save(const std::filesystem::path& path)
+bool MapNormalizer::Project::HoI4Project::save(const std::filesystem::path& path,
+                                               std::error_code& ec)
 {
-    return save(path, true);
+    return save(path, true, ec);
 }
 
 /**
@@ -222,7 +236,8 @@ bool MapNormalizer::Project::HoI4Project::save(const std::filesystem::path& path
  * @return 
  */
 bool MapNormalizer::Project::HoI4Project::save(const std::filesystem::path& path,
-                                               bool do_save_subprojects)
+                                               bool do_save_subprojects,
+                                               std::error_code& ec)
 {
     using json = nlohmann::json;
 
@@ -237,6 +252,7 @@ bool MapNormalizer::Project::HoI4Project::save(const std::filesystem::path& path
 
         out << std::setw(4) << proj << std::endl;
     } else {
+        ec = std::error_code(static_cast<int>(errno), std::generic_category());
         writeError("Failed to write file to ", path, ". Reason: ", std::strerror(errno));
         return false;
     }
@@ -251,15 +267,17 @@ bool MapNormalizer::Project::HoI4Project::save(const std::filesystem::path& path
     }
 
     // Save sub-projects
-    return m_map_project.save(getMapRoot());
+    return m_map_project.save(getMapRoot(), ec);
 }
 
-bool MapNormalizer::Project::HoI4Project::load() {
-    return load(m_path);
+bool MapNormalizer::Project::HoI4Project::load(std::error_code& ec) {
+    return load(m_path, ec);
 }
 
-bool MapNormalizer::Project::HoI4Project::save(bool do_save_subprojects) {
-    return save(m_path, do_save_subprojects);
+bool MapNormalizer::Project::HoI4Project::save(bool do_save_subprojects,
+                                               std::error_code& ec)
+{
+    return save(m_path, do_save_subprojects, ec);
 }
 
 /**

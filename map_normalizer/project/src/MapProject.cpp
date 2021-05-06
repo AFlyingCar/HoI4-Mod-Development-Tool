@@ -29,7 +29,8 @@ MapNormalizer::Project::MapProject::~MapProject() {
  *
  * @return True if all data was ablee to be successfully loaded, false otherwise
  */
-bool MapNormalizer::Project::MapProject::save(const std::filesystem::path& path)
+bool MapNormalizer::Project::MapProject::save(const std::filesystem::path& path,
+                                              std::error_code& ec)
 {
     if(!std::filesystem::exists(path)) {
         writeDebug("Creating directory ", path);
@@ -41,7 +42,7 @@ bool MapNormalizer::Project::MapProject::save(const std::filesystem::path& path)
         return true;
     }
 
-    return saveShapeLabels(path) && saveProvinceData(path);
+    return saveShapeLabels(path, ec) && saveProvinceData(path, ec);
 }
 
 /**
@@ -51,12 +52,15 @@ bool MapNormalizer::Project::MapProject::save(const std::filesystem::path& path)
  *
  * @return True if all data was able to be successfully loaded, false otherwise
  */
-bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path)
+bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
+                                              std::error_code& ec)
 {
     // If there is no root path for this subproject, then don't bother trying
     //  to load
     if(!std::filesystem::exists(path)) {
-        return true;
+        // Do not set an error_code as there was no error, but return false
+        //  because we are not actually loading any data
+        return false;
     }
 
     // First we try to load the input map back up, as it holds important info
@@ -64,6 +68,7 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path)
     auto inputs_root = dynamic_cast<HoI4Project&>(m_parent_project).getInputsRoot();
     auto input_provincemap_path = inputs_root / INPUT_PROVINCEMAP_FILENAME;
     if(!std::filesystem::exists(input_provincemap_path)) {
+        ec = std::make_error_code(std::errc::no_such_file_or_directory);
         writeWarning("Source import image does not exist, unable to finish loading data.");
         return false;
     } else {
@@ -74,13 +79,16 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path)
 
         m_shape_detection_info.image = readBMP(input_provincemap_path);
         if(m_shape_detection_info.image == nullptr) {
+            // TODO: We should instead pass ec into readBMP() and let it set ec
+            //  to whatever might be appropriate
+            ec = std::make_error_code(std::errc::io_error);
             writeWarning("Failed to read imported image.");
             return false;
         }
     }
 
     // Now load the other related data
-    if(!loadProvinceData(path) || !loadShapeLabels(path)) {
+    if(!loadProvinceData(path, ec) || !loadShapeLabels(path, ec)) {
         return false;
     }
 
@@ -138,7 +146,8 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path)
  *
  * @return True if the data was able to be successfully written, false otherwise.
  */
-bool MapNormalizer::Project::MapProject::saveShapeLabels(const std::filesystem::path& root)
+bool MapNormalizer::Project::MapProject::saveShapeLabels(const std::filesystem::path& root,
+                                                         std::error_code& ec)
 {
     auto path = root / SHAPEDATA_FILENAME;
 
@@ -155,6 +164,7 @@ bool MapNormalizer::Project::MapProject::saveShapeLabels(const std::filesystem::
                   m_shape_detection_info.label_matrix_size * sizeof(uint32_t));
         out << '\0';
     } else {
+        ec = std::error_code(static_cast<int>(errno), std::generic_category());
         writeError("Failed to open file ", path, ". Reason: ", std::strerror(errno));
         return false;
     }
@@ -170,7 +180,8 @@ bool MapNormalizer::Project::MapProject::saveShapeLabels(const std::filesystem::
  *
  * @return True if the file was able to be successfully written, false otherwise.
  */
-bool MapNormalizer::Project::MapProject::saveProvinceData(const std::filesystem::path& root)
+bool MapNormalizer::Project::MapProject::saveProvinceData(const std::filesystem::path& root,
+                                                          std::error_code& ec)
 {
     auto path = root / PROVINCEDATA_FILENAME;
 
@@ -181,6 +192,7 @@ bool MapNormalizer::Project::MapProject::saveProvinceData(const std::filesystem:
             out << province << std::endl;
         }
     } else {
+        ec = std::error_code(static_cast<int>(errno), std::generic_category());
         writeError("Failed to open file ", path, ". Reason: ", std::strerror(errno));
         return false;
     }
@@ -197,7 +209,8 @@ bool MapNormalizer::Project::MapProject::saveProvinceData(const std::filesystem:
  *
  * @return True if the data was able to be loaded successfully, false otherwise
  */
-bool MapNormalizer::Project::MapProject::loadShapeLabels(const std::filesystem::path& root)
+bool MapNormalizer::Project::MapProject::loadShapeLabels(const std::filesystem::path& root,
+                                                         std::error_code& ec)
 {
     auto path = root / SHAPEDATA_FILENAME;
 
@@ -212,6 +225,7 @@ bool MapNormalizer::Project::MapProject::loadShapeLabels(const std::filesystem::
         // Read in all header information first, and make sure that we were 
         //  successful
         if(!safeRead(in, &magic, &width, &height)) {
+            ec = std::error_code(static_cast<int>(errno), std::generic_category());
             writeError("Failed to read in header information. Reason: ", std::strerror(errno));
             return false;
         }
@@ -227,6 +241,7 @@ bool MapNormalizer::Project::MapProject::loadShapeLabels(const std::filesystem::
         label_matrix = new uint32_t[label_matrix_size];
 
         if(!safeRead(label_matrix, label_matrix_size * sizeof(uint32_t), in)) {
+            ec = std::error_code(static_cast<int>(errno), std::generic_category());
             writeError("Failed to read full label matrix. Reason: ", std::strerror(errno));
 
             delete[] label_matrix;
@@ -234,6 +249,7 @@ bool MapNormalizer::Project::MapProject::loadShapeLabels(const std::filesystem::
             return false;
         }
     } else {
+        ec = std::error_code(static_cast<int>(errno), std::generic_category());
         writeError("Failed to open file ", path, ". Reason: ", std::strerror(errno));
         return false;
     }
@@ -249,11 +265,12 @@ bool MapNormalizer::Project::MapProject::loadShapeLabels(const std::filesystem::
  *
  * @return True if the file was able to be successfully loaded, false otherwise.
  */
-bool MapNormalizer::Project::MapProject::loadProvinceData(const std::filesystem::path& root)
+bool MapNormalizer::Project::MapProject::loadProvinceData(const std::filesystem::path& root,
+                                                          std::error_code& ec)
 {
     auto path = root / PROVINCEDATA_FILENAME;
 
-    if(!std::filesystem::exists(path)) {
+    if(!std::filesystem::exists(path, ec)) {
         writeWarning("File ", path, " does not exist.");
         return false;
     } else if(std::ifstream in(path); in) {
@@ -278,6 +295,7 @@ bool MapNormalizer::Project::MapProject::loadProvinceData(const std::filesystem:
                                      prov.type, prov.coastal, prov.terrain,
                                      prov.continent))
             {
+                ec = std::make_error_code(std::errc::bad_message);
                 writeError("Failed to parse line #", line_num, ": '", line, "'");
                 return false;
             }
@@ -288,6 +306,7 @@ bool MapNormalizer::Project::MapProject::loadProvinceData(const std::filesystem:
         writeDebug("Loaded information for ",
                    m_shape_detection_info.provinces.size(), " provinces");
     } else {
+        ec = std::error_code(static_cast<int>(errno), std::generic_category());
         writeError("Failed to open file ", path, ". Reason: ", std::strerror(errno));
         return false;
     }

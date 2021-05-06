@@ -39,8 +39,8 @@ namespace MapNormalizer::Project {
 
             MapProject& getMapProject();
 
-            bool load();
-            bool save(bool = true);
+            bool load(std::error_code& = last_error);
+            bool save(bool = true, std::error_code& = last_error);
 
             void setPath(const std::filesystem::path&);
             void setName(const std::string&);
@@ -50,10 +50,13 @@ namespace MapNormalizer::Project {
             void importFile(const std::filesystem::path&);
 
         protected:
-            bool save(const std::filesystem::path&, bool);
+            bool save(const std::filesystem::path&, bool,
+                      std::error_code& = last_error);
 
-            virtual bool save(const std::filesystem::path&) override;
-            virtual bool load(const std::filesystem::path&) override;
+            virtual bool save(const std::filesystem::path&,
+                              std::error_code& = last_error) override;
+            virtual bool load(const std::filesystem::path&,
+                              std::error_code& = last_error) override;
 
         private:
             //! The path to the project file (The .hoi4proj file)
