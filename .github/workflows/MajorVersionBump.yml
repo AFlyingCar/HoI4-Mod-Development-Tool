@@ -1,0 +1,24 @@
+name: Major Version Bump
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: 'master'
+
+    - name: Bump the version number
+      run: sh "$GITHUB_WORKSPACE/tools/versionbump.sh" "$GITHUB_WORKSPACE" 1
+
+    # Commit and push the new version number
+    - uses: EndBug/add-and-commit@v7
+      with:
+        add: '.config/version.txt'
+        branch: master
+        message: 'Automated Major Version Bump'
+        push: true
+

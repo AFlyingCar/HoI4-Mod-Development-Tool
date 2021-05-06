@@ -1,0 +1,27 @@
+name: Minor Version Bump
+
+# Only run this when code is pushed to the master branch:
+#   https://github.community/t/trigger-workflow-only-on-pull-request-merge/17359
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Bump the version number
+      run: sh "$GITHUB_WORKSPACE/tools/versionbump.sh" "$GITHUB_WORKSPACE" 0.1
+
+    # Commit and push the new version number
+    - uses: EndBug/add-and-commit@v7
+      with:
+        add: '.config/version.txt'
+        branch: master
+        message: 'Automated Minor Version Bump'
+        push: true
+
