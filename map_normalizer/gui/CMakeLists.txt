@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
 
-find_package(SDL2 REQUIRED)
 find_package(gtkmm REQUIRED)
 
 add_library(gui STATIC
@@ -15,9 +14,6 @@ add_library(gui STATIC
 )
 
 target_include_directories(gui PUBLIC inc)
-target_include_directories(gui PRIVATE ${SDL2_INCLUDE_DIRS})
-
-target_link_libraries(gui ${SDL2_LIBRARIES})
 
 target_link_libraries(gui gtkmm)
 

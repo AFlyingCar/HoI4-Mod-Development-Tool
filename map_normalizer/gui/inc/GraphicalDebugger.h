@@ -13,9 +13,6 @@
 # include "Types.h"
 
 namespace MapNormalizer {
-    [[deprecated]]
-    void writeDebugColor(unsigned char*, uint32_t, uint32_t, uint32_t, Color);
-
     void writeDebugColor(uint32_t, uint32_t, Color);
 
     class GraphicsWorker {
@@ -25,8 +22,6 @@ namespace MapNormalizer {
             static GraphicsWorker& getInstance();
 
             void init(const BitMap*, unsigned char*);
-
-            void work(bool&);
 
             void resetDebugData();
             void resetDebugDataAt(const Point2D&);

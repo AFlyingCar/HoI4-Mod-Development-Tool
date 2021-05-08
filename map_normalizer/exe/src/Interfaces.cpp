@@ -122,8 +122,6 @@ int MapNormalizer::runHeadless() {
     unsigned char* river_data = nullptr;
     unsigned char* normalmap_data = nullptr;
 
-    bool done = false;
-
     auto data_size = image->info_header.width * image->info_header.height * 3;
 
     {
@@ -134,26 +132,7 @@ int MapNormalizer::runHeadless() {
 
     river_data = new unsigned char[data_size];
     normalmap_data = new unsigned char[data_size];
-
-    auto& worker = GraphicsWorker::getInstance();
-
     graphics_data = new unsigned char[data_size];
-
-    std::thread graphics_thread;
-    if(!prog_opts.no_gui) {
-        if(prog_opts.verbose)
-            writeDebug("Graphical debugger enabled.");
-
-
-        worker.init(image, graphics_data);
-        worker.resetDebugData();
-
-        graphics_thread = std::thread([&done, &worker]() {
-                worker.work(done);
-                // TODO: We should somehow switch the graphicsWorker over to
-                //   displaying the blank river map builder
-        });
-    }
 
     if(!prog_opts.quiet)
         setInfoLine("Finding all possible shapes.");
@@ -161,9 +140,6 @@ int MapNormalizer::runHeadless() {
     // Find every shape
     ShapeFinder shape_finder(image);
     auto shapes = shape_finder.findAllShapes();
-
-    // Reset the graphical image data
-    worker.resetDebugData();
 
     // Redraw the new image so we can properly show how it should look in the
     //  final output
@@ -175,9 +151,6 @@ int MapNormalizer::runHeadless() {
             writeColorTo(image->data, image->info_header.width,
                                         pixel.point.x, pixel.point.y,
                                         shape.unique_color);
-
-            worker.writeDebugColor(pixel.point.x, pixel.point.y,
-                                   shape.unique_color);
         }
     }
 
@@ -274,13 +247,6 @@ int MapNormalizer::runHeadless() {
     setInfoLine("Press any key to exit.");
 
     std::getchar();
-    done = true;
-
-    if(!prog_opts.no_gui) {
-        if(!prog_opts.quiet)
-            setInfoLine("Waiting for graphical debugger thread to join...");
-        graphics_thread.join();
-    }
 
     // One last newline so that the command line isn't horrible at the end of
     //   all this
