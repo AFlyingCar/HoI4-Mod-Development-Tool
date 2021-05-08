@@ -19,7 +19,7 @@ static std::string program_name = "map_normalizer";
  */
 void MapNormalizer::printHelp() {
     writeStdout<false>(program_name + " [OPTIONS...] {[INFILE] [OUTPATH]}");
-    writeStdout<false>("\t   --no-gui                Do not open or render the map GUI.");
+    writeStdout<false>("\t   --no-gui                Alias for --headless.");
     writeStdout<false>("\t   --no-skip-no-name-state Do not skip states with no name.");
     writeStdout<false>("\t   --state-input           The input file for writing state definitions.");
     writeStdout<false>("\t   --height-map            The input file for writing the normal map.");
@@ -63,7 +63,7 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
     };
 
     // Setup default option values
-    ProgramOptions prog_opts { 0, "", "", false, false, false, "", "", false, "", false, false };
+    ProgramOptions prog_opts { 0, "", "", false, false, "", "", false, "", false, false };
 
     int optindex = 0;
     int c = 0;
@@ -89,9 +89,6 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
                     writeDebug("optarg = "s + optarg);
                 else
                     writeDebug("optarg = 0x0");
-                break;
-            case 1: // --no-gui
-                prog_opts.no_gui = true;
                 break;
             case 2: // --state-input
                 if(optarg == nullptr) {
@@ -123,7 +120,8 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
             case 6: // --output-stages
                 prog_opts.output_stages = true;
                 break;
-            case 7:
+            case 1: // --no-gui
+            case 7: // --headless
                 prog_opts.headless = true;
                 break;
             case 'v': // -v,--verbose

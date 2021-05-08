@@ -27,9 +27,6 @@ namespace MapNormalizer {
         //! -q,--quiet
         bool quiet;
 
-        //! --no-gui
-        bool no_gui;
-
         //! --state-input=
         std::string state_input_file;
 
