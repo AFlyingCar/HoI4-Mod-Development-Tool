@@ -166,9 +166,7 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
                 ++next_label;
             }
 
-            // Only write the color if we are expected to output this stage or
-            //  if we are expected to display the stage graphically
-            if((prog_opts.output_stages || !prog_opts.no_gui) && m_label_to_color.count(label) == 0)
+            if(m_label_to_color.count(label) == 0)
                 m_label_to_color[label] = (label == 0 ? BORDER_COLOR : generateUniqueColor(ProvinceType::UNKNOWN));
 
             worker.writeDebugColor(x, y, m_label_to_color[label]);
