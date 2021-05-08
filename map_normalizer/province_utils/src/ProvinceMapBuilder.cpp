@@ -38,7 +38,7 @@ bool MapNormalizer::isCoastal(const Color& color) {
 auto MapNormalizer::getTerrainType(const Color& color) -> Terrain {
     auto value = colorToRGB(color) & PROV_TERRAIN_MASK;
 
-    return static_cast<Terrain>(value >> indexOfLSB(value));
+    return static_cast<uint8_t>(value >> indexOfLSB(value));
 }
 
 auto MapNormalizer::getContinent(const Color& color) -> Continent {
