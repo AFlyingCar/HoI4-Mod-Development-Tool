@@ -243,7 +243,8 @@ void MapNormalizer::Log::Logger::work(bool& quit) {
         // If there are no messages in the queue, let them build up before we
         //  try gathering the next batch
         if(queue.empty()) {
-            std::this_thread::sleep_for(5s);
+            // TODO: We should have the ability to immediately awaken if we need to
+            std::this_thread::sleep_for(0.5s);
         } else {
             // Output every message in the queue
             while(!queue.empty()) {
