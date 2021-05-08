@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.0)
 find_package(SDL2 REQUIRED)
 
 # All subprojects
+add_subdirectory(logging)
 add_subdirectory(unique_colors)
 add_subdirectory(common)
 add_subdirectory(province_utils)
