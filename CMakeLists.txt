@@ -26,20 +26,5 @@ if(WIN32 AND NOT MSVC)
     add_definitions(-D_REENTRANT)
 endif()
 
-# Generate ToolVersion.h
-add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/version/ToolVersion.h"
-    COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/genVersionHeader.py" "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/version"
-    DEPENDS "${CMAKE_SOURCE_DIR}/.config/version.txt"
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    )
-
-add_custom_target(tool_version_generator DEPENDS "${CMAKE_BINARY_DIR}/version/ToolVersion.h")
-
-add_library(tool_version INTERFACE)
-target_include_directories(tool_version INTERFACE "${CMAKE_BINARY_DIR}/version")
-add_dependencies(tool_version tool_version_generator)
-
-# Now go ahead and compile the rest of the project
-
 add_subdirectory(map_normalizer)
 
