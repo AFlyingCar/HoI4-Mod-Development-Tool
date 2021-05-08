@@ -49,6 +49,9 @@ namespace MapNormalizer::Project {
 
             void importFile(const std::filesystem::path&);
 
+            void setToolVersion(const Version&);
+            void setHoI4Version(const Version&);
+
         protected:
             bool save(const std::filesystem::path&, bool,
                       std::error_code& = last_error);

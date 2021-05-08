@@ -313,3 +313,13 @@ void MapNormalizer::Project::HoI4Project::setPathAndName(const std::filesystem::
     setPath(path);
 }
 
+void MapNormalizer::Project::HoI4Project::setToolVersion(const Version& version)
+{
+    m_tool_version = version;
+}
+
+void MapNormalizer::Project::HoI4Project::setHoI4Version(const Version& version)
+{
+    m_hoi4_version = version;
+}
+
