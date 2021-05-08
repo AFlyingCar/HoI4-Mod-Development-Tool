@@ -68,14 +68,6 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
     int optindex = 0;
     int c = 0;
 
-    // We have multiple required arguments, so if we have none then just
-    //  fail immediately
-    if(argc == 1) {
-        printHelp();
-        prog_opts.status = 1;
-        return prog_opts;
-    }
-
     // Supress getopt error reporting, so that we can handle it ourselves.
     opterr = 0;
 

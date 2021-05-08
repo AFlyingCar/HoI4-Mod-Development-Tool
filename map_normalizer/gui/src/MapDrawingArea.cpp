@@ -9,15 +9,16 @@
 
 #include "GraphicalDebugger.h"
 
-MapNormalizer::GUI::MapDrawingArea::MapDrawingArea()
+MapNormalizer::GUI::MapDrawingArea::MapDrawingArea():
+    m_graphics_data(nullptr),
+    m_image(nullptr)
 {
     // Mark that we want to receive button presses
     add_events(Gdk::BUTTON_PRESS_MASK);
 }
 
 bool MapNormalizer::GUI::MapDrawingArea::hasData() const {
-    return m_graphics_data_ptr != nullptr && *m_graphics_data_ptr != nullptr &&
-           m_image_ptr != nullptr && *m_image_ptr != nullptr;
+    return m_graphics_data != nullptr && m_image != nullptr;
 }
 
 bool MapNormalizer::GUI::MapDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
@@ -27,12 +28,12 @@ bool MapNormalizer::GUI::MapDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Cont
         return true;
     }
 
-    auto iwidth = (*m_image_ptr)->info_header.width;
-    auto iheight = (*m_image_ptr)->info_header.height;
+    auto iwidth = m_image->info_header.width;
+    auto iheight = m_image->info_header.height;
 
     set_size_request(iwidth, iheight);
 
-    Glib::RefPtr<Gdk::Pixbuf> image = Gdk::Pixbuf::create_from_data(*m_graphics_data_ptr, Gdk::Colorspace::COLORSPACE_RGB, false, 8, iwidth, iheight, iwidth * 3);
+    Glib::RefPtr<Gdk::Pixbuf> image = Gdk::Pixbuf::create_from_data(m_graphics_data, Gdk::Colorspace::COLORSPACE_RGB, false, 8, iwidth, iheight, iwidth * 3);
 
     // Draw the image in the center of the drawing area (or the middle part of
     //  the imagee if it is larger than the drawing area)
@@ -79,14 +80,13 @@ bool MapNormalizer::GUI::MapDrawingArea::on_button_press_event(GdkEventButton* e
     return true;
 }
 
-void MapNormalizer::GUI::MapDrawingArea::setGraphicsDataPtr(unsigned char* const* data_ptr)
+void MapNormalizer::GUI::MapDrawingArea::setGraphicsData(const unsigned char* data)
 {
-    m_graphics_data_ptr = data_ptr;
+    m_graphics_data = data;
 }
 
-void MapNormalizer::GUI::MapDrawingArea::setImagePtr(BitMap* const* image_ptr)
-{
-    m_image_ptr = image_ptr;
+void MapNormalizer::GUI::MapDrawingArea::setImage(const BitMap* image) {
+    m_image = image;
 }
 
 void MapNormalizer::GUI::MapDrawingArea::graphicsUpdateCallback(const Rectangle& rectangle)

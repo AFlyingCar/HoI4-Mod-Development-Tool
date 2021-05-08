@@ -3,6 +3,7 @@
 
 # include <vector>
 # include <string>
+# include <type_traits>
 
 # include <gtkmm/applicationwindow.h>
 # include <gtkmm/widget.h>
@@ -29,6 +30,26 @@ namespace MapNormalizer::GUI {
             Gtk::Box* getBox();
 
             Gtk::Application* getApplication();
+
+            /**
+             * @brief Helper function to get an action of a specific type
+             *
+             * @tparam T The type of action to get.
+             * @param action_name The name of the action to get
+             *
+             * @return The action, or nullptr if no action was found of that
+             *         name or type
+             */
+            template<typename T = Gio::SimpleAction,
+                     typename = std::enable_if_t<std::is_base_of_v<Gio::Action, T>, T>>
+            T* getAction(const Glib::ustring& action_name) {
+                auto action = lookup_action(action_name);
+
+                if(action.get() == nullptr)
+                    return nullptr;
+
+                return dynamic_cast<T*>(&(*action.get()));
+            }
 
         private:
             std::string m_window_name;

@@ -6,6 +6,7 @@ add_library(common STATIC
     src/Util.cpp
     src/Logger.cpp
     src/UniqueColorGenerator.cpp
+    src/Version.cpp
 )
 
 target_include_directories(common PUBLIC inc)

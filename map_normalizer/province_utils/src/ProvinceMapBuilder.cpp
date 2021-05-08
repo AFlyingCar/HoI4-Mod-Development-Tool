@@ -71,7 +71,7 @@ MapNormalizer::ProvinceList MapNormalizer::createProvinceList(const PolygonList&
         auto state = getState(color);
 
         provinces.push_back(Province{
-            i, shape.unique_color,
+            i + 1, shape.unique_color,
             prov_type, is_coastal, terrain_type, continent, state
         });
     }

@@ -20,6 +20,8 @@ namespace MapNormalizer {
      */
     class ShapeFinder {
         public:
+            using LabelToColorMap = std::map<uint32_t, Color>;
+
             enum class Stage {
                 START,
                 PASS1,
@@ -31,19 +33,36 @@ namespace MapNormalizer {
                 DONE
             };
 
-            ShapeFinder(BitMap*);
+            ShapeFinder(const BitMap*);
+            ShapeFinder();
+            ShapeFinder(ShapeFinder&&);
 
-            PolygonList findAllShapes();
+            ShapeFinder& operator=(ShapeFinder&&);
+
+            const PolygonList& findAllShapes();
 
             void estop();
 
             Stage getStage() const;
 
+            uint32_t getLabelMatrixSize();
+            uint32_t* getLabelMatrix();
+            std::vector<Pixel>& getBorderPixels();
+            std::map<uint32_t, Color>& getLabelToColorMap();
+            PolygonList& getShapes();
+
+            const BitMap* getImage() const;
+            uint32_t getLabelMatrixSize() const;
+            const uint32_t* getLabelMatrix() const;
+            const std::vector<Pixel>& getBorderPixels() const;
+            const std::map<uint32_t, Color>& getLabelToColorMap() const;
+            const PolygonList& getShapes() const;
+
         protected:
             using LabelShapeIdxMap = std::unordered_map<uint32_t, uint32_t>;
 
             uint32_t pass1();
-            PolygonList pass2(LabelShapeIdxMap&);
+            PolygonList& pass2(LabelShapeIdxMap&);
 
             bool mergeBorders(PolygonList&,
                               const LabelShapeIdxMap&);
@@ -62,11 +81,9 @@ namespace MapNormalizer {
             void buildShape(uint32_t, const Pixel&, PolygonList&,
                             LabelShapeIdxMap&);
 
-            void addPixelToShape(Polygon&, const Pixel&);
-
         private:
             //! The image to find shapes on
-            BitMap* m_image;
+            const BitMap* m_image;
 
             //! The size of the label matrix
             uint32_t m_label_matrix_size;
@@ -81,14 +98,19 @@ namespace MapNormalizer {
             std::vector<Pixel> m_border_pixels;
 
             //! The color of each label
-            std::map<uint32_t, Color> m_label_to_color;
+            LabelToColorMap m_label_to_color;
 
             //! Whether or not the find algorithm should stop
             bool m_do_estop;
 
             //! The stage the findAllShapes() algorithm is at.
             Stage m_stage;
+
+            //! The last list of shapes that were found
+            PolygonList m_shapes;
     };
+
+    void addPixelToShape(Polygon&, const Pixel&);
 
     std::string toString(const ShapeFinder::Stage&);
 }

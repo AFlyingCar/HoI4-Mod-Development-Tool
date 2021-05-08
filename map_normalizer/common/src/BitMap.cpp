@@ -10,9 +10,11 @@
 #include <cstddef>
 #include <cerrno>
 #include <iostream>
+#include <fstream>
 
 #include "Constants.h"
 #include "Logger.h"
+#include "Util.h"
 
 /**
  * @brief Reads a bitmap file.

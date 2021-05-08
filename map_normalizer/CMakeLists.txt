@@ -5,6 +5,7 @@ find_package(SDL2 REQUIRED)
 # All subprojects
 add_subdirectory(unique_colors)
 add_subdirectory(common)
+add_subdirectory(project)
 add_subdirectory(province_utils)
 add_subdirectory(gui)
 

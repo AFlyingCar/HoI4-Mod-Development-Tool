@@ -16,7 +16,7 @@
  *
  * @param image The image to detect shapes from
  */
-MapNormalizer::ShapeFinder::ShapeFinder(BitMap* image):
+MapNormalizer::ShapeFinder::ShapeFinder(const BitMap* image):
     m_image(image),
     m_label_matrix_size(m_image->info_header.width *
                         m_image->info_header.height),
@@ -25,8 +25,48 @@ MapNormalizer::ShapeFinder::ShapeFinder(BitMap* image):
     m_border_pixels(),
     m_label_to_color(),
     m_do_estop(false),
-    m_stage(Stage::START)
+    m_stage(Stage::START),
+    m_shapes()
 {
+}
+
+MapNormalizer::ShapeFinder::ShapeFinder():
+    m_image(nullptr),
+    m_label_matrix_size(0),
+    m_label_matrix(nullptr),
+    m_label_parents(),
+    m_border_pixels(),
+    m_label_to_color(),
+    m_do_estop(false),
+    m_stage(Stage::START),
+    m_shapes()
+{ }
+
+MapNormalizer::ShapeFinder::ShapeFinder(ShapeFinder&& other):
+    m_image(std::move(other.m_image)),
+    m_label_matrix_size(std::move(other.m_label_matrix_size)),
+    m_label_matrix(std::move(other.m_label_matrix)),
+    m_label_parents(std::move(other.m_label_parents)),
+    m_border_pixels(std::move(other.m_border_pixels)),
+    m_label_to_color(std::move(other.m_label_to_color)),
+    m_do_estop(std::move(other.m_do_estop)),
+    m_stage(std::move(other.m_stage)),
+    m_shapes(std::move(other.m_shapes))
+{ }
+
+auto MapNormalizer::ShapeFinder::operator=(ShapeFinder&& other) -> ShapeFinder&
+{
+    m_image = std::move(other.m_image);
+    m_label_matrix_size = std::move(other.m_label_matrix_size);
+    m_label_matrix = std::move(other.m_label_matrix);
+    m_label_parents = std::move(other.m_label_parents);
+    m_border_pixels = std::move(other.m_border_pixels);
+    m_label_to_color = std::move(other.m_label_to_color);
+    m_do_estop = std::move(other.m_do_estop);
+    m_stage = std::move(other.m_stage);
+    m_shapes = std::move(other.m_shapes);
+
+    return *this;
 }
 
 /**
@@ -151,12 +191,12 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
  * @return A list of all detected shapes
  */
 auto MapNormalizer::ShapeFinder::pass2(LabelShapeIdxMap& label_to_shapeidx)
-    -> PolygonList
+    -> PolygonList&
 {
     uint32_t width = m_image->info_header.width;
     uint32_t height = m_image->info_header.height;
 
-    PolygonList shapes;
+    m_shapes.clear();
 
     auto& worker = GraphicsWorker::getInstance();
 
@@ -166,7 +206,7 @@ auto MapNormalizer::ShapeFinder::pass2(LabelShapeIdxMap& label_to_shapeidx)
     for(uint32_t y = 0; y < height; ++y) {
         for(uint32_t x = 0; x < width; ++x) {
             if(m_do_estop) {
-                return PolygonList{};
+                return m_shapes;
             }
 
             uint32_t index = xyToIndex(m_image, x, y);
@@ -184,16 +224,16 @@ auto MapNormalizer::ShapeFinder::pass2(LabelShapeIdxMap& label_to_shapeidx)
 
             worker.writeDebugColor(x, y, m_label_to_color[label]);
 
-            buildShape(label, Pixel{ point, color }, shapes, label_to_shapeidx);
+            buildShape(label, Pixel{ point, color }, m_shapes, label_to_shapeidx);
         }
 
         worker.updateCallback({0, y, width, 1});
     }
 
     if(!prog_opts.quiet)
-        writeStdout("Generated ", shapes.size(), " shapes.");
+        writeStdout("Generated ", m_shapes.size(), " shapes.");
 
-    return shapes;
+    return m_shapes;
 }
 
 /**
@@ -297,7 +337,7 @@ bool MapNormalizer::ShapeFinder::mergeBorders(PolygonList& shapes,
  *
  * @return A list of every shape in the image.
  */
-MapNormalizer::PolygonList MapNormalizer::ShapeFinder::findAllShapes() {
+const MapNormalizer::PolygonList& MapNormalizer::ShapeFinder::findAllShapes() {
     auto& worker = GraphicsWorker::getInstance();
 
     m_stage = Stage::PASS1;
@@ -307,7 +347,8 @@ MapNormalizer::PolygonList MapNormalizer::ShapeFinder::findAllShapes() {
     uint32_t num_border_pixels = pass1();
     if(m_do_estop) {
         m_do_estop = false;
-        return PolygonList{};
+        m_shapes.clear();
+        return m_shapes;
     }
 
     m_border_pixels.reserve(num_border_pixels);
@@ -320,7 +361,8 @@ MapNormalizer::PolygonList MapNormalizer::ShapeFinder::findAllShapes() {
         outputStage("labels1.bmp");
         if(m_do_estop) {
             m_do_estop = false;
-            return PolygonList{};
+            m_shapes.clear();
+            return m_shapes;
         }
     }
 
@@ -332,10 +374,11 @@ MapNormalizer::PolygonList MapNormalizer::ShapeFinder::findAllShapes() {
     m_stage = Stage::PASS2;
     // Do pass 1, we now have all of the shapes in the image, though there are
     //  still the border pixels left over to deal with
-    PolygonList shapes = pass2(label_to_shapeidx);
+    pass2(label_to_shapeidx);
     if(m_do_estop) {
         m_do_estop = false;
-        return PolygonList{};
+        m_shapes.clear();
+        return m_shapes;
     }
 
     m_stage = Stage::OUTPUT_PASS2;
@@ -344,13 +387,15 @@ MapNormalizer::PolygonList MapNormalizer::ShapeFinder::findAllShapes() {
         outputStage("labels2.bmp");
         if(m_do_estop) {
             m_do_estop = false;
-            return PolygonList{};
+            m_shapes.clear();
+            return m_shapes;
         }
     }
 
     if(m_do_estop) {
         m_do_estop = false;
-        return PolygonList{};
+        m_shapes.clear();
+        return m_shapes;
     }
 
     // Again, we want to end this function by not consuming any unique colors
@@ -359,20 +404,21 @@ MapNormalizer::PolygonList MapNormalizer::ShapeFinder::findAllShapes() {
     m_stage = Stage::MERGE_BORDERS;
     // Merge all of the border pixels together into surrounding shapes
     //  If this fails, then we return an empty-list of shapes to denote failure
-    if(!mergeBorders(shapes, label_to_shapeidx) || m_do_estop) {
-        return PolygonList{};
+    if(!mergeBorders(m_shapes, label_to_shapeidx) || m_do_estop) {
+        m_shapes.clear();
+        return m_shapes;
     }
 
     m_stage = Stage::ERROR_CHECK;
     // Perform error checking. This doesn't actually cause us to fail, just spit
     //   out warnings about the input image (as there isn't much for us to do to
     //   fix any errors ourselves
-    errorCheckAllShapes(shapes);
+    errorCheckAllShapes(m_shapes);
 
     m_do_estop = false;
     m_stage = Stage::DONE;
 
-    return shapes;
+    return m_shapes;
 }
 
 /**
@@ -387,18 +433,25 @@ std::optional<uint32_t> MapNormalizer::ShapeFinder::errorCheckAllShapes(const Po
     uint32_t problematic_shapes = 0;
 
     // Perform error-checking on shapes
-    uint32_t index = 0;
+    uint32_t label = 0;
     for(const Polygon& shape : shapes) {
         if(m_do_estop) {
             return std::nullopt;
         }
 
-        ++index;
+        ++label;
+
+        // Make sure that the label matrix is updated to reflect the correct
+        //  shape labels
+        for(auto&& pixel : shape.pixels) {
+            auto index = xyToIndex(m_image, pixel.point.x, pixel.point.y);
+            m_label_matrix[index] = label;
+        }
 
         // Check for minimum province size.
         //  See: https://hoi4.paradoxwikis.com/Map_modding
         if(shape.pixels.size() <= MIN_SHAPE_SIZE) {
-            writeWarning("Shape ", index, " has only ",
+            writeWarning("Shape ", label, " has only ",
                          shape.pixels.size(),
                          " pixels. All provinces are required to have more than ",
                          MIN_SHAPE_SIZE,
@@ -410,7 +463,7 @@ std::optional<uint32_t> MapNormalizer::ShapeFinder::errorCheckAllShapes(const Po
         if(auto [width, height] = calcShapeDims(shape);
            isShapeTooLarge(width, height, m_image))
         {
-            writeWarning("Shape #", index, " has a bounding box of size ",
+            writeWarning("Shape #", label, " has a bounding box of size ",
                          Point2D{width, height},
                          ". One of these is larger than the allowed ratio of 1/8 * (",
                          m_image->info_header.width, ',', m_image->info_header.height,
@@ -533,32 +586,6 @@ auto MapNormalizer::ShapeFinder::getAdjacentPixel(const Point2D& point,
 }
 
 /**
- * @brief Adds a pixel to the given shape.
- * @details As a side-effect, will also expand the shape's bounding box.
- *
- * @param shape The shape to add the pixel to.
- * @param pixel The pixel to add to the shape.
- */
-void MapNormalizer::ShapeFinder::addPixelToShape(Polygon& shape,
-                                                 const Pixel& pixel)
-{
-    shape.pixels.push_back(pixel);
-
-    // We calculate the bounding box of the shape incrementally
-    if(pixel.point.x > shape.top_right.x) {
-        shape.top_right.x = pixel.point.x;
-    } else if(pixel.point.x < shape.bottom_left.x) {
-        shape.bottom_left.x = pixel.point.x;
-    }
-
-    if(pixel.point.y > shape.top_right.y) {
-        shape.top_right.y = pixel.point.y;
-    } else if(pixel.point.y < shape.bottom_left.y) {
-        shape.bottom_left.y = pixel.point.y;
-    }
-}
-
-/**
  * @brief Builds a shape up.
  *
  * @param label The label of the shape being built
@@ -599,6 +626,82 @@ void MapNormalizer::ShapeFinder::estop() {
 
 MapNormalizer::ShapeFinder::Stage MapNormalizer::ShapeFinder::getStage() const {
     return m_stage;
+}
+
+uint32_t MapNormalizer::ShapeFinder::getLabelMatrixSize() {
+    return m_label_matrix_size;
+}
+
+uint32_t* MapNormalizer::ShapeFinder::getLabelMatrix() {
+    return m_label_matrix;
+}
+
+auto MapNormalizer::ShapeFinder::getBorderPixels() 
+    -> std::vector<Pixel>&
+{
+    return m_border_pixels;
+}
+
+auto MapNormalizer::ShapeFinder::getLabelToColorMap() 
+    -> std::map<uint32_t, Color>&
+{
+    return m_label_to_color;
+}
+
+auto MapNormalizer::ShapeFinder::getShapes() -> PolygonList& {
+    return m_shapes;
+}
+
+const MapNormalizer::BitMap* MapNormalizer::ShapeFinder::getImage() const {
+    return m_image;
+}
+
+uint32_t MapNormalizer::ShapeFinder::getLabelMatrixSize() const {
+    return m_label_matrix_size;
+}
+
+const uint32_t* MapNormalizer::ShapeFinder::getLabelMatrix() const {
+    return m_label_matrix;
+}
+
+auto MapNormalizer::ShapeFinder::getBorderPixels() const
+    -> const std::vector<Pixel>&
+{
+    return m_border_pixels;
+}
+
+auto MapNormalizer::ShapeFinder::getLabelToColorMap() const
+    -> const std::map<uint32_t, Color>&
+{
+    return m_label_to_color;
+}
+
+auto MapNormalizer::ShapeFinder::getShapes() const -> const PolygonList& {
+    return m_shapes;
+}
+
+/**
+ * @brief Adds a pixel to the given shape.
+ * @details As a side-effect, will also expand the shape's bounding box.
+ *
+ * @param shape The shape to add the pixel to.
+ * @param pixel The pixel to add to the shape.
+ */
+void MapNormalizer::addPixelToShape(Polygon& shape, const Pixel& pixel) {
+    shape.pixels.push_back(pixel);
+
+    // We calculate the bounding box of the shape incrementally
+    if(pixel.point.x > shape.top_right.x) {
+        shape.top_right.x = pixel.point.x;
+    } else if(pixel.point.x < shape.bottom_left.x) {
+        shape.bottom_left.x = pixel.point.x;
+    }
+
+    if(pixel.point.y > shape.top_right.y) {
+        shape.top_right.y = pixel.point.y;
+    } else if(pixel.point.y < shape.bottom_left.y) {
+        shape.bottom_left.y = pixel.point.y;
+    }
 }
 
 std::string MapNormalizer::toString(const ShapeFinder::Stage& stage) {

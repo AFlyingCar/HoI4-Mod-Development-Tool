@@ -35,7 +35,7 @@ namespace MapNormalizer::GUI {
             virtual Gtk::Orientation getDisplayOrientation() const override;
             virtual void addWidgetToParent(Gtk::Widget&) override;
 
-            bool openInputMap(const Glib::ustring&);
+            bool importProvinceMap(const Glib::ustring&);
 
             /**
              * @brief Adds a widget to this window and marks that it is now the
@@ -54,18 +54,21 @@ namespace MapNormalizer::GUI {
             void initializeViewActions();
             void initializeProjectActions();
 
+            void newProject();
+            void openProject();
+
+            void onProjectOpened();
+            void onProjectClosed();
+
+            void saveProject();
+            void saveProjectAs(const std::string& = "Save As...");
+
         private:
             template<typename... Args>
             using ActiveChildVariant = std::variant<std::monostate, Args*...>;
 
             //! The currently active widget to be added to
             ActiveChildVariant<Gtk::Box, Gtk::Frame, Gtk::ScrolledWindow> m_active_child;
-
-            //! The currently loaded province image
-            BitMap* m_image;
-
-            //! The current graphics data to be rendered to
-            unsigned char* m_graphics_data;
 
             //! The main pane where all child widgets will be inside
             Gtk::Paned* m_paned;
