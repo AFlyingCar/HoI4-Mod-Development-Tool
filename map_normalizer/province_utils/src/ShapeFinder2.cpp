@@ -117,10 +117,6 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
                 }
             }
 
-            if(prog_opts.verbose)
-                writeDebug<false>("Pixel ", Point2D{x, y}, " [", color, "] => ",
-                                  std::to_string(label));
-
             // Only increment to the next label if we actually used this one
             if(label == next_label) {
                 ++next_label;
