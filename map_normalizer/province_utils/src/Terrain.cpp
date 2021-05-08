@@ -10,7 +10,7 @@
 #include "Util.h"
 
 namespace {
-    std::map<MapNormalizer::Terrain, std::string> terrain_id_map;
+    std::map<std::uint8_t, std::string> terrain_id_map;
     const std::string UNKNOWN_TERRAIN_NAME = "unknown";
 }
 
