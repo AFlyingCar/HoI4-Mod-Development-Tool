@@ -11,7 +11,9 @@
 
 MapNormalizer::GUI::MapDrawingArea::MapDrawingArea():
     m_graphics_data(nullptr),
-    m_image(nullptr)
+    m_image(nullptr),
+    m_on_select([](auto...) { }),
+    m_on_multiselect([](auto...) { })
 {
     // Mark that we want to receive button presses
     add_events(Gdk::BUTTON_PRESS_MASK);
@@ -61,19 +63,9 @@ bool MapNormalizer::GUI::MapDrawingArea::on_button_press_event(GdkEventButton* e
         auto y = event->y;
 
         if(event->state & GDK_SHIFT_MASK) {
-            writeDebug("Got shift+click!");
-            // TODO: Mark which shape we are actually selecting rather than just
-            //  drawing a pixel at the point where we click
-            writeDebugColor(x, y, Color{0, 255, 255});
-            queue_draw_area(x, y, 1, 1);
+            m_on_multiselect(x, y);
         } else {
-            // TODO: Remove this
-            writeDebug("Got mouse button at (", x, ',', y, ")!");
-
-            // TODO: Mark which shape we are actually selecting rather than just
-            //  drawing a pixel at the point where we click
-            writeDebugColor(x, y, CURSOR_COLOR);
-            queue_draw_area(x, y, 1, 1);
+            m_on_select(x, y);
         }
     }
 
@@ -96,5 +88,15 @@ void MapNormalizer::GUI::MapDrawingArea::graphicsUpdateCallback(const Rectangle&
     }
 
     queue_draw_area(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
+}
+
+void MapNormalizer::GUI::MapDrawingArea::setOnProvinceSelectCallback(const SelectionCallback& callback)
+{
+    m_on_select = callback;
+}
+
+void MapNormalizer::GUI::MapDrawingArea::setOnMultiProvinceSelectionCallback(const SelectionCallback& callback)
+{
+    m_on_multiselect = callback;
 }
 
