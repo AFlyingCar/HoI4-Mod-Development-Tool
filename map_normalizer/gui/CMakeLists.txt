@@ -11,6 +11,7 @@ add_library(gui STATIC
     src/MapDrawingArea.cpp
     src/ProgressBarDialog.cpp
     src/NewProjectDialog.cpp
+    src/ProvincePropertiesPane.cpp
 )
 
 target_include_directories(gui PUBLIC inc)
