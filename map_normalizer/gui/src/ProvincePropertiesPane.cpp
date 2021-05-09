@@ -1,6 +1,8 @@
 
 #include "ProvincePropertiesPane.h"
 
+#include "gtkmm/messagedialog.h"
+
 #include "Constants.h"
 #include "Logger.h"
 
@@ -69,6 +71,23 @@ void MapNormalizer::GUI::ProvincePropertiesPane::init() {
 
     // Continent
     m_continent_entry = addWidget<Gtk::Entry>();
+    m_continent_entry->signal_activate().connect([this]() {
+        if(m_province != nullptr) {
+            auto data = m_continent_entry->get_text();
+            // Validate input, only allow positive numbers
+            if(data.find_first_not_of("0123456789") != std::string::npos) {
+                Gtk::MessageDialog dialog("Invalid input, continents can only be positive numbers.",
+                                          false, Gtk::MESSAGE_ERROR);
+                dialog.run();
+                return;
+            }
+
+            m_province->continent = std::atoi(data.c_str());
+
+            // TODO: We should "ungrab"/"release" focus from this widget.
+            //  ... How do we actually do that?
+        }
+    });
 
     setEnabled(false);
 
@@ -114,7 +133,7 @@ void MapNormalizer::GUI::ProvincePropertiesPane::updateProperties(const Province
         m_provtype_menu->set_active(static_cast<int>(prov->type) - 1);
         // TODO
         // m_terrain_menu->set_selected(0);
-        // m_continent_entry->set_text("");
+        m_continent_entry->set_text(std::to_string(prov->continent));
     }
 }
 
