@@ -2,6 +2,7 @@
 #include "ProvincePropertiesPane.h"
 
 #include "gtkmm/messagedialog.h"
+#include "gtkmm/label.h"
 
 #include "Constants.h"
 #include "Logger.h"
@@ -31,7 +32,10 @@ void MapNormalizer::GUI::ProvincePropertiesPane::init() {
     }
 
     // Province Type
+    addWidget<Gtk::Label>("");
     {
+        addWidget<Gtk::Label>("Province Type");
+
         m_provtype_menu = addWidget<Gtk::ComboBoxText>();
 
         m_provtype_menu->append("Land");
@@ -55,7 +59,9 @@ void MapNormalizer::GUI::ProvincePropertiesPane::init() {
     }
 
     // Terrain Type
+    addWidget<Gtk::Label>("");
     {
+        addWidget<Gtk::Label>("Terrain Type");
         m_terrain_menu = addWidget<Gtk::ComboBoxText>();
 
         // TODO: Add options, how do we know which terrain types are valid?
@@ -70,24 +76,29 @@ void MapNormalizer::GUI::ProvincePropertiesPane::init() {
     }
 
     // Continent
-    m_continent_entry = addWidget<Gtk::Entry>();
-    m_continent_entry->signal_activate().connect([this]() {
-        if(m_province != nullptr) {
-            auto data = m_continent_entry->get_text();
-            // Validate input, only allow positive numbers
-            if(data.find_first_not_of("0123456789") != std::string::npos) {
-                Gtk::MessageDialog dialog("Invalid input, continents can only be positive numbers.",
-                                          false, Gtk::MESSAGE_ERROR);
-                dialog.run();
-                return;
+    addWidget<Gtk::Label>("");
+    {
+        addWidget<Gtk::Label>("Continent");
+
+        m_continent_entry = addWidget<Gtk::Entry>();
+        m_continent_entry->signal_activate().connect([this]() {
+            if(m_province != nullptr) {
+                auto data = m_continent_entry->get_text();
+                // Validate input, only allow positive numbers
+                if(data.find_first_not_of("0123456789") != std::string::npos) {
+                    Gtk::MessageDialog dialog("Invalid input, continents can only be positive numbers.",
+                                              false, Gtk::MESSAGE_ERROR);
+                    dialog.run();
+                    return;
+                }
+
+                m_province->continent = std::atoi(data.c_str());
+
+                // TODO: We should "ungrab"/"release" focus from this widget.
+                //  ... How do we actually do that?
             }
-
-            m_province->continent = std::atoi(data.c_str());
-
-            // TODO: We should "ungrab"/"release" focus from this widget.
-            //  ... How do we actually do that?
-        }
-    });
+        });
+    }
 
     setEnabled(false);
 
