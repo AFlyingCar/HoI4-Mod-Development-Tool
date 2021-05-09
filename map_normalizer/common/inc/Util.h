@@ -168,7 +168,7 @@ namespace MapNormalizer {
                 return ProvinceType::LAND;
             } else if(s == "sea") {
                 return ProvinceType::SEA;
-            } else if(s == "sea") {
+            } else if(s == "lake") {
                 return ProvinceType::LAKE;
             } else {
                 return ProvinceType::UNKNOWN;
