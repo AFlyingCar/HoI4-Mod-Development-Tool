@@ -96,7 +96,7 @@ void MapNormalizer::GUI::MainWindow::initializeEditActions() {
  * @brief Initializes every action in the View menu
  */
 void MapNormalizer::GUI::MainWindow::initializeViewActions() {
-    add_action_bool("properties", [this]() {
+    auto properties_action = add_action_bool("properties", [this]() {
         auto self = lookup_action("properties");
         bool active = false;
         self->get_state(active);
@@ -104,11 +104,13 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
 
         if(m_paned->get_child2() == nullptr) {
             buildPropertiesPane();
+
             m_paned->show_all();
         } else {
             m_paned->remove(*m_paned->get_child2());
         }
     }, false);
+    properties_action->set_enabled(false);
 }
 
 /**
@@ -179,6 +181,42 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
     auto drawing_window = addWidget<Gtk::ScrolledWindow>();
     auto drawing_area = m_drawing_area = new MapDrawingArea();
 
+    drawing_area->setOnProvinceSelectCallback([this](uint32_t x, uint32_t y) {
+        if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+            auto& project = opt_project->get();
+
+            auto image = project.getMapProject().getImage();
+            auto lmatrix = project.getMapProject().getLabelMatrix();
+
+            auto label = lmatrix[xyToIndex(image, x, y)];
+
+            project.getMapProject().selectProvince(label);
+
+            if(auto opt_selected = project.getMapProject().getSelectedProvince();
+               m_province_properties_pane != nullptr && opt_selected)
+            {
+                m_province_properties_pane->setProvince(&opt_selected->get());
+            }
+        }
+    });
+
+    drawing_area->setOnMultiProvinceSelectionCallback([](uint32_t x, uint32_t y)
+    {
+        if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+            auto& project = opt_project->get();
+
+            auto image = project.getMapProject().getImage();
+            auto lmatrix = project.getMapProject().getLabelMatrix();
+
+            auto label = lmatrix[xyToIndex(image, x, y)];
+
+            // TODO: get the current province and add it to some sort of
+            //   grouping that can be acted upon
+
+            project.getMapProject().selectProvince(label);
+        }
+    });
+
     // Place the drawing area in a scrollable window
     drawing_window->add(*drawing_area);
     drawing_window->show_all();
@@ -196,36 +234,43 @@ Gtk::Frame* MapNormalizer::GUI::MainWindow::buildPropertiesPane() {
 
     m_paned->pack2(*properties_frame, false, false);
 
-    auto properties_tab = addWidget<Gtk::Notebook>();
+    // Province Tab
+    auto properties_tab = addActiveWidget<Gtk::Notebook>();
 
+    m_province_properties_pane.reset(new ProvincePropertiesPane);
+    m_province_properties_pane->init();
+    properties_tab->append_page(m_province_properties_pane->getParent(), "Province");
+
+    // State Tab
     {
         // We want to possibly be able to scroll in the properties window
         auto properties_window = new Gtk::ScrolledWindow();
-        properties_window->set_size_request(MINIMUM_PROPERTIES_PANE_WIDTH, -1);
-
-        properties_tab->append_page(*properties_window, "Province");
-
         // Do this so all future widgets we add get put into this one
         m_active_child = properties_window;
 
-        // TODO: Add all of the properties stuff
-        //   We may want a custom widget that knows what is currently selected?
-        addWidget<Gtk::Label>("Province Properties");
-    }
-
-    {
-        // We want to possibly be able to scroll in the properties window
-        auto properties_window = new Gtk::ScrolledWindow();
         properties_window->set_size_request(MINIMUM_PROPERTIES_PANE_WIDTH, -1);
 
         properties_tab->append_page(*properties_window, "State");
 
-        // Do this so all future widgets we add get put into this one
-        m_active_child = properties_window;
+        // Begin defining the contents of the tab-window
 
         // TODO: Add all of the properties stuff
         //   We may want a custom widget that knows what is currently selected?
         addWidget<Gtk::Label>("State Properties");
+    }
+
+    m_active_child = std::monostate();
+
+    // Finish extra setup in case we have a project loaded
+    if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+        auto& project = opt_project->get();
+
+        // Provinces Tab
+        if(auto opt_selected = project.getMapProject().getSelectedProvince();
+                opt_selected)
+        {
+            m_province_properties_pane->setProvince(&opt_selected->get());
+        }
     }
 
     return properties_frame;
@@ -540,16 +585,27 @@ void MapNormalizer::GUI::MainWindow::onProjectOpened() {
     getAction("import_provincemap")->set_enabled(true);
     getAction("save")->set_enabled(true);
     getAction("close")->set_enabled(true);
+    getAction("properties")->set_enabled(true);
 }
 
 /**
  * @brief Called when a project is closed
  */
 void MapNormalizer::GUI::MainWindow::onProjectClosed() {
+    // Have the drawing area forget the data it was set to render
+    m_drawing_area->setGraphicsData(nullptr);
+    m_drawing_area->setImage(nullptr);
+    m_drawing_area->queue_draw();
+
     // Disable all actions that can only be done on an opened project
     getAction("import_provincemap")->set_enabled(false);
     getAction("save")->set_enabled(false);
     getAction("close")->set_enabled(false);
+    getAction("properties")->set_enabled(false);
+
+    if(m_province_properties_pane != nullptr) {
+        m_province_properties_pane->setProvince(nullptr);
+    }
 }
 
 /**
