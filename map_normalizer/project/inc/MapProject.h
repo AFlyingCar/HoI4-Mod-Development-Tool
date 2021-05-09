@@ -35,6 +35,13 @@ namespace MapNormalizer::Project {
             unsigned char* getGraphicsData();
             const unsigned char* getGraphicsData() const;
 
+            const uint32_t* getLabelMatrix() const;
+
+            void selectProvince(uint32_t);
+
+            OptionalReference<const Province> getSelectedProvince() const;
+            OptionalReference<Province> getSelectedProvince();
+
         protected:
             bool saveShapeLabels(const std::filesystem::path&,
                                  std::error_code&);
@@ -59,6 +66,8 @@ namespace MapNormalizer::Project {
                 // TODO: This should really be a smart pointer
                 unsigned char* graphics_data = nullptr;
             } m_shape_detection_info;
+
+            uint32_t m_selected_province;
 
             //! The parent project that this MapProject belongs to
             IProject& m_parent_project;
