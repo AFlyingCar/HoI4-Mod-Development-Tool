@@ -36,8 +36,8 @@ void MapNormalizer::GUI::MapNormalizerApplication::on_startup() {
         { "_New Project", "win.new" },
         { "_Open Project", "win.open" }, // TODO: We should probably have a subsubmenu for this: different input types (province-map, heightmap, etc...)
         { "_Save Project", "win.save" },
-        { "_Close Project", "win.close_project" },
-        { "_Quit", "win.close" }
+        { "_Close Project", "win.close" },
+        { "_Quit", "win.quit" }
     });
 
     createMenu("Root", "Edit", {
