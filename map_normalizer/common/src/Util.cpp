@@ -192,17 +192,12 @@ auto MapNormalizer::createProvincesFromShapeList(const PolygonList& shapes)
 
         auto prov_type = getProvinceType(color);
 
-        // auto is_coastal = isCoastal(color);
-        // auto terrain_type = getTerrainType(color);
-        // auto continent = getContinent(color);
-        // auto state = getState(color);
-
         provinces.push_back(Province{
             i + 1, shape.unique_color,
             prov_type,
             false,
-            "",
-            0,
+            "unknown",
+            "None",
             0
         });
     }

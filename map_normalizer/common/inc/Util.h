@@ -173,8 +173,6 @@ namespace MapNormalizer {
             } else {
                 return ProvinceType::UNKNOWN;
             }
-        } else if constexpr(std::is_same_v<T, Terrain>) {
-            return s;
         } else {
             static_assert("Unsupported type!");
 
@@ -199,6 +197,13 @@ namespace MapNormalizer {
                 result = *opt_result;
                 return true;
             }
+
+            return false;
+        }
+
+        if(auto opt_result = fromString<T>(""); opt_result) {
+            result = *opt_result;
+            return true;
         }
 
         return false;
