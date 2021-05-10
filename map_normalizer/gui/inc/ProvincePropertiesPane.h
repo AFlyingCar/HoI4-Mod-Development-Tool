@@ -3,6 +3,9 @@
 
 # include "WidgetContainer.h"
 
+# include <set>
+# include <string>
+
 # include "gtkmm/scrolledwindow.h"
 # include "gtkmm/checkbutton.h"
 # include "gtkmm/comboboxtext.h"
@@ -29,6 +32,15 @@ namespace MapNormalizer::GUI {
 
             void updateProperties(const Province*);
 
+            void rebuildContinentMenu(const std::set<std::string>&);
+
+            void buildProvincePreviewView();
+
+            void buildIsCoastalField();
+            void buildProvinceTypeField();
+            void buildTerrainTypeField();
+            void buildContinentField();
+
         private:
             Province* m_province;
 
@@ -38,7 +50,7 @@ namespace MapNormalizer::GUI {
             Gtk::CheckButton* m_is_coastal_button;
             Gtk::ComboBoxText* m_provtype_menu;
             Gtk::ComboBoxText* m_terrain_menu;
-            Gtk::Entry* m_continent_entry;
+            Gtk::ComboBoxText* m_continent_menu;
     };
 }
 
