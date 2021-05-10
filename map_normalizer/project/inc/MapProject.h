@@ -1,6 +1,7 @@
 #ifndef MAPPROJECT_H
 # define MAPPROJECT_H
 
+# include <set>
 # include <string>
 # include <filesystem>
 
@@ -8,6 +9,8 @@
 
 # include "Types.h"
 # include "BitMap.h"
+
+# include "Terrain.h"
 
 # include "IProject.h"
 
@@ -42,16 +45,27 @@ namespace MapNormalizer::Project {
             OptionalReference<const Province> getSelectedProvince() const;
             OptionalReference<Province> getSelectedProvince();
 
+            const std::set<std::string>& getContinentList() const;
+
+            void addNewContinent(const std::string&);
+            void removeContinent(const std::string&);
+
+            const std::vector<Terrain>& getTerrains() const;
+
         protected:
             bool saveShapeLabels(const std::filesystem::path&,
                                  std::error_code&);
             bool saveProvinceData(const std::filesystem::path&,
                                  std::error_code&);
+            bool saveContinentData(const std::filesystem::path&,
+                                   std::error_code&);
 
             bool loadShapeLabels(const std::filesystem::path&,
                                  std::error_code&);
             bool loadProvinceData(const std::filesystem::path&,
                                  std::error_code&);
+            bool loadContinentData(const std::filesystem::path&,
+                                   std::error_code&);
 
         private:
             /**
@@ -66,6 +80,9 @@ namespace MapNormalizer::Project {
                 // TODO: This should really be a smart pointer
                 unsigned char* graphics_data = nullptr;
             } m_shape_detection_info;
+
+            std::set<std::string> m_continents;
+            std::vector<Terrain> m_terrains;
 
             uint32_t m_selected_province;
 

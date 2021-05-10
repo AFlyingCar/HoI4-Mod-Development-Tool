@@ -15,6 +15,9 @@
 
 MapNormalizer::Project::MapProject::MapProject(IProject& parent_project):
     m_shape_detection_info(),
+    m_continents(),
+    m_terrains(getDefaultTerrains()),
+    m_selected_province(),
     m_parent_project(parent_project)
 {
 }
@@ -42,7 +45,8 @@ bool MapNormalizer::Project::MapProject::save(const std::filesystem::path& path,
         return true;
     }
 
-    return saveShapeLabels(path, ec) && saveProvinceData(path, ec);
+    return saveShapeLabels(path, ec) && saveProvinceData(path, ec) &&
+           saveContinentData(path, ec);
 }
 
 /**
@@ -88,7 +92,14 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
     }
 
     // Now load the other related data
+    // This data is required
     if(!loadProvinceData(path, ec) || !loadShapeLabels(path, ec)) {
+        return false;
+    }
+
+    // This data is not required (only fail if loading it failed), not if it 
+    //  doesn't exist
+    if(!loadContinentData(path, ec) && ec.value() != 0) {
         return false;
     }
 
@@ -188,8 +199,33 @@ bool MapNormalizer::Project::MapProject::saveProvinceData(const std::filesystem:
     if(std::ofstream out(path); out) {
         // Write one line to the CSV for each province
         for(auto&& province : m_shape_detection_info.provinces) {
-            
-            out << province << std::endl;
+            out << province.id << ';'
+                << static_cast<int>(province.unique_color.r) << ';'
+                << static_cast<int>(province.unique_color.g) << ';'
+                << static_cast<int>(province.unique_color.b) << ';'
+                << province.type << ';'
+                << (province.coastal ? "true" : "false")
+                << ';' << province.terrain << ';'
+                << province.continent
+                << std::endl;
+        }
+    } else {
+        ec = std::error_code(static_cast<int>(errno), std::generic_category());
+        writeError("Failed to open file ", path, ". Reason: ", std::strerror(errno));
+        return false;
+    }
+
+    return true;
+}
+
+bool MapNormalizer::Project::MapProject::saveContinentData(const std::filesystem::path& root,
+                                                           std::error_code& ec)
+{
+    auto path = root / CONTINENTDATA_FILENAME;
+
+    if(std::ofstream out(path); out) {
+        for(auto&& continent : m_continents) {
+            out << continent << '\n';
         }
     } else {
         ec = std::error_code(static_cast<int>(errno), std::generic_category());
@@ -314,6 +350,32 @@ bool MapNormalizer::Project::MapProject::loadProvinceData(const std::filesystem:
     return true;
 }
 
+bool MapNormalizer::Project::MapProject::loadContinentData(const std::filesystem::path& root,
+                                                           std::error_code& ec)
+{
+    auto path = root / CONTINENTDATA_FILENAME;
+
+    if(!std::filesystem::exists(path)) {
+        writeWarning("No data to load! No continents currently exist!");
+        return false;
+    }
+
+    if(std::ifstream in(path); in) {
+        std::string line;
+        while(std::getline(in, line)) {
+            if(line.empty()) continue;
+
+            m_continents.insert(line);
+        }
+    } else {
+        ec = std::error_code(static_cast<int>(errno), std::generic_category());
+        writeError("Failed to open file ", path, ". Reason: ", std::strerror(errno));
+        return false;
+    }
+
+    return true;
+}
+
 /**
  * @brief Loads data out of a ShapeFinder. We invalidate the original ShapeFinder
  *        as we want to take ownership of all pointers it holds
@@ -396,5 +458,26 @@ auto MapNormalizer::Project::MapProject::getSelectedProvince()
     }
 
     return std::nullopt;
+}
+
+const std::set<std::string>& MapNormalizer::Project::MapProject::getContinentList() const
+{
+    return m_continents;
+}
+
+auto MapNormalizer::Project::MapProject::getTerrains() const
+    -> const std::vector<Terrain>&
+{
+    return m_terrains;
+}
+
+void MapNormalizer::Project::MapProject::addNewContinent(const std::string& continent)
+{
+    m_continents.insert(continent);
+}
+
+void MapNormalizer::Project::MapProject::removeContinent(const std::string& continent)
+{
+    m_continents.erase(continent);
 }
 
