@@ -65,6 +65,8 @@ namespace MapNormalizer {
         // Used for checking to make sure the box isn't too big for HOI4
         Point2D bottom_left; //!< Bottom-left-most point in the polygon's bounding box
         Point2D top_right; //!< Top-right-most point in the polygon's bounding box
+
+        // TODO: We should have an adjacency vector in here
     };
 
     /**
@@ -78,8 +80,8 @@ namespace MapNormalizer {
     };
 
     using ProvinceID = std::uint32_t;
-    using Terrain = std::variant<std::uint8_t, std::string>;
-    using Continent = std::uint8_t;
+    using TerrainID = std::string;
+    using Continent = std::string;
     using StateID = std::uint32_t;
 
     /**
@@ -91,7 +93,7 @@ namespace MapNormalizer {
 
         ProvinceType type;
         bool coastal;
-        Terrain terrain;
+        TerrainID terrain;
         Continent continent;
         StateID state;
     };

@@ -10,3 +10,5 @@ target_include_directories(province_utils PUBLIC inc)
 
 target_link_libraries(province_utils common gui)
 
+target_compile_options(province_utils PUBLIC -Wno-deprecated-declarations)
+

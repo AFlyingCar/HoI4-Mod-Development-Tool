@@ -12,10 +12,17 @@
 # include "Types.h"
 
 namespace MapNormalizer {
-    void loadTerrainInfo(const std::filesystem::path&);
-    void loadDefaultTerrainInfo();
+    class Terrain {
+        public:
+            Terrain(const std::string&);
 
-    const std::string& getTerrainIdentifier(Terrain);
+            const std::string& getIdentifier() const;
+
+        private:
+            std::string m_identifier;
+    };
+
+    const std::vector<Terrain>& getDefaultTerrains();
 }
 
 #endif
