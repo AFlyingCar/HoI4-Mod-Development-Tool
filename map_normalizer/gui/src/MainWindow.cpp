@@ -439,7 +439,7 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
             did_estop = true;
         }
 
-        // Wait for the worker to join back up
+        writeDebug("Waiting for ShapeFinder worker to rejoin.");
         sf_worker.join();
 
         worker.resetWriteCallback();
@@ -449,12 +449,14 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
             return true;
         }
 
+        writeDebug("Assigning the found data to the map project.");
         project.getMapProject().setShapeFinder(std::move(shape_finder));
         project.getMapProject().setGraphicsData(graphics_data);
 
         std::filesystem::path imported(filename);
         std::filesystem::path input_root = project.getInputsRoot();
 
+        writeDebug("Copying the imported map into ", input_root);
         if(!std::filesystem::exists(input_root)) {
             std::filesystem::create_directory(input_root);
         }
@@ -471,6 +473,8 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
         writeError("Unable to complete importing '", filename, "'. Reason: There is no project currently loaded.");
         return false;
     }
+
+    writeStdout("Import Finished!");
 
     return true;
 }
