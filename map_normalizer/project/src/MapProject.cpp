@@ -17,7 +17,7 @@ MapNormalizer::Project::MapProject::MapProject(IProject& parent_project):
     m_shape_detection_info(),
     m_continents(),
     m_terrains(getDefaultTerrains()),
-    m_selected_province(),
+    m_selected_province(-1),
     m_parent_project(parent_project)
 {
 }
@@ -206,7 +206,11 @@ bool MapNormalizer::Project::MapProject::saveProvinceData(const std::filesystem:
                 << province.type << ';'
                 << (province.coastal ? "true" : "false")
                 << ';' << province.terrain << ';'
-                << province.continent
+                << province.continent << ';'
+                << province.bounding_box.bottom_left.x << ';'
+                << province.bounding_box.bottom_left.y << ';'
+                << province.bounding_box.top_right.x << ';'
+                << province.bounding_box.top_right.y
                 << std::endl;
         }
     } else {
@@ -329,7 +333,11 @@ bool MapNormalizer::Project::MapProject::loadProvinceData(const std::filesystem:
                                               prov.unique_color.g,
                                               prov.unique_color.b,
                                      prov.type, prov.coastal, prov.terrain,
-                                     prov.continent))
+                                     prov.continent,
+                                     prov.bounding_box.bottom_left.x,
+                                     prov.bounding_box.bottom_left.y,
+                                     prov.bounding_box.top_right.x,
+                                     prov.bounding_box.top_right.y))
             {
                 ec = std::make_error_code(std::errc::bad_message);
                 writeError("Failed to parse line #", line_num, ": '", line, "'");
@@ -479,5 +487,99 @@ void MapNormalizer::Project::MapProject::addNewContinent(const std::string& cont
 void MapNormalizer::Project::MapProject::removeContinent(const std::string& continent)
 {
     m_continents.erase(continent);
+}
+
+auto MapNormalizer::Project::MapProject::getPreviewData(ProvinceID id)
+    -> ProvinceDataPtr
+{
+    if(id - 1 < m_shape_detection_info.provinces.size()) {
+        return getPreviewData(&m_shape_detection_info.provinces.at(id - 1));
+    }
+
+    return nullptr;
+}
+
+auto MapNormalizer::Project::MapProject::getPreviewData(const Province* province_ptr)
+    -> ProvinceDataPtr
+{
+    const auto& province = *province_ptr;
+    auto id = province.id;
+
+    auto& data = m_data_cache[id];
+
+    // If there is no cached data for the given province ID, then generate the
+    //  data for the preview
+    if(data == nullptr) {
+        writeDebug("No preview data for province ", id, ". Building...");
+
+        // Some references first, to make the following code easier to read
+        //  id also starts at 1, so make sure we offset it down
+        const auto& label_matrix = m_shape_detection_info.label_matrix;
+        const auto& gdata = m_shape_detection_info.graphics_data;
+        const auto* image = m_shape_detection_info.image;
+
+        auto&& bb = province.bounding_box;
+        auto&& [width, height] = calcDims(bb);
+
+        auto depth = 4;
+
+        // Make sure we 0-initialize the array
+        //  We use a depth of 4 since we have RGBA
+        data.reset(new unsigned char[width * height * depth]());
+
+        writeDebug("Allocated space for ", width * height * depth, " bytes.");
+        for(auto x = bb.bottom_left.x; x < bb.top_right.x; ++x) {
+            for(auto y = bb.top_right.y; y < bb.bottom_left.y; ++y) {
+                // Get the index into the label matrix
+                auto lindex = xyToIndex(image, x, y);
+
+                // Get the index into the graphics data
+                //  3 == the depth
+                auto gindex = xyToIndex(image->info_header.width * 3, x * 3, y);
+
+                // Offset the x,y so that we get 0-preview width/height
+                auto relx = x - bb.bottom_left.x;
+                auto rely = y - bb.top_right.y;
+
+                // Index into the cached data
+                //  Need a special one since the depth is different from the
+                //  stored graphics data
+                auto dindex = xyToIndex(width * depth, relx * depth, rely);
+
+                auto label = label_matrix[lindex];
+
+                if(label == id) {
+                    data[dindex] = 0xFF; // Alpha
+                    // Copy in the 3 color values
+                    std::memcpy(&data[dindex + 1],
+                                &gdata[gindex], 3);
+                }
+            }
+        }
+
+        writeDebug("Done.");
+
+        if(prog_opts.debug) {
+            auto path = dynamic_cast<HoI4Project&>(m_parent_project).getMetaRoot() / "debug";
+            auto fname = path / (std::string("prov_preview") + std::to_string(id) + ".pam");
+
+            if(!std::filesystem::exists(path)) {
+                std::filesystem::create_directory(path);
+            }
+
+            writeDebug("Writing province ", width, 'x', height, " (", id, ") to ", fname);
+
+            if(std::ofstream out(fname); out) {
+                out << "P7\nWIDTH " << width << "\nHEIGHT " << height << "\nDEPTH 4\nMAXVAL 255\nTUPLTYPE RGB_ALPHA\nENDHDR\n";
+                for(auto i = 0; i < width * height * 4; i += 4) {
+                    // Write Alpha first
+                    out.write(reinterpret_cast<char*>(&data[i + 3]), 1);
+                    out.write(reinterpret_cast<char*>(&data[i + 1]), 3);
+                }
+            }
+        }
+    }
+
+    return data;
 }
 

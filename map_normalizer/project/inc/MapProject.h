@@ -20,6 +20,8 @@ namespace MapNormalizer::Project {
      */
     class MapProject: public IProject {
         public:
+            using ProvinceDataPtr = std::shared_ptr<unsigned char[]>;
+
             MapProject(IProject&);
             virtual ~MapProject();
 
@@ -52,6 +54,9 @@ namespace MapNormalizer::Project {
 
             const std::vector<Terrain>& getTerrains() const;
 
+            ProvinceDataPtr getPreviewData(ProvinceID);
+            ProvinceDataPtr getPreviewData(const Province*);
+
         protected:
             bool saveShapeLabels(const std::filesystem::path&,
                                  std::error_code&);
@@ -80,6 +85,8 @@ namespace MapNormalizer::Project {
                 // TODO: This should really be a smart pointer
                 unsigned char* graphics_data = nullptr;
             } m_shape_detection_info;
+
+            std::unordered_map<ProvinceID, ProvinceDataPtr> m_data_cache;
 
             std::set<std::string> m_continents;
             std::vector<Terrain> m_terrains;
