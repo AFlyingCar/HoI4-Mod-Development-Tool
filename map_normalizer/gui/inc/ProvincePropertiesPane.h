@@ -14,6 +14,8 @@
 
 # include "Types.h"
 
+# include "ProvincePreviewDrawingArea.h"
+
 namespace MapNormalizer::GUI {
     class ProvincePropertiesPane: public WidgetContainer {
         public:
@@ -25,7 +27,7 @@ namespace MapNormalizer::GUI {
 
             void setEnabled(bool = true);
 
-            void setProvince(Province*);
+            void setProvince(Province*, ProvincePreviewDrawingArea::DataPtr);
 
         protected:
             virtual void addWidgetToParent(Gtk::Widget&) override;
@@ -41,11 +43,15 @@ namespace MapNormalizer::GUI {
             void buildTerrainTypeField();
             void buildContinentField();
 
+            void setPreview(ProvincePreviewDrawingArea::DataPtr);
+
         private:
             Province* m_province;
 
             Gtk::Box m_box;
             Gtk::ScrolledWindow m_parent;
+
+            ProvincePreviewDrawingArea m_preview_area;
 
             Gtk::CheckButton* m_is_coastal_button;
             Gtk::ComboBoxText* m_provtype_menu;

@@ -3,9 +3,11 @@
 
 #include "gtkmm/messagedialog.h"
 #include "gtkmm/label.h"
+#include "gtkmm/frame.h"
 
 #include "Constants.h"
 #include "Logger.h"
+#include "Util.h"
 
 #include "Driver.h"
 
@@ -23,11 +25,9 @@ void MapNormalizer::GUI::ProvincePropertiesPane::init() {
     m_parent.add(m_box);
     addWidget<Gtk::Label>("");
 
-    // TODO
-#if 0
-    buildProvincePreviewView();
+    auto* preview_frame = addWidget<Gtk::Frame>();
+    preview_frame->add(m_preview_area);
     addWidget<Gtk::Label>("");
-#endif
 
     buildIsCoastalField();
     addWidget<Gtk::Label>("");
@@ -261,12 +261,26 @@ void MapNormalizer::GUI::ProvincePropertiesPane::setEnabled(bool enabled) {
     m_continent_menu->set_sensitive(enabled);
 }
 
-void MapNormalizer::GUI::ProvincePropertiesPane::setProvince(Province* prov) {
+void MapNormalizer::GUI::ProvincePropertiesPane::setProvince(Province* prov,
+                                                             ProvincePreviewDrawingArea::DataPtr preview_data)
+{
     m_province = prov;
+
+    setPreview(preview_data);
 
     setEnabled(m_province != nullptr);
 
     updateProperties(prov);
+}
+
+void MapNormalizer::GUI::ProvincePropertiesPane::setPreview(ProvincePreviewDrawingArea::DataPtr preview_data)
+{
+    if(m_province == nullptr) {
+        m_preview_area.setData(preview_data, 0, 0);
+    } else {
+        auto&& [width, height] = calcDims(m_province->bounding_box);
+        m_preview_area.setData(preview_data, width, height);
+    }
 }
 
 void MapNormalizer::GUI::ProvincePropertiesPane::updateProperties(const Province* prov)

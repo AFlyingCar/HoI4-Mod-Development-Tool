@@ -184,18 +184,33 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
     drawing_area->setOnProvinceSelectCallback([this](uint32_t x, uint32_t y) {
         if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
             auto& project = opt_project->get();
+            auto& map_project = project.getMapProject();
 
             auto image = project.getMapProject().getImage();
             auto lmatrix = project.getMapProject().getLabelMatrix();
 
+            if(x < 0 || x > image->info_header.width ||
+               y < 0 || y > image->info_header.height)
+            {
+                map_project.selectProvince(-1);
+
+                ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
+                m_province_properties_pane->setProvince(nullptr, null_data);
+
+                return;
+            }
+
             auto label = lmatrix[xyToIndex(image, x, y)];
 
-            project.getMapProject().selectProvince(label);
+            writeDebug("Selecting province with ID ", label);
+            map_project.selectProvince(label - 1);
 
             if(auto opt_selected = project.getMapProject().getSelectedProvince();
                m_province_properties_pane != nullptr && opt_selected)
             {
-                m_province_properties_pane->setProvince(&opt_selected->get());
+                auto* province = &opt_selected->get();
+                m_province_properties_pane->setProvince(province,
+                                                        map_project.getPreviewData(province));
             }
         }
     });
@@ -208,12 +223,19 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
             auto image = project.getMapProject().getImage();
             auto lmatrix = project.getMapProject().getLabelMatrix();
 
+            // Multiselect out of bounds will simply not add to the selections
+            if(x < 0 || x > image->info_header.width ||
+               y < 0 || y > image->info_header.height)
+            {
+                return;
+            }
+
             auto label = lmatrix[xyToIndex(image, x, y)];
 
             // TODO: get the current province and add it to some sort of
             //   grouping that can be acted upon
 
-            project.getMapProject().selectProvince(label);
+            project.getMapProject().selectProvince(label - 1);
         }
     });
 
@@ -264,12 +286,14 @@ Gtk::Frame* MapNormalizer::GUI::MainWindow::buildPropertiesPane() {
     // Finish extra setup in case we have a project loaded
     if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
         auto& project = opt_project->get();
+        auto& map_project = project.getMapProject();
 
         // Provinces Tab
-        if(auto opt_selected = project.getMapProject().getSelectedProvince();
-                opt_selected)
+        if(auto opt_selected = map_project.getSelectedProvince(); opt_selected)
         {
-            m_province_properties_pane->setProvince(&opt_selected->get());
+            auto label = opt_selected->get().id;
+            m_province_properties_pane->setProvince(&opt_selected->get(),
+                                                    map_project.getPreviewData(label));
         }
     }
 
@@ -608,7 +632,8 @@ void MapNormalizer::GUI::MainWindow::onProjectClosed() {
     getAction("properties")->set_enabled(false);
 
     if(m_province_properties_pane != nullptr) {
-        m_province_properties_pane->setProvince(nullptr);
+        ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
+        m_province_properties_pane->setProvince(nullptr, null_data);
     }
 }
 
