@@ -4,8 +4,6 @@
 #include "cairomm/context.h"
 #include "gdkmm/general.h"
 
-#include "Logger.h"
-
 MapNormalizer::GUI::ProvincePreviewDrawingArea::ProvincePreviewDrawingArea():
     m_data(),
     m_width(0),
@@ -28,8 +26,6 @@ void MapNormalizer::GUI::ProvincePreviewDrawingArea::setData(DataPtr data,
     m_width = width;
     m_height = height;
 
-    writeDebug("Setting preview to different image of dimensions ", width, 'x', height);
-
     queue_draw();
 }
 
@@ -43,19 +39,16 @@ bool MapNormalizer::GUI::ProvincePreviewDrawingArea::on_draw(const Cairo::RefPtr
         set_size_request(m_width, m_height);
 
         // Note: The version of Gtk being used apparently doesn't support creating
-        //  Pixbuf's from data with Alpha values. For now, we will be very hacky
-        //  with it
-        // TODO: Other Pixbuf creation mechanisms use alpha, so can we write our
-        //  own Pixbuf builder?
+        //  Pixbuf's from data with Alpha values.
+        // Because of this, we will be using Cairo directly, and bypassing
+        //  Gtk/Gdk completely
         auto stride = Cairo::ImageSurface::format_stride_for_width(Cairo::FORMAT_ARGB32, m_width);
 
         auto cairo_image = Cairo::ImageSurface::create(const_cast<unsigned char*>(data.get()),
                                                        Cairo::FORMAT_ARGB32,
                                                        m_width, m_height,
                                                        stride);
-        // auto image = Gdk::Pixbuf::create(cairo_image, 0, 0, m_width, m_height);
 
-        // Gdk::Cairo::set_source_pixbuf(cr, image, 0, 0);
         cr->set_source(cairo_image, 0, 0);
 
         // Only scale if we have a non-zero scale
