@@ -12,6 +12,7 @@ add_library(gui STATIC
     src/ProgressBarDialog.cpp
     src/NewProjectDialog.cpp
     src/ProvincePropertiesPane.cpp
+    src/ProvincePreviewDrawingArea.cpp
 )
 
 target_include_directories(gui PUBLIC inc)
