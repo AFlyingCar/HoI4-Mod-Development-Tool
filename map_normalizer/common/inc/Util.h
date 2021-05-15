@@ -31,6 +31,7 @@ namespace MapNormalizer {
     bool isInImage(const BitMap*, uint32_t, uint32_t);
 
     bool isShapeTooLarge(uint32_t, uint32_t, const BitMap*);
+    std::pair<uint32_t, uint32_t> calcDims(const BoundingBox&);
     std::pair<uint32_t, uint32_t> calcShapeDims(const Polygon&);
 
     void ltrim(std::string&);

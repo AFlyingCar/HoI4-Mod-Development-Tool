@@ -53,6 +53,11 @@ namespace MapNormalizer {
         DOWN
     };
 
+    struct BoundingBox {
+        Point2D bottom_left; //!< Bottom-left-most point
+        Point2D top_right; //!< Top-right-most point
+    };
+
     /**
      * @brief A polygon, which may be a solid color shape and a vector of all
      *        pixels which make it up
@@ -62,9 +67,7 @@ namespace MapNormalizer {
         Color color; //!< Color of the shape as it was read in
         Color unique_color; //!< Unique color we have generated just for this shape
 
-        // Used for checking to make sure the box isn't too big for HOI4
-        Point2D bottom_left; //!< Bottom-left-most point in the polygon's bounding box
-        Point2D top_right; //!< Top-right-most point in the polygon's bounding box
+        BoundingBox bounding_box;
 
         // TODO: We should have an adjacency vector in here
     };
@@ -96,6 +99,8 @@ namespace MapNormalizer {
         TerrainID terrain;
         Continent continent;
         StateID state;
+
+        BoundingBox bounding_box;
     };
 
     /**

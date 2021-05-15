@@ -158,10 +158,15 @@ bool MapNormalizer::isShapeTooLarge(uint32_t s_width, uint32_t s_height,
            static_cast<float>(s_height) >= (i_height / 8.0f);
 }
 
+std::pair<uint32_t, uint32_t> MapNormalizer::calcDims(const BoundingBox& bb)
+{
+    return std::make_pair(static_cast<uint32_t>(std::abs(static_cast<int>(bb.top_right.x) - static_cast<int>(bb.bottom_left.x))),
+                          static_cast<uint32_t>(std::abs(static_cast<int>(bb.top_right.y) - static_cast<int>(bb.bottom_left.y))));
+}
+
 std::pair<uint32_t, uint32_t> MapNormalizer::calcShapeDims(const Polygon& shape)
 {
-    return std::make_pair(static_cast<uint32_t>(std::abs(static_cast<int>(shape.top_right.x) - static_cast<int>(shape.bottom_left.x))),
-                          static_cast<uint32_t>(std::abs(static_cast<int>(shape.top_right.y) - static_cast<int>(shape.bottom_left.y))));
+    return calcDims(shape.bounding_box);
 }
 
 void MapNormalizer::writeColorTo(unsigned char* color_data, uint32_t w,
@@ -198,7 +203,8 @@ auto MapNormalizer::createProvincesFromShapeList(const PolygonList& shapes)
             false,
             "unknown",
             "None",
-            0
+            0,
+            shape.bounding_box
         });
     }
 
