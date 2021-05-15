@@ -70,7 +70,7 @@ namespace MapNormalizer {
             std::pair<uint32_t, Color> getLabelAndColor(const Point2D&,
                                                         const Color&);
 
-            std::optional<uint32_t> errorCheckAllShapes(const PolygonList&);
+            std::optional<uint32_t> finalize(PolygonList&);
 
             void outputStage(const std::string&);
 

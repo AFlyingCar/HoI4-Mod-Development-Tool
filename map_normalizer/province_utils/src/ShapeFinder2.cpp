@@ -411,7 +411,7 @@ const MapNormalizer::PolygonList& MapNormalizer::ShapeFinder::findAllShapes() {
     // Perform error checking. This doesn't actually cause us to fail, just spit
     //   out warnings about the input image (as there isn't much for us to do to
     //   fix any errors ourselves
-    errorCheckAllShapes(m_shapes);
+    finalize(m_shapes);
 
     m_do_estop = false;
     m_stage = Stage::DONE;
@@ -426,25 +426,40 @@ const MapNormalizer::PolygonList& MapNormalizer::ShapeFinder::findAllShapes() {
  *
  * @return The number of problematic shapes detected.
  */
-std::optional<uint32_t> MapNormalizer::ShapeFinder::errorCheckAllShapes(const PolygonList& shapes)
+std::optional<uint32_t> MapNormalizer::ShapeFinder::finalize(PolygonList& shapes)
 {
     uint32_t problematic_shapes = 0;
 
     // Perform error-checking on shapes
     uint32_t label = 0;
-    for(const Polygon& shape : shapes) {
+    for(Polygon& shape : shapes) {
         if(m_do_estop) {
             return std::nullopt;
         }
 
         ++label;
 
+        uint32_t left = m_image->info_header.width;
+        uint32_t right = 0;
+        uint32_t bottom = 0;
+        uint32_t top = m_image->info_header.height;
+
         // Make sure that the label matrix is updated to reflect the correct
-        //  shape labels
+        //  shape labels, and that the borders of the shape are properly
+        //  calculated
         for(auto&& pixel : shape.pixels) {
             auto index = xyToIndex(m_image, pixel.point.x, pixel.point.y);
             m_label_matrix[index] = label;
+
+            auto&& [x, y] = pixel.point;
+            left = std::min(x, left);
+            right = std::max(x, right);
+            bottom = std::max(y, bottom);
+            top = std::min(y, top);
         }
+
+        // Update the bounding box
+        shape.bounding_box = BoundingBox { { left, bottom }, { right, top } };
 
         // Check for minimum province size.
         //  See: https://hoi4.paradoxwikis.com/Map_modding
@@ -468,7 +483,7 @@ std::optional<uint32_t> MapNormalizer::ShapeFinder::errorCheckAllShapes(const Po
                          ") => (", (m_image->info_header.width / 8.0f), ',',
                                    (m_image->info_header.height / 8.0f),
                          "). Check the province borders. Bounds are: ",
-                         shape.bottom_left, " to ", shape.top_right);
+                         shape.bounding_box.bottom_left, " to ", shape.bounding_box.top_right);
         }
     }
 
@@ -609,7 +624,7 @@ void MapNormalizer::ShapeFinder::buildShape(uint32_t label, const Pixel& pixel,
             { },
             pixel.color,
             unique_color,
-            { 0, 0 }, { 0, 0 }
+            { { 0, 0 }, { 0, 0 } } /* bounding_box */
         });
     }
 
@@ -687,19 +702,6 @@ auto MapNormalizer::ShapeFinder::getShapes() const -> const PolygonList& {
  */
 void MapNormalizer::addPixelToShape(Polygon& shape, const Pixel& pixel) {
     shape.pixels.push_back(pixel);
-
-    // We calculate the bounding box of the shape incrementally
-    if(pixel.point.x > shape.top_right.x) {
-        shape.top_right.x = pixel.point.x;
-    } else if(pixel.point.x < shape.bottom_left.x) {
-        shape.bottom_left.x = pixel.point.x;
-    }
-
-    if(pixel.point.y > shape.top_right.y) {
-        shape.top_right.y = pixel.point.y;
-    } else if(pixel.point.y < shape.bottom_left.y) {
-        shape.bottom_left.y = pixel.point.y;
-    }
 }
 
 std::string MapNormalizer::toString(const ShapeFinder::Stage& stage) {

@@ -70,9 +70,11 @@ MapNormalizer::ProvinceList MapNormalizer::createProvinceList(const PolygonList&
         auto continent = getContinent(color);
         auto state = getState(color);
 
+        auto&& bounding_box = shape.bounding_box;
+
         provinces.push_back(Province{
             i + 1, shape.unique_color,
-            prov_type, is_coastal, terrain_type, continent, state
+            prov_type, is_coastal, terrain_type, continent, state, bounding_box
         });
     }
 
