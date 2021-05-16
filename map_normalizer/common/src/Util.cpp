@@ -204,7 +204,8 @@ auto MapNormalizer::createProvincesFromShapeList(const PolygonList& shapes)
             "unknown",
             "None",
             0,
-            shape.bounding_box
+            shape.bounding_box,
+            { }
         });
     }
 

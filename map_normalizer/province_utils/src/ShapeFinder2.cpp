@@ -487,6 +487,9 @@ std::optional<uint32_t> MapNormalizer::ShapeFinder::finalize(PolygonList& shapes
         }
     }
 
+    // Do a second pass over the shapes to check for adjacencies
+    calculateAdjacencies(shapes);
+
     if(problematic_shapes == 0) {
         return std::nullopt;
     } else {
@@ -572,6 +575,23 @@ auto MapNormalizer::ShapeFinder::getAdjacentPixel(const Point2D& point,
                                                   Direction dir1) const
     -> std::optional<Point2D>
 {
+    return getAdjacentPixel(m_image, point, dir1);
+}
+
+/**
+ * @brief Gets a pixel adjacent to point
+ *
+ * @param point The point to get an adjacent pixel for.
+ * @param dir1 The direction.
+ *
+ * @return The point adjacent to 'point', std::nullopt if there is no pixel
+ *         adjacent to 'point' in the directions specified
+ */
+auto MapNormalizer::ShapeFinder::getAdjacentPixel(const BitMap* image,
+                                                  const Point2D& point,
+                                                  Direction dir1)
+    -> std::optional<Point2D>
+{
     Point2D adjacent = point;
 
     switch(dir1) {
@@ -589,8 +609,8 @@ auto MapNormalizer::ShapeFinder::getAdjacentPixel(const Point2D& point,
             break;
     }
 
-    if(isInImage(m_image, adjacent.x, adjacent.y) &&
-       getColorAt(m_image, adjacent.x, adjacent.y) != BORDER_COLOR)
+    if(isInImage(image, adjacent.x, adjacent.y) &&
+       getColorAt(image, adjacent.x, adjacent.y) != BORDER_COLOR)
     {
         return adjacent;
     } else {
@@ -624,7 +644,8 @@ void MapNormalizer::ShapeFinder::buildShape(uint32_t label, const Pixel& pixel,
             { },
             pixel.color,
             unique_color,
-            { { 0, 0 }, { 0, 0 } } /* bounding_box */
+            { { 0, 0 }, { 0, 0 } }, /* bounding_box */
+            { }
         });
     }
 
@@ -632,6 +653,34 @@ void MapNormalizer::ShapeFinder::buildShape(uint32_t label, const Pixel& pixel,
 
     addPixelToShape(shapes.at(shapeidx), pixel);
 }
+
+void MapNormalizer::ShapeFinder::calculateAdjacency(const BitMap* image,
+                                                    const uint32_t* label_matrix,
+                                                    std::set<uint32_t>& adjacency_list,
+                                                    const Point2D& point)
+{
+    if(auto left = getAdjacentPixel(image, point, Direction::LEFT); left) {
+        auto adj_index = xyToIndex(image, left->x, left->y);
+        adjacency_list.insert(label_matrix[adj_index]);
+    }
+
+    if(auto right = getAdjacentPixel(image, point, Direction::RIGHT); right) {
+        auto adj_index = xyToIndex(image, right->x, right->y);
+        adjacency_list.insert(label_matrix[adj_index]);
+    }
+
+    if(auto up = getAdjacentPixel(image, point, Direction::UP); up) {
+        auto adj_index = xyToIndex(image, up->x, up->y);
+        adjacency_list.insert(label_matrix[adj_index]);
+    }
+
+    if(auto down = getAdjacentPixel(image, point, Direction::DOWN); down) {
+        auto adj_index = xyToIndex(image, down->x, down->y);
+        adjacency_list.insert(label_matrix[adj_index]);
+    }
+}
+
+
 
 void MapNormalizer::ShapeFinder::estop() {
     m_do_estop = true;
@@ -691,6 +740,16 @@ auto MapNormalizer::ShapeFinder::getLabelToColorMap() const
 
 auto MapNormalizer::ShapeFinder::getShapes() const -> const PolygonList& {
     return m_shapes;
+}
+
+void MapNormalizer::ShapeFinder::calculateAdjacencies(PolygonList& shapes) const
+{
+    for(Polygon& shape : shapes) {
+        for(auto&& pixel : shape.pixels) {
+            calculateAdjacency(m_image, m_label_matrix, shape.adjacent_labels,
+                               pixel.point);
+        }
+    }
 }
 
 /**

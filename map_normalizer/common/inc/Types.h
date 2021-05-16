@@ -5,6 +5,7 @@
 # include <cstdint> // uint32_t, uint8_t
 # include <ostream>
 # include <map>
+# include <set>
 # include <variant>
 
 namespace MapNormalizer {
@@ -69,7 +70,7 @@ namespace MapNormalizer {
 
         BoundingBox bounding_box;
 
-        // TODO: We should have an adjacency vector in here
+        std::set<std::uint32_t> adjacent_labels;
     };
 
     /**
@@ -101,6 +102,8 @@ namespace MapNormalizer {
         StateID state;
 
         BoundingBox bounding_box;
+
+        std::set<ProvinceID> adjacent_provinces;
     };
 
     /**

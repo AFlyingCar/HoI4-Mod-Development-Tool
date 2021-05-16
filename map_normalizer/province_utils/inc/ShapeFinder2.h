@@ -58,6 +58,13 @@ namespace MapNormalizer {
             const std::map<uint32_t, Color>& getLabelToColorMap() const;
             const PolygonList& getShapes() const;
 
+            static void calculateAdjacency(const BitMap*, const uint32_t*,
+                                           std::set<uint32_t>&, const Point2D&);
+
+            static std::optional<Point2D> getAdjacentPixel(const BitMap*,
+                                                           const Point2D&,
+                                                           Direction);
+
         protected:
             using LabelShapeIdxMap = std::unordered_map<uint32_t, uint32_t>;
 
@@ -80,6 +87,8 @@ namespace MapNormalizer {
 
             void buildShape(uint32_t, const Pixel&, PolygonList&,
                             LabelShapeIdxMap&);
+
+            void calculateAdjacencies(PolygonList&) const;
 
         private:
             //! The image to find shapes on

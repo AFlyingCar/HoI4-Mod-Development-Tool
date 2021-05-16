@@ -74,7 +74,8 @@ MapNormalizer::ProvinceList MapNormalizer::createProvinceList(const PolygonList&
 
         provinces.push_back(Province{
             i + 1, shape.unique_color,
-            prov_type, is_coastal, terrain_type, continent, state, bounding_box
+            prov_type, is_coastal, terrain_type, continent, state, bounding_box,
+            { }
         });
     }
 
