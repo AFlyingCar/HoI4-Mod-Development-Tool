@@ -8,6 +8,7 @@
 # include "gdkmm/event.h"
 
 # include "BitMap.h"
+# include "MapProject.h"
 
 namespace MapNormalizer {
     struct Rectangle;
@@ -16,6 +17,11 @@ namespace MapNormalizer {
 namespace MapNormalizer::GUI {
     class MapDrawingArea: public Gtk::DrawingArea {
         public:
+            struct SelectionInfo {
+                Project::MapProject::ProvinceDataPtr data;
+                BoundingBox bounding_box;
+            };
+
             using SelectionCallback = std::function<void(uint32_t, uint32_t)>;
 
             MapDrawingArea();
@@ -31,6 +37,9 @@ namespace MapNormalizer::GUI {
             void setOnProvinceSelectCallback(const SelectionCallback&);
             void setOnMultiProvinceSelectionCallback(const SelectionCallback&);
 
+            void setSelection();
+            void setSelection(const SelectionInfo&);
+
         protected:
             virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>&) override;
 
@@ -42,6 +51,8 @@ namespace MapNormalizer::GUI {
 
             SelectionCallback m_on_select;
             SelectionCallback m_on_multiselect;
+
+            std::optional<SelectionInfo> m_selection;
     };
 }
 
