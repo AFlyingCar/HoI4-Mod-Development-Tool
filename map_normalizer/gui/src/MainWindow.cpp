@@ -209,8 +209,11 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                m_province_properties_pane != nullptr && opt_selected)
             {
                 auto* province = &opt_selected->get();
-                m_province_properties_pane->setProvince(province,
-                                                        map_project.getPreviewData(province));
+                auto preview_data = map_project.getPreviewData(province);
+                m_province_properties_pane->setProvince(province, preview_data);
+
+                m_drawing_area->setSelection({preview_data, province->bounding_box});
+                m_drawing_area->queue_draw();
             }
         }
     });
