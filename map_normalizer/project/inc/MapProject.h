@@ -73,6 +73,8 @@ namespace MapNormalizer::Project {
                                    std::error_code&);
 
         private:
+            void buildProvinceCache(const Province*);
+
             /**
              * @brief A struct which holds information about shape detection
              */

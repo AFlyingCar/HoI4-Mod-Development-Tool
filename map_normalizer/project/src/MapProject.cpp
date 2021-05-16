@@ -116,7 +116,7 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
     auto data_size = width * height * 3;
     graphics_data = new unsigned char[data_size];
 
-    // Rebuild the graphics_data array
+    // Rebuild the graphics_data array and the adjacency lists
     for(uint32_t x = 0; x < width; ++x) {
         for(uint32_t y = 0; y < height; ++y) {
             // Get the index into the label matrix
@@ -137,11 +137,19 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
                 continue;
             }
 
+            // Rebuild color data
             auto& province = m_shape_detection_info.provinces[label - 1];
 
-            graphics_data[gindex] = province.unique_color.r;
+            // Flip the colors from RGB to BGR because BitMap is a bad format
+            graphics_data[gindex] = province.unique_color.b;
             graphics_data[gindex + 1] = province.unique_color.g;
-            graphics_data[gindex + 2] = province.unique_color.b;
+            graphics_data[gindex + 2] = province.unique_color.r;
+
+            // Recalculate adjacencies for this pixel
+            ShapeFinder::calculateAdjacency(image,
+                                            m_shape_detection_info.label_matrix,
+                                            province.adjacent_provinces,
+                                            {x, y});
         }
     }
 
@@ -328,7 +336,8 @@ bool MapNormalizer::Project::MapProject::loadProvinceData(const std::filesystem:
             Province prov;
 
             // Attempt to parse the entire CSV line, we expect it to look like:
-            //  ID;R;G;B;ProvinceType;IsCoastal;TerrainType;ContinentID
+            //  ID;R;G;B;ProvinceType;IsCoastal;TerrainType;ContinentID;BB.BottomLeft.X;BB.BottomLeft.Y;BB.TopRight.X;BB.TopRight.Y;Adjacencies
+            // std::string adjacencies_str;
             if(!parseValues<';'>(ss, prov.id, prov.unique_color.r,
                                               prov.unique_color.g,
                                               prov.unique_color.b,
@@ -337,7 +346,8 @@ bool MapNormalizer::Project::MapProject::loadProvinceData(const std::filesystem:
                                      prov.bounding_box.bottom_left.x,
                                      prov.bounding_box.bottom_left.y,
                                      prov.bounding_box.top_right.x,
-                                     prov.bounding_box.top_right.y))
+                                     prov.bounding_box.top_right.y/*,
+                                     adjacencies_str*/))
             {
                 ec = std::make_error_code(std::errc::bad_message);
                 writeError("Failed to parse line #", line_num, ": '", line, "'");
@@ -510,76 +520,86 @@ auto MapNormalizer::Project::MapProject::getPreviewData(const Province* province
     // If there is no cached data for the given province ID, then generate the
     //  data for the preview
     if(data == nullptr) {
-        writeDebug("No preview data for province ", id, ". Building...");
+        buildProvinceCache(province_ptr);
+    }
 
-        // Some references first, to make the following code easier to read
-        //  id also starts at 1, so make sure we offset it down
-        const auto& label_matrix = m_shape_detection_info.label_matrix;
-        const auto& gdata = m_shape_detection_info.graphics_data;
-        const auto* image = m_shape_detection_info.image;
+    return data;
+}
 
-        auto&& bb = province.bounding_box;
-        auto&& [width, height] = calcDims(bb);
+void MapNormalizer::Project::MapProject::buildProvinceCache(const Province* province_ptr)
+{
+    const auto& province = *province_ptr;
+    auto id = province.id;
 
-        auto depth = 4;
+    auto& data = m_data_cache[id];
 
-        // Make sure we 0-initialize the array
-        //  We use a depth of 4 since we have RGBA
-        data.reset(new unsigned char[width * height * depth]());
+    writeDebug("No preview data for province ", id, ". Building...");
 
-        writeDebug("Allocated space for ", width * height * depth, " bytes.");
-        for(auto x = bb.bottom_left.x; x < bb.top_right.x; ++x) {
-            for(auto y = bb.top_right.y; y < bb.bottom_left.y; ++y) {
-                // Get the index into the label matrix
-                auto lindex = xyToIndex(image, x, y);
+    // Some references first, to make the following code easier to read
+    //  id also starts at 1, so make sure we offset it down
+    const auto& label_matrix = m_shape_detection_info.label_matrix;
+    const auto& gdata = m_shape_detection_info.graphics_data;
+    const auto* image = m_shape_detection_info.image;
 
-                // Get the index into the graphics data
-                //  3 == the depth
-                auto gindex = xyToIndex(image->info_header.width * 3, x * 3, y);
+    auto&& bb = province.bounding_box;
+    auto&& [width, height] = calcDims(bb);
 
-                // Offset the x,y so that we get 0-preview width/height
-                auto relx = x - bb.bottom_left.x;
-                auto rely = y - bb.top_right.y;
+    auto depth = 4;
 
-                // Index into the cached data
-                //  Need a special one since the depth is different from the
-                //  stored graphics data
-                auto dindex = xyToIndex(width * depth, relx * depth, rely);
+    // Make sure we 0-initialize the array
+    //  We use a depth of 4 since we have RGBA
+    data.reset(new unsigned char[width * height * depth]());
 
-                auto label = label_matrix[lindex];
+    writeDebug("Allocated space for ", width * height * depth, " bytes.");
+    for(auto x = bb.bottom_left.x; x < bb.top_right.x; ++x) {
+        for(auto y = bb.top_right.y; y < bb.bottom_left.y; ++y) {
+            // Get the index into the label matrix
+            auto lindex = xyToIndex(image, x, y);
 
-                if(label == id) {
-                    data[dindex] = 0xFF; // Alpha
-                    // Copy in the 3 color values
-                    std::memcpy(&data[dindex + 1],
-                                &gdata[gindex], 3);
-                }
-            }
-        }
+            // Get the index into the graphics data
+            //  3 == the depth
+            auto gindex = xyToIndex(image->info_header.width * 3, x * 3, y);
 
-        writeDebug("Done.");
+            // Offset the x,y so that we get 0-preview width/height
+            auto relx = x - bb.bottom_left.x;
+            auto rely = y - bb.top_right.y;
 
-        if(prog_opts.debug) {
-            auto path = dynamic_cast<HoI4Project&>(m_parent_project).getMetaRoot() / "debug";
-            auto fname = path / (std::string("prov_preview") + std::to_string(id) + ".pam");
+            // Index into the cached data
+            //  Need a special one since the depth is different from the
+            //  stored graphics data
+            auto dindex = xyToIndex(width * depth, relx * depth, rely);
 
-            if(!std::filesystem::exists(path)) {
-                std::filesystem::create_directory(path);
-            }
+            auto label = label_matrix[lindex];
 
-            writeDebug("Writing province ", width, 'x', height, " (", id, ") to ", fname);
-
-            if(std::ofstream out(fname); out) {
-                out << "P7\nWIDTH " << width << "\nHEIGHT " << height << "\nDEPTH 4\nMAXVAL 255\nTUPLTYPE RGB_ALPHA\nENDHDR\n";
-                for(auto i = 0; i < width * height * 4; i += 4) {
-                    // Write Alpha first
-                    out.write(reinterpret_cast<char*>(&data[i + 3]), 1);
-                    out.write(reinterpret_cast<char*>(&data[i + 1]), 3);
-                }
+            if(label == id) {
+                data[dindex] = 0xFF; // Alpha
+                // Copy in the 3 color values
+                std::memcpy(&data[dindex + 1],
+                            &gdata[gindex], 3);
             }
         }
     }
 
-    return data;
+    writeDebug("Done.");
+
+    if(prog_opts.debug) {
+        auto path = dynamic_cast<HoI4Project&>(m_parent_project).getMetaRoot() / "debug";
+        auto fname = path / (std::string("prov_preview") + std::to_string(id) + ".pam");
+
+        if(!std::filesystem::exists(path)) {
+            std::filesystem::create_directory(path);
+        }
+
+        writeDebug("Writing province ", width, 'x', height, " (", id, ") to ", fname);
+
+        if(std::ofstream out(fname); out) {
+            out << "P7\nWIDTH " << width << "\nHEIGHT " << height << "\nDEPTH 4\nMAXVAL 255\nTUPLTYPE RGB_ALPHA\nENDHDR\n";
+            for(auto i = 0; i < width * height * 4; i += 4) {
+                // Write Alpha first
+                out.write(reinterpret_cast<char*>(&data[i + 3]), 1);
+                out.write(reinterpret_cast<char*>(&data[i + 1]), 3);
+            }
+        }
+    }
 }
 
