@@ -170,15 +170,20 @@ void MapNormalizer::GUI::MapDrawingArea::setSelection(const SelectionInfo& selec
 void MapNormalizer::GUI::MapDrawingArea::zoom(ZoomDirection direction) {
     switch(direction) {
         case ZoomDirection::IN:
-            m_scale_factor += ZOOM_FACTOR;
+            zoom(ZOOM_FACTOR);
             break;
         case ZoomDirection::OUT:
-            m_scale_factor -= ZOOM_FACTOR;
+            zoom(-ZOOM_FACTOR);
             break;
         case ZoomDirection::RESET:
             m_scale_factor = DEFAULT_ZOOM;
+            queue_draw();
             break;
     }
+}
+
+void MapNormalizer::GUI::MapDrawingArea::zoom(double scale_factor_delta) {
+    m_scale_factor += scale_factor_delta;
 
     // We need to redraw the entire map if we zoom in/out
     queue_draw();

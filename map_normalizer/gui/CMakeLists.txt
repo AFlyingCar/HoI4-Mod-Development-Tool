@@ -13,6 +13,7 @@ add_library(gui STATIC
     src/NewProjectDialog.cpp
     src/ProvincePropertiesPane.cpp
     src/ProvincePreviewDrawingArea.cpp
+    src/InterruptableScrolledWindow.cpp
 )
 
 target_include_directories(gui PUBLIC inc)

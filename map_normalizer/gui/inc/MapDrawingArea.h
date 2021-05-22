@@ -47,6 +47,7 @@ namespace MapNormalizer::GUI {
             };
 
             void zoom(ZoomDirection);
+            void zoom(double);
 
         protected:
             virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>&) override;

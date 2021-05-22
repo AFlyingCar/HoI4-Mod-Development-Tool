@@ -14,6 +14,7 @@
 #include "ShapeFinder2.h" // ShapeFinder
 
 #include "GraphicalDebugger.h"
+#include "InterruptableScrolledWindow.h"
 #include "MapNormalizerApplication.h"
 #include "ProgressBarDialog.h"
 #include "NewProjectDialog.h"
@@ -178,7 +179,7 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
     m_paned->pack1(*std::get<Gtk::Frame*>(m_active_child = new Gtk::Frame()), true, false);
 
     // Setup the box+area for the map image to render
-    auto drawing_window = addWidget<Gtk::ScrolledWindow>();
+    auto drawing_window = addWidget<InterruptableScrolledWindow>();
     auto drawing_area = m_drawing_area = new MapDrawingArea();
 
     drawing_area->setOnProvinceSelectCallback([this](uint32_t x, uint32_t y) {
@@ -240,6 +241,48 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
 
             project.getMapProject().selectProvince(label - 1);
         }
+    });
+
+    drawing_window->signalOnScroll().connect([drawing_area](GdkEventScroll* event)
+    {
+        if(event->state & GDK_CONTROL_MASK) {
+            switch(event->direction) {
+                case GDK_SCROLL_UP:
+                    drawing_area->zoom(MapDrawingArea::ZoomDirection::IN);
+                    break;
+                case GDK_SCROLL_DOWN:
+                    drawing_area->zoom(MapDrawingArea::ZoomDirection::OUT);
+                    break;
+                case GDK_SCROLL_SMOOTH:
+                    drawing_area->zoom(-event->delta_y * ZOOM_FACTOR);
+                    break;
+                default: // We don't care about _LEFT or _RIGHT
+                    break;
+            }
+            return true;
+        }
+
+        return false;
+    });
+
+    drawing_window->add_events(Gdk::KEY_PRESS_MASK);
+    drawing_window->signal_key_press_event().connect([drawing_area](GdkEventKey* event)
+    {
+        switch(event->keyval) {
+            case GDK_KEY_KP_Add:
+                drawing_area->zoom(MapDrawingArea::ZoomDirection::IN);
+                break;
+            case GDK_KEY_KP_Subtract:
+                drawing_area->zoom(MapDrawingArea::ZoomDirection::OUT);
+                break;
+            case GDK_KEY_r:
+                if(event->state & GDK_CONTROL_MASK) {
+                    drawing_area->zoom(MapDrawingArea::ZoomDirection::RESET);
+                }
+                break;
+        }
+
+        return false;
     });
 
     // Place the drawing area in a scrollable window
