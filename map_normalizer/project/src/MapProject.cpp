@@ -413,6 +413,7 @@ void MapNormalizer::Project::MapProject::setShapeFinder(ShapeFinder&& shape_find
 
     // Clear out which province is selected
     m_selected_province = -1;
+    m_data_cache.clear();
 }
 
 void MapNormalizer::Project::MapProject::setGraphicsData(unsigned char* data) {
@@ -515,13 +516,18 @@ auto MapNormalizer::Project::MapProject::getPreviewData(const Province* province
     const auto& province = *province_ptr;
     auto id = province.id;
 
-    auto& data = m_data_cache[id];
+    auto data = m_data_cache[id];
 
     // If there is no cached data for the given province ID, then generate the
     //  data for the preview
     if(data == nullptr) {
         buildProvinceCache(province_ptr);
     }
+
+    // Reset access time, cycles the element to the end of the FIFO queue
+    data = m_data_cache[id];
+    m_data_cache.erase(id);
+    m_data_cache[id] = data;
 
     return data;
 }
@@ -530,6 +536,18 @@ void MapNormalizer::Project::MapProject::buildProvinceCache(const Province* prov
 {
     const auto& province = *province_ptr;
     auto id = province.id;
+
+    // If there are too many cached provinces, then remove the least accessed
+    //  one (which should be the first one in the cache)
+    if(m_data_cache.size() > MAX_CACHED_PROVINCE_PREVIEWS) {
+        // Do not clear out the first value if it is the one we are trying to
+        //  create.
+        if(m_data_cache.begin()->first == id) {
+            m_data_cache.erase(std::next(m_data_cache.begin()));
+        } else {
+            m_data_cache.erase(m_data_cache.begin());
+        }
+    }
 
     auto& data = m_data_cache[id];
 

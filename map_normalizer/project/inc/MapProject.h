@@ -5,6 +5,8 @@
 # include <string>
 # include <filesystem>
 
+# include "fifo_map.hpp"
+
 # include "ShapeFinder2.h"
 
 # include "Types.h"
@@ -88,7 +90,14 @@ namespace MapNormalizer::Project {
                 unsigned char* graphics_data = nullptr;
             } m_shape_detection_info;
 
-            std::unordered_map<ProvinceID, ProvinceDataPtr> m_data_cache;
+            /**
+             * @brief A cache of province previews
+             * @details Note: We use nlohmann::fifo_map for this so that we can
+             *          do hash-based lookup while still retaining FIFO access.
+             *          This is so that the least accessed (first in) can get
+             *          garbage collected and cleaned out
+             */
+            nlohmann::fifo_map<ProvinceID, ProvinceDataPtr> m_data_cache;
 
             std::set<std::string> m_continents;
             std::vector<Terrain> m_terrains;

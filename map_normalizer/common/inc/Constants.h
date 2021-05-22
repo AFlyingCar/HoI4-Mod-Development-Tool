@@ -73,6 +73,9 @@ namespace MapNormalizer {
     //! The 4 magic bytes 
     const std::string SHAPEDATA_MAGIC = "SDAT";
 
+    //! The maximum number of province previews to store in memory
+    const size_t MAX_CACHED_PROVINCE_PREVIEWS = 100;
+
     //! The version of the tool
     extern const Version TOOL_VERSION;
 }
