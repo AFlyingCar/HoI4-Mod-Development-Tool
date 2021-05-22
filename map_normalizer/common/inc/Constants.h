@@ -76,6 +76,12 @@ namespace MapNormalizer {
     //! The maximum number of province previews to store in memory
     const size_t MAX_CACHED_PROVINCE_PREVIEWS = 100;
 
+    //! How much to zoom each time
+    const double ZOOM_FACTOR = 0.1;
+
+    //! The default zoom level
+    const double DEFAULT_ZOOM = 1.0;
+
     //! The version of the tool
     extern const Version TOOL_VERSION;
 }

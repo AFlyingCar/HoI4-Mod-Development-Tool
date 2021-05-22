@@ -40,6 +40,14 @@ namespace MapNormalizer::GUI {
             void setSelection();
             void setSelection(const SelectionInfo&);
 
+            enum class ZoomDirection {
+                RESET,
+                IN,
+                OUT
+            };
+
+            void zoom(ZoomDirection);
+
         protected:
             virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>&) override;
 
@@ -53,6 +61,8 @@ namespace MapNormalizer::GUI {
             SelectionCallback m_on_multiselect;
 
             std::optional<SelectionInfo> m_selection;
+
+            double m_scale_factor;
     };
 }
 

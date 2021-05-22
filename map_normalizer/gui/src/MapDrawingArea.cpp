@@ -15,7 +15,8 @@ MapNormalizer::GUI::MapDrawingArea::MapDrawingArea():
     m_graphics_data(nullptr),
     m_image(nullptr),
     m_on_select([](auto...) { }),
-    m_on_multiselect([](auto...) { })
+    m_on_multiselect([](auto...) { }),
+    m_scale_factor(DEFAULT_ZOOM)
 {
     // Mark that we want to receive button presses
     add_events(Gdk::BUTTON_PRESS_MASK);
@@ -35,9 +36,14 @@ bool MapNormalizer::GUI::MapDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Cont
     auto iwidth = m_image->info_header.width;
     auto iheight = m_image->info_header.height;
 
-    set_size_request(iwidth, iheight);
-
     auto image = Gdk::Pixbuf::create_from_data(m_graphics_data, Gdk::Colorspace::COLORSPACE_RGB, false, 8, iwidth, iheight, iwidth * 3);
+
+    auto siwidth = iwidth * m_scale_factor;
+    auto siheight = iheight * m_scale_factor;
+
+    image = image->scale_simple(siwidth, siheight, Gdk::INTERP_BILINEAR);
+
+    set_size_request(siwidth, siheight);
 
     // If a province is selected, then go ahead and draw the province preview
     //  on top of the map again
@@ -81,6 +87,7 @@ bool MapNormalizer::GUI::MapDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Cont
         if(posy >= 4) {
             posy -= 4;
         }
+        full_cr->scale(m_scale_factor, m_scale_factor);
         full_cr->set_source(province_image, posx, posy);
 #endif
         full_cr->paint();
@@ -95,9 +102,6 @@ bool MapNormalizer::GUI::MapDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Cont
         Gdk::Cairo::set_source_pixbuf(cr, image, 0, 0);
     }
 
-    // TODO: cr has scale+translate methods, we should use those
-    cr->scale(1, 1);
-
     cr->paint();
 
     return true;
@@ -111,8 +115,10 @@ bool MapNormalizer::GUI::MapDrawingArea::on_button_press_event(GdkEventButton* e
 
     // Is it a left-click?
     if(event->type == GDK_BUTTON_PRESS && event->button == 1) {
-        auto x = event->x;
-        auto y = event->y;
+        // Note that x and y will be the values after scaling. If we want the
+        //  true coordinates, we have to invert the scaling
+        auto x = event->x * (1 / m_scale_factor);
+        auto y = event->y * (1 / m_scale_factor);
 
         if(event->state & GDK_SHIFT_MASK) {
             m_on_multiselect(x, y);
@@ -161,4 +167,20 @@ void MapNormalizer::GUI::MapDrawingArea::setSelection(const SelectionInfo& selec
     m_selection = selection;
 }
 
+void MapNormalizer::GUI::MapDrawingArea::zoom(ZoomDirection direction) {
+    switch(direction) {
+        case ZoomDirection::IN:
+            m_scale_factor += ZOOM_FACTOR;
+            break;
+        case ZoomDirection::OUT:
+            m_scale_factor -= ZOOM_FACTOR;
+            break;
+        case ZoomDirection::RESET:
+            m_scale_factor = DEFAULT_ZOOM;
+            break;
+    }
+
+    // We need to redraw the entire map if we zoom in/out
+    queue_draw();
+}
 
