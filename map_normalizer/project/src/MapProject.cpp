@@ -230,11 +230,20 @@ bool MapNormalizer::Project::MapProject::saveProvinceData(const std::filesystem:
     return true;
 }
 
+/**
+ * @brief Writes all continent data to root/$CONTINENTDATA_FILENAME
+ *
+ * @param root The root where all continent data should go
+ * @param ec The error code
+ *
+ * @return True if continent data was successfully loaded, false otherwise
+ */
 bool MapNormalizer::Project::MapProject::saveContinentData(const std::filesystem::path& root,
                                                            std::error_code& ec)
 {
     auto path = root / CONTINENTDATA_FILENAME;
 
+    // Try to open the continent file for reading.
     if(std::ofstream out(path); out) {
         for(auto&& continent : m_continents) {
             out << continent << '\n';
@@ -336,7 +345,7 @@ bool MapNormalizer::Project::MapProject::loadProvinceData(const std::filesystem:
             Province prov;
 
             // Attempt to parse the entire CSV line, we expect it to look like:
-            //  ID;R;G;B;ProvinceType;IsCoastal;TerrainType;ContinentID;BB.BottomLeft.X;BB.BottomLeft.Y;BB.TopRight.X;BB.TopRight.Y;Adjacencies
+            //  ID;R;G;B;ProvinceType;IsCoastal;TerrainType;ContinentID;BB.BottomLeft.X;BB.BottomLeft.Y;BB.TopRight.X;BB.TopRight.Y
             // std::string adjacencies_str;
             if(!parseValues<';'>(ss, prov.id, prov.unique_color.r,
                                               prov.unique_color.g,
@@ -346,8 +355,7 @@ bool MapNormalizer::Project::MapProject::loadProvinceData(const std::filesystem:
                                      prov.bounding_box.bottom_left.x,
                                      prov.bounding_box.bottom_left.y,
                                      prov.bounding_box.top_right.x,
-                                     prov.bounding_box.top_right.y/*,
-                                     adjacencies_str*/))
+                                     prov.bounding_box.top_right.y))
             {
                 ec = std::make_error_code(std::errc::bad_message);
                 writeError("Failed to parse line #", line_num, ": '", line, "'");
@@ -368,11 +376,22 @@ bool MapNormalizer::Project::MapProject::loadProvinceData(const std::filesystem:
     return true;
 }
 
+/**
+ * @brief Loads all continent data from a file
+ *
+ * @param root The root where the continent data file should be found
+ * @param ec The error code
+ *
+ * @return True if data was loaded correctly, false otherwise
+ */
 bool MapNormalizer::Project::MapProject::loadContinentData(const std::filesystem::path& root,
                                                            std::error_code& ec)
 {
     auto path = root / CONTINENTDATA_FILENAME;
 
+    // If the file doesn't exist, then return false (we didn't actually load it
+    //  after all), but don't set the error code as it is expected that the
+    //  file may not exist
     if(!std::filesystem::exists(path)) {
         writeWarning("No data to load! No continents currently exist!");
         return false;
@@ -469,6 +488,12 @@ auto MapNormalizer::Project::MapProject::getSelectedProvince() const
     return std::nullopt;
 }
 
+/**
+ * @brief Will return the currently selected province, or std::nullopt if no
+ *        valid province is currently selected.
+ *
+ * @return The currently selected province, or std::nullopt.
+ */
 auto MapNormalizer::Project::MapProject::getSelectedProvince()
     -> OptionalReference<Province>
 {
@@ -500,6 +525,13 @@ void MapNormalizer::Project::MapProject::removeContinent(const std::string& cont
     m_continents.erase(continent);
 }
 
+/**
+ * @brief Gets province preview data for the given ID
+ *
+ * @param id
+ *
+ * @return The preview data, or nullptr if the ID does not exist
+ */
 auto MapNormalizer::Project::MapProject::getPreviewData(ProvinceID id)
     -> ProvinceDataPtr
 {
@@ -510,6 +542,14 @@ auto MapNormalizer::Project::MapProject::getPreviewData(ProvinceID id)
     return nullptr;
 }
 
+/**
+ * @brief Gets the preview data for the given province. If no data currently
+ *        exists, construct it and cache it.
+ *
+ * @param province_ptr
+ *
+ * @return The preview data. This method should never return nullptr
+ */
 auto MapNormalizer::Project::MapProject::getPreviewData(const Province* province_ptr)
     -> ProvinceDataPtr
 {
@@ -532,6 +572,14 @@ auto MapNormalizer::Project::MapProject::getPreviewData(const Province* province
     return data;
 }
 
+/**
+ * @brief Will build the province preview for the given province. If more than
+ *        MAX_CACHED_PROVINCE_PREVIEWS are already stored, then the least
+ *        accessed preview will be kicked out of the cache before a new preview
+ *        is constructed.
+ *
+ * @param province_ptr
+ */
 void MapNormalizer::Project::MapProject::buildProvinceCache(const Province* province_ptr)
 {
     const auto& province = *province_ptr;

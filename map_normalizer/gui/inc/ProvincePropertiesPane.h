@@ -17,6 +17,9 @@
 # include "ProvincePreviewDrawingArea.h"
 
 namespace MapNormalizer::GUI {
+    /**
+     * @brief The pane where properties of a province are placed into
+     */
     class ProvincePropertiesPane: public WidgetContainer {
         public:
             ProvincePropertiesPane();
@@ -48,6 +51,7 @@ namespace MapNormalizer::GUI {
             void setPreview(ProvincePreviewDrawingArea::DataPtr);
 
         private:
+            //! The province currently being acted upon
             Province* m_province;
 
             Gtk::Box m_box;

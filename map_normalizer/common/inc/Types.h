@@ -54,6 +54,9 @@ namespace MapNormalizer {
         DOWN
     };
 
+    /**
+     * @brief An axis-aligned bounding box
+     */
     struct BoundingBox {
         Point2D bottom_left; //!< Bottom-left-most point
         Point2D top_right; //!< Top-right-most point
@@ -68,8 +71,10 @@ namespace MapNormalizer {
         Color color; //!< Color of the shape as it was read in
         Color unique_color; //!< Unique color we have generated just for this shape
 
+        //! The bounding box of the polygon
         BoundingBox bounding_box;
 
+        //! All adjacent shape labels
         std::set<std::uint32_t> adjacent_labels;
     };
 

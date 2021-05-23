@@ -20,7 +20,13 @@ Gtk::ScrolledWindow& MapNormalizer::GUI::ProvincePropertiesPane::getParent() {
     return m_parent;
 }
 
+/**
+ * @brief Initializes every component of the pane
+ */
 void MapNormalizer::GUI::ProvincePropertiesPane::init() {
+    // Note: The empty labels are here for spacing purposes so that the fields
+    //   aren't too bunched up
+
     m_parent.set_size_request(MINIMUM_PROPERTIES_PANE_WIDTH, -1);
     m_parent.add(m_box);
     addWidget<Gtk::Label>("");
@@ -61,6 +67,7 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildProvinceTypeField() {
 
     m_provtype_menu = addWidget<Gtk::ComboBoxText>();
 
+    // You can only choose one of these 3 province types
     m_provtype_menu->append("Land");
     m_provtype_menu->append("Sea");
     m_provtype_menu->append("Lake");
@@ -287,6 +294,12 @@ void MapNormalizer::GUI::ProvincePropertiesPane::onResize() {
     m_preview_area.calcScale();
 }
 
+/**
+ * @brief Will update all of the values stored in every field to the given
+ *        province. If prov is nullptr, then the values are changed to defaults.
+ *
+ * @param prov The province to update the properties to.
+ */
 void MapNormalizer::GUI::ProvincePropertiesPane::updateProperties(const Province* prov)
 {
     if(prov == nullptr) {
@@ -304,6 +317,11 @@ void MapNormalizer::GUI::ProvincePropertiesPane::updateProperties(const Province
     }
 }
 
+/**
+ * @brief Rebuilds the continents menu
+ *
+ * @param continents The continents to be in the new menu
+ */
 void MapNormalizer::GUI::ProvincePropertiesPane::rebuildContinentMenu(const std::set<std::string>& continents)
 {
     m_continent_menu->remove_all();

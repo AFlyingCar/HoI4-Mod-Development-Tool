@@ -99,9 +99,13 @@ namespace MapNormalizer::Project {
              */
             nlohmann::fifo_map<ProvinceID, ProvinceDataPtr> m_data_cache;
 
+            //! All continents defined for this project
             std::set<std::string> m_continents;
+
+            //! All terrains defined for this project
             std::vector<Terrain> m_terrains;
 
+            //! The current selected province
             uint32_t m_selected_province;
 
             //! The parent project that this MapProject belongs to

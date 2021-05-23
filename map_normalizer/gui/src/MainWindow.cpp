@@ -210,6 +210,8 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
             auto image = project.getMapProject().getImage();
             auto lmatrix = project.getMapProject().getLabelMatrix();
 
+            // If the click happens outside of the bounds of the image, then
+            //   deselect the province
             if(x < 0 || x > image->info_header.width ||
                y < 0 || y > image->info_header.height)
             {
@@ -224,11 +226,14 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                 return;
             }
 
+            // Get the label for the pixel that got clicked on
             auto label = lmatrix[xyToIndex(image, x, y)];
 
             writeDebug("Selecting province with ID ", label);
             map_project.selectProvince(label - 1);
 
+            // If the label is a valid province, then go ahead and mark it as
+            //  selected everywhere that needs it to be marked as such
             if(auto opt_selected = project.getMapProject().getSelectedProvince();
                m_province_properties_pane != nullptr && opt_selected)
             {
@@ -266,6 +271,7 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
         }
     });
 
+    // Set up a signal callback to zoom in and out when performing CTRL+ScrollWhell
     drawing_window->signalOnScroll().connect([drawing_area](GdkEventScroll* event)
     {
         if(event->state & GDK_CONTROL_MASK) {
@@ -288,6 +294,8 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
         return false;
     });
 
+    // Set up a signal callback to zoom in and out when pressing NumpadADD and NumpadSUB
+    // CTRL+r will reset zoom level
     drawing_window->add_events(Gdk::KEY_PRESS_MASK);
     drawing_window->signal_key_press_event().connect([drawing_area](GdkEventKey* event)
     {

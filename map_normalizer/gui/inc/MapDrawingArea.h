@@ -17,6 +17,9 @@ namespace MapNormalizer {
 namespace MapNormalizer::GUI {
     class MapDrawingArea: public Gtk::DrawingArea {
         public:
+            /**
+             * @brief Holds information about the currently selected province
+             */
             struct SelectionInfo {
                 Project::MapProject::ProvinceDataPtr data;
                 BoundingBox bounding_box;
@@ -69,11 +72,16 @@ namespace MapNormalizer::GUI {
              */
             Glib::RefPtr<Gdk::Pixbuf> m_image_pixbuf;
 
+            //! Called when a provice is selected
             SelectionCallback m_on_select;
+
+            //! Called when a province is multi-selected (shift+click)
             SelectionCallback m_on_multiselect;
 
+            //! The current selection
             std::optional<SelectionInfo> m_selection;
 
+            //! How much should the display be scaled.
             double m_scale_factor;
     };
 }

@@ -158,12 +158,26 @@ bool MapNormalizer::isShapeTooLarge(uint32_t s_width, uint32_t s_height,
            static_cast<float>(s_height) >= (i_height / 8.0f);
 }
 
+/**
+ * @brief Calculates the width and height of the given boundingg box
+ *
+ * @param bb The bounding box
+ *
+ * @return A pair containing the width and height of the bounding box
+ */
 std::pair<uint32_t, uint32_t> MapNormalizer::calcDims(const BoundingBox& bb)
 {
     return std::make_pair(static_cast<uint32_t>(std::abs(static_cast<int>(bb.top_right.x) - static_cast<int>(bb.bottom_left.x))),
                           static_cast<uint32_t>(std::abs(static_cast<int>(bb.top_right.y) - static_cast<int>(bb.bottom_left.y))));
 }
 
+/**
+ * @brief Calculates the width and height of the given shape
+ *
+ * @param shape The shape
+ *
+ * @return A pair containing the width and height of the shape
+ */
 std::pair<uint32_t, uint32_t> MapNormalizer::calcShapeDims(const Polygon& shape)
 {
     return calcDims(shape.bounding_box);

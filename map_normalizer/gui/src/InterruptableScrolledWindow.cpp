@@ -1,6 +1,13 @@
 
 #include "InterruptableScrolledWindow.h"
 
+/**
+ * @brief The signal for when scrolling is about to start. Fires before any
+ *        scrolling takes place. Returning true will prevent normal scrolling
+ *        functionality
+ *
+ * @return 
+ */
 auto MapNormalizer::GUI::InterruptableScrolledWindow::signalOnScroll()
     -> SignalOnScroll
 {

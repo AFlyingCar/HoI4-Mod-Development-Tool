@@ -8,6 +8,9 @@
 # include "gdkmm/event.h"
 
 namespace MapNormalizer::GUI {
+    /**
+     * @brief The area where a singlee province preview can get drawn
+     */
     class ProvincePreviewDrawingArea: public Gtk::DrawingArea {
         public:
             using DataPtr = std::weak_ptr<const unsigned char[]>;

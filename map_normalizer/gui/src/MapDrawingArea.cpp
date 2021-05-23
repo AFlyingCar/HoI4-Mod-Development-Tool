@@ -186,6 +186,9 @@ void MapNormalizer::GUI::MapDrawingArea::zoom(double scale_factor_delta) {
     queue_draw();
 }
 
+/**
+ * @brief Will reset the zoom level
+ */
 void MapNormalizer::GUI::MapDrawingArea::resetZoom() {
     // Do nothing if there is no data loaded
     if(!hasData()) return;
@@ -214,6 +217,7 @@ void MapNormalizer::GUI::MapDrawingArea::resetZoom() {
 
     writeDebug("Reset zoom to ", m_scale_factor);
 
+    // Rebuild the cached image
     rebuildImageCache();
     queue_draw();
 }

@@ -19,6 +19,10 @@ void MapNormalizer::GUI::ProvincePreviewDrawingArea::setScale(double x, double y
     m_scaley = y;
 }
 
+/**
+ * @brief Calculates the correct scaling for the preview so that it fits in the
+ *        drawing area without being stretched too much
+ */
 void MapNormalizer::GUI::ProvincePreviewDrawingArea::calcScale() {
     auto* parent = get_parent();
 

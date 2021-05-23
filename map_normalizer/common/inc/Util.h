@@ -202,6 +202,10 @@ namespace MapNormalizer {
             return false;
         }
 
+        // If we failed to get a line from the stream, see if we can parse an
+        //   empty string instead. This is to take care of the edge-case of
+        //   there being an empty string after the last delimiter which could
+        //   possibly still get parsed
         if(auto opt_result = fromString<T>(""); opt_result) {
             result = *opt_result;
             return true;

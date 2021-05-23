@@ -1,3 +1,9 @@
+/**
+ * @file InterruptableScrolledWindow.h
+ *
+ * @brief Defines a special ScrolledWindow whose scrolling can be interrupted
+ */
+
 #ifndef INTERRUPTABLE_SCROLLED_WINDOW_H
 # define INTERRUPTABLE_SCROLLED_WINDOW_H
 
@@ -5,6 +11,10 @@
 # include "sigc++/sigc++.h"
 
 namespace MapNormalizer::GUI {
+    /**
+     * @brief A ScrolledWindow which can have its scrolling functionality get
+     *        prevented.
+     */
     class InterruptableScrolledWindow: public Gtk::ScrolledWindow {
         public:
             using Gtk::ScrolledWindow::ScrolledWindow;
