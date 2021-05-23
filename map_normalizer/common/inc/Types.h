@@ -7,6 +7,8 @@
 # include <map>
 # include <set>
 # include <variant>
+# include <optional>
+# include <utility>
 
 namespace MapNormalizer {
     /**
