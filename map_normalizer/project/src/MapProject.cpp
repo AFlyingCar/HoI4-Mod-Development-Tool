@@ -556,7 +556,6 @@ void MapNormalizer::Project::MapProject::buildProvinceCache(const Province* prov
     // Some references first, to make the following code easier to read
     //  id also starts at 1, so make sure we offset it down
     const auto& label_matrix = m_shape_detection_info.label_matrix;
-    const auto& gdata = m_shape_detection_info.graphics_data;
     const auto* image = m_shape_detection_info.image;
 
     auto&& bb = province.bounding_box;
@@ -574,10 +573,6 @@ void MapNormalizer::Project::MapProject::buildProvinceCache(const Province* prov
             // Get the index into the label matrix
             auto lindex = xyToIndex(image, x, y);
 
-            // Get the index into the graphics data
-            //  3 == the depth
-            auto gindex = xyToIndex(image->info_header.width * 3, x * 3, y);
-
             // Offset the x,y so that we get 0-preview width/height
             auto relx = x - bb.bottom_left.x;
             auto rely = y - bb.top_right.y;
@@ -590,10 +585,8 @@ void MapNormalizer::Project::MapProject::buildProvinceCache(const Province* prov
             auto label = label_matrix[lindex];
 
             if(label == id) {
-                data[dindex] = 0xFF; // Alpha
-                // Copy in the 3 color values
-                std::memcpy(&data[dindex + 1],
-                            &gdata[gindex], 3);
+                // ARGB
+                *reinterpret_cast<uint32_t*>(&data[dindex]) = 0xFFFFFFFF;
             }
         }
     }
