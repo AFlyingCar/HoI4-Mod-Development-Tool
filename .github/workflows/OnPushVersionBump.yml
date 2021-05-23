@@ -1,0 +1,41 @@
+name: Version Bump
+
+# Only run this when code is pushed to the master branch:
+#   https://github.community/t/trigger-workflow-only-on-pull-request-merge/17359
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Check if Patch
+      id: check-patch
+      run: |
+          shopt -s nocasematch
+          if [[ "${{ github.event.head_commit.message }}" =~ ^\[(bugfix|patch|fix|refactor|perf)\] ]]; then
+            echo ::set-output name=match::true
+          fi
+
+    - name: Bump the Minor version number
+      if: steps.check-patch.outputs.match != 'true'
+      run: sh "$GITHUB_WORKSPACE/tools/versionbump.sh" "$GITHUB_WORKSPACE" 0.1.0
+
+    - name: Bump the Patch version number
+      if: steps.check-patch.outputs.match == 'true'
+      run: sh "$GITHUB_WORKSPACE/tools/versionbump.sh" "$GITHUB_WORKSPACE" 0.0.1
+
+    # Commit and push the new version number
+    - uses: EndBug/add-and-commit@v7
+      with:
+        add: '.config/version.txt'
+        branch: master
+        message: 'Automated Bugfix Version Bump'
+        push: true
+        default_author: github_actions
+

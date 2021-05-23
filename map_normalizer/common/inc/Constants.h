@@ -7,8 +7,10 @@
 #ifndef CONSTANTS_H
 # define CONSTANTS_H
 
-# include "Types.h"
 # include <cstdint>
+
+# include "Types.h"
+# include "Version.h"
 
 namespace MapNormalizer {
     //! Mask to get RED values out of a 24-bit color.
@@ -67,6 +69,9 @@ namespace MapNormalizer {
 
     //! The 4 magic bytes 
     const std::string SHAPEDATA_MAGIC = "SDAT";
+
+    //! The version of the tool
+    extern const Version TOOL_VERSION;
 }
 
 #endif

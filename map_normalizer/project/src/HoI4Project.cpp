@@ -15,7 +15,7 @@ MapNormalizer::Project::HoI4Project::HoI4Project():
     m_path(),
     m_root(),
     m_name(),
-    m_tool_version(),
+    m_tool_version(TOOL_VERSION),
     m_hoi4_version(),
     m_tags(),
     m_overrides(),
@@ -26,7 +26,7 @@ MapNormalizer::Project::HoI4Project::HoI4Project(const std::filesystem::path& pa
     m_path(path),
     m_root(path.parent_path()),
     m_name(),
-    m_tool_version(),
+    m_tool_version(TOOL_VERSION),
     m_hoi4_version(),
     m_tags(),
     m_overrides(),
@@ -311,5 +311,15 @@ void MapNormalizer::Project::HoI4Project::setPathAndName(const std::filesystem::
     }
 
     setPath(path);
+}
+
+void MapNormalizer::Project::HoI4Project::setToolVersion(const Version& version)
+{
+    m_tool_version = version;
+}
+
+void MapNormalizer::Project::HoI4Project::setHoI4Version(const Version& version)
+{
+    m_hoi4_version = version;
 }
 

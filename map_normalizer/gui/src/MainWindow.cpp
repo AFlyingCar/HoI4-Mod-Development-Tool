@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 
 #include <thread>
+#include <sstream>
 
 #include "gtkmm.h"
 #include "gtkmm/filechooserdialog.h"
@@ -502,6 +503,20 @@ void MapNormalizer::GUI::MainWindow::openProject() {
         case Gtk::RESPONSE_DELETE_EVENT:
         default:
             return;
+    }
+
+    if(project->getToolVersion() != TOOL_VERSION) {
+        std::stringstream message_ss;
+        message_ss << "This project was built with a different tool version: '"
+                   << project->getToolVersion() << "' != '" << TOOL_VERSION
+                   << "\'\nColor data may be generated differently.";
+
+        Gtk::MessageDialog dialog(message_ss.str(), false, Gtk::MESSAGE_WARNING);
+
+        dialog.run();
+
+        // Bring the tool version up to date
+        project->setToolVersion(TOOL_VERSION);
     }
 
     // Set up the drawing area
