@@ -34,18 +34,6 @@ bool MapNormalizer::GUI::MapDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Cont
         return true;
     }
 
-    auto iwidth = m_image->info_header.width;
-    auto iheight = m_image->info_header.height;
-
-    auto image = Gdk::Pixbuf::create_from_data(m_graphics_data, Gdk::Colorspace::COLORSPACE_RGB, false, 8, iwidth, iheight, iwidth * 3);
-
-    auto siwidth = iwidth * m_scale_factor;
-    auto siheight = iheight * m_scale_factor;
-
-    image = image->scale_simple(siwidth, siheight, Gdk::INTERP_BILINEAR);
-
-    set_size_request(siwidth, siheight);
-
     // If a province is selected, then go ahead and draw the province preview
     //  on top of the map again
     if(m_selection) {
@@ -59,7 +47,7 @@ bool MapNormalizer::GUI::MapDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Cont
 
         // Manually create the surface from the pixbuf so we can do extra stuff
         //  with it
-        Cairo::RefPtr<Cairo::Surface> full_image(new Cairo::Surface(gdk_cairo_surface_create_from_pixbuf(image->gobj(), 1, NULL)));
+        Cairo::RefPtr<Cairo::Surface> full_image(new Cairo::Surface(gdk_cairo_surface_create_from_pixbuf(m_image_pixbuf->gobj(), 1, NULL)));
 
         auto province_cr = Cairo::Context::create(province_image);
         auto full_cr = Cairo::Context::create(full_image);
@@ -83,11 +71,9 @@ bool MapNormalizer::GUI::MapDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Cont
         // Paint the province onto the full image
         full_cr->set_source(province_image, m_selection->bounding_box.bottom_left.x, m_selection->bounding_box.top_right.y);
 #else
-        auto posx = m_selection->bounding_box.bottom_left.x;// + 4;
+        auto posx = m_selection->bounding_box.bottom_left.x;
         auto posy = m_selection->bounding_box.top_right.y;
-        if(posy >= 4) {
-            //posy -= 4;
-        }
+
         full_cr->scale(m_scale_factor, m_scale_factor);
         full_cr->set_source(province_image, posx, posy);
 #endif
@@ -100,7 +86,7 @@ bool MapNormalizer::GUI::MapDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Cont
         //  the imagee if it is larger than the drawing area)
         // TODO: We should have a way to move the image around/zoom
         //  Also, the specific image should not be affecting the size of the window itself
-        Gdk::Cairo::set_source_pixbuf(cr, image, 0, 0);
+        Gdk::Cairo::set_source_pixbuf(cr, m_image_pixbuf, 0, 0);
     }
 
     cr->paint();
@@ -194,6 +180,8 @@ void MapNormalizer::GUI::MapDrawingArea::zoom(ZoomDirection direction) {
 void MapNormalizer::GUI::MapDrawingArea::zoom(double scale_factor_delta) {
     m_scale_factor += scale_factor_delta;
 
+    rebuildImageCache();
+
     // We need to redraw the entire map if we zoom in/out
     queue_draw();
 }
@@ -226,6 +214,28 @@ void MapNormalizer::GUI::MapDrawingArea::resetZoom() {
 
     writeDebug("Reset zoom to ", m_scale_factor);
 
+    rebuildImageCache();
     queue_draw();
+}
+
+/**
+ * @brief Scales the cached Pixbuf up or down based on the current scale factor
+ */
+void MapNormalizer::GUI::MapDrawingArea::rebuildImageCache() {
+    if(hasData()) {
+        auto iwidth = m_image->info_header.width;
+        auto iheight = m_image->info_header.height;
+
+        auto siwidth = iwidth * m_scale_factor;
+        auto siheight = iheight * m_scale_factor;
+
+        m_image_pixbuf = Gdk::Pixbuf::create_from_data(m_graphics_data, Gdk::Colorspace::COLORSPACE_RGB, false, 8, iwidth, iheight, iwidth * 3);
+
+        m_image_pixbuf = m_image_pixbuf->scale_simple(siwidth, siheight, Gdk::INTERP_BILINEAR);
+
+        set_size_request(siwidth, siheight);
+    } else {
+        m_image_pixbuf.reset();
+    }
 }
 

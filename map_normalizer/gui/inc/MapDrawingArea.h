@@ -57,9 +57,17 @@ namespace MapNormalizer::GUI {
 
             virtual bool on_button_press_event(GdkEventButton*) override;
 
+            void rebuildImageCache();
+
         private:
             const unsigned char* m_graphics_data;
             const BitMap* m_image;
+
+            /**
+             * @brief A cached version of the pixbuf that gets rendered. We
+             *        cache it so that we don't have to constantly rebuild it.
+             */
+            Glib::RefPtr<Gdk::Pixbuf> m_image_pixbuf;
 
             SelectionCallback m_on_select;
             SelectionCallback m_on_multiselect;
