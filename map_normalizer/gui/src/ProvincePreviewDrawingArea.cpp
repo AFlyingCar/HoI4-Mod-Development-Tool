@@ -3,6 +3,7 @@
 
 #include "cairomm/context.h"
 #include "gdkmm/general.h"
+#include "gtkmm/container.h"
 
 MapNormalizer::GUI::ProvincePreviewDrawingArea::ProvincePreviewDrawingArea():
     m_data(),
@@ -18,6 +19,29 @@ void MapNormalizer::GUI::ProvincePreviewDrawingArea::setScale(double x, double y
     m_scaley = y;
 }
 
+void MapNormalizer::GUI::ProvincePreviewDrawingArea::calcScale() {
+    auto* parent = get_parent();
+
+    if(parent != nullptr) {
+        double pwidth = parent->get_width();
+        double pheight = parent->get_height();
+
+        // Scale to the smallest dimension of the parent window
+        // But only scale down if the image is too large, don't worry about
+        //  trying to scale up a smaller image
+        if(m_height > 512) {
+            m_scaley = (pheight / m_height);
+            m_scalex = (pheight / m_height);
+        } else if(pwidth < m_width) {
+            m_scalex = (pwidth / m_width);
+            m_scaley = (pwidth / m_width);
+        } else {
+            m_scalex = 1.0;
+            m_scaley = 1.0;
+        }
+    }
+}
+
 void MapNormalizer::GUI::ProvincePreviewDrawingArea::setData(DataPtr data,
                                                              uint32_t width,
                                                              uint32_t height)
@@ -25,6 +49,8 @@ void MapNormalizer::GUI::ProvincePreviewDrawingArea::setData(DataPtr data,
     m_data = data;
     m_width = width;
     m_height = height;
+
+    calcScale();
 
     queue_draw();
 }
@@ -36,7 +62,10 @@ bool MapNormalizer::GUI::ProvincePreviewDrawingArea::isValid() const {
 bool MapNormalizer::GUI::ProvincePreviewDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
     if(auto data = m_data.lock(); data) {
-        set_size_request(m_width, m_height);
+        auto [width, height] = std::make_pair(m_width * m_scalex,
+                                              m_height * m_scaley);
+
+        set_size_request(width, height);
 
         // Note: The version of Gtk being used apparently doesn't support creating
         //  Pixbuf's from data with Alpha values.
@@ -49,12 +78,12 @@ bool MapNormalizer::GUI::ProvincePreviewDrawingArea::on_draw(const Cairo::RefPtr
                                                        m_width, m_height,
                                                        stride);
 
-        cr->set_source(cairo_image, 0, 0);
-
         // Only scale if we have a non-zero scale
         if(m_scalex != 0 && m_scaley != 0) {
             cr->scale(m_scalex, m_scaley);
         }
+
+        cr->set_source(cairo_image, 0, 0);
 
         cr->paint();
 

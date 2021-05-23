@@ -21,6 +21,8 @@ namespace MapNormalizer::GUI {
 
             bool isValid() const;
 
+            void calcScale();
+
         protected:
             virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>&) override;
 

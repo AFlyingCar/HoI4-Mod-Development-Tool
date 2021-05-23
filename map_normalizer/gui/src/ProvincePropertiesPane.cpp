@@ -283,6 +283,10 @@ void MapNormalizer::GUI::ProvincePropertiesPane::setPreview(ProvincePreviewDrawi
     }
 }
 
+void MapNormalizer::GUI::ProvincePropertiesPane::onResize() {
+    m_preview_area.calcScale();
+}
+
 void MapNormalizer::GUI::ProvincePropertiesPane::updateProperties(const Province* prov)
 {
     if(prov == nullptr) {

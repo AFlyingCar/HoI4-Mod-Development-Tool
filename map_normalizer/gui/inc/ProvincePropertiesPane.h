@@ -29,6 +29,8 @@ namespace MapNormalizer::GUI {
 
             void setProvince(Province*, ProvincePreviewDrawingArea::DataPtr);
 
+            void onResize();
+
         protected:
             virtual void addWidgetToParent(Gtk::Widget&) override;
 

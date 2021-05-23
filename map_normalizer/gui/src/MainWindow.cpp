@@ -332,6 +332,12 @@ Gtk::Frame* MapNormalizer::GUI::MainWindow::buildPropertiesPane() {
     m_province_properties_pane->init();
     properties_tab->append_page(m_province_properties_pane->getParent(), "Province");
 
+    m_paned->property_position().signal_changed().connect([this]() {
+        if(m_province_properties_pane) {
+            m_province_properties_pane->onResize();
+        }
+    });
+
     // State Tab
     {
         // We want to possibly be able to scroll in the properties window
