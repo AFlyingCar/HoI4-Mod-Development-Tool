@@ -35,7 +35,7 @@ jobs:
       with:
         add: '.config/version.txt'
         branch: master
-        message: 'Automated Bugfix Version Bump'
+        message: 'Automated Version Bump'
         push: true
         default_author: github_actions
 
