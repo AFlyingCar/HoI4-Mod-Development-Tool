@@ -169,6 +169,26 @@ bool MapNormalizer::GUI::MainWindow::initializeWidgets() {
 
     m_active_child = std::monostate{};
 
+    // If the escape key is pressed, deselect the current province
+    signal_key_press_event().connect([this](GdkEventKey* event) {
+        if(event->keyval == GDK_KEY_Escape) {
+            if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+                auto& project = opt_project->get();
+                auto& map_project = project.getMapProject();
+
+                map_project.selectProvince(-1);
+
+                ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
+                m_province_properties_pane->setProvince(nullptr, null_data);
+
+                m_drawing_area->setSelection();
+                m_drawing_area->queue_draw();
+            }
+        }
+
+        return false;
+    });
+
     return true;
 }
 
@@ -197,6 +217,9 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
 
                 ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
                 m_province_properties_pane->setProvince(nullptr, null_data);
+
+                m_drawing_area->setSelection();
+                m_drawing_area->queue_draw();
 
                 return;
             }
@@ -680,6 +703,9 @@ void MapNormalizer::GUI::MainWindow::onProjectClosed() {
     if(m_province_properties_pane != nullptr) {
         ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
         m_province_properties_pane->setProvince(nullptr, null_data);
+
+        m_drawing_area->setSelection();
+        m_drawing_area->queue_draw();
     }
 }
 
