@@ -9,7 +9,7 @@
         }
         $i = versions[i] + $i
     }
-    for(i = lastNonzero + 1; i < nIter; ++i) {
+    for(i = lastNonzero + 1; i <= nIter; ++i) {
         $i = 0
     }
     print
