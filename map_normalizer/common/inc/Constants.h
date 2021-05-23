@@ -82,6 +82,8 @@ namespace MapNormalizer {
     //! The default zoom level
     const double DEFAULT_ZOOM = 1.0;
 
+    const uint32_t PROVINCE_HIGHLIGHT_COLOR = 0xFFFFFFFF;
+
     //! The version of the tool
     extern const Version TOOL_VERSION;
 }

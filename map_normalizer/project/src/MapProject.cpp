@@ -586,7 +586,7 @@ void MapNormalizer::Project::MapProject::buildProvinceCache(const Province* prov
 
             if(label == id) {
                 // ARGB
-                *reinterpret_cast<uint32_t*>(&data[dindex]) = 0xFFFFFFFF;
+                *reinterpret_cast<uint32_t*>(&data[dindex]) = PROVINCE_HIGHLIGHT_COLOR;
             }
         }
     }
