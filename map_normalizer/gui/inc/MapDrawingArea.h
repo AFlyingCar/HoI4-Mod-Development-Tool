@@ -29,6 +29,7 @@ namespace MapNormalizer::GUI {
 
             void setGraphicsData(const unsigned char*);
             void setImage(const BitMap*);
+            void setData(const BitMap*, const unsigned char*);
 
             bool hasData() const;
 
@@ -48,6 +49,8 @@ namespace MapNormalizer::GUI {
 
             void zoom(ZoomDirection);
             void zoom(double);
+
+            void resetZoom();
 
         protected:
             virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>&) override;

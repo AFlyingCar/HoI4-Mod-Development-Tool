@@ -4,6 +4,7 @@
 #include "cairomm/context.h"
 #include "gdkmm/general.h"
 #include "gdk/gdkcairo.h"
+#include "gtkmm/container.h"
 
 #include "Logger.h"
 #include "Constants.h"
@@ -82,10 +83,10 @@ bool MapNormalizer::GUI::MapDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Cont
         // Paint the province onto the full image
         full_cr->set_source(province_image, m_selection->bounding_box.bottom_left.x, m_selection->bounding_box.top_right.y);
 #else
-        auto posx = m_selection->bounding_box.bottom_left.x + 4;
+        auto posx = m_selection->bounding_box.bottom_left.x;// + 4;
         auto posy = m_selection->bounding_box.top_right.y;
         if(posy >= 4) {
-            posy -= 4;
+            //posy -= 4;
         }
         full_cr->scale(m_scale_factor, m_scale_factor);
         full_cr->set_source(province_image, posx, posy);
@@ -139,6 +140,15 @@ void MapNormalizer::GUI::MapDrawingArea::setImage(const BitMap* image) {
     m_image = image;
 }
 
+void MapNormalizer::GUI::MapDrawingArea::setData(const BitMap* image,
+                                                 const unsigned char* data)
+{
+    setImage(image);
+    setGraphicsData(data);
+
+    resetZoom();
+}
+
 void MapNormalizer::GUI::MapDrawingArea::graphicsUpdateCallback(const Rectangle& rectangle)
 {
     if(rectangle.w == 0 && rectangle.h == 0) {
@@ -176,8 +186,7 @@ void MapNormalizer::GUI::MapDrawingArea::zoom(ZoomDirection direction) {
             zoom(-ZOOM_FACTOR);
             break;
         case ZoomDirection::RESET:
-            m_scale_factor = DEFAULT_ZOOM;
-            queue_draw();
+            resetZoom();
             break;
     }
 }
@@ -186,6 +195,37 @@ void MapNormalizer::GUI::MapDrawingArea::zoom(double scale_factor_delta) {
     m_scale_factor += scale_factor_delta;
 
     // We need to redraw the entire map if we zoom in/out
+    queue_draw();
+}
+
+void MapNormalizer::GUI::MapDrawingArea::resetZoom() {
+    // Do nothing if there is no data loaded
+    if(!hasData()) return;
+
+    auto* parent = get_parent();
+
+    if(parent == nullptr) {
+        writeWarning("MapDrawingArea has no parent, setting zoom to ", DEFAULT_ZOOM);
+
+        m_scale_factor = DEFAULT_ZOOM;
+    } else {
+        double pwidth = parent->get_width();
+        double pheight = parent->get_height();
+
+        double iheight = m_image->info_header.height;
+
+        // Scale to the smallest dimension of the parent window
+        // But only scale down if the image is too large, don't worry about
+        //  trying to scale up a smaller image
+        if(pheight <= pwidth && pheight < iheight) {
+            m_scale_factor = (pheight / iheight);
+        } else {
+            m_scale_factor = DEFAULT_ZOOM;
+        }
+    }
+
+    writeDebug("Reset zoom to ", m_scale_factor);
+
     queue_draw();
 }
 

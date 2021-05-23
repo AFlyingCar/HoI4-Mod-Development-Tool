@@ -437,8 +437,7 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
         m_drawing_area->get_window()->resize(image->info_header.width,
                                              image->info_header.height);
 
-        m_drawing_area->setGraphicsData(graphics_data);
-        m_drawing_area->setImage(image);
+        m_drawing_area->setData(image, graphics_data);
 
         ShapeFinder shape_finder(image);
 
@@ -664,8 +663,8 @@ void MapNormalizer::GUI::MainWindow::openProject() {
     // Set up the drawing area
     const auto& map_project = project->getMapProject();
 
-    m_drawing_area->setGraphicsData(map_project.getGraphicsData());
-    m_drawing_area->setImage(map_project.getImage());
+    m_drawing_area->setData(map_project.getImage(),
+                            map_project.getGraphicsData());
     m_drawing_area->queue_draw();
 
     // We no longer need to own the project, so give it to the Driver
