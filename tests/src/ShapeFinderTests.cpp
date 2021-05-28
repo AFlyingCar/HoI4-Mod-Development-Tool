@@ -8,6 +8,21 @@
 #include "TestOverrides.h"
 
 namespace {
+    class GraphicsWorkerMock: public MapNormalizer::IGraphicsWorker {
+        public:
+            virtual ~GraphicsWorkerMock() = default;
+
+            virtual void writeDebugColor(uint32_t, uint32_t,
+                                         const MapNormalizer::Color&) { }
+            virtual void updateCallback(const MapNormalizer::Rectangle&) { }
+
+            static GraphicsWorkerMock& getInstance() {
+                static GraphicsWorkerMock instance;
+
+                return instance;
+            }
+    };
+
     class ShapeFinderMock: public MapNormalizer::ShapeFinder {
         public:
             using MapNormalizer::ShapeFinder::ShapeFinder;
@@ -34,8 +49,9 @@ TEST(ShapeFinderTests, TestPass1BorderCount) {
     const InputImageInfo& iii = images.at("./bin/simple.bmp");
 
     auto image = MapNormalizer::readBMP(iii.path);
+    ASSERT_NE(image, nullptr);
 
-    ShapeFinderMock finder(image);
+    ShapeFinderMock finder(image, GraphicsWorkerMock::getInstance());
 
     auto border_pixel_count = finder.pass1();
 
