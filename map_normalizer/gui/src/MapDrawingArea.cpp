@@ -15,7 +15,7 @@
 MapNormalizer::GUI::MapDrawingArea::MapDrawingArea():
     m_graphics_data(nullptr),
     m_image(nullptr),
-    m_on_select([](auto...) { }),
+    m_on_select([](auto...) { }),      // The default callback does nothing
     m_on_multiselect([](auto...) { }),
     m_scale_factor(DEFAULT_ZOOM)
 {
