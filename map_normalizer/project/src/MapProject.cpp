@@ -346,7 +346,6 @@ bool MapNormalizer::Project::MapProject::loadProvinceData(const std::filesystem:
 
             // Attempt to parse the entire CSV line, we expect it to look like:
             //  ID;R;G;B;ProvinceType;IsCoastal;TerrainType;ContinentID;BB.BottomLeft.X;BB.BottomLeft.Y;BB.TopRight.X;BB.TopRight.Y
-            // std::string adjacencies_str;
             if(!parseValues<';'>(ss, prov.id, prov.unique_color.r,
                                               prov.unique_color.g,
                                               prov.unique_color.b,
