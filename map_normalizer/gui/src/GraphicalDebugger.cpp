@@ -45,7 +45,7 @@ void MapNormalizer::GraphicsWorker::init(const BitMap* image,
 }
 
 void MapNormalizer::GraphicsWorker::writeDebugColor(uint32_t x, uint32_t y,
-                                                    Color c)
+                                                    const Color& c)
 {
     if(m_debug_data != nullptr) {
         uint32_t w = m_image->info_header.width;
