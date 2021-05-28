@@ -654,6 +654,14 @@ void MapNormalizer::ShapeFinder::buildShape(uint32_t label, const Pixel& pixel,
     addPixelToShape(shapes.at(shapeidx), pixel);
 }
 
+/**
+ * @brief Calculates the adjacent shapes for a single point
+ *
+ * @param image The image the pixel is from
+ * @param label_matrix The matrix of labels
+ * @param adjacency_list The set of adjacent labels to insert into
+ * @param point The point to find adjacent shapes for
+ */
 void MapNormalizer::ShapeFinder::calculateAdjacency(const BitMap* image,
                                                     const uint32_t* label_matrix,
                                                     std::set<uint32_t>& adjacency_list,
