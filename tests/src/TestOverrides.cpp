@@ -8,6 +8,6 @@
 #include "TestOverrides.h"
 
 MapNormalizer::ProgramOptions MapNormalizer::prog_opts = {
-    0, "", "", false, false, false, "", "", false, "", false, false
+    0, "", "", false, false, "", "", false, "", false, false, false 
 };
 
