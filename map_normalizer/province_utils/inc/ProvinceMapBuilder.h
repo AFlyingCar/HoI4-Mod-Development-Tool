@@ -43,13 +43,12 @@ namespace MapNormalizer {
     ProvinceList createProvinceList(const PolygonList&);
     ProvinceType getProvinceType(std::uint32_t);
     ProvinceType getProvinceType(const Color&);
-    bool isCoastal(const Color&);
-    Terrain getTerrainType(const Color&);
-    Continent getContinent(const Color&);
-    StateID getState(const Color&);
+    [[deprecated]] bool isCoastal(const Color&);
+    [[deprecated]] TerrainID getTerrainType(const Color&);
+    [[deprecated]] Continent getContinent(const Color&);
+    [[deprecated]] StateID getState(const Color&);
 
     std::ostream& operator<<(std::ostream&, const MapNormalizer::Province&);
-    std::ostream& operator<<(std::ostream&, MapNormalizer::Terrain);
 }
 
 #endif

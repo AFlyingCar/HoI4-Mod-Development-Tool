@@ -14,6 +14,7 @@
 #include "ShapeFinder2.h" // ShapeFinder
 
 #include "GraphicalDebugger.h"
+#include "InterruptableScrolledWindow.h"
 #include "MapNormalizerApplication.h"
 #include "ProgressBarDialog.h"
 #include "NewProjectDialog.h"
@@ -96,7 +97,7 @@ void MapNormalizer::GUI::MainWindow::initializeEditActions() {
  * @brief Initializes every action in the View menu
  */
 void MapNormalizer::GUI::MainWindow::initializeViewActions() {
-    add_action_bool("properties", [this]() {
+    auto properties_action = add_action_bool("properties", [this]() {
         auto self = lookup_action("properties");
         bool active = false;
         self->get_state(active);
@@ -104,11 +105,13 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
 
         if(m_paned->get_child2() == nullptr) {
             buildPropertiesPane();
+
             m_paned->show_all();
         } else {
             m_paned->remove(*m_paned->get_child2());
         }
     }, false);
+    properties_action->set_enabled(false);
 }
 
 /**
@@ -166,6 +169,26 @@ bool MapNormalizer::GUI::MainWindow::initializeWidgets() {
 
     m_active_child = std::monostate{};
 
+    // If the escape key is pressed, deselect the current province
+    signal_key_press_event().connect([this](GdkEventKey* event) {
+        if(event->keyval == GDK_KEY_Escape) {
+            if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+                auto& project = opt_project->get();
+                auto& map_project = project.getMapProject();
+
+                map_project.selectProvince(-1);
+
+                ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
+                m_province_properties_pane->setProvince(nullptr, null_data);
+
+                m_drawing_area->setSelection();
+                m_drawing_area->queue_draw();
+            }
+        }
+
+        return false;
+    });
+
     return true;
 }
 
@@ -176,8 +199,122 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
     m_paned->pack1(*std::get<Gtk::Frame*>(m_active_child = new Gtk::Frame()), true, false);
 
     // Setup the box+area for the map image to render
-    auto drawing_window = addWidget<Gtk::ScrolledWindow>();
+    auto drawing_window = addWidget<InterruptableScrolledWindow>();
     auto drawing_area = m_drawing_area = new MapDrawingArea();
+
+    drawing_area->setOnProvinceSelectCallback([this](uint32_t x, uint32_t y) {
+        if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+            auto& project = opt_project->get();
+            auto& map_project = project.getMapProject();
+
+            auto image = project.getMapProject().getImage();
+            auto lmatrix = project.getMapProject().getLabelMatrix();
+
+            // If the click happens outside of the bounds of the image, then
+            //   deselect the province
+            if(x < 0 || x > image->info_header.width ||
+               y < 0 || y > image->info_header.height)
+            {
+                map_project.selectProvince(-1);
+
+                ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
+                m_province_properties_pane->setProvince(nullptr, null_data);
+
+                m_drawing_area->setSelection();
+                m_drawing_area->queue_draw();
+
+                return;
+            }
+
+            // Get the label for the pixel that got clicked on
+            auto label = lmatrix[xyToIndex(image, x, y)];
+
+            writeDebug("Selecting province with ID ", label);
+            map_project.selectProvince(label - 1);
+
+            // If the label is a valid province, then go ahead and mark it as
+            //  selected everywhere that needs it to be marked as such
+            if(auto opt_selected = project.getMapProject().getSelectedProvince();
+               m_province_properties_pane != nullptr && opt_selected)
+            {
+                auto* province = &opt_selected->get();
+                auto preview_data = map_project.getPreviewData(province);
+                m_province_properties_pane->setProvince(province, preview_data);
+
+                m_drawing_area->setSelection({preview_data, province->bounding_box});
+                m_drawing_area->queue_draw();
+            }
+        }
+    });
+
+    drawing_area->setOnMultiProvinceSelectionCallback([](uint32_t x, uint32_t y)
+    {
+        if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+            auto& project = opt_project->get();
+
+            auto image = project.getMapProject().getImage();
+            auto lmatrix = project.getMapProject().getLabelMatrix();
+
+            // Multiselect out of bounds will simply not add to the selections
+            if(x < 0 || x > image->info_header.width ||
+               y < 0 || y > image->info_header.height)
+            {
+                return;
+            }
+
+            auto label = lmatrix[xyToIndex(image, x, y)];
+
+            // TODO: get the current province and add it to some sort of
+            //   grouping that can be acted upon
+
+            project.getMapProject().selectProvince(label - 1);
+        }
+    });
+
+    // Set up a signal callback to zoom in and out when performing CTRL+ScrollWhell
+    drawing_window->signalOnScroll().connect([drawing_area](GdkEventScroll* event)
+    {
+        if(event->state & GDK_CONTROL_MASK) {
+            switch(event->direction) {
+                case GDK_SCROLL_UP:
+                    drawing_area->zoom(MapDrawingArea::ZoomDirection::IN);
+                    break;
+                case GDK_SCROLL_DOWN:
+                    drawing_area->zoom(MapDrawingArea::ZoomDirection::OUT);
+                    break;
+                case GDK_SCROLL_SMOOTH:
+                    drawing_area->zoom(-event->delta_y * ZOOM_FACTOR);
+                    break;
+                default: // We don't care about _LEFT or _RIGHT
+                    break;
+            }
+            return true;
+        }
+
+        return false;
+    });
+
+    // Set up a signal callback to zoom in and out when pressing NumpadADD and NumpadSUB
+    // CTRL+r will reset zoom level
+    drawing_window->add_events(Gdk::KEY_PRESS_MASK);
+    drawing_window->signal_key_press_event().connect([drawing_area](GdkEventKey* event)
+    {
+        switch(event->keyval) {
+            case GDK_KEY_KP_Add:
+                drawing_area->zoom(MapDrawingArea::ZoomDirection::IN);
+                break;
+            case GDK_KEY_KP_Subtract:
+                drawing_area->zoom(MapDrawingArea::ZoomDirection::OUT);
+                break;
+            case GDK_KEY_r:
+                if(event->state & GDK_CONTROL_MASK) {
+                    drawing_area->zoom(MapDrawingArea::ZoomDirection::RESET);
+                }
+                break;
+        }
+
+        return false;
+    });
 
     // Place the drawing area in a scrollable window
     drawing_window->add(*drawing_area);
@@ -196,36 +333,51 @@ Gtk::Frame* MapNormalizer::GUI::MainWindow::buildPropertiesPane() {
 
     m_paned->pack2(*properties_frame, false, false);
 
-    auto properties_tab = addWidget<Gtk::Notebook>();
+    // Province Tab
+    auto properties_tab = addActiveWidget<Gtk::Notebook>();
 
+    m_province_properties_pane.reset(new ProvincePropertiesPane);
+    m_province_properties_pane->init();
+    properties_tab->append_page(m_province_properties_pane->getParent(), "Province");
+
+    m_paned->property_position().signal_changed().connect([this]() {
+        if(m_province_properties_pane) {
+            m_province_properties_pane->onResize();
+        }
+    });
+
+    // State Tab
     {
         // We want to possibly be able to scroll in the properties window
         auto properties_window = new Gtk::ScrolledWindow();
-        properties_window->set_size_request(MINIMUM_PROPERTIES_PANE_WIDTH, -1);
-
-        properties_tab->append_page(*properties_window, "Province");
-
         // Do this so all future widgets we add get put into this one
         m_active_child = properties_window;
 
-        // TODO: Add all of the properties stuff
-        //   We may want a custom widget that knows what is currently selected?
-        addWidget<Gtk::Label>("Province Properties");
-    }
-
-    {
-        // We want to possibly be able to scroll in the properties window
-        auto properties_window = new Gtk::ScrolledWindow();
         properties_window->set_size_request(MINIMUM_PROPERTIES_PANE_WIDTH, -1);
 
         properties_tab->append_page(*properties_window, "State");
 
-        // Do this so all future widgets we add get put into this one
-        m_active_child = properties_window;
+        // Begin defining the contents of the tab-window
 
         // TODO: Add all of the properties stuff
         //   We may want a custom widget that knows what is currently selected?
         addWidget<Gtk::Label>("State Properties");
+    }
+
+    m_active_child = std::monostate();
+
+    // Finish extra setup in case we have a project loaded
+    if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+        auto& project = opt_project->get();
+        auto& map_project = project.getMapProject();
+
+        // Provinces Tab
+        if(auto opt_selected = map_project.getSelectedProvince(); opt_selected)
+        {
+            auto label = opt_selected->get().id;
+            m_province_properties_pane->setProvince(&opt_selected->get(),
+                                                    map_project.getPreviewData(label));
+        }
     }
 
     return properties_frame;
@@ -299,8 +451,7 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
         m_drawing_area->get_window()->resize(image->info_header.width,
                                              image->info_header.height);
 
-        m_drawing_area->setGraphicsData(graphics_data);
-        m_drawing_area->setImage(image);
+        m_drawing_area->setData(image, graphics_data);
 
         ShapeFinder shape_finder(image);
 
@@ -339,6 +490,10 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
             }
             progress_dialog.setFraction(fraction);
         });
+
+        // TODO: This threading stuff is dangerous because GTK is not actually
+        //  thread safe. We should make sure to do GTK things to ensure that
+        //  nothing causes thread race conditions.
 
         // Start processing the data
         std::thread sf_worker([&shape_finder, done_button, cancel_button]() {
@@ -394,8 +549,14 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
             did_estop = true;
         }
 
-        // Wait for the worker to join back up
+        writeDebug("Waiting for ShapeFinder worker to rejoin.");
         sf_worker.join();
+
+        // Note: We reset the zoom here so that we can ensure that the drawing
+        //  area actually updates the image.
+        // TODO: Why do I have to do this? What about this PR has caused this
+        //  to suddenly be required?
+        m_drawing_area->resetZoom();
 
         worker.resetWriteCallback();
 
@@ -404,12 +565,14 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
             return true;
         }
 
+        writeDebug("Assigning the found data to the map project.");
         project.getMapProject().setShapeFinder(std::move(shape_finder));
         project.getMapProject().setGraphicsData(graphics_data);
 
         std::filesystem::path imported(filename);
         std::filesystem::path input_root = project.getInputsRoot();
 
+        writeDebug("Copying the imported map into ", input_root);
         if(!std::filesystem::exists(input_root)) {
             std::filesystem::create_directory(input_root);
         }
@@ -426,6 +589,8 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
         writeError("Unable to complete importing '", filename, "'. Reason: There is no project currently loaded.");
         return false;
     }
+
+    writeStdout("Import Finished!");
 
     return true;
 }
@@ -522,8 +687,8 @@ void MapNormalizer::GUI::MainWindow::openProject() {
     // Set up the drawing area
     const auto& map_project = project->getMapProject();
 
-    m_drawing_area->setGraphicsData(map_project.getGraphicsData());
-    m_drawing_area->setImage(map_project.getImage());
+    m_drawing_area->setData(map_project.getImage(),
+                            map_project.getGraphicsData());
     m_drawing_area->queue_draw();
 
     // We no longer need to own the project, so give it to the Driver
@@ -540,16 +705,31 @@ void MapNormalizer::GUI::MainWindow::onProjectOpened() {
     getAction("import_provincemap")->set_enabled(true);
     getAction("save")->set_enabled(true);
     getAction("close")->set_enabled(true);
+    getAction("properties")->set_enabled(true);
 }
 
 /**
  * @brief Called when a project is closed
  */
 void MapNormalizer::GUI::MainWindow::onProjectClosed() {
+    // Have the drawing area forget the data it was set to render
+    m_drawing_area->setGraphicsData(nullptr);
+    m_drawing_area->setImage(nullptr);
+    m_drawing_area->queue_draw();
+
     // Disable all actions that can only be done on an opened project
     getAction("import_provincemap")->set_enabled(false);
     getAction("save")->set_enabled(false);
     getAction("close")->set_enabled(false);
+    getAction("properties")->set_enabled(false);
+
+    if(m_province_properties_pane != nullptr) {
+        ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
+        m_province_properties_pane->setProvince(nullptr, null_data);
+
+        m_drawing_area->setSelection();
+        m_drawing_area->queue_draw();
+    }
 }
 
 /**

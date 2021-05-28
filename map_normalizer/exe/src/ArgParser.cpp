@@ -26,6 +26,7 @@ void MapNormalizer::printHelp() {
     writeStdout<false>("\t   --hoi4-install-path     The installation path for Hearts of Iron 4.");
     writeStdout<false>("\t   --output-stages         Output every stage of the shape detection algorithm.");
     writeStdout<false>("\t   --headless              Should the application run in headless mode (without the GUI). Note that this requires [INFIILE] and [OUTPATH] to be provided.");
+    writeStdout<false>("\t   --debug                 Should debugging features be enabled.");
     writeStdout<false>("\t-v,--verbose               Display all output.");
     writeStdout<false>("\t-q,--quiet                 Display only errors and warnings (does not affect this message).");
     writeStdout<false>("\t-h,--help                  Display this message and exit.");
@@ -59,11 +60,12 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
         { "hoi4-install-path", required_argument, NULL, 5 },
         { "output-stages", no_argument, NULL, 6 },
         { "headless", no_argument, NULL, 7 },
+        { "debug", no_argument, NULL, 8 },
         { nullptr, 0, nullptr, 0}
     };
 
     // Setup default option values
-    ProgramOptions prog_opts { 0, "", "", false, false, "", "", false, "", false, false };
+    ProgramOptions prog_opts { 0, "", "", false, false, "", "", false, "", false, false, false };
 
     int optindex = 0;
     int c = 0;
@@ -123,6 +125,9 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
             case 1: // --no-gui
             case 7: // --headless
                 prog_opts.headless = true;
+                break;
+            case 8: // --debug
+                prog_opts.debug = true;
                 break;
             case 'v': // -v,--verbose
                 if(prog_opts.quiet) {

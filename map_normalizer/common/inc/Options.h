@@ -44,6 +44,9 @@ namespace MapNormalizer {
 
         //! --headless
         bool headless;
+
+        //! --debug
+        bool debug;
     };
 
     //! Global variable for storing program options.

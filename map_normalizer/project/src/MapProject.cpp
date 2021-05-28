@@ -15,6 +15,9 @@
 
 MapNormalizer::Project::MapProject::MapProject(IProject& parent_project):
     m_shape_detection_info(),
+    m_continents(),
+    m_terrains(getDefaultTerrains()),
+    m_selected_province(-1),
     m_parent_project(parent_project)
 {
 }
@@ -42,7 +45,8 @@ bool MapNormalizer::Project::MapProject::save(const std::filesystem::path& path,
         return true;
     }
 
-    return saveShapeLabels(path, ec) && saveProvinceData(path, ec);
+    return saveShapeLabels(path, ec) && saveProvinceData(path, ec) &&
+           saveContinentData(path, ec);
 }
 
 /**
@@ -88,7 +92,14 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
     }
 
     // Now load the other related data
+    // This data is required
     if(!loadProvinceData(path, ec) || !loadShapeLabels(path, ec)) {
+        return false;
+    }
+
+    // This data is not required (only fail if loading it failed), not if it 
+    //  doesn't exist
+    if(!loadContinentData(path, ec) && ec.value() != 0) {
         return false;
     }
 
@@ -105,7 +116,7 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
     auto data_size = width * height * 3;
     graphics_data = new unsigned char[data_size];
 
-    // Rebuild the graphics_data array
+    // Rebuild the graphics_data array and the adjacency lists
     for(uint32_t x = 0; x < width; ++x) {
         for(uint32_t y = 0; y < height; ++y) {
             // Get the index into the label matrix
@@ -126,11 +137,19 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
                 continue;
             }
 
+            // Rebuild color data
             auto& province = m_shape_detection_info.provinces[label - 1];
 
-            graphics_data[gindex] = province.unique_color.r;
+            // Flip the colors from RGB to BGR because BitMap is a bad format
+            graphics_data[gindex] = province.unique_color.b;
             graphics_data[gindex + 1] = province.unique_color.g;
-            graphics_data[gindex + 2] = province.unique_color.b;
+            graphics_data[gindex + 2] = province.unique_color.r;
+
+            // Recalculate adjacencies for this pixel
+            ShapeFinder::calculateAdjacency(image,
+                                            m_shape_detection_info.label_matrix,
+                                            province.adjacent_provinces,
+                                            {x, y});
         }
     }
 
@@ -188,8 +207,46 @@ bool MapNormalizer::Project::MapProject::saveProvinceData(const std::filesystem:
     if(std::ofstream out(path); out) {
         // Write one line to the CSV for each province
         for(auto&& province : m_shape_detection_info.provinces) {
-            
-            out << province << std::endl;
+            out << province.id << ';'
+                << static_cast<int>(province.unique_color.r) << ';'
+                << static_cast<int>(province.unique_color.g) << ';'
+                << static_cast<int>(province.unique_color.b) << ';'
+                << province.type << ';'
+                << (province.coastal ? "true" : "false")
+                << ';' << province.terrain << ';'
+                << province.continent << ';'
+                << province.bounding_box.bottom_left.x << ';'
+                << province.bounding_box.bottom_left.y << ';'
+                << province.bounding_box.top_right.x << ';'
+                << province.bounding_box.top_right.y
+                << std::endl;
+        }
+    } else {
+        ec = std::error_code(static_cast<int>(errno), std::generic_category());
+        writeError("Failed to open file ", path, ". Reason: ", std::strerror(errno));
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * @brief Writes all continent data to root/$CONTINENTDATA_FILENAME
+ *
+ * @param root The root where all continent data should go
+ * @param ec The error code
+ *
+ * @return True if continent data was successfully loaded, false otherwise
+ */
+bool MapNormalizer::Project::MapProject::saveContinentData(const std::filesystem::path& root,
+                                                           std::error_code& ec)
+{
+    auto path = root / CONTINENTDATA_FILENAME;
+
+    // Try to open the continent file for reading.
+    if(std::ofstream out(path); out) {
+        for(auto&& continent : m_continents) {
+            out << continent << '\n';
         }
     } else {
         ec = std::error_code(static_cast<int>(errno), std::generic_category());
@@ -288,12 +345,16 @@ bool MapNormalizer::Project::MapProject::loadProvinceData(const std::filesystem:
             Province prov;
 
             // Attempt to parse the entire CSV line, we expect it to look like:
-            //  ID;R;G;B;ProvinceType;IsCoastal;TerrainType;ContinentID
+            //  ID;R;G;B;ProvinceType;IsCoastal;TerrainType;ContinentID;BB.BottomLeft.X;BB.BottomLeft.Y;BB.TopRight.X;BB.TopRight.Y
             if(!parseValues<';'>(ss, prov.id, prov.unique_color.r,
                                               prov.unique_color.g,
                                               prov.unique_color.b,
                                      prov.type, prov.coastal, prov.terrain,
-                                     prov.continent))
+                                     prov.continent,
+                                     prov.bounding_box.bottom_left.x,
+                                     prov.bounding_box.bottom_left.y,
+                                     prov.bounding_box.top_right.x,
+                                     prov.bounding_box.top_right.y))
             {
                 ec = std::make_error_code(std::errc::bad_message);
                 writeError("Failed to parse line #", line_num, ": '", line, "'");
@@ -305,6 +366,43 @@ bool MapNormalizer::Project::MapProject::loadProvinceData(const std::filesystem:
 
         writeDebug("Loaded information for ",
                    m_shape_detection_info.provinces.size(), " provinces");
+    } else {
+        ec = std::error_code(static_cast<int>(errno), std::generic_category());
+        writeError("Failed to open file ", path, ". Reason: ", std::strerror(errno));
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * @brief Loads all continent data from a file
+ *
+ * @param root The root where the continent data file should be found
+ * @param ec The error code
+ *
+ * @return True if data was loaded correctly, false otherwise
+ */
+bool MapNormalizer::Project::MapProject::loadContinentData(const std::filesystem::path& root,
+                                                           std::error_code& ec)
+{
+    auto path = root / CONTINENTDATA_FILENAME;
+
+    // If the file doesn't exist, then return false (we didn't actually load it
+    //  after all), but don't set the error code as it is expected that the
+    //  file may not exist
+    if(!std::filesystem::exists(path)) {
+        writeWarning("No data to load! No continents currently exist!");
+        return false;
+    }
+
+    if(std::ifstream in(path); in) {
+        std::string line;
+        while(std::getline(in, line)) {
+            if(line.empty()) continue;
+
+            m_continents.insert(line);
+        }
     } else {
         ec = std::error_code(static_cast<int>(errno), std::generic_category());
         writeError("Failed to open file ", path, ". Reason: ", std::strerror(errno));
@@ -330,6 +428,10 @@ void MapNormalizer::Project::MapProject::setShapeFinder(ShapeFinder&& shape_find
     m_shape_detection_info.label_matrix = sf.getLabelMatrix();
     m_shape_detection_info.label_matrix_size = sf.getLabelMatrixSize();
     m_shape_detection_info.graphics_data = nullptr;
+
+    // Clear out which province is selected
+    m_selected_province = -1;
+    m_data_cache.clear();
 }
 
 void MapNormalizer::Project::MapProject::setGraphicsData(unsigned char* data) {
@@ -359,5 +461,203 @@ unsigned char* MapNormalizer::Project::MapProject::getGraphicsData() {
 const unsigned char* MapNormalizer::Project::MapProject::getGraphicsData() const
 {
     return m_shape_detection_info.graphics_data;
+}
+
+const uint32_t* MapNormalizer::Project::MapProject::getLabelMatrix() const {
+    return m_shape_detection_info.label_matrix;
+}
+
+void MapNormalizer::Project::MapProject::selectProvince(uint32_t label) {
+    m_selected_province = label;
+}
+
+/**
+ * @brief Will return the currently selected province, or std::nullopt if no
+ *        valid province is currently selected.
+ *
+ * @return The currently selected province, or std::nullopt.
+ */
+auto MapNormalizer::Project::MapProject::getSelectedProvince() const
+    -> OptionalReference<const Province>
+{
+    if(m_selected_province < m_shape_detection_info.provinces.size()) {
+        return std::ref(m_shape_detection_info.provinces.at(m_selected_province));
+    }
+
+    return std::nullopt;
+}
+
+/**
+ * @brief Will return the currently selected province, or std::nullopt if no
+ *        valid province is currently selected.
+ *
+ * @return The currently selected province, or std::nullopt.
+ */
+auto MapNormalizer::Project::MapProject::getSelectedProvince()
+    -> OptionalReference<Province>
+{
+    if(m_selected_province < m_shape_detection_info.provinces.size()) {
+        return std::ref(m_shape_detection_info.provinces.at(m_selected_province));
+    }
+
+    return std::nullopt;
+}
+
+const std::set<std::string>& MapNormalizer::Project::MapProject::getContinentList() const
+{
+    return m_continents;
+}
+
+auto MapNormalizer::Project::MapProject::getTerrains() const
+    -> const std::vector<Terrain>&
+{
+    return m_terrains;
+}
+
+void MapNormalizer::Project::MapProject::addNewContinent(const std::string& continent)
+{
+    m_continents.insert(continent);
+}
+
+void MapNormalizer::Project::MapProject::removeContinent(const std::string& continent)
+{
+    m_continents.erase(continent);
+}
+
+/**
+ * @brief Gets province preview data for the given ID
+ *
+ * @param id
+ *
+ * @return The preview data, or nullptr if the ID does not exist
+ */
+auto MapNormalizer::Project::MapProject::getPreviewData(ProvinceID id)
+    -> ProvinceDataPtr
+{
+    if(id - 1 < m_shape_detection_info.provinces.size()) {
+        return getPreviewData(&m_shape_detection_info.provinces.at(id - 1));
+    }
+
+    return nullptr;
+}
+
+/**
+ * @brief Gets the preview data for the given province. If no data currently
+ *        exists, construct it and cache it.
+ *
+ * @param province_ptr
+ *
+ * @return The preview data. This method should never return nullptr
+ */
+auto MapNormalizer::Project::MapProject::getPreviewData(const Province* province_ptr)
+    -> ProvinceDataPtr
+{
+    const auto& province = *province_ptr;
+    auto id = province.id;
+
+    auto data = m_data_cache[id];
+
+    // If there is no cached data for the given province ID, then generate the
+    //  data for the preview
+    if(data == nullptr) {
+        buildProvinceCache(province_ptr);
+    }
+
+    // Reset access time, cycles the element to the end of the FIFO queue
+    data = m_data_cache[id];
+    m_data_cache.erase(id);
+    m_data_cache[id] = data;
+
+    return data;
+}
+
+/**
+ * @brief Will build the province preview for the given province. If more than
+ *        MAX_CACHED_PROVINCE_PREVIEWS are already stored, then the least
+ *        accessed preview will be kicked out of the cache before a new preview
+ *        is constructed.
+ *
+ * @param province_ptr
+ */
+void MapNormalizer::Project::MapProject::buildProvinceCache(const Province* province_ptr)
+{
+    const auto& province = *province_ptr;
+    auto id = province.id;
+
+    // If there are too many cached provinces, then remove the least accessed
+    //  one (which should be the first one in the cache)
+    if(m_data_cache.size() > MAX_CACHED_PROVINCE_PREVIEWS) {
+        // Do not clear out the first value if it is the one we are trying to
+        //  create.
+        if(m_data_cache.begin()->first == id) {
+            m_data_cache.erase(std::next(m_data_cache.begin()));
+        } else {
+            m_data_cache.erase(m_data_cache.begin());
+        }
+    }
+
+    auto& data = m_data_cache[id];
+
+    writeDebug("No preview data for province ", id, ". Building...");
+
+    // Some references first, to make the following code easier to read
+    //  id also starts at 1, so make sure we offset it down
+    const auto& label_matrix = m_shape_detection_info.label_matrix;
+    const auto* image = m_shape_detection_info.image;
+
+    auto&& bb = province.bounding_box;
+    auto&& [width, height] = calcDims(bb);
+
+    auto depth = 4;
+
+    // Make sure we 0-initialize the array
+    //  We use a depth of 4 since we have RGBA
+    data.reset(new unsigned char[width * height * depth]());
+
+    writeDebug("Allocated space for ", width * height * depth, " bytes.");
+    for(auto x = bb.bottom_left.x; x < bb.top_right.x; ++x) {
+        for(auto y = bb.top_right.y; y < bb.bottom_left.y; ++y) {
+            // Get the index into the label matrix
+            auto lindex = xyToIndex(image, x, y);
+
+            // Offset the x,y so that we get 0-preview width/height
+            auto relx = x - bb.bottom_left.x;
+            auto rely = y - bb.top_right.y;
+
+            // Index into the cached data
+            //  Need a special one since the depth is different from the
+            //  stored graphics data
+            auto dindex = xyToIndex(width * depth, relx * depth, rely);
+
+            auto label = label_matrix[lindex];
+
+            if(label == id) {
+                // ARGB
+                *reinterpret_cast<uint32_t*>(&data[dindex]) = PROVINCE_HIGHLIGHT_COLOR;
+            }
+        }
+    }
+
+    writeDebug("Done.");
+
+    if(prog_opts.debug) {
+        auto path = dynamic_cast<HoI4Project&>(m_parent_project).getMetaRoot() / "debug";
+        auto fname = path / (std::string("prov_preview") + std::to_string(id) + ".pam");
+
+        if(!std::filesystem::exists(path)) {
+            std::filesystem::create_directory(path);
+        }
+
+        writeDebug("Writing province ", width, 'x', height, " (", id, ") to ", fname);
+
+        if(std::ofstream out(fname); out) {
+            out << "P7\nWIDTH " << width << "\nHEIGHT " << height << "\nDEPTH 4\nMAXVAL 255\nTUPLTYPE RGB_ALPHA\nENDHDR\n";
+            for(auto i = 0; i < width * height * 4; i += 4) {
+                // Write Alpha first
+                out.write(reinterpret_cast<char*>(&data[i + 3]), 1);
+                out.write(reinterpret_cast<char*>(&data[i + 1]), 3);
+            }
+        }
+    }
 }
 

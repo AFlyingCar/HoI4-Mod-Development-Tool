@@ -7,17 +7,21 @@
 #ifndef MAIN_WINDOW_H
 # define MAIN_WINDOW_H
 
+# include <functional>
 # include <variant>
 
 # include "gtkmm/box.h"
 # include "gtkmm/frame.h"
 # include "gtkmm/paned.h"
 # include "gtkmm/scrolledwindow.h"
+# include "gtkmm/notebook.h"
 
 # include "BitMap.h"
+# include "Types.h"
 
 # include "Window.h"
 # include "MapDrawingArea.h"
+# include "ProvincePropertiesPane.h"
 
 namespace MapNormalizer::GUI {
     /**
@@ -68,13 +72,16 @@ namespace MapNormalizer::GUI {
             using ActiveChildVariant = std::variant<std::monostate, Args*...>;
 
             //! The currently active widget to be added to
-            ActiveChildVariant<Gtk::Box, Gtk::Frame, Gtk::ScrolledWindow> m_active_child;
+            ActiveChildVariant<Gtk::Box, Gtk::Frame, Gtk::ScrolledWindow, Gtk::Notebook> m_active_child;
 
             //! The main pane where all child widgets will be inside
             Gtk::Paned* m_paned;
 
             //! The DrawingArea that the map gets rendered to.
             MapDrawingArea* m_drawing_area;
+
+            //! A container holding properties for provinces
+            std::unique_ptr<ProvincePropertiesPane> m_province_properties_pane;
     };
 }
 

@@ -31,6 +31,7 @@ namespace MapNormalizer {
     bool isInImage(const BitMap*, uint32_t, uint32_t);
 
     bool isShapeTooLarge(uint32_t, uint32_t, const BitMap*);
+    std::pair<uint32_t, uint32_t> calcDims(const BoundingBox&);
     std::pair<uint32_t, uint32_t> calcShapeDims(const Polygon&);
 
     void ltrim(std::string&);
@@ -168,13 +169,11 @@ namespace MapNormalizer {
                 return ProvinceType::LAND;
             } else if(s == "sea") {
                 return ProvinceType::SEA;
-            } else if(s == "sea") {
+            } else if(s == "lake") {
                 return ProvinceType::LAKE;
             } else {
                 return ProvinceType::UNKNOWN;
             }
-        } else if constexpr(std::is_same_v<T, Terrain>) {
-            return s;
         } else {
             static_assert("Unsupported type!");
 
@@ -199,6 +198,17 @@ namespace MapNormalizer {
                 result = *opt_result;
                 return true;
             }
+
+            return false;
+        }
+
+        // If we failed to get a line from the stream, see if we can parse an
+        //   empty string instead. This is to take care of the edge-case of
+        //   there being an empty string after the last delimiter which could
+        //   possibly still get parsed
+        if(auto opt_result = fromString<T>(""); opt_result) {
+            result = *opt_result;
+            return true;
         }
 
         return false;

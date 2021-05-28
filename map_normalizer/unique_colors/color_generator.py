@@ -13,6 +13,9 @@ MAX_HUE_VALUE = 360
 MIN_VAL_VALUE = 20
 MIN_SAT_VALUE = 20
 
+MAX_SAT_VALUE = 100
+MAX_VAL_VALUE = 80
+
 def genColor(hue, sat, val):
     return [int(255 * i) for i in colorsys.hsv_to_rgb(hue / MAX_HUE_VALUE,
                                                       sat / 100.0,
@@ -46,7 +49,7 @@ else:
     exit(1)
 
 print(f"Generating {filename[:-5]} colors...")
-genAllColors(hue_range, (MIN_SAT_VALUE, 100), (MIN_VAL_VALUE, 100))
+genAllColors(hue_range, (MIN_SAT_VALUE, MAX_SAT_VALUE), (MIN_VAL_VALUE, MAX_VAL_VALUE))
 
 print(f"Generated {len(colors)} colors.")
 

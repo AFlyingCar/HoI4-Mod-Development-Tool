@@ -44,7 +44,7 @@ namespace MapNormalizer {
     const std::string APPLICATION_ID = "com.aflyingcar.tool.hoi4_map_normalizer";
 
     //! Default width of the properties pane, 30% of the minimum window width of 512
-    const size_t MINIMUM_PROPERTIES_PANE_WIDTH = 153;
+    const size_t MINIMUM_PROPERTIES_PANE_WIDTH = 170;
 
     //! The minimum width of the window
     const size_t MINIMUM_WINDOW_W = 512;
@@ -64,11 +64,25 @@ namespace MapNormalizer {
     //! The filename for storing data about provinces
     const std::string PROVINCEDATA_FILENAME = "definition.csv";
 
+    //! The filename for storing data about continents
+    const std::string CONTINENTDATA_FILENAME = "continents";
+
     //! The filename for the imported province maps
     const std::string INPUT_PROVINCEMAP_FILENAME = "import_provincemap.bmp";
 
     //! The 4 magic bytes 
     const std::string SHAPEDATA_MAGIC = "SDAT";
+
+    //! The maximum number of province previews to store in memory
+    const size_t MAX_CACHED_PROVINCE_PREVIEWS = 100;
+
+    //! How much to zoom each time
+    const double ZOOM_FACTOR = 0.1;
+
+    //! The default zoom level
+    const double DEFAULT_ZOOM = 1.0;
+
+    const uint32_t PROVINCE_HIGHLIGHT_COLOR = 0xFFFFFFFF;
 
     //! The version of the tool
     extern const Version TOOL_VERSION;

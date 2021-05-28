@@ -35,16 +35,16 @@ bool MapNormalizer::isCoastal(const Color& color) {
     return (value >> indexOfLSB(value)) == 1;
 }
 
-auto MapNormalizer::getTerrainType(const Color& color) -> Terrain {
+auto MapNormalizer::getTerrainType(const Color& color) -> TerrainID {
     auto value = colorToRGB(color) & PROV_TERRAIN_MASK;
 
-    return static_cast<uint8_t>(value >> indexOfLSB(value));
+    return std::to_string(static_cast<uint8_t>(value >> indexOfLSB(value)));
 }
 
 auto MapNormalizer::getContinent(const Color& color) -> Continent {
     auto value = colorToRGB(color) & PROV_CONTINENT_ID_MASK;
 
-    return static_cast<Continent>(value >> indexOfLSB(value));
+    return std::to_string(static_cast<uint8_t>(value >> indexOfLSB(value)));
 }
 
 auto MapNormalizer::getState(const Color& color) -> StateID {
@@ -70,9 +70,12 @@ MapNormalizer::ProvinceList MapNormalizer::createProvinceList(const PolygonList&
         auto continent = getContinent(color);
         auto state = getState(color);
 
+        auto&& bounding_box = shape.bounding_box;
+
         provinces.push_back(Province{
             i + 1, shape.unique_color,
-            prov_type, is_coastal, terrain_type, continent, state
+            prov_type, is_coastal, terrain_type, continent, state, bounding_box,
+            { }
         });
     }
 
@@ -86,15 +89,8 @@ std::ostream& MapNormalizer::operator<<(std::ostream& stream,
            << ';' << static_cast<int>(province.unique_color.g) << ';'
            << static_cast<int>(province.unique_color.b) << ';'
            << province.type << ';' << (province.coastal ? "true" : "false")
-           << ';' << province.terrain << ';' << static_cast<int>(province.continent);
-
-    return stream;
-}
-
-std::ostream& MapNormalizer::operator<<(std::ostream& stream,
-                                        MapNormalizer::Terrain terrain)
-{
-    stream << MapNormalizer::getTerrainIdentifier(terrain);
+           << ';' << province.terrain << ';'
+           << province.continent;
 
     return stream;
 }
