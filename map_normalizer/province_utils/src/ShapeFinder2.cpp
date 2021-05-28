@@ -9,14 +9,14 @@
 #include "ProvinceMapBuilder.h" // getProvinceType
 #include "UniqueColorGenerator.h" // generateUniqueColor
 #include "Options.h"
-#include "GraphicalDebugger.h"
 
 /**
  * @brief Constructs a ShapeFinder
  *
  * @param image The image to detect shapes from
  */
-MapNormalizer::ShapeFinder::ShapeFinder(const BitMap* image):
+MapNormalizer::ShapeFinder::ShapeFinder(const BitMap* image, IGraphicsWorker& worker):
+    m_worker(worker),
     m_image(image),
     m_label_matrix_size(m_image->info_header.width *
                         m_image->info_header.height),
@@ -30,7 +30,8 @@ MapNormalizer::ShapeFinder::ShapeFinder(const BitMap* image):
 {
 }
 
-MapNormalizer::ShapeFinder::ShapeFinder():
+MapNormalizer::ShapeFinder::ShapeFinder(IGraphicsWorker& worker):
+    m_worker(worker),
     m_image(nullptr),
     m_label_matrix_size(0),
     m_label_matrix(nullptr),
@@ -43,6 +44,7 @@ MapNormalizer::ShapeFinder::ShapeFinder():
 { }
 
 MapNormalizer::ShapeFinder::ShapeFinder(ShapeFinder&& other):
+    m_worker(other.m_worker),
     m_image(std::move(other.m_image)),
     m_label_matrix_size(std::move(other.m_label_matrix_size)),
     m_label_matrix(std::move(other.m_label_matrix)),
@@ -84,8 +86,6 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
 
     if(!prog_opts.quiet)
         writeStdout("Performing Pass #1 of CCL.");
-
-    auto& worker = GraphicsWorker::getInstance();
 
     // Go over every pixel of the image
     for(uint32_t y = 0; y < height; ++y) {
@@ -169,10 +169,10 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
             if(m_label_to_color.count(label) == 0)
                 m_label_to_color[label] = (label == 0 ? BORDER_COLOR : generateUniqueColor(ProvinceType::UNKNOWN));
 
-            worker.writeDebugColor(x, y, m_label_to_color[label]);
+            m_worker.writeDebugColor(x, y, m_label_to_color[label]);
         }
 
-        worker.updateCallback({0, y, width, 1});
+        m_worker.updateCallback({0, y, width, 1});
     }
 
     deleteInfoLine();
@@ -196,8 +196,6 @@ auto MapNormalizer::ShapeFinder::pass2(LabelShapeIdxMap& label_to_shapeidx)
 
     m_shapes.clear();
 
-    auto& worker = GraphicsWorker::getInstance();
-
     if(!prog_opts.quiet)
         writeStdout("Performing Pass #2 of CCL.");
 
@@ -220,12 +218,12 @@ auto MapNormalizer::ShapeFinder::pass2(LabelShapeIdxMap& label_to_shapeidx)
             // Will return itself if this label is already a root
             label = getRootLabel(label);
 
-            worker.writeDebugColor(x, y, m_label_to_color[label]);
+            m_worker.writeDebugColor(x, y, m_label_to_color[label]);
 
             buildShape(label, Pixel{ point, color }, m_shapes, label_to_shapeidx);
         }
 
-        worker.updateCallback({0, y, width, 1});
+        m_worker.updateCallback({0, y, width, 1});
     }
 
     if(!prog_opts.quiet)
@@ -249,8 +247,6 @@ bool MapNormalizer::ShapeFinder::mergeBorders(PolygonList& shapes,
 {
     uint32_t width = m_image->info_header.width;
     uint32_t height = m_image->info_header.height;
-
-    auto& worker = GraphicsWorker::getInstance();
 
     if(!prog_opts.quiet)
         writeStdout("Performing Pass #3 of CCL.");
@@ -319,10 +315,10 @@ bool MapNormalizer::ShapeFinder::mergeBorders(PolygonList& shapes,
 
         m_label_matrix[xyToIndex(m_image, x, y)] = label;
 
-        worker.writeDebugColor(x, y, shape.unique_color);
+        m_worker.writeDebugColor(x, y, shape.unique_color);
     }
 
-    worker.updateCallback({0, 0, width, height});
+    m_worker.updateCallback({0, 0, width, height});
 
     return true;
 }
@@ -336,8 +332,6 @@ bool MapNormalizer::ShapeFinder::mergeBorders(PolygonList& shapes,
  * @return A list of every shape in the image.
  */
 const MapNormalizer::PolygonList& MapNormalizer::ShapeFinder::findAllShapes() {
-    auto& worker = GraphicsWorker::getInstance();
-
     m_stage = Stage::PASS1;
 
     // Do pass 1, and reserve enough space in the m_border_pixels vector for all
@@ -355,7 +349,7 @@ const MapNormalizer::PolygonList& MapNormalizer::ShapeFinder::findAllShapes() {
 
     if(prog_opts.output_stages) {
         m_label_to_color[0] = BORDER_COLOR;
-        worker.updateCallback({0, 0, 0, 0});
+        m_worker.updateCallback({0, 0, 0, 0});
         outputStage("labels1.bmp");
         if(m_do_estop) {
             m_do_estop = false;
@@ -381,7 +375,7 @@ const MapNormalizer::PolygonList& MapNormalizer::ShapeFinder::findAllShapes() {
 
     m_stage = Stage::OUTPUT_PASS2;
     if(prog_opts.output_stages) {
-        worker.updateCallback({0, 0, 0, 0});
+        m_worker.updateCallback({0, 0, 0, 0});
         outputStage("labels2.bmp");
         if(m_do_estop) {
             m_do_estop = false;

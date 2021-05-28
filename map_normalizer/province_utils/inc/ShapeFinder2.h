@@ -11,6 +11,7 @@
 # include <unordered_map>
 # include <optional>
 
+# include "IGraphicsWorker.h"
 # include "Types.h"
 # include "BitMap.h"
 
@@ -33,8 +34,8 @@ namespace MapNormalizer {
                 DONE
             };
 
-            ShapeFinder(const BitMap*);
-            ShapeFinder();
+            ShapeFinder(const BitMap*, IGraphicsWorker&);
+            ShapeFinder(IGraphicsWorker&);
             ShapeFinder(ShapeFinder&&);
 
             ShapeFinder& operator=(ShapeFinder&&);
@@ -91,6 +92,9 @@ namespace MapNormalizer {
             void calculateAdjacencies(PolygonList&) const;
 
         private:
+            //! The graphics worker
+            IGraphicsWorker& m_worker;
+
             //! The image to find shapes on
             const BitMap* m_image;
 
