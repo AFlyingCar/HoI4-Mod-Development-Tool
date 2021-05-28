@@ -491,6 +491,10 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
             progress_dialog.setFraction(fraction);
         });
 
+        // TODO: This threading stuff is dangerous because GTK is not actually
+        //  thread safe. We should make sure to do GTK things to ensure that
+        //  nothing causes thread race conditions.
+
         // Start processing the data
         std::thread sf_worker([&shape_finder, done_button, cancel_button]() {
             auto& worker = GraphicsWorker::getInstance();
@@ -547,6 +551,12 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
 
         writeDebug("Waiting for ShapeFinder worker to rejoin.");
         sf_worker.join();
+
+        // Note: We reset the zoom here so that we can ensure that the drawing
+        //  area actually updates the image.
+        // TODO: Why do I have to do this? What about this PR has caused this
+        //  to suddenly be required?
+        m_drawing_area->resetZoom();
 
         worker.resetWriteCallback();
 
