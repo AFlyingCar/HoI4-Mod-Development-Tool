@@ -32,6 +32,27 @@ add_custom_target(generated_colors
     DEPENDS "${CMAKE_BINARY_DIR}/lakes.bin" "${CMAKE_BINARY_DIR}/lands.bin" "${CMAKE_BINARY_DIR}/seas.bin" "${CMAKE_BINARY_DIR}/unknowns.bin"
     )
 
+# See map_normalizer/common/CMakeLists.txt for why this is necessary
+# Also, because CMake is weird, we have to do this once for each dependended on
+#  binary file
+set_source_files_properties(src/ColorArray_x86.asm
+    PROPERTIES
+    OBJECT_DEPENDS "${CMAKE_BINARY_DIR}/lakes.bin"
+    )
+set_source_files_properties(src/ColorArray_x86.asm
+    PROPERTIES
+    OBJECT_DEPENDS "${CMAKE_BINARY_DIR}/lands.bin"
+    )
+set_source_files_properties(src/ColorArray_x86.asm
+    PROPERTIES
+    OBJECT_DEPENDS "${CMAKE_BINARY_DIR}/seas.bin"
+    )
+set_source_files_properties(src/ColorArray_x86.asm
+    PROPERTIES
+    OBJECT_DEPENDS "${CMAKE_BINARY_DIR}/unknowns.bin"
+    )
+
+
 add_library(unique_colors STATIC
     src/ColorArray_x86.asm
 )
