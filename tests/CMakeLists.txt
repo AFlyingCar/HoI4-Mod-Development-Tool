@@ -13,6 +13,7 @@ if(GTest_FOUND AND gtest_location AND gtest_main_location)
         ${TEST_SRC_DIR}/ShapeFinderTests.cpp
         ${TEST_SRC_DIR}/UniqueColorTests.cpp
         ${TEST_SRC_DIR}/UtilTests.cpp
+        ${TEST_SRC_DIR}/VersionTests.cpp
 
         ${TEST_SRC_DIR}/TestOverrides.cpp
         ${TEST_SRC_DIR}/TestUtils.cpp
