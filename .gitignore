@@ -15,6 +15,7 @@ callgrind.out.*
 compile_commands.json
 valout.txt
 
+__pycache__/
 Binaries/
 build/
 bin/*
