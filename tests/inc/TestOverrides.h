@@ -3,6 +3,7 @@
 # define TEST_OVERRIDES_H
 
 # include "Options.h"
+# include "TestUtils.h"
 
 /**
  * @brief Sets a program option value for the scope it is declared in
@@ -28,8 +29,6 @@ class ProgramOptionSetter {
         T m_old_value;
 };
 
-# define PRIM_CONCAT(A,B) A##B
-# define CONCAT(A,B) PRIM_CONCAT(A, B)
 # define SET_PROGRAM_OPTION(OPTION_NAME, VALUE) \
     ProgramOptionSetter<decltype(MapNormalizer::prog_opts. OPTION_NAME)> CONCAT(_PROGRAM_OPTION_SETTER_,__LINE__) (&MapNormalizer::prog_opts. OPTION_NAME, (VALUE))
 
