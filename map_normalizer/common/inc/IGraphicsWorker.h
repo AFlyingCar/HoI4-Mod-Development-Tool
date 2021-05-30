@@ -1,6 +1,8 @@
 #ifndef IGRAPHICS_WORKER
 # define IGRAPHICS_WORKER
 
+# include <cstdint>
+
 namespace MapNormalizer {
     struct Color;
     struct Rectangle;
