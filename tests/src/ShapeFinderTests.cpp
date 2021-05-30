@@ -2,19 +2,20 @@
 #include "gtest/gtest.h"
 
 #include <iostream>
+#include <filesystem>
 
 #include "ShapeFinder2.h"
 
 #include "TestOverrides.h"
+#include "TestUtils.h"
 
-namespace {
-    class GraphicsWorkerMock: public MapNormalizer::IGraphicsWorker {
+namespace MapNormalizer::UnitTests {
+    class GraphicsWorkerMock: public IGraphicsWorker {
         public:
             virtual ~GraphicsWorkerMock() = default;
 
-            virtual void writeDebugColor(uint32_t, uint32_t,
-                                         const MapNormalizer::Color&) { }
-            virtual void updateCallback(const MapNormalizer::Rectangle&) { }
+            virtual void writeDebugColor(uint32_t, uint32_t, const Color&) { }
+            virtual void updateCallback(const Rectangle&) { }
 
             static GraphicsWorkerMock& getInstance() {
                 static GraphicsWorkerMock instance;
@@ -23,30 +24,32 @@ namespace {
             }
     };
 
-    class ShapeFinderMock: public MapNormalizer::ShapeFinder {
+    class ShapeFinderMock: public ShapeFinder {
         public:
-            using MapNormalizer::ShapeFinder::ShapeFinder;
+            using ShapeFinder::ShapeFinder;
 
-            using MapNormalizer::ShapeFinder::pass1;
-            using MapNormalizer::ShapeFinder::outputStage;
+            using ShapeFinder::pass1;
+            using ShapeFinder::outputStage;
     };
 
     struct InputImageInfo {
-        const char* path;
+        std::filesystem::path path;
         uint32_t num_border_pixel;
         uint32_t num_shapes;
     };
 
     //! All test images and meta information about them for tests
     const std::map<std::string, InputImageInfo> images = {
-        { "./bin/simple.bmp", { "./bin/simple.bmp", 3631, 22 } }
+        { "simple", { getTestProgramPath() / "bin" / "simple.bmp", 3631, 22 } }
     };
 }
 
 TEST(ShapeFinderTests, TestPass1BorderCount) {
+    using namespace MapNormalizer::UnitTests;
+
     SET_PROGRAM_OPTION(quiet, true);
 
-    const InputImageInfo& iii = images.at("./bin/simple.bmp");
+    const InputImageInfo& iii = images.at("simple");
 
     auto image = MapNormalizer::readBMP(iii.path);
     ASSERT_NE(image, nullptr);
@@ -55,7 +58,7 @@ TEST(ShapeFinderTests, TestPass1BorderCount) {
 
     auto border_pixel_count = finder.pass1();
 
-    finder.outputStage("./simple.pass1.bmp");
+    finder.outputStage(getTestProgramPath() / "simple.pass1.bmp");
 
     ASSERT_EQ(border_pixel_count, iii.num_border_pixel);
 }
