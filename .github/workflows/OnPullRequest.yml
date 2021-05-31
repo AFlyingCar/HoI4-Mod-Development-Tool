@@ -16,6 +16,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+          lfs: true
+
+    - name: Checkout all LFS objects
+      run: git lfs checkout
 
     - name: Install required dependencies
       # We need the following dependencies in order to compile
