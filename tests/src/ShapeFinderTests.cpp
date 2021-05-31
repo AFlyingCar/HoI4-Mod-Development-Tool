@@ -64,3 +64,29 @@ TEST(ShapeFinderTests, TestPass1BorderCount) {
     ASSERT_EQ(border_pixel_count, iii.num_border_pixel);
 }
 
+TEST(ShapeFinderTests, TestDetectedShapeCount) {
+    using namespace MapNormalizer::UnitTests;
+
+    SET_PROGRAM_OPTION(quiet, true);
+
+    const InputImageInfo& iii = images.at("simple");
+
+    std::shared_ptr<MapNormalizer::BitMap> image(new MapNormalizer::BitMap);
+
+    ASSERT_NE(MapNormalizer::readBMP(iii.path, image.get()), nullptr);
+
+    ShapeFinderMock finder(image.get(), GraphicsWorkerMock::getInstance());
+
+    auto&& shapes = finder.findAllShapes();
+
+    ASSERT_EQ(shapes.size(), iii.num_shapes);
+
+    // Verify that there is exactly one label per shape
+    std::set<uint32_t> colors;
+    std::for_each(finder.getLabelMatrix(),
+                  finder.getLabelMatrix() + finder.getLabelMatrixSize(),
+                  [&colors](uint32_t c) { colors.insert(c); });
+
+    ASSERT_EQ(colors.size(), iii.num_shapes);
+}
+
