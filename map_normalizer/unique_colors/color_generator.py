@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 import sys
+import struct
 import random
 import colorsys
-from array import array
 
 from collections import OrderedDict
 
@@ -30,7 +30,7 @@ def genAllColors(h_range, s_range, v_range):
         for sat in range(*s_range):
             for val in range(*v_range):
                 color = genColor(hue, sat, val)
-                colors.append(array('B', color).tobytes())
+                colors.append(struct.pack("<BBB", color[0], color[1], color[2]))
 
 if "lands" in sys.argv:
     filename = "lands.bin"
