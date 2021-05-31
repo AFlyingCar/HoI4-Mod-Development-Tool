@@ -275,6 +275,10 @@ bool MapNormalizer::ShapeFinder::mergeBorders(PolygonList& shapes,
                   opt_adjacent)
         {
             merge_with = *opt_adjacent;
+        } else if(opt_adjacent = getAdjacentPixel(point, Direction::DOWN);
+                  opt_adjacent)
+        {
+            merge_with = *opt_adjacent;
         } else {
             bool found = false;
             // If that fails, start walking left->right, top->bottom for the
@@ -463,6 +467,11 @@ std::optional<uint32_t> MapNormalizer::ShapeFinder::finalize(PolygonList& shapes
                          " pixels. All provinces are required to have more than ",
                          MIN_SHAPE_SIZE,
                          " pixels. See: https://hoi4.paradoxwikis.com/Map_modding");
+            std::stringstream ss;
+            for(auto&& pix : shape.pixels) {
+                ss << pix.point << ',';
+            }
+            writeWarning<false>("    Pixels: ", ss.str());
             ++problematic_shapes;
         }
 
