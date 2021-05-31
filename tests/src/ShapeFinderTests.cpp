@@ -51,10 +51,11 @@ TEST(ShapeFinderTests, TestPass1BorderCount) {
 
     const InputImageInfo& iii = images.at("simple");
 
-    auto image = MapNormalizer::readBMP(iii.path);
-    ASSERT_NE(image, nullptr);
+    std::shared_ptr<MapNormalizer::BitMap> image(new MapNormalizer::BitMap);
 
-    ShapeFinderMock finder(image, GraphicsWorkerMock::getInstance());
+    ASSERT_NE(MapNormalizer::readBMP(iii.path, image.get()), nullptr);
+
+    ShapeFinderMock finder(image.get(), GraphicsWorkerMock::getInstance());
 
     auto border_pixel_count = finder.pass1();
 

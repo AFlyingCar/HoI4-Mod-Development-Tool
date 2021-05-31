@@ -80,7 +80,14 @@ MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename,
     size_t new_pitch = bm->info_header.width * (bm->info_header.bitsPerPixel / 8); // This is how many we _want_ each line to take up.
 
     // Allocate space for our new image data
-    bm->data = new unsigned char[new_pitch * bm->info_header.height];
+    try {
+        bm->data = new unsigned char[new_pitch * bm->info_header.height];
+    } catch(const std::bad_alloc& e) {
+        writeError("Failed to allocate enough space for the bitmap's data (",
+                   new_pitch * bm->info_header.height, " bytes required): ",
+                   e.what());
+        return nullptr;
+    }
 
     // Make sure we read where the file tells us the offset is, and not just
     //  assume that the data starts after the header (it doesn't always do that)
@@ -107,7 +114,14 @@ MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename,
     //----------------
 
     // Big enough to store exactly one line of the image
-    unsigned char* temp = new unsigned char[new_pitch];
+    unsigned char* temp = nullptr;
+    try {
+        temp = new unsigned char[new_pitch];
+    } catch(const std::bad_alloc& e) {
+        writeError("Failed to allocate enough space for one line of pixels (",
+                   new_pitch, " bytes required): ", e.what());
+        return nullptr;
+    }
 
     size_t idx_s = 0;
     size_t idx_t = (bm->info_header.height - 1) * new_pitch;
