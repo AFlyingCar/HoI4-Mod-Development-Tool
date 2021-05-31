@@ -9,6 +9,8 @@ from collections import OrderedDict
 
 colors = []
 
+RANDOM_SEED = 1622487670
+
 # Maximum possible legal value for hue
 MAX_HUE_VALUE = 360
 
@@ -59,7 +61,7 @@ print("Removing duplicates...")
 colors = list(OrderedDict.fromkeys(colors))
 
 print(f"Shuffling {len(colors)} colors...")
-random.shuffle(colors)
+random.Random(RANDOM_SEED).shuffle(colors)
 
 colors = b"".join(colors)
 
