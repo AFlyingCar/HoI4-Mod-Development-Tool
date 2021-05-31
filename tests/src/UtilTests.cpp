@@ -87,14 +87,39 @@ TEST(UtilTests, CalcDimsTests) {
 }
 
 TEST(UtilTests, SimpleSafeReadTests) {
-    std::string str("\xe2\x2b\x00\x00");
     std::stringstream sstream;
-    sstream << str;
 
-    uint32_t idata;
+    // Input data points
+    uint32_t idata = 11234;
+    bool bdata = true;
+    float fdata = 3.14159f;
+    std::string sdata = "foobar";
 
-    ASSERT_TRUE(MapNormalizer::safeRead(&idata, sstream));
-    ASSERT_EQ(idata, 11234);
+    // Output data points
+    uint32_t read_idata;
+    bool read_bdata;
+    float read_fdata;
+    std::shared_ptr<char[]> read_sdata(new char[sdata.size() + 1]);
+
+    // Write data points into the stream
+    MapNormalizer::writeData(sstream, idata);
+    MapNormalizer::writeData(sstream, bdata);
+    MapNormalizer::writeData(sstream, fdata);
+    sstream.write(sdata.c_str(), sdata.size() + 1);
+
+    // Read all of the data out of the stream
+    ASSERT_TRUE(MapNormalizer::safeRead(&read_idata, sstream));
+    ASSERT_TRUE(MapNormalizer::safeRead(&read_bdata, sstream));
+    ASSERT_TRUE(MapNormalizer::safeRead(&read_fdata, sstream));
+
+    // Read one more character than size() for the \0
+    ASSERT_TRUE(MapNormalizer::safeRead(read_sdata.get(), sdata.size() + 1, sstream));
+
+    // Make sure that the data got read back out of the stream correctly
+    ASSERT_EQ(read_idata, idata);
+    ASSERT_EQ(read_bdata, bdata);
+    ASSERT_EQ(read_fdata, fdata);
+    ASSERT_EQ(std::string(read_sdata.get()), sdata);
 }
 
 TEST(UtilTests, SimpleWriteDataTests) {
@@ -104,8 +129,10 @@ TEST(UtilTests, SimpleWriteDataTests) {
     bool bdata = true;
     float fdata = 3.14f;
 
+    // Write the data into the stream
     MapNormalizer::writeData(sstream, idata, bdata, fdata);
 
+    // Make sure that the datta which got written is correct
     ASSERT_EQ(idata, *reinterpret_cast<const uint32_t*>(sstream.str().c_str()));
     ASSERT_EQ(bdata, *reinterpret_cast<const bool*>(sstream.str().c_str() + sizeof(uint32_t)));
     ASSERT_FLOAT_EQ(fdata, *reinterpret_cast<const float*>(sstream.str().c_str() + sizeof(uint32_t) + sizeof(bool)));
@@ -122,8 +149,9 @@ TEST(UtilTests, ParseValueTests) {
     MapNormalizer::ProvinceType pdata;
     float fdata;
 
-    MapNormalizer::parseValues(ss, idata, sdata, bdata, pdata, fdata);
+    ASSERT_TRUE(MapNormalizer::parseValues(ss, idata, sdata, bdata, pdata, fdata));
 
+    // Make sure the data got parsed out correctly
     ASSERT_EQ(idata, 1234);
     ASSERT_EQ(sdata, "foobar");
     ASSERT_EQ(bdata, true);
