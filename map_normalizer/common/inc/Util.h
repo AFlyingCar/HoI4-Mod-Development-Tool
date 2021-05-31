@@ -67,7 +67,7 @@ namespace MapNormalizer {
     bool safeRead(T* destination, std::istream& stream) {
         if(!stream.eof() && stream.good()) {
             stream.read(reinterpret_cast<char*>(destination), sizeof(T));
-            return true;
+            return stream.gcount() == sizeof(T);
         } else {
             return false;
         }
@@ -87,7 +87,7 @@ namespace MapNormalizer {
     bool safeRead(T* destination, size_t size, std::istream& stream) {
         if(!stream.eof() && stream.good()) {
             stream.read(reinterpret_cast<char*>(destination), size);
-            return true;
+            return stream.gcount() == size;
         } else {
             return false;
         }
