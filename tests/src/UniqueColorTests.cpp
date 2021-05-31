@@ -8,7 +8,8 @@
 #include <cstdlib>
 
 #include "ColorArray.h" // We use the raw arrays rather than the fancy generator
-                        // functions for efficiency
+                        // functions for efficiency in some tests
+#include "UniqueColorGenerator.h"
 #include "TestUtils.h"
 
 struct UInt24 {
@@ -24,6 +25,12 @@ bool operator<(const UInt24& a, const UInt24& b) {
 }
 
 TEST(UniqueColorTests, TestColorUniqueness) {
+    // First make sure that there is an RGB for every color value
+    ASSERT_EQ(MN_ALL_LANDS_SIZE % 3, 0);
+    ASSERT_EQ(MN_ALL_LAKES_SIZE % 3, 0);
+    ASSERT_EQ(MN_ALL_SEAS_SIZE % 3, 0);
+    ASSERT_EQ(MN_ALL_UNKNOWNS_SIZE % 3, 0);
+
     auto get_duplicates = [](const unsigned char* array, unsigned int size) {
         std::vector<UInt24> values(size);
         std::set<UInt24> duplicates;
@@ -91,5 +98,27 @@ TEST(UniqueColorTests, TestColorUniqueness) {
             }
         }
     }
+}
+
+// We want to be able to use this function despite its private nature
+//  NOTE: Do not ever actually use this in practice, this is simply to make the
+//   unit test easier to write and run
+using UniqueColorPtr = const unsigned char*;
+extern UniqueColorPtr& getUniqueColorPtr(MapNormalizer::ProvinceType);
+
+TEST(UniqueColorTests, TestGetUnknownsWhenOutOfColors) {
+    // Make sure that we start these at the beginning
+    MapNormalizer::resetUniqueColorGenerator(MapNormalizer::ProvinceType::UNKNOWN);
+
+    // Force the LAND to the end
+    ::getUniqueColorPtr(MapNormalizer::ProvinceType::LAND) = MN_ALL_LANDS + MN_ALL_LANDS_SIZE;
+
+    auto c = MapNormalizer::generateUniqueColor(MapNormalizer::ProvinceType::LAND);
+
+    // Reset this again since generateUniqueColor _should_ have grabbed a value
+    //  from here
+    MapNormalizer::resetUniqueColorGenerator(MapNormalizer::ProvinceType::UNKNOWN);
+    
+    ASSERT_EQ(c, MapNormalizer::generateUniqueColor(MapNormalizer::ProvinceType::UNKNOWN));
 }
 

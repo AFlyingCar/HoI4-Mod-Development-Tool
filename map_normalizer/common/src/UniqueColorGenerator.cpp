@@ -9,66 +9,85 @@
 
 #include <iostream> // std::cerr
 
-namespace {
-    using UniqueColorPtr = const unsigned char*;
+// NOTE: None of this stuff is in a private namespace. Never use it outside of
+//  here. The reason it's not static or in an anonymous namespace is because
+//  unit tests will need to use them directly, but other than that these should
+//  never get used outside of this file
+using UniqueColorPtr = const unsigned char*;
 
-    UniqueColorPtr getUniqueColorPtrStart(MapNormalizer::ProvinceType bias) {
-        switch(bias) {
-            case MapNormalizer::ProvinceType::LAND:
-                return MN_ALL_LANDS;
-            case MapNormalizer::ProvinceType::SEA:
-                return MN_ALL_SEAS;
-            case MapNormalizer::ProvinceType::LAKE:
-                return MN_ALL_LAKES;
-            default:
-                return MN_ALL_UNKNOWNS;
-        }
-    }
-
-    unsigned int getUniqueColorPtrSize(MapNormalizer::ProvinceType bias) {
-        switch(bias) {
-            case MapNormalizer::ProvinceType::LAND:
-                return MN_ALL_LANDS_SIZE;
-            case MapNormalizer::ProvinceType::SEA:
-                return MN_ALL_SEAS_SIZE;
-            case MapNormalizer::ProvinceType::LAKE:
-                return MN_ALL_LAKES_SIZE;
-            default:
-                return MN_ALL_UNKNOWNS_SIZE;
-        }
-    }
-
-    UniqueColorPtr& getUniqueColorPtr(MapNormalizer::ProvinceType bias) {
-        static const unsigned char* land_ptr = MN_ALL_LANDS;
-        static const unsigned char* sea_ptr = MN_ALL_SEAS;
-        static const unsigned char* lake_ptr = MN_ALL_LAKES;
-        static const unsigned char* unknown_ptr = MN_ALL_UNKNOWNS;
-
-        switch(bias) {
-            case MapNormalizer::ProvinceType::LAND:
-                return land_ptr;
-            case MapNormalizer::ProvinceType::SEA:
-                return sea_ptr;
-            case MapNormalizer::ProvinceType::LAKE:
-                return lake_ptr;
-            default:
-                return unknown_ptr;
-        }
-    }
-
-    bool verifyColorsRemain(MapNormalizer::ProvinceType bias) {
-        UniqueColorPtr color_ptr = getUniqueColorPtr(bias);
-        UniqueColorPtr start_ptr = getUniqueColorPtrStart(bias);
-        unsigned int size = getUniqueColorPtrSize(bias);
-
-        if(color_ptr >= start_ptr + size) {
-            MapNormalizer::writeWarning("NO VALUES LEFT!");
-            return false;
-        }
-
-        return true;
+UniqueColorPtr getUniqueColorPtrStart(MapNormalizer::ProvinceType bias) {
+    switch(bias) {
+        case MapNormalizer::ProvinceType::LAND:
+            return MN_ALL_LANDS;
+        case MapNormalizer::ProvinceType::SEA:
+            return MN_ALL_SEAS;
+        case MapNormalizer::ProvinceType::LAKE:
+            return MN_ALL_LAKES;
+        default:
+            return MN_ALL_UNKNOWNS;
     }
 }
+
+unsigned int getUniqueColorPtrSize(MapNormalizer::ProvinceType bias) {
+    switch(bias) {
+        case MapNormalizer::ProvinceType::LAND:
+            return MN_ALL_LANDS_SIZE;
+        case MapNormalizer::ProvinceType::SEA:
+            return MN_ALL_SEAS_SIZE;
+        case MapNormalizer::ProvinceType::LAKE:
+            return MN_ALL_LAKES_SIZE;
+        default:
+            return MN_ALL_UNKNOWNS_SIZE;
+    }
+}
+
+/**
+ * @brief Gets a pointer to the current location in the list of unique colors
+ *        for the given bias
+ *
+ * @param bias The type of province for the unique color
+ *
+ * @return A reference to a pointer into one of the unique color arrays
+ */
+UniqueColorPtr& getUniqueColorPtr(MapNormalizer::ProvinceType bias) {
+    static const unsigned char* land_ptr = MN_ALL_LANDS;
+    static const unsigned char* sea_ptr = MN_ALL_SEAS;
+    static const unsigned char* lake_ptr = MN_ALL_LAKES;
+    static const unsigned char* unknown_ptr = MN_ALL_UNKNOWNS;
+
+    switch(bias) {
+        case MapNormalizer::ProvinceType::LAND:
+            return land_ptr;
+        case MapNormalizer::ProvinceType::SEA:
+            return sea_ptr;
+        case MapNormalizer::ProvinceType::LAKE:
+            return lake_ptr;
+        default:
+            return unknown_ptr;
+    }
+}
+
+/**
+ * @brief Verify that some colors remain for the given bias
+ *
+ * @param bias The type of province 
+ *
+ * @return True if there are still values, false otherwise.
+ */
+bool verifyColorsRemain(MapNormalizer::ProvinceType bias) {
+    UniqueColorPtr color_ptr = getUniqueColorPtr(bias);
+    UniqueColorPtr start_ptr = getUniqueColorPtrStart(bias);
+    unsigned int size = getUniqueColorPtrSize(bias);
+
+    if(color_ptr >= start_ptr + size) {
+        MapNormalizer::writeWarning("NO VALUES LEFT!");
+        return false;
+    }
+
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @brief Generates a unique color value.
