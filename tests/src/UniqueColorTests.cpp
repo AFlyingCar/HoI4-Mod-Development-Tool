@@ -12,9 +12,11 @@
 #include "UniqueColorGenerator.h"
 #include "TestUtils.h"
 
+#pragma pack(push, 1)
 struct UInt24 {
     unsigned int data: 24;
 };
+#pragma pack(pop)
 
 bool operator==(const UInt24& a, const UInt24& b) {
     return a.data == b.data;
@@ -31,21 +33,33 @@ TEST(UniqueColorTests, TestColorUniqueness) {
     ASSERT_EQ(MN_ALL_SEAS_SIZE % 3, 0);
     ASSERT_EQ(MN_ALL_UNKNOWNS_SIZE % 3, 0);
 
+    // We need UInt24 to be exactly 3 bytes large, as otherwise the below
+    //  duplicate detection code will fail
+    ASSERT_EQ(sizeof(UInt24), 3);
+
     auto get_duplicates = [](const unsigned char* array, unsigned int size) {
         std::vector<UInt24> values(size);
         std::set<UInt24> duplicates;
 
-        std::cout << "Sorting color array..." << std::endl;
-        std::partial_sort_copy(reinterpret_cast<const UInt24*>(array),
-                               reinterpret_cast<const UInt24*>(array + size),
-                               values.begin(), values.end());
+        std::copy(reinterpret_cast<const UInt24*>(array),
+                  reinterpret_cast<const UInt24*>(array + size),
+                  std::back_inserter(values));
 
-        std::cout << "Detecting duplicates..." << std::endl;
-        for(auto i = values.begin(); i != values.end(); ++i) {
-            if(auto i2 = std::next(i); i2 != values.end() && *i == *i2) {
-                duplicates.insert(*i);
-                i = i2;
-            }
+        if(MapNormalizer::UnitTests::useVerboseOutput())
+            std::cerr << "Sorting color array..." << std::endl;
+        std::sort(values.begin(), values.end());
+
+        if(MapNormalizer::UnitTests::useVerboseOutput())
+            std::cerr << "Detecting duplicates..." << std::endl;
+        std::set<UInt24> uniques(values.begin(), values.end());
+        std::set_difference(values.begin(), values.end(),
+                            uniques.begin(), uniques.end(),
+                            std::inserter(duplicates, duplicates.end()));
+
+        // Edge case: Remove this color because it shouldn't be in the list at
+        //  all
+        if(duplicates.count(UInt24{0})) {
+            duplicates.erase(duplicates.find(UInt24{0}));
         }
 
         return duplicates;
@@ -68,6 +82,7 @@ TEST(UniqueColorTests, TestColorUniqueness) {
 
     EXPECT_FALSE(duplicate_found);
 
+    // Dump out which colors are in duplicate if $ENVVAR_VERBOSE is defined
     if(MapNormalizer::UnitTests::useVerboseOutput()) {
         for(auto i = 0; i < duplicate_lists.size(); ++i) {
             const auto& dup_list = duplicate_lists[i];
@@ -78,12 +93,12 @@ TEST(UniqueColorTests, TestColorUniqueness) {
 
                 std::cerr << "Color List " << i << " has " << dup_size << " duplicates." << std::endl;
 
+                // Find the indices for each duplicate color
                 for(const UInt24* color = reinterpret_cast<const UInt24*>(array);
                     color < reinterpret_cast<const UInt24*>(array + size);
                     ++color)
                 {
                     if(dup_list.count(*color)) {
-                        // std::cerr << std::distance(reinterpret_cast<const UInt24*>(array), color) << ',';
                         dup_indices[*color].push_back(std::distance(reinterpret_cast<const UInt24*>(array), color));
                     }
                 }
