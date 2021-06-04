@@ -1,5 +1,4 @@
 
-pacman -S mingw-w64-cmake
 pacman -S mingw-w64-x86_64-clang
 pacman -S mingw-w64-x86_64-gtkmm3
 
