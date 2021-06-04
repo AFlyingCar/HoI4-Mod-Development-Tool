@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 
 import sys
+import struct
 import random
 import colorsys
-from array import array
+
+from collections import OrderedDict
 
 colors = []
+
+RANDOM_SEED = 1622487670
 
 # Maximum possible legal value for hue
 MAX_HUE_VALUE = 360
 
-MIN_VAL_VALUE = 20
-MIN_SAT_VALUE = 20
+MIN_VAL_VALUE = 50
+MIN_SAT_VALUE = 50
 
-MAX_SAT_VALUE = 100
-MAX_VAL_VALUE = 80
+MAX_SAT_VALUE = 80
+MAX_VAL_VALUE = 100
 
 def genColor(hue, sat, val):
     return [int(255 * i) for i in colorsys.hsv_to_rgb(hue / MAX_HUE_VALUE,
@@ -26,7 +30,7 @@ def genAllColors(h_range, s_range, v_range):
         for sat in range(*s_range):
             for val in range(*v_range):
                 color = genColor(hue, sat, val)
-                colors.append(array('B', color))
+                colors.append(struct.pack("<BBB", color[0], color[1], color[2]))
 
 if "lands" in sys.argv:
     filename = "lands.bin"
@@ -53,8 +57,11 @@ genAllColors(hue_range, (MIN_SAT_VALUE, MAX_SAT_VALUE), (MIN_VAL_VALUE, MAX_VAL_
 
 print(f"Generated {len(colors)} colors.")
 
-print("Shuffling...")
-random.shuffle(colors)
+print("Removing duplicates...")
+colors = list(OrderedDict.fromkeys(colors))
+
+print(f"Shuffling {len(colors)} colors...")
+random.Random(RANDOM_SEED).shuffle(colors)
 
 colors = b"".join(colors)
 

@@ -453,7 +453,7 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
 
         m_drawing_area->setData(image, graphics_data);
 
-        ShapeFinder shape_finder(image);
+        ShapeFinder shape_finder(image, GraphicsWorker::getInstance());
 
         // Open a progress bar dialog to show the user that we are actually doing
         //  something

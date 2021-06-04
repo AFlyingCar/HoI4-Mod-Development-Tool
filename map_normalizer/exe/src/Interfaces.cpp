@@ -26,6 +26,14 @@
 
 // TODO: This should probably be moved into a different file
 namespace MapNormalizer {
+    class EmptyGraphicsWorker: public IGraphicsWorker {
+        public:
+            virtual ~EmptyGraphicsWorker() = default;
+
+            virtual void writeDebugColor(uint32_t, uint32_t, const Color&) { }
+            virtual void updateCallback(const Rectangle&) { }
+    };
+
     /**
      * @brief Writes empty override files.
      *
@@ -138,7 +146,8 @@ int MapNormalizer::runHeadless() {
         setInfoLine("Finding all possible shapes.");
 
     // Find every shape
-    ShapeFinder shape_finder(image);
+    EmptyGraphicsWorker worker;
+    ShapeFinder shape_finder(image, worker);
     auto shapes = shape_finder.findAllShapes();
 
     // Redraw the new image so we can properly show how it should look in the

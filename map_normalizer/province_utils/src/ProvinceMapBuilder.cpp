@@ -7,17 +7,13 @@
 #include "Util.h"
 
 auto MapNormalizer::getProvinceType(std::uint32_t color) -> ProvinceType {
-    auto value = color & PROV_TYPE_MASK;
-
-    switch(value >> indexOfLSB(value)) {
-        case 3:
+    if(color == RED_MASK) {
+        return ProvinceType::LAND;
+    } else if(color == BLUE_MASK) {
             return ProvinceType::SEA;
-        case 2:
+    } else if(color == GREEN_MASK) {
             return ProvinceType::LAKE;
-        case 1:
-            return ProvinceType::LAND;
-        case 0:
-        default:
+    } else {
             return ProvinceType::UNKNOWN;
     }
 }

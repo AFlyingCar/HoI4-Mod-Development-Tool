@@ -9,13 +9,14 @@
 
 # include <functional>
 
+# include "IGraphicsWorker.h"
 # include "BitMap.h"
 # include "Types.h"
 
 namespace MapNormalizer {
     void writeDebugColor(uint32_t, uint32_t, Color);
 
-    class GraphicsWorker {
+    class GraphicsWorker: public IGraphicsWorker {
         public:
             using UpdateCallback = std::function<void(const Rectangle&)>;
 
@@ -26,16 +27,15 @@ namespace MapNormalizer {
             void resetDebugData();
             void resetDebugDataAt(const Point2D&);
 
-            void writeDebugColor(uint32_t, uint32_t, Color);
-
             const unsigned char* getDebugData() const;
             const BitMap* getImage() const;
-
-            void updateCallback(const Rectangle&);
 
             const UpdateCallback& getWriteCallback() const;
             void setWriteCallback(const UpdateCallback&);
             void resetWriteCallback();
+
+            virtual void writeDebugColor(uint32_t, uint32_t, const Color&) override;
+            virtual void updateCallback(const Rectangle&) override;
 
         private:
             GraphicsWorker() = default;

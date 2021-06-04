@@ -28,3 +28,5 @@ endif()
 
 add_subdirectory(map_normalizer)
 
+add_subdirectory(tests)
+

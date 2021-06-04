@@ -1,0 +1,31 @@
+cmake_minimum_required(VERSION 3.2)
+
+find_package(gtest REQUIRED)
+
+set(TEST_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(TEST_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/bin")
+
+set(TEST_SOURCES
+    ${TEST_SRC_DIR}/ShapeFinderTests.cpp
+    ${TEST_SRC_DIR}/UniqueColorTests.cpp
+    ${TEST_SRC_DIR}/UtilTests.cpp
+    ${TEST_SRC_DIR}/VersionTests.cpp
+    ${TEST_SRC_DIR}/ProjectTests.cpp
+
+    ${TEST_SRC_DIR}/TestOverrides.cpp
+    ${TEST_SRC_DIR}/TestUtils.cpp
+)
+
+add_executable(unit_tests ${TEST_SOURCES})
+target_link_libraries(unit_tests PRIVATE gtest gtest_main common province_utils unique_colors project)
+target_link_libraries(unit_tests PUBLIC stdc++fs pthread)
+target_include_directories(unit_tests PRIVATE inc)
+
+target_compile_options(unit_tests PRIVATE -g)
+
+add_custom_command(TARGET unit_tests
+                   POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${TEST_BIN_DIR} $<TARGET_FILE_DIR:unit_tests>/bin/
+)
+
+add_test(NAME unit_tests COMMAND unit_tests)
+
