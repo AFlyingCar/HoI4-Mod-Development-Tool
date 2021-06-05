@@ -27,7 +27,7 @@ jobs:
       with:
         update: true
         # Install packages after installation through pacman
-        install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-gcc
+        install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-libc++ mingw-w64-x86_64-libc++abi mingw-w64-ucrt-x86_64-toolchain
 
     - name: Install required dependencies
       shell: msys2 {0}
@@ -50,7 +50,7 @@ jobs:
       #  MSVC
       # run: cmake ${{github.workspace}} -DCMAKE_BUILD_TYPE=$BUILD_TYPE
       #  MSYS
-      run: CXX=clang++ cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_GENERATOR="MinGW Makefiles"
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_GENERATOR="MinGW Makefiles"
 
     - name: Build
       working-directory: ${{runner.workspace}}/build

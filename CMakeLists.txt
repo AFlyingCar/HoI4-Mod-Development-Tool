@@ -21,7 +21,7 @@ else()
     add_compile_options(-Wall -Werror -Wextra -Wno-unused-command-line-argument -Wno-sign-compare -Wno-unused-label -Wno-unused-const-variable -Wno-unused-parameter -Wno-unused-function)
 endif()
 
-if(WIN32 AND NOT MSVC)
+if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Xclang -flto-visibility-public-std -m32)
     add_definitions(-D_REENTRANT)
 endif()
