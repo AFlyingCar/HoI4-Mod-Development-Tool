@@ -5,7 +5,9 @@
 
 #ifdef _WIN32
 # include "windows.h"
-# define PATH_MAX FILENAME_MAX
+# ifndef PATH_MAX
+#  define PATH_MAX FILENAME_MAX
+# endif
 #else
 # include <unistd.h>
 # include <linux/limits.h>

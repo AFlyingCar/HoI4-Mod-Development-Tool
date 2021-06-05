@@ -107,7 +107,7 @@ find_package_handle_standard_args(gtkmm
 if(gtkmm_FOUND)
     if(NOT TARGET gtkmm)
         add_library(gtkmm INTERFACE)
-        target_include_directories(gtkmm PUBLIC INTERFACE ${GTKMM3_INCLUDE_DIRS})
+        target_include_directories(gtkmm SYSTEM PUBLIC INTERFACE ${GTKMM3_INCLUDE_DIRS})
         target_link_libraries(gtkmm INTERFACE ${GTKMM3_LIBRARIES})
     endif(NOT TARGET gtkmm)
 endif(gtkmm_FOUND)

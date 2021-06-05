@@ -212,9 +212,7 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
 
             // If the click happens outside of the bounds of the image, then
             //   deselect the province
-            if(x < 0 || x > image->info_header.width ||
-               y < 0 || y > image->info_header.height)
-            {
+            if(x > image->info_header.width || y > image->info_header.height) {
                 map_project.selectProvince(-1);
 
                 ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
@@ -256,9 +254,7 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
             auto lmatrix = project.getMapProject().getLabelMatrix();
 
             // Multiselect out of bounds will simply not add to the selections
-            if(x < 0 || x > image->info_header.width ||
-               y < 0 || y > image->info_header.height)
-            {
+            if(x > image->info_header.width || y > image->info_header.height) {
                 return;
             }
 
@@ -418,7 +414,7 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
         auto& project = opt_project->get();
 
         // First, load the image into memory
-        if(BitMap* image = readBMP(filename); image != nullptr) {
+        if(BitMap* image = readBMP(std::string(filename)); image != nullptr) {
             project.getMapProject().setImage(image);
         } else {
             writeError("Failed to read bitmap from ", filename);
@@ -569,7 +565,7 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
         project.getMapProject().setShapeFinder(std::move(shape_finder));
         project.getMapProject().setGraphicsData(graphics_data);
 
-        std::filesystem::path imported(filename);
+        std::filesystem::path imported{std::string(filename)};
         std::filesystem::path input_root = project.getInputsRoot();
 
         writeDebug("Copying the imported map into ", input_root);

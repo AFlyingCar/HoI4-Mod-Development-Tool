@@ -11,6 +11,7 @@
 #include <cerrno>
 #include <iostream>
 #include <fstream>
+#include <string>
 
 #include "Constants.h"
 #include "Logger.h"
@@ -19,15 +20,15 @@
 /**
  * @brief Reads a bitmap file.
  *
- * @param filename The filename to read from.
+ * @param path The path to read from.
  * @return A pointer to a bitmap struct if the bitmap was successfully read,
  *         nullptr otherwise.
  */
-MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename)
+MapNormalizer::BitMap* MapNormalizer::readBMP(const std::filesystem::path& path)
 {
     BitMap* bm = new BitMap();
 
-    if(readBMP(filename, bm) == nullptr) {
+    if(readBMP(path, bm) == nullptr) {
         delete bm;
         return nullptr;
     }
@@ -38,15 +39,15 @@ MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename)
 /**
  * @brief Reads a bitmap file.
  *
- * @param filename The filename to read from.
+ * @param path The path to read from.
  * @param bm The BitMap structure to write into
  * @return A pointer to a bitmap struct if the bitmap was successfully read,
  *         nullptr otherwise.
  */
-MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename,
+MapNormalizer::BitMap* MapNormalizer::readBMP(const std::filesystem::path& path,
                                               BitMap* bm)
 {
-    std::ifstream file(filename, std::ios::in | std::ios::binary);
+    std::ifstream file(path, std::ios::in | std::ios::binary);
 
     if(!file.is_open()) {
         return nullptr;
@@ -140,14 +141,14 @@ MapNormalizer::BitMap* MapNormalizer::readBMP(const std::string& filename,
 /**
  * @brief Writes a bitmap file
  *
- * @param filename The filename to write to
+ * @param path The path to write to
  * @param bmp The BitMap object to write.
  */
-void MapNormalizer::writeBMP(const std::string& filename, const BitMap* bmp) {
-    std::ofstream file(filename, std::ios::out | std::ios::binary);
+void MapNormalizer::writeBMP(const std::filesystem::path& path, const BitMap* bmp) {
+    std::ofstream file(path, std::ios::out | std::ios::binary);
 
     if(!file) {
-        std::cerr << "[ERR] ~ Failed to open output file " << filename << ": " << strerror(errno) << std::endl;
+        std::cerr << "[ERR] ~ Failed to open output file " << path << ": " << strerror(errno) << std::endl;
         return;
     }
 
@@ -181,12 +182,12 @@ void MapNormalizer::writeBMP(const std::string& filename, const BitMap* bmp) {
 /**
  * @brief Writes a bitmap file
  *
- * @param filename The filename to write to
+ * @param path The path to write to
  * @param data The color data to write
  * @param width The width of the bitmap
  * @param height The height of the bitmap
  */
-void MapNormalizer::writeBMP(const std::string& filename, unsigned char* data,
+void MapNormalizer::writeBMP(const std::filesystem::path& path, unsigned char* data,
                              uint32_t width, uint32_t height)
 {
     BitMap bmp;
@@ -219,7 +220,7 @@ void MapNormalizer::writeBMP(const std::string& filename, unsigned char* data,
     bmp.info_header.colorImportant = 0;
     bmp.data = data;
 
-    writeBMP(filename, &bmp);
+    writeBMP(path, &bmp);
 }
 
 /**

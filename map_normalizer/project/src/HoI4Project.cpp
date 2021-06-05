@@ -154,7 +154,14 @@ bool MapNormalizer::Project::HoI4Project::load(const std::filesystem::path& path
         }
 
         if(proj.contains("overrides") && proj["overrides"].is_array()) {
-            proj["overrides"].get_to(m_overrides);
+            std::vector<std::string> overrides;
+            proj["overrides"].get_to(overrides);
+
+            std::transform(overrides.begin(), overrides.end(),
+                           std::back_inserter(m_overrides),
+                           [](const std::string& path) {
+                               return std::filesystem::path(path);
+                           });
         } else {
             complete["overrides"] = false;
         }
@@ -302,7 +309,7 @@ void MapNormalizer::Project::HoI4Project::setName(const std::string& name) {
  */
 void MapNormalizer::Project::HoI4Project::setPathAndName(const std::filesystem::path& full_path) {
     if(full_path.has_filename()) {
-        setName(full_path.filename().replace_extension());
+        setName(full_path.filename().replace_extension().generic_string());
     }
 
     auto path = full_path;
