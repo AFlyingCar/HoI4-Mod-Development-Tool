@@ -27,7 +27,7 @@ jobs:
       with:
         update: true
         # Install packages after installation through pacman
-        install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake
+        install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-gcc
 
     - name: Install required dependencies
       shell: msys2 {0}
