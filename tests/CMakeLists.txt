@@ -23,6 +23,10 @@ target_include_directories(unit_tests PRIVATE inc)
 
 target_compile_options(unit_tests PRIVATE -g)
 
+if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(unit_tests PRIVATE -mno-ms-bitfields)
+endif()
+
 add_custom_command(TARGET unit_tests
                    POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${TEST_BIN_DIR} $<TARGET_FILE_DIR:unit_tests>/bin/
 )
