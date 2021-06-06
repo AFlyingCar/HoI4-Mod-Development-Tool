@@ -23,14 +23,35 @@ constructed for the importing algorithm to work.
 
 ## Building
 
+### Windows
+
+#### Using MSYS2
+
+```
+$ ./win32.bootstrap.sh
+$ mkdir Binaries
+$ cd Binaries
+$ cmake .. -DCMAKE_GENERATOR="MinGW Makefiles"
+$ make
+```
+
+#### Using MSVC
+
+Make sure that GTKMM3 is installed and visible to MSVC
+
+```
+> mkdir Binaries
+> cd Binaries
+> cmake ..
+```
+
 ### Linux
 
 ```
-$ apt install -y python3.6 libgtkmm-3.0-dev googletest libgtest-dev
-$ ./tools/setupGTest.linux.sh
+$ apt install -y python3.6 libgtkmm-3.0-dev
 $ mkdir Binaries
 $ cd Binaries
-$ cmake -G"Unix Makefiles" ..
+$ cmake ..
 $ make
 ```
 
