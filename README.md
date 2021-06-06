@@ -20,6 +20,7 @@ constructed for the importing algorithm to work.
 ### Currently Supported Platforms
 
 * Linux
+* Windows
 
 ## Building
 
@@ -62,6 +63,7 @@ may work with other compilers, but I have not tested those yet.
 
 ## Completed Features
 
+* Windows support
 * Detecting provinces given an input map
 * Selecting and editing data about a given province
 * Generating unique colors for every province
@@ -69,7 +71,6 @@ may work with other compilers, but I have not tested those yet.
 
 ## Planned Features
 
-* Windows support
 * Exporting mods to load in HoI4 
 * Building custom research trees
 * Building custom focus trees
