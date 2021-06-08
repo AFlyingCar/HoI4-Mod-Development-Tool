@@ -28,6 +28,8 @@ constructed for the importing algorithm to work.
 
 #### Using MSYS2
 
+Make sure you install [MSYS](https://www.msys2.org/wiki/MSYS2-installation/) first, and run the following commands in an MSYS2 shell.
+
 ```
 $ ./win32.bootstrap.sh
 $ mkdir Binaries
