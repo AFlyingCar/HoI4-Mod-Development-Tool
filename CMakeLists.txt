@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 
 project(MapNormalizerTools CXX ASM)
 
+set(MSYS_PREFIX "C:/msys64" CACHE PATH "Prefix for where packages are installed to with MSYS. Only applies to WIN32.")
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -101,11 +103,27 @@ include(InstallRequiredSystemLibraries)
 
 # Code taken from here: https://stackoverflow.com/questions/62884439/how-to-use-cmake-file-get-runtime-dependencies-in-an-install-statement
 if(WIN32)
+    set(DEPENDENCY_PATHS "${MSYS_PREFIX}/mingw64/bin/")
+    install(CODE "set(DEPENDENCY_PATHS  \"${DEPENDENCY_PATHS}\")")
+
+    message(STATUS "Contents of ${MSYS_PREFIX}/mingw64/bin/")
+    file(GLOB children1 RELATIVE "${MSYS_PREFIX}/mingw64/bin/" "${MSYS_PREFIX}/mingw64/bin/*")
+    foreach(child ${chilren1})
+        if(NOT IS_DIRECTORY "${MSYS_PREFIX}/mingw64/bin/${child}")
+            message(STATUS "  > ${MSYS_PREFIX}/mingw64/bin/${child}")
+        endif()
+    endforeach()
+
     install(CODE [[
+        # https://github.com/longturn/freeciv21/blob/d53d0181ba837d0d8e10fd76811f0aaeabd6fe5b/CMakeLists.txt
+        string(REGEX REPLACE "objdump.exe" "" MINGW_PATH ${CMAKE_OBJDUMP})
         file(GET_RUNTIME_DEPENDENCIES
             EXECUTABLES "$<TARGET_FILE:map_normalizer>"
             RESOLVED_DEPENDENCIES_VAR _r_deps
             UNRESOLVED_DEPENDENCIES_VAR _u_deps
+            DIRECTORIES ${DEPENDENCY_PATHS}
+            PRE_EXCLUDE_REGEXES "api-ms-*"
+            POST_EXCLUDE_REGEXES ".*system32/.*\\.dll" ".*SysWOW64/.*\\.dll"
         )
         foreach(_file ${_r_deps})
             message(STATUS "Copying dependency ${_file}")
