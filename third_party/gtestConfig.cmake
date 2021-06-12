@@ -19,7 +19,7 @@ if(NOT TARGET gtest)
 
     # Add googletest directly to our build. This defines
     #  the gtest and gtest_main targets.
-    add_subdirectory("${CMAKE_BINARY_DIR}/googletest-src" "${CMAKE_BINARY_DIR}/googletest-build")
+    add_subdirectory("${CMAKE_BINARY_DIR}/googletest-src" "${CMAKE_BINARY_DIR}/googletest-build" EXCLUDE_FROM_ALL)
 
     # organize the gtest projects in the folder view
     set_target_properties(gtest PROPERTIES FOLDER "third_party/gtest")
