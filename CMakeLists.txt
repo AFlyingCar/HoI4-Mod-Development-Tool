@@ -34,11 +34,11 @@ add_subdirectory(tests)
 
 ################################################################################
 
-##############
-#            #
-#   CPACK    #
-#            #
-##############
+######################
+#                    #
+#   CPACK SETTINGS   #
+#                    #
+######################
 
 # https://dominoc925.blogspot.com/2016/09/create-windows-installer-using-cmake.html
 set(CPACK_PACKAGE_NAME "MapNormalizerTool")
@@ -90,7 +90,7 @@ endif()
 #######################
 
 if(WIN32)
-    set(INSTALL_DESTINATION .)
+    set(INSTALL_DESTINATION bin)
 else()
     set(INSTALL_DESTINATION "opt/${CPACK_PACKAGE_NAME}")
 endif()
@@ -105,14 +105,7 @@ include(InstallRequiredSystemLibraries)
 if(WIN32)
     set(DEPENDENCY_PATHS "${MSYS_PREFIX}/mingw64/bin/")
     install(CODE "set(DEPENDENCY_PATHS  \"${DEPENDENCY_PATHS}\")")
-
-    message(STATUS "Contents of ${MSYS_PREFIX}/mingw64/bin/")
-    file(GLOB children1 RELATIVE "${MSYS_PREFIX}/mingw64/bin/" "${MSYS_PREFIX}/mingw64/bin/*")
-    foreach(child ${chilren1})
-        if(NOT IS_DIRECTORY "${MSYS_PREFIX}/mingw64/bin/${child}")
-            message(STATUS "  > ${MSYS_PREFIX}/mingw64/bin/${child}")
-        endif()
-    endforeach()
+    install(CODE "set(INSTALL_DESTINATION \"${INSTALL_DESTINATION}\")")
 
     install(CODE [[
         # https://github.com/longturn/freeciv21/blob/d53d0181ba837d0d8e10fd76811f0aaeabd6fe5b/CMakeLists.txt
@@ -128,7 +121,7 @@ if(WIN32)
         foreach(_file ${_r_deps})
             message(STATUS "Copying dependency ${_file}")
             file(INSTALL
-                DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
+                DESTINATION "${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}"
                 TYPE SHARED_LIBRARY
                 FOLLOW_SYMLINK_CHAIN
                 FILES "${_file}"
@@ -139,6 +132,15 @@ if(WIN32)
             message(WARNING "Unresolved dependencies detected! ${_u_deps}")
         endif()
     ]])
+
+    message(STATUS "Install will create a SYMLINK from ${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}/$<TARGET_FILE:map_normalizer> to ${CMAKE_INSTALL_PREFIX}/$<TARGET_FILE:map_normalizer>")
+
+    install(CODE "execute_process( \
+        COMMAND ${CMAKE_COMMAND} -E create_symlink \
+        ${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}/$<TARGET_FILE:map_normalizer> \
+        ${CMAKE_INSTALL_PREFIX}/$<TARGET_FILE:map_normalizer>
+        )"
+    )
 endif()
 
 include(CPack)
