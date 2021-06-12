@@ -55,7 +55,7 @@ jobs:
       run: ${{github.workspace}}/bin/unit_tests
 
     - name: Generate Result Packages
-      working-directory: ${{runner.workspace}}/build
+      working-directory: ${{github.workspace}}/build
       shell: bash
       run: cmake --build . --target package
 
