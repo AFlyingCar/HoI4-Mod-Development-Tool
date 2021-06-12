@@ -42,11 +42,14 @@ add_subdirectory(tests)
 set(CPACK_PACKAGE_NAME "MapNormalizerTool")
 set(CPACK_PACKAGE_VENDOR "AFlyingCar")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A tool which takes BMP files as input and normalizes them to a format which can be read by Hearts of Iron 4.")
-set(CPACK_PACKAGE_VERSION "")       # TODO: Grab from file
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "map_normalizer")
+set(CPACK_PACKAGE_CONTACT "https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/issues")
+
+# Calculate package version information
+file(STRINGS "${CMAKE_SOURCE_DIR}/.config/version.txt" CPACK_PACKAGE_VERSION)
 set(CPACK_PACKAGE_VERSION_MAJOR "") # TODO: Grab from file
 set(CPACK_PACKAGE_VERSION_MINOR "") # TODO: Grab from file
 set(CPACK_PACKAGE_VERSION_PATCH "") # TODO: Grab from file
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "map_normalizer")
 
 set(CPACK_COMPONENTS_ALL applications libraries)
 set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "Map Normalizer Tools")
@@ -61,12 +64,18 @@ set(CPACK_COMPONENT_LIBRARIES_GROUP "Runtime")
 # Make sure we output to the right place
 set(CPACK_PACKAGE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/packages)
 
-# TODO: Generate an actual installer
-set(CPACK_GENERATOR "ZIP")
+set(CPACK_PACKAGING_INSTALL_PREFIX "/")
 
-if(NOT WIN32)
-    set(CPACK_PACKAGING_INSTALL_PREFIX "/")
+if(WIN32)
+    set(CPACK_GENERATOR ZIP;NSIS)
+else()
+    set(CPACK_GENERATOR ZIP;DEB)
+endif()
 
+# Generator specific settings
+if(WIN32)
+    set(CPACK_NSIS_MODIFY_PATH OFF)
+else()
     set(CPACK_DEBIAN_PACKAGE_PREDEPENDS "")
     set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgtkmm-3.0-1v5")
     set(CPACK_DEBIAN_PACKAGE_DESCRIPTION ${CPACK_PACKAGE_DESCRIPTION_SUMMARY})
@@ -84,7 +93,9 @@ else()
     set(INSTALL_DESTINATION "opt/${CPACK_PACKAGE_NAME}")
 endif()
 
-install(TARGETS map_normalizer DESTINATION ${INSTALL_DESTINATION})
+install(TARGETS map_normalizer
+        DESTINATION ${INSTALL_DESTINATION}
+        COMPONENT applications)
 
 include(InstallRequiredSystemLibraries)
 
