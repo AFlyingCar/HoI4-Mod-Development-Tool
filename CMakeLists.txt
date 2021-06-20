@@ -101,11 +101,78 @@ install(TARGETS map_normalizer
 
 include(InstallRequiredSystemLibraries)
 
+# Make sure we include the resource files into the installation as well
+# install(DIRECTORY resources/etc
+#         DESTINATION ${INSTALL_DESTINATION})
+# install(DIRECTORY resources/lib
+#         DESTINATION ${INSTALL_DESTINATION})
+# install(DIRECTORY resources/share
+#         DESTINATION ${INSTALL_DESTINATION})
+install(FILES README.md
+        DESTINATION ${INSTALL_DESTINATION}/share)
+# TODO: Install the license as well, once we have one
+
 # Code taken from here: https://stackoverflow.com/questions/62884439/how-to-use-cmake-file-get-runtime-dependencies-in-an-install-statement
 if(WIN32)
     set(DEPENDENCY_PATHS "${MSYS_PREFIX}/mingw64/bin/")
+    install(CODE "set(MSYS_PREFIX \"${MSYS_PREFIX}\")")
     install(CODE "set(DEPENDENCY_PATHS  \"${DEPENDENCY_PATHS}\")")
     install(CODE "set(INSTALL_DESTINATION \"${INSTALL_DESTINATION}\")")
+
+    message(STATUS "Grabbing GTK resources")
+
+    # Make sure we get the icons (part of the resources, but installed via GTK, so
+    #  we have to grab them seperately)
+    install(DIRECTORY ${MSYS_PREFIX}/mingw64/etc/gtk-3.0
+            DESTINATION ${INSTALL_DESTINATION}/etc/)
+    install(DIRECTORY ${MSYS_PREFIX}/mingw64/share/icons
+            DESTINATION ${INSTALL_DESTINATION}/share/)
+    install(DIRECTORY ${MSYS_PREFIX}/mingw64/share/locale
+            DESTINATION ${INSTALL_DESTINATION}/share/)
+    install(DIRECTORY ${MSYS_PREFIX}/mingw64/share/themes/Default
+            DESTINATION ${INSTALL_DESTINATION}/share/themes)
+
+    message(STATUS "Grabbing pixbuf modules")
+
+    # Make sure we grab the pixbuf modules as well
+    install(FILES ${MSYS_PREFIX}/mingw64/lib/gdk-pixbuf-2.0/2.10.0/loaders/libpixbufloader-png.dll
+            DESTINATION ${INSTALL_DESTINATION}/lib/gdk-pixbuf-2.0/2.10.0/loaders/)
+
+    find_program(GDK_PIXBUF_QUERY_LOADERS gdk-pixbuf-query-loaders.exe
+                 PATHS "${MSYS_PREFIX}/mingw64/bin/")
+
+    if(NOT GDK_PIXBUF_QUERY_LOADERS)
+        message(WARNING "Unable to find `${MSYS_PREFIX}/mingw64/bin/gdk-pixbuf-query-loaders.exe`, which means we may not be able to correctly generate an installer!")
+    else()
+        message(STATUS "Found ${GDK_PIXBUF_QUERY_LOADERS}")
+    endif()
+
+    install(CODE "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E make_directory \"${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}/lib/gdk-pixbuf-2.0/2.10.0/loaders\")")
+
+    ########## DELETTE THIS ########## 
+    install(CODE "execute_process(COMMAND cmd.exe /c dir \
+                                  WORKING_DIRECTORY \"${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}/lib/gdk-pixbuf-2.0/2.10.0/loaders\"\
+                                  RESULT_VARIABLE DIR_RESULT \
+    )")
+    install(CODE [[
+        if(DIR_RESULT)
+            message(FATAL_ERROR "dir exited with status: `${DIR_RESULT}")
+        endif()
+    ]])
+    ########## ############ ########## 
+
+    install(CODE "\
+        execute_process(COMMAND \"${GDK_PIXBUF_QUERY_LOADERS}\" \"libpixbufloader-png.dll\"\
+                        WORKING_DIRECTORY \"${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}/lib/gdk-pixbuf-2.0/2.10.0/loaders\"\
+                        RESULT_VARIABLE GDK_PIXBUF_QUERY_LOADERS_RESULT \
+                        OUTPUT_FILE \"${INSTALL_DESTINATION}/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache\")")
+    install(CODE [[
+        if(GDK_PIXBUF_QUERY_LOADERS_RESULT)
+            message(FATAL_ERROR "`${MSYS_PREFIX}/mingw64/bin/gdk-pixbuf-query-loaders.exe libpixbufloader-*` exited with status: `${GDK_PIXBUF_QUERY_LOADERS_RESULT}")
+        endif()
+    ]])
+    install(FILES ${CMAKE_BINARY_DIR}/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache
+            DESTINATION ${INSTALL_DESTINATION}/lib/gdk-pixbuf-2.0/2.10.0/)
 
     install(CODE [[
         # https://github.com/longturn/freeciv21/blob/d53d0181ba837d0d8e10fd76811f0aaeabd6fe5b/CMakeLists.txt
@@ -133,14 +200,11 @@ if(WIN32)
         endif()
     ]])
 
-    message(STATUS "Install will create a SYMLINK from ${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}/$<TARGET_FILE:map_normalizer> to ${CMAKE_INSTALL_PREFIX}/$<TARGET_FILE:map_normalizer>")
+    # message(STATUS "Install will create a SYMLINK from ${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}/$<TARGET_FILE:map_normalizer> to ${CMAKE_INSTALL_PREFIX}/$<TARGET_FILE:map_normalizer>")
 
-    install(CODE "execute_process( \
-        COMMAND ${CMAKE_COMMAND} -E create_symlink \
-        ${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}/$<TARGET_FILE:map_normalizer> \
-        ${CMAKE_INSTALL_PREFIX}/$<TARGET_FILE:map_normalizer>
-        )"
-    )
+    # install(CODE [[
+    #        execute_process(COMMAND cmd.exe /c mklink /J ${CMAKE_INSTALL_PREFIX}\${INSTALL_DESTINATION}\$<TARGET_FILE:map_normalizer> ${CMAKE_INSTALL_PREFIX}\$<TARGET_FILE:map_normalizer>)
+    # ]])
 endif()
 
 include(CPack)
