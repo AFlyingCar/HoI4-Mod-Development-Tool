@@ -90,13 +90,13 @@ endif()
 #######################
 
 if(WIN32)
-    set(INSTALL_DESTINATION bin)
+    set(INSTALL_DESTINATION .)
 else()
     set(INSTALL_DESTINATION "opt/${CPACK_PACKAGE_NAME}")
 endif()
 
 install(TARGETS map_normalizer
-        DESTINATION ${INSTALL_DESTINATION}
+        DESTINATION ${INSTALL_DESTINATION}/bin
         COMPONENT applications)
 
 include(InstallRequiredSystemLibraries)
@@ -147,32 +147,20 @@ if(WIN32)
         message(STATUS "Found ${GDK_PIXBUF_QUERY_LOADERS}")
     endif()
 
-    install(CODE "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E make_directory \"${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}/lib/gdk-pixbuf-2.0/2.10.0/loaders\")")
+    install(CODE "set(GDK_PIXBUF_QUERY_LOADERS \"${GDK_PIXBUF_QUERY_LOADERS}\")")
 
-    ########## DELETTE THIS ########## 
-    install(CODE "execute_process(COMMAND cmd.exe /c dir \
-                                  WORKING_DIRECTORY \"${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}/lib/gdk-pixbuf-2.0/2.10.0/loaders\"\
-                                  RESULT_VARIABLE DIR_RESULT \
-    )")
     install(CODE [[
-        if(DIR_RESULT)
-            message(FATAL_ERROR "dir exited with status: `${DIR_RESULT}")
-        endif()
+        execute_process(COMMAND "${GDK_PIXBUF_QUERY_LOADERS}" "loaders/libpixbufloader-png.dll"
+                        COMMAND_ECHO STDOUT
+                        WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}/lib/gdk-pixbuf-2.0/2.10.0"
+                        RESULT_VARIABLE GDK_PIXBUF_QUERY_LOADERS_RESULT
+                        OUTPUT_FILE loaders.cache)
     ]])
-    ########## ############ ########## 
-
-    install(CODE "\
-        execute_process(COMMAND \"${GDK_PIXBUF_QUERY_LOADERS}\" \"libpixbufloader-png.dll\"\
-                        WORKING_DIRECTORY \"${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}/lib/gdk-pixbuf-2.0/2.10.0/loaders\"\
-                        RESULT_VARIABLE GDK_PIXBUF_QUERY_LOADERS_RESULT \
-                        OUTPUT_FILE \"${INSTALL_DESTINATION}/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache\")")
     install(CODE [[
         if(GDK_PIXBUF_QUERY_LOADERS_RESULT)
-            message(FATAL_ERROR "`${MSYS_PREFIX}/mingw64/bin/gdk-pixbuf-query-loaders.exe libpixbufloader-*` exited with status: `${GDK_PIXBUF_QUERY_LOADERS_RESULT}")
+            message(FATAL_ERROR "${GDK_PIXBUF_QUERY_LOADERS} exited with status: `${GDK_PIXBUF_QUERY_LOADERS_RESULT}")
         endif()
     ]])
-    install(FILES ${CMAKE_BINARY_DIR}/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache
-            DESTINATION ${INSTALL_DESTINATION}/lib/gdk-pixbuf-2.0/2.10.0/)
 
     install(CODE [[
         # https://github.com/longturn/freeciv21/blob/d53d0181ba837d0d8e10fd76811f0aaeabd6fe5b/CMakeLists.txt
@@ -188,7 +176,7 @@ if(WIN32)
         foreach(_file ${_r_deps})
             message(STATUS "Copying dependency ${_file}")
             file(INSTALL
-                DESTINATION "${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}"
+                DESTINATION "${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}/bin/"
                 TYPE SHARED_LIBRARY
                 FOLLOW_SYMLINK_CHAIN
                 FILES "${_file}"
