@@ -1,4 +1,4 @@
-name: CMake Win32
+name: Windows Status
 
 on: [pull_request, workflow_dispatch]
 
@@ -27,7 +27,7 @@ jobs:
       with:
         update: true
         # Install packages after installation through pacman
-        install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-libc++ mingw-w64-x86_64-libc++abi mingw-w64-ucrt-x86_64-toolchain
+        install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake
 
     - name: Install required dependencies
       shell: msys2 {0}
