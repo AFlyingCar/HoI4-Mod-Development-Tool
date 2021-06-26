@@ -16,10 +16,6 @@ MapNormalizer::GUI::Driver::~Driver() {
 }
 
 bool MapNormalizer::GUI::Driver::initialize() {
-#ifdef _WIN32
-    g_setenv("GTK_THEME", "win32", FALSE);
-#endif
-
     m_app = Glib::RefPtr<MapNormalizerApplication>(new MapNormalizerApplication());
 
     return true;
