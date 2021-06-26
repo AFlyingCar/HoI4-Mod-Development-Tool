@@ -2,7 +2,8 @@
 #include "NewProjectDialog.h"
 
 #include "gtkmm/widget.h"
-#include "gtkmm/filechooserdialog.h"
+
+#include "NativeDialog.h"
 
 MapNormalizer::GUI::NewProjectDialog::NewProjectDialog(Gtk::Window& window,
                                                        bool modal):
@@ -89,27 +90,20 @@ void MapNormalizer::GUI::NewProjectDialog::buildPathField() {
         choose_button->signal_clicked().connect([this]() {
             // Allocate this on the stack so that it gets automatically cleaned up
             //  when we finish
-            Gtk::FileChooserDialog dialog(*this, "Path to project",
-                                          Gtk::FILE_CHOOSER_ACTION_CREATE_FOLDER);
-            dialog.set_select_multiple(false);
+            std::string path;
+            NativeDialog::FileDialog dialog("Path to project",
+                                            NativeDialog::FileDialog::SELECT_DIR);
+            dialog.setAllowsMultipleSelection(false)
+                  .setDecideHandler([&path](const NativeDialog::Dialog& dialog) {
+                      auto& fdlg = dynamic_cast<const NativeDialog::FileDialog&>(dialog);
+                      path = fdlg.selectedPathes().front();
+                  }).show();
 
-            dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
-            dialog.add_button("Select", Gtk::RESPONSE_ACCEPT);
+            if(!path.empty()) {
+                m_path_field.set_text(path);
 
-            const int result = dialog.run();
-            switch(result) {
-                case Gtk::RESPONSE_ACCEPT:
-                    dialog.hide(); // Hide ourselves immediately
-
-                    m_path_field.set_text(dialog.get_filename());
-
-                    m_confirm_button->set_sensitive(!m_name_field.get_text().empty() &&
-                                                    !m_path_field.get_text().empty());
-                    break;
-                case Gtk::RESPONSE_CANCEL:
-                case Gtk::RESPONSE_DELETE_EVENT:
-                default:
-                    return;
+                m_confirm_button->set_sensitive(!m_name_field.get_text().empty() &&
+                                                !m_path_field.get_text().empty());
             }
         });
     }

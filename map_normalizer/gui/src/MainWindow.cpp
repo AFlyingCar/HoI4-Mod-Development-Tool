@@ -4,7 +4,8 @@
 #include <sstream>
 
 #include "gtkmm.h"
-#include "gtkmm/filechooserdialog.h"
+
+#include "NativeDialog.h"
 
 #include "BitMap.h"
 #include "Constants.h"
@@ -121,29 +122,23 @@ void MapNormalizer::GUI::MainWindow::initializeProjectActions() {
     auto ipm_action = add_action("import_provincemap", [this]() {
         // Allocate this on the stack so that it gets automatically cleaned up
         //  when we finish
-        Gtk::FileChooserDialog dialog(*this, "Choose an input image file");
-        dialog.set_select_multiple(false);
-        // dialog.add_filter(); // TODO: Filter only for supported file types
+        NativeDialog::FileDialog dialog("Choose an input image file",
+                                        NativeDialog::FileDialog::SELECT_FILE);
+        // dialog.setDefaultPath() // TODO: Start in the installation directory/Documents
+        std::string path;
+        dialog.addFilter("Province Image Files", "bmp")
+              .addFilter("All files", "*")
+              .setAllowsMultipleSelection(false)
+              .setDecideHandler([&path](const NativeDialog::Dialog& dialog) {
+                    auto& fdlg = dynamic_cast<const NativeDialog::FileDialog&>(dialog);
+                    path = fdlg.selectedPathes().front();
+              }).show();
 
-        dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
-        dialog.add_button("Select", Gtk::RESPONSE_ACCEPT);
-
-        const int result = dialog.run();
-
-        switch(result) {
-            case Gtk::RESPONSE_ACCEPT:
-                dialog.hide(); // Hide ourselves immediately
-                if(!importProvinceMap(dialog.get_filename())) {
-                    Gtk::MessageDialog dialog("Failed to open file.", false,
-                                              Gtk::MESSAGE_ERROR);
-                    dialog.run();
-                }
-                break;
-            case Gtk::RESPONSE_CANCEL:
-            case Gtk::RESPONSE_DELETE_EVENT:
-            default:
-                break;
-        }
+          if(!path.empty() && !importProvinceMap(path)) {
+              Gtk::MessageDialog err_diag("Failed to open file.",
+                                          false, Gtk::MESSAGE_ERROR);
+              err_diag.run();
+          }
     });
 
     // This action should be disabled by default, until a project gets opened
@@ -639,31 +634,27 @@ void MapNormalizer::GUI::MainWindow::openProject() {
 
     // Allocate this on the stack so that it gets automatically cleaned up
     //  when we finish
-    Gtk::FileChooserDialog dialog(*this, "Choose a project file.");
-    dialog.set_select_multiple(false);
-    // dialog.add_filter(); // TODO: Filter only for supported file types
+    std::string path;
 
-    dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
-    dialog.add_button("Select", Gtk::RESPONSE_ACCEPT);
+    NativeDialog::FileDialog dialog("Choose a project file.",
+                                    NativeDialog::FileDialog::SELECT_FILE);
+    // dialog.setDefaultPath() // TODO: Start in the installation directory/Documents
+    dialog.addFilter("Project Files", "hoi4proj")
+          .addFilter("All files", "*")
+          .setAllowsMultipleSelection(false)
+          .setDecideHandler([&path](const NativeDialog::Dialog& dialog) {
+                auto& fdlg = dynamic_cast<const NativeDialog::FileDialog&>(dialog);
+                path = fdlg.selectedPathes().front();
+          }).show();
 
-    const int result = dialog.run();
-
-    switch(result) {
-        case Gtk::RESPONSE_ACCEPT:
-            dialog.hide(); // Hide ourselves immediately
-
-            project->setPath(dialog.get_filename());
-            if(!project->load()) {
-                Gtk::MessageDialog dialog("Failed to open file.", false,
-                                          Gtk::MESSAGE_ERROR);
-                dialog.run();
-                return;
-            }
-            break;
-        case Gtk::RESPONSE_CANCEL:
-        case Gtk::RESPONSE_DELETE_EVENT:
-        default:
+    if(!path.empty()) {
+        project->setPath(path);
+        if(!project->load()) {
+            Gtk::MessageDialog err_diag("Failed to open file.", false,
+                                        Gtk::MESSAGE_ERROR);
+            err_diag.run();
             return;
+        }
     }
 
     if(project->getToolVersion() != TOOL_VERSION) {
@@ -755,26 +746,21 @@ void MapNormalizer::GUI::MainWindow::saveProjectAs(const std::string& dtitle) {
 
         // Allocate this on the stack so that it gets automatically cleaned up
         //  when we finish
-        Gtk::FileChooserDialog dialog(*this, dtitle,
-                                      Gtk::FILE_CHOOSER_ACTION_SAVE);
-        dialog.set_select_multiple(false);
+        NativeDialog::FileDialog dialog(dtitle,
+                                        NativeDialog::FileDialog::SELECT_FILE |
+                                        NativeDialog::FileDialog::SELECT_TO_SAVE);
+        // dialog.setDefaultPath() // TODO: Start in the installation directory/Documents
+        dialog.addFilter("Project Files", "hoi4proj")
+              .addFilter("All files", "*")
+              .setAllowsMultipleSelection(false)
+              .setDecideHandler([this, &project](const NativeDialog::Dialog& dialog)
+              {
+                    auto& fdlg = dynamic_cast<const NativeDialog::FileDialog&>(dialog);
+                    auto&& paths = fdlg.selectedPathes();
 
-        dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
-        dialog.add_button("Select", Gtk::RESPONSE_ACCEPT);
-
-        const int result = dialog.run();
-        switch(result) {
-            case Gtk::RESPONSE_ACCEPT:
-                dialog.hide(); // Hide ourselves immediately
-
-                project.setPathAndName(dialog.get_filename());
-                saveProject();
-                break;
-            case Gtk::RESPONSE_CANCEL:
-            case Gtk::RESPONSE_DELETE_EVENT:
-            default:
-                return;
-        }
+                    project.setPathAndName(paths.front());
+                    saveProject();
+              }).show();
     }
 }
 
