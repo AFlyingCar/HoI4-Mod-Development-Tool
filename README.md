@@ -1,5 +1,5 @@
 
-# HoI4 Map Normalizer Tool [![CMake](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.yml/badge.svg)](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.yml)
+# HoI4 Map Normalizer Tool [![Linux](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.yml/badge.svg)](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.yml) [![Windows](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.Win32.yml/badge.svg)](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.Win32.yml)
 
 ## Description
 
@@ -26,9 +26,13 @@ constructed for the importing algorithm to work.
 
 ### Windows
 
+Note: I have not tested MSVC, so the project most likely will not configure
+properly or compile. As such, I will not describe how to compile with MSVC here.
+
 #### Using MSYS2
 
-Make sure you install [MSYS](https://www.msys2.org/wiki/MSYS2-installation/) first, and run the following commands in an MSYS2 shell.
+Make sure you install [MSYS](https://www.msys2.org/wiki/MSYS2-installation/)
+first, and run the following commands in an MSYS2 shell.
 
 ```
 $ ./win32.bootstrap.sh
@@ -37,17 +41,6 @@ $ cd Binaries
 $ cmake .. -DCMAKE_GENERATOR="MinGW Makefiles"
 $ make
 ```
-
-#### Using MSVC
-
-Make sure that GTKMM3 is installed and visible to MSVC
-
-```
-> mkdir Binaries
-> cd Binaries
-> cmake ..
-```
-
 ### Linux
 
 ```
@@ -85,9 +78,13 @@ may work with other compilers, but I have not tested those yet.
 * Calculate coastal provinces
 * Render the map as it would be seen ingame
 * Importing state information
+* Painting properties onto the map
 
 ## Credits
 
-Libraries used are [gtkmm](https://gtkmm.org/), [nlohmann::json](https://github.com/nlohmann/json), [nlohmann::fifo_map](https://github.com/nlohmann/fifo_map), and [gtest](https://github.com/google/googletest)
-
+Libraries used are [gtkmm](https://gtkmm.org/),
+[nlohmann::json](https://github.com/nlohmann/json),
+[nlohmann::fifo_map](https://github.com/nlohmann/fifo_map),
+[gtest](https://github.com/google/googletest), and
+[Native Dialogs](https://github.com/Geequlim/NativeDialogs)
 
