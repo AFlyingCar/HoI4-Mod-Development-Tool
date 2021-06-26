@@ -1,11 +1,14 @@
 cmake_minimum_required(VERSION 3.0)
 
+cmake_policy(SET CMP0097 NEW)
+
 include(FetchContent)
 
 find_package(gtkmm REQUIRED)
 
 FetchContent_Declare(native_dialogs
     GIT_REPOSITORY https://github.com/Geequlim/NativeDialogs
+	GIT_SUBMODULES ""
 )
 
 FetchContent_GetProperties(native_dialogs)
@@ -36,7 +39,11 @@ if(NOT native_dialogs_POPULATED)
     endif()
 
     add_library(native_dialogs STATIC ${ND_SOURCES})
-    target_include_directories(native_dialogs PUBLIC ${native_dialogs_SOURCE_DIR}/src)
+    target_include_directories(native_dialogs SYSTEM PUBLIC ${native_dialogs_SOURCE_DIR}/src)
     target_link_libraries(native_dialogs gtkmm)
+
+    if(WIN32)
+        target_compile_options(native_dialogs PRIVATE -Wno-error -fpermissive -Wno-missing-field-initializers -Wno-unknown-pragmas)
+    endif()
 endif()
 
