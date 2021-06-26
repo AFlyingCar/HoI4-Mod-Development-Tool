@@ -1,5 +1,5 @@
 
-# HoI4 Map Normalizer Tool [![Linux](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.yml/badge.svg)](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.yml) [![Windows](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.Win32.yml/badge.svg)](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.Win32.yml)
+# HoI4 Map Normalizer Tool 
 
 ## Description
 
@@ -19,8 +19,8 @@ constructed for the importing algorithm to work.
 
 ### Currently Supported Platforms
 
-* Linux
-* Windows
+* Linux [![Linux](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.yml/badge.svg)](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.yml) 
+* Windows [![Windows](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.Win32.yml/badge.svg)](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.Win32.yml)
 
 ## Building
 
