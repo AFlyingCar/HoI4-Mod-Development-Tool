@@ -16,6 +16,13 @@ set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/third_party
     ${CMAKE_PREFIX_PATH}
 )
 
+# Set up install destinations
+if(WIN32)
+    set(INSTALL_DESTINATION .)
+else()
+    set(INSTALL_DESTINATION "opt/${CPACK_PACKAGE_NAME}")
+endif()
+
 # TODO: What other MSVC options should we pass?
 if(MSVC)
     add_compile_options(/W4 /WX)
@@ -89,12 +96,6 @@ endif()
 #                     #
 #######################
 
-if(WIN32)
-    set(INSTALL_DESTINATION .)
-else()
-    set(INSTALL_DESTINATION "opt/${CPACK_PACKAGE_NAME}")
-endif()
-
 install(TARGETS map_normalizer
         DESTINATION ${INSTALL_DESTINATION}/bin
         COMPONENT applications)
@@ -109,8 +110,8 @@ include(InstallRequiredSystemLibraries)
 # install(DIRECTORY resources/share
 #         DESTINATION ${INSTALL_DESTINATION})
 install(FILES README.md
-        DESTINATION ${INSTALL_DESTINATION}/share)
-# TODO: Install the license as well, once we have one
+        DESTINATION ${INSTALL_DESTINATION}/share/doc/)
+# TODO: Install the license as well to /share/licenses/, once we have one
 
 # Code taken from here: https://stackoverflow.com/questions/62884439/how-to-use-cmake-file-get-runtime-dependencies-in-an-install-statement
 if(WIN32)
@@ -187,12 +188,6 @@ if(WIN32)
             message(WARNING "Unresolved dependencies detected! ${_u_deps}")
         endif()
     ]])
-
-    # message(STATUS "Install will create a SYMLINK from ${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}/$<TARGET_FILE:map_normalizer> to ${CMAKE_INSTALL_PREFIX}/$<TARGET_FILE:map_normalizer>")
-
-    # install(CODE [[
-    #        execute_process(COMMAND cmd.exe /c mklink /J ${CMAKE_INSTALL_PREFIX}\${INSTALL_DESTINATION}\$<TARGET_FILE:map_normalizer> ${CMAKE_INSTALL_PREFIX}\$<TARGET_FILE:map_normalizer>)
-    # ]])
 endif()
 
 include(CPack)
