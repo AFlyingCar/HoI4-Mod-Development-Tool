@@ -12,5 +12,9 @@ FetchContent_GetProperties(json)
 if(NOT json_POPULATED)
     FetchContent_Populate(json)
     add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
+
+    install(FILES ${json_SOURCE_DIR}/LICENSE.MIT
+            DESTINATION ${INSTALL_DESTINATION}/share/licenses
+            RENAME LICENSE.json.txt)
 endif()
 

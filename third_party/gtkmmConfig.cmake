@@ -3,28 +3,7 @@ cmake_minimum_required(VERSION 3.0)
 # Linux installation: https://developer.gnome.org/gtkmm-tutorial/stable/sec-install-unix-and-linux.html.en
 # Windows installation: https://wiki.gnome.org/Projects/gtkmm/MSWindows
 
-# TODO: Where does windows put them?
 if(WIN32)
-    # find_program(MSYS2_INSTALLED bash.exe)
-
-    # if(MSYS2_INSTALLED)
-    #     # Install GTKMM via MSYS
-    #     # Running MSYS via CMake: https://stackoverflow.com/a/36347852
-    #     set(BOOTSTRAP_COMMAND_DIR "${CMAKE_SOURCE_DIR}")
-    #     set(BOOTSTRAP_COMMAND bash -l -c "cd ${BOOTSTRAP_COMMAND_DIR} && sh ./win32.bootstrap.sh")
-    #     execute_process(COMMAND ${BOOTSTRAP_COMMAND}
-    #                     WORKING_DIRECTORY ${BOOTSTRAP_COMMAND_DIR}
-    #                     RESULT_VARIABLE boostrap_result)
-    #     if(NOT "${boostrap_result}" STREQUAL "0")
-    #         message(FATAL_ERROR "Bootstrap returned ${command_result}")
-    #     endif()
-    # else()
-    #     message(WARNING "Bash not found. We require bash installed via MSYS2 in order to run the bootstrapping script.")
-    #     message(WARNING "If you have already installed the required packages, then this will not be an error and we can attempt to continue regardless.")
-    # endif()
-
-    # find_package(gtkmm REQUIRED)
-
     # Attempt to use pkgconfig to find gtkmm-3
     include(FindPkgConfig)
     pkg_search_module(GTKMM3 REQUIRED gtkmm-3.0)
@@ -75,22 +54,8 @@ if(WIN32)
             NAMES libgtkmm-3.0-1 gtkmm-3.0-1 gtkmm-3.0 libgtkmm-3.0
             PATHS "${GTK_LIB_ROOT}"
             )
-
-        if(NOT GTKMM3_LIBRARIES)
-            message(STATUS "Contents of ${GTK_LIB_ROOT}/*")
-            FILE(GLOB GTKMM3_ROOT_CHILDREN RELATIVE ${GTK_LIB_ROOT} ${GTK_LIB_ROOT}/*)
-            foreach(child ${GTKMM3_ROOT_CHILDREN})
-                message(STATUS ${child})
-            endforeach()
-        endif()
     endif()
 else()
-    #    find_path(GTK_INCLUDE_DIRS
-    #        NAMES gtkmm.h
-    #        PATHS /usr/include
-    #        PATH_SUFFIXES gtkmm-3.0
-    #    )
-
     include(FindPkgConfig)
     pkg_search_module(GTKMM3 REQUIRED gtkmm-3.0)
 endif()
@@ -109,8 +74,12 @@ if(gtkmm_FOUND)
         add_library(gtkmm INTERFACE)
         target_include_directories(gtkmm SYSTEM PUBLIC INTERFACE ${GTKMM3_INCLUDE_DIRS})
         target_link_libraries(gtkmm INTERFACE ${GTKMM3_LIBRARIES})
+
+        # Make sure we get the license as well
+        file(DOWNLOAD https://www.gnu.org/licenses/lgpl-3.0.txt
+                      ${CMAKE_BINARY_DIR}/LICENSE-gtkmm-3.0.txt)
+        install(FILES ${CMAKE_BINARY_DIR}/LICENSE-gtkmm-3.0.txt
+                DESTINATION ${INSTALL_DESTINATION}/share/licenses)
     endif(NOT TARGET gtkmm)
 endif(gtkmm_FOUND)
-
-
 

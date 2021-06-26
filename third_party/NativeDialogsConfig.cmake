@@ -8,16 +8,13 @@ find_package(gtkmm REQUIRED)
 
 FetchContent_Declare(native_dialogs
     GIT_REPOSITORY https://github.com/Geequlim/NativeDialogs
-	GIT_SUBMODULES ""
+    GIT_SUBMODULES ""
 )
 
 FetchContent_GetProperties(native_dialogs)
 
 if(NOT native_dialogs_POPULATED)
     FetchContent_Populate(native_dialogs)
-
-    message(STATUS ${native_dialogs_SOURCE_DIR})
-    message(STATUS ${native_dialogs_BINARY_DIR})
 
     set(ND_SOURCES ${native_dialogs_SOURCE_DIR}/src/NativeDialog.cpp)
 
@@ -45,5 +42,9 @@ if(NOT native_dialogs_POPULATED)
     if(WIN32)
         target_compile_options(native_dialogs PRIVATE -Wno-error -fpermissive -Wno-missing-field-initializers -Wno-unknown-pragmas)
     endif()
+
+    install(FILES ${native_dialogs_SOURCE_DIR}/LICENSE.txt
+            DESTINATION ${INSTALL_DESTINATION}/share/licenses
+            RENAME LICENSE.NativeDialogs.txt)
 endif()
 
