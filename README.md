@@ -39,7 +39,7 @@ $ ./win32.bootstrap.sh
 $ mkdir Binaries
 $ cd Binaries
 $ cmake .. -DCMAKE_GENERATOR="MinGW Makefiles"
-$ make
+$ mingw32-make
 ```
 ### Linux
 
