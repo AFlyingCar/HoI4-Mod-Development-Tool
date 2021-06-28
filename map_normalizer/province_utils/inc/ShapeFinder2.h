@@ -80,7 +80,7 @@ namespace MapNormalizer {
 
             std::optional<uint32_t> finalize(PolygonList&);
 
-            void outputStage(const std::string&);
+            void outputStage(const std::filesystem::path&);
 
             uint32_t getRootLabel(uint32_t);
 

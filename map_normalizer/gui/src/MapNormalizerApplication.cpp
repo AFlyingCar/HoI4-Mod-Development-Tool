@@ -9,7 +9,8 @@
 #include "MainWindow.h"
 
 MapNormalizer::GUI::MapNormalizerApplication::MapNormalizerApplication():
-    Gtk::Application(APPLICATION_ID)
+    Gtk::Application(APPLICATION_ID),
+    m_settings(Gtk::Settings::get_default())
 {
     Glib::set_application_name(APPLICATION_NAME);
 }

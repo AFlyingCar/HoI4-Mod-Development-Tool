@@ -3,7 +3,10 @@
 #include "ColorArray.h"
 #include "Logger.h"
 
-#define NOMINMAX
+#ifndef NOMINMAX
+# define NOMINMAX
+#endif
+
 #include <cmath>
 #include <algorithm>
 

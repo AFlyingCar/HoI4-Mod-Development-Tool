@@ -143,8 +143,8 @@ bool MapNormalizer::doColorsMatch(const Color& c1, const Color& c2) {
  * @return True if the point is within the bounds of the image, false otherwise
  */
 bool MapNormalizer::isInImage(const BitMap* image, uint32_t x, uint32_t y) {
-    return x >= 0 && x < static_cast<uint32_t>(image->info_header.width) &&
-           y >= 0 && y < static_cast<uint32_t>(image->info_header.height);
+    return x < static_cast<uint32_t>(image->info_header.width) &&
+           y < static_cast<uint32_t>(image->info_header.height);
 }
 
 bool MapNormalizer::isShapeTooLarge(uint32_t s_width, uint32_t s_height,

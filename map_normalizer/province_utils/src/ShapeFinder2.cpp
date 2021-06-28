@@ -505,7 +505,7 @@ std::optional<uint32_t> MapNormalizer::ShapeFinder::finalize(PolygonList& shapes
  *
  * @param filename The filename to output the stage to.
  */
-void MapNormalizer::ShapeFinder::outputStage(const std::string& filename) {
+void MapNormalizer::ShapeFinder::outputStage(const std::filesystem::path& filename) {
     unsigned char* label_data = new unsigned char[m_label_matrix_size * 3];
 
     for(uint32_t i = 0; i < m_label_matrix_size; ++i) {
@@ -792,6 +792,8 @@ std::string MapNormalizer::toString(const ShapeFinder::Stage& stage) {
             return "Error Checking";
         case ShapeFinder::Stage::DONE:
             return "Done";
+        default:
+            return "<ERROR: INVALID STAGE>";
     }
 }
 

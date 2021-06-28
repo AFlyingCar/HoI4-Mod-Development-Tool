@@ -37,11 +37,15 @@ namespace MapNormalizer::GUI {
             MenuWrapper createMenu(const std::string&, const std::string&,
                                    std::initializer_list<MenuItemInfo>);
 
+            Glib::RefPtr<Gtk::Settings> getSettings();
+
         private:
             std::unique_ptr<Window> m_window;
 
             std::map<std::string, MenuItemWrapper> m_menu_items;
             std::map<std::string, MenuWrapper> m_menus;
+
+            Glib::RefPtr<Gtk::Settings> m_settings;
     };
 }
 

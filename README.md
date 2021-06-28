@@ -1,5 +1,5 @@
 
-# HoI4 Map Normalizer Tool [![CMake](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.yml/badge.svg)](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.yml)
+# HoI4 Map Normalizer Tool 
 
 ## Description
 
@@ -19,18 +19,35 @@ constructed for the importing algorithm to work.
 
 ### Currently Supported Platforms
 
-* Linux
+* Linux [![Linux](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.yml/badge.svg)](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.yml) 
+* Windows [![Windows](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.Win32.yml/badge.svg)](https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/actions/workflows/OnPullRequest.Win32.yml)
 
 ## Building
 
+### Windows
+
+Note: I have not tested MSVC, so the project most likely will not configure
+properly or compile. As such, I will not describe how to compile with MSVC here.
+
+#### Using MSYS2
+
+Make sure you install [MSYS](https://www.msys2.org/wiki/MSYS2-installation/)
+first, and run the following commands in an MSYS2 shell.
+
+```
+$ ./win32.bootstrap.sh
+$ mkdir Binaries
+$ cd Binaries
+$ cmake .. -DCMAKE_GENERATOR="MinGW Makefiles"
+$ mingw32-make
+```
 ### Linux
 
 ```
-$ apt install -y python3.6 libgtkmm-3.0-dev googletest libgtest-dev
-$ ./tools/setupGTest.linux.sh
+$ apt install -y python3.6 libgtkmm-3.0-dev
 $ mkdir Binaries
 $ cd Binaries
-$ cmake -G"Unix Makefiles" ..
+$ cmake ..
 $ make
 ```
 
@@ -41,6 +58,7 @@ may work with other compilers, but I have not tested those yet.
 
 ## Completed Features
 
+* Windows support
 * Detecting provinces given an input map
 * Selecting and editing data about a given province
 * Generating unique colors for every province
@@ -48,7 +66,6 @@ may work with other compilers, but I have not tested those yet.
 
 ## Planned Features
 
-* Windows support
 * Exporting mods to load in HoI4 
 * Building custom research trees
 * Building custom focus trees
@@ -61,9 +78,13 @@ may work with other compilers, but I have not tested those yet.
 * Calculate coastal provinces
 * Render the map as it would be seen ingame
 * Importing state information
+* Painting properties onto the map
 
 ## Credits
 
-Libraries used are [gtkmm](https://gtkmm.org/), [nlohmann::json](https://github.com/nlohmann/json), [nlohmann::fifo_map](https://github.com/nlohmann/fifo_map), and [gtest](https://github.com/google/googletest)
-
+Libraries used are [gtkmm](https://gtkmm.org/),
+[nlohmann::json](https://github.com/nlohmann/json),
+[nlohmann::fifo_map](https://github.com/nlohmann/fifo_map),
+[gtest](https://github.com/google/googletest), and
+[Native Dialogs](https://github.com/Geequlim/NativeDialogs)
 

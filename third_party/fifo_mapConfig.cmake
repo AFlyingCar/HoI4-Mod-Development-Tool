@@ -11,5 +11,9 @@ FetchContent_GetProperties(fifo_map)
 if(NOT fifo_map_POPULATED)
     FetchContent_Populate(fifo_map)
     add_subdirectory(${fifo_map_SOURCE_DIR} ${fifo_map_BINARY_DIR} EXCLUDE_FROM_ALL)
+
+    install(FILES ${json_SOURCE_DIR}/LICENSE.MIT
+            DESTINATION ${INSTALL_DESTINATION}/share/licenses
+            RENAME LICENSE.fifo_map.txt)
 endif()
 

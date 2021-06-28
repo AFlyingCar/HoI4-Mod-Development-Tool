@@ -54,7 +54,7 @@ set_source_files_properties(src/ColorArray_x86.asm
 
 
 add_library(unique_colors STATIC
-    src/ColorArray_x86.asm
+    src/ColorArray_x86.s
 )
 
 target_include_directories(unique_colors PUBLIC inc)

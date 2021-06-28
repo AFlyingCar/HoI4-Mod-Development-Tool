@@ -126,7 +126,6 @@ int MapNormalizer::runHeadless() {
         writeDebug(ss.str(), false);
     }
 
-    unsigned char* graphics_data = nullptr;
     unsigned char* river_data = nullptr;
     unsigned char* normalmap_data = nullptr;
 
@@ -140,7 +139,6 @@ int MapNormalizer::runHeadless() {
 
     river_data = new unsigned char[data_size];
     normalmap_data = new unsigned char[data_size];
-    graphics_data = new unsigned char[data_size];
 
     if(!prog_opts.quiet)
         setInfoLine("Finding all possible shapes.");

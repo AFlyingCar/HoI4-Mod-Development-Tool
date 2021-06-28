@@ -8,7 +8,7 @@
 # define _BITMAP_H_
 
 # include <ostream> // std::ostream
-# include <string>  // std::string
+# include <filesystem> // std::filesystem::path
 
 namespace MapNormalizer {
     /**
@@ -48,11 +48,11 @@ namespace MapNormalizer {
         unsigned char* data;          //! The image data
     };
 
-    BitMap* readBMP(const std::string&, BitMap*);
-    BitMap* readBMP(const std::string&);
+    BitMap* readBMP(const std::filesystem::path&, BitMap*);
+    BitMap* readBMP(const std::filesystem::path&);
 
-    void writeBMP(const std::string&, const BitMap*);
-    void writeBMP(const std::string&, unsigned char*, uint32_t, uint32_t);
+    void writeBMP(const std::filesystem::path&, const BitMap*);
+    void writeBMP(const std::filesystem::path&, unsigned char*, uint32_t, uint32_t);
 
     std::ostream& operator<<(std::ostream&, const MapNormalizer::BitMap&);
 }

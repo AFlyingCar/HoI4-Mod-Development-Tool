@@ -7,7 +7,10 @@
 #include "GraphicalDebugger.h"
 
 // Define this to prevent the #define-ing of the min() and max() functions.
-#define NOMINMAX
+#ifndef NOMINMAX
+# define NOMINMAX
+#endif
+
 #include <cmath>
 #include <algorithm>
 
