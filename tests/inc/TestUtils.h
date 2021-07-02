@@ -2,6 +2,7 @@
 # define TEST_UTILS_H
 
 # include <filesystem>
+# include <iostream>
 
 # define STR(X) #X
 # define PRIM_CONCAT(A,B) A##B
@@ -15,6 +16,9 @@
 # define ASSERT_OPTIONAL_FLOAT(VAL, EXPECTED) \
     ASSERT_VALID(VAL); \
     ASSERT_FLOAT_EQ(*VAL, EXPECTED)
+
+#define TEST_COUT std::cerr << "[          ] [ INFO ]"
+#define TEST_CERR std::cerr << "[          ] [ ERR  ]"
 
 namespace MapNormalizer::UnitTests {
     bool useVerboseOutput();
