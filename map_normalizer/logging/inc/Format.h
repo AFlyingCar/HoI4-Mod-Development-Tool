@@ -8,6 +8,8 @@ namespace MapNormalizer::Log {
      * @brief Defines a single formatting operation
      */
     struct Format {
+        static constexpr std::size_t DATA_SIZE = 1;
+
         /**
          * @brief The type of operation to perform
          */
@@ -25,8 +27,17 @@ namespace MapNormalizer::Log {
             COLOR     = 0b10000000, // Color
         } type;
 
-        //! Color data for Format::COLOR
-        uint8_t colordata[3] = { 0 };
+        /**
+         * @brief Extra data for formatting options that need it
+         *
+         * @details Defined Formatting options that make use of this:
+         *     BLINK:
+         *       0 == Slow
+         *       1 == Rapid
+         *     COLOR:
+         *       Full byte is used for 256-color: https://i.stack.imgur.com/KTSQa.png
+         */
+        uint8_t data[DATA_SIZE] = { 0 };
 
         Format operator|(const MapNormalizer::Log::Format&) const;
         bool operator==(const MapNormalizer::Log::Format&) const;
@@ -54,20 +65,21 @@ namespace MapNormalizer::Log {
  * @param G The green color
  * @param B The blue color
  */
-# define FTYPE(TYPE, R, G, B) \
-    MapNormalizer::Log::Format { MapNormalizer::Log::Format::Type::TYPE, { R, G, B } }
+# define FTYPE(TYPE, COLOR) \
+    MapNormalizer::Log::Format { MapNormalizer::Log::Format::Type::TYPE, { COLOR } }
 
 // Formatting types
-# define FCLEAR          FTYPE(CLEAR, 0, 0, 0)
-# define FRESET          FTYPE(RESET, 0, 0, 0)
-# define FBOLD           FTYPE(BOLD, 0, 0, 0)
-# define FFAINT          FTYPE(FAINT, 0, 0, 0)
-# define FITALIC         FTYPE(ITALIC, 0, 0, 0)
-# define FUNDERLINE      FTYPE(UNDERLINE, 0, 0, 0)
-# define FBLINK          FTYPE(BLINK, 0, 0, 0)
-# define FINVISIBLE      FTYPE(INVISIBLE, 0, 0, 0)
-# define FSTRIKE         FTYPE(STRIKE, 0, 0, 0)
-# define FCOLOR(R, G, B) FTYPE(COLOR, R, G, B)
+# define FCLEAR     FTYPE(CLEAR, 0)
+# define FRESET     FTYPE(RESET, 0)
+# define FBOLD      FTYPE(BOLD, 0)
+# define FFAINT     FTYPE(FAINT, 0)
+# define FITALIC    FTYPE(ITALIC, 0)
+# define FUNDERLINE FTYPE(UNDERLINE, 0)
+# define FBLINKSLOW FTYPE(BLINK, 0)
+# define FBLINKFAST FTYPE(BLINK, 1)
+# define FINVISIBLE FTYPE(INVISIBLE, 0)
+# define FSTRIKE    FTYPE(STRIKE, 0)
+# define FCOLOR(C)  FTYPE(COLOR, C)
 
 /**
  * @brief Builds a single Format option
