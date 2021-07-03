@@ -6,6 +6,7 @@
 #include "NewLogger.h"
 #include "Message.h"
 #include "Format.h"
+#include "ConsoleOutputFunctions.h"
 
 #include "TestOverrides.h"
 #include "TestUtils.h"
@@ -149,5 +150,73 @@ TEST(LogTests, LogMacroTests) {
     std::this_thread::sleep_for(2.5s);
 
     ASSERT_EQ(received_messages, expected_messages);
+}
+
+TEST(LogTests, ANSIOutputTests) {
+    using MapNormalizer::Log::Logger;
+    using MapNormalizer::Log::Message;
+    using MapNormalizer::Log::Source;
+
+    using namespace std::chrono_literals;
+    using namespace std::string_literals;
+
+    Logger::getInstance().reset();
+
+#define FMT_STDOUT_PREFIX "\33[38;5;15m[OUT] ~ "
+#define FMT_DEBUG_PREFIX "\33[38;5;9m[DBG] ~ "
+#define FMT_ERROR_PREFIX "\33[38;5;12m[ERR] ~ "
+#define FMT_WARN_PREFIX "\33[38;5;11m[WRN] ~ "
+
+#define FMT_SUFFIX "\33[0m\n"
+
+    std::string expected_stdout =
+        // "hello world", 1500, 'a'
+        FMT_STDOUT_PREFIX "hello world1500a" FMT_SUFFIX
+        // "airplane", FORMAT(FBOLD), 'a', FORMAT(FRESET), "foobar"
+        FMT_STDOUT_PREFIX "airplane\33[1ma\33[0m\33[38;5;15mfoobar" FMT_SUFFIX
+        // "white", FORMAT(FCOLOR(204)), "salmon", FORMAT(FRESET), "white again"
+        FMT_STDOUT_PREFIX "white\33[38;5;204msalmon\33[0m\33[38;5;15mwhite again" FMT_SUFFIX
+        ;
+    // TODO: We should also test every individual formatting operation
+
+    std::stringstream stdout_ss;
+    // TODO: We should also do some minimal testing for the other 3 levels.
+
+    Logger::registerOutputFunction([&stdout_ss](const Message& m) {
+        return MapNormalizer::Log::outputToStream(m, true, true,
+            [&stdout_ss](uint8_t debug_level) -> std::ostream& {
+                switch(static_cast<Message::Level>(debug_level)) {
+                    case Message::Level::STDOUT:
+                        return stdout_ss;
+#if 0
+                    case Message::Level::DEBUG:
+                        return debug_ss;
+                    case Message::Level::ERROR:
+                        return error_ss;
+                    case Message::Level::WARN:
+                        return warn_ss;
+#else
+                    default:
+                        return stdout_ss;
+#endif
+                }
+            });
+    });
+
+    // Write all of the messages
+    WRITE_STDOUT("hello world", 1500, 'a');
+    WRITE_STDOUT("airplane", FORMAT(FBOLD), 'a', FORMAT(FRESET), "foobar");
+    WRITE_STDOUT("white", FORMAT(FCOLOR(204)), "salmon", FORMAT(FRESET), "white again");
+
+    ASSERT_TRUE(Logger::getInstance().started());
+
+    // Sleep for a bit while we wait for the logger to finish its tasks
+    // Normally we don't actually need to worry about _when_ the logs get
+    //  processed, but we do for the unit test
+    std::this_thread::sleep_for(2.5s);
+
+    std::cout << stdout_ss.str();
+
+    ASSERT_EQ(stdout_ss.str(), expected_stdout);
 }
 
