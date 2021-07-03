@@ -2,7 +2,7 @@
 #include "Message.h"
 
 MapNormalizer::Log::Message::Message(const Level& debug_level,
-                                     const std::vector<Piece>& pieces,
+                                     const PieceList& pieces,
                                      const Timestamp& timestamp,
                                      const Source& source):
     m_level(debug_level),
@@ -34,8 +34,28 @@ auto MapNormalizer::Log::Message::getDebugLevel() const -> const Level& {
     return m_level;
 }
 
-auto MapNormalizer::Log::Message::getPieces() const -> const std::vector<Piece>&
-{
+auto MapNormalizer::Log::Message::getPieces() const -> const PieceList& {
     return m_pieces;
+}
+
+std::ostream& operator<<(std::ostream& o,
+                         const MapNormalizer::Log::Message::Level& level)
+{
+    return (o << std::to_string(level));
+}
+
+std::string std::to_string(const MapNormalizer::Log::Message::Level& level) {
+    switch(level) {
+        case MapNormalizer::Log::Message::Level::ERROR:
+            return "ERR";
+        case MapNormalizer::Log::Message::Level::WARN:
+            return "WRN";
+        case MapNormalizer::Log::Message::Level::STDOUT:
+            return "OUT";
+        case MapNormalizer::Log::Message::Level::DEBUG:
+            return "DBG";
+    }
+
+    return "";
 }
 

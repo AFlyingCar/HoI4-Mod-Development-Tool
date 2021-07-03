@@ -20,6 +20,7 @@ namespace MapNormalizer::Log {
 
             //! A message piece can be either text or formatting.
             using Piece = std::variant<std::string, Format>;
+            using PieceList = std::vector<Piece>;
 
             /**
              * @brief The debug level
@@ -31,8 +32,8 @@ namespace MapNormalizer::Log {
                 DEBUG
             };
 
-            Message(const Level&, const std::vector<Piece>&,
-                    const Timestamp&, const Source& = Source());
+            Message(const Level&, const PieceList&, const Timestamp&,
+                    const Source& = Source());
 
             bool operator==(const Message&) const;
             bool operator!=(const Message&) const;
@@ -40,14 +41,14 @@ namespace MapNormalizer::Log {
             const Source& getSource() const;
             const Timestamp& getTimestamp() const;
             const Level& getDebugLevel() const;
-            const std::vector<Piece>& getPieces() const;
+            const PieceList& getPieces() const;
 
         private:
             //! The debug level of the message
             Level m_level;
 
             //! The pieces of this message
-            std::vector<Piece> m_pieces;
+            PieceList m_pieces;
 
             //! When the message was generated
             Timestamp m_timestamp;
@@ -55,6 +56,13 @@ namespace MapNormalizer::Log {
             //! Where the message came from
             Source m_source;
     };
+}
+
+std::ostream& operator<<(std::ostream&,
+                         const MapNormalizer::Log::Message::Level&);
+
+namespace std {
+    string to_string(const MapNormalizer::Log::Message::Level&);
 }
 
 #endif
