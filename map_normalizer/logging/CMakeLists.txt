@@ -5,6 +5,7 @@ add_library(logging STATIC
     src/Message.cpp
     src/Source.cpp
     src/Format.cpp
+    src/ConsoleOutputFunctions.cpp
 )
 
 target_include_directories(logging PUBLIC inc)
