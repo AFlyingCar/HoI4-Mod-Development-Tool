@@ -18,18 +18,18 @@ static std::string program_name = "map_normalizer";
  * @brief Prints help information to the console.
  */
 void MapNormalizer::printHelp() {
-    writeStdout<false>(program_name + " [OPTIONS...] {[INFILE] [OUTPATH]}");
-    writeStdout<false>("\t   --no-gui                Alias for --headless.");
-    writeStdout<false>("\t   --no-skip-no-name-state Do not skip states with no name.");
-    writeStdout<false>("\t   --state-input           The input file for writing state definitions.");
-    writeStdout<false>("\t   --height-map            The input file for writing the normal map.");
-    writeStdout<false>("\t   --hoi4-install-path     The installation path for Hearts of Iron 4.");
-    writeStdout<false>("\t   --output-stages         Output every stage of the shape detection algorithm.");
-    writeStdout<false>("\t   --headless              Should the application run in headless mode (without the GUI). Note that this requires [INFIILE] and [OUTPATH] to be provided.");
-    writeStdout<false>("\t   --debug                 Should debugging features be enabled.");
-    writeStdout<false>("\t-v,--verbose               Display all output.");
-    writeStdout<false>("\t-q,--quiet                 Display only errors and warnings (does not affect this message).");
-    writeStdout<false>("\t-h,--help                  Display this message and exit.");
+    std::cout << program_name << " [OPTIONS...] {[INFILE] [OUTPATH]}";
+    std::cout << "\t   --no-gui                Alias for --headless.";
+    std::cout << "\t   --no-skip-no-name-state Do not skip states with no name.";
+    std::cout << "\t   --state-input           The input file for writing state definitions.";
+    std::cout << "\t   --height-map            The input file for writing the normal map.";
+    std::cout << "\t   --hoi4-install-path     The installation path for Hearts of Iron 4.";
+    std::cout << "\t   --output-stages         Output every stage of the shape detection algorithm.";
+    std::cout << "\t   --headless              Should the application run in headless mode (without the GUI). Note that this requires [INFIILE] and [OUTPATH] to be provided.";
+    std::cout << "\t   --debug                 Should debugging features be enabled.";
+    std::cout << "\t-v,--verbose               Display all output.";
+    std::cout << "\t-q,--quiet                 Display only errors and warnings (does not affect this message).";
+    std::cout << "\t-h,--help                  Display this message and exit.";
 }
 
 /**
@@ -81,6 +81,7 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
 
         switch(c) {
             case 0:
+#if 0
                 // The user shouldn't be able to see this
                 //   If it is possible to see, then whatever causes that to
                 //   be seen should be fixed
@@ -91,10 +92,11 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
                     writeDebug("optarg = "s + optarg);
                 else
                     writeDebug("optarg = 0x0");
+#endif
                 break;
             case 2: // --state-input
                 if(optarg == nullptr) {
-                    writeWarning("Missing argument to option 'state-input'. Assuming no option.");
+                    WRITE_WARN("Missing argument to option 'state-input'. Assuming no option.");
                     prog_opts.state_input_file = "";
                 } else {
                     prog_opts.state_input_file = optarg;
@@ -102,7 +104,7 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
                 break;
             case 3: // --height-map
                 if(optarg == nullptr) {
-                    writeWarning("Missing argument to option 'height-map'. Assuming no option.");
+                    WRITE_WARN("Missing argument to option 'height-map'. Assuming no option.");
                     prog_opts.heightmap_input_file = "";
                 } else {
                     prog_opts.heightmap_input_file = optarg;
@@ -113,7 +115,7 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
                 break;
             case 5: // --hoi4-install-path
                 if(optarg == nullptr) {
-                    writeWarning("Missing argument to option 'hoi4-install-path'. Assuming no option.");
+                    WRITE_WARN("Missing argument to option 'hoi4-install-path'. Assuming no option.");
                     prog_opts.hoi4_install_path = "";
                 } else {
                     prog_opts.hoi4_install_path = optarg;
@@ -131,7 +133,7 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
                 break;
             case 'v': // -v,--verbose
                 if(prog_opts.quiet) {
-                    writeError("Conflicting command line arguments 'v' and 'q'");
+                    WRITE_ERROR("Conflicting command line arguments 'v' and 'q'");
                     prog_opts.status = 1;
                     printHelp();
                     return prog_opts;
@@ -140,7 +142,7 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
                 break;
             case 'q': // -q,--quiet
                 if(prog_opts.verbose) {
-                    writeError("Conflicting command line arguments 'v' and 'q'");
+                    WRITE_ERROR("Conflicting command line arguments 'v' and 'q'");
                     prog_opts.status = 1;
                     printHelp();
                     return prog_opts;
@@ -152,12 +154,12 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
                 printHelp();
                 return prog_opts;
             case '?':
-                writeError("Unknown command line argument `"s + argv[optind - 1] + '`');
+                WRITE_ERROR("Unknown command line argument `"s + argv[optind - 1] + '`');
                 prog_opts.status = 1;
                 printHelp();
                 return prog_opts;
             default:
-                writeError("Unrecognized getopt_long code `"s + std::to_string(optopt) + '`');
+                WRITE_ERROR("Unrecognized getopt_long code `"s + std::to_string(optopt) + '`');
                 prog_opts.status = 1;
                 printHelp();
                 return prog_opts;
@@ -170,7 +172,7 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
         prog_opts.outpath = argv[i + 1];
     } else if(prog_opts.headless) {
         // We only require the file options if we are in headless mode
-        writeError("Missing required argument(s)");
+        WRITE_ERROR("Missing required argument(s)");
         prog_opts.status = 1;
         printHelp();
     }

@@ -196,7 +196,7 @@ void MapNormalizer::GUI::MapDrawingArea::resetZoom() {
     auto* parent = get_parent();
 
     if(parent == nullptr) {
-        writeWarning("MapDrawingArea has no parent, setting zoom to ", DEFAULT_ZOOM);
+        WRITE_WARN("MapDrawingArea has no parent, setting zoom to ", DEFAULT_ZOOM);
 
         m_scale_factor = DEFAULT_ZOOM;
     } else {
@@ -215,7 +215,7 @@ void MapNormalizer::GUI::MapDrawingArea::resetZoom() {
         }
     }
 
-    writeDebug("Reset zoom to ", m_scale_factor);
+    WRITE_DEBUG("Reset zoom to ", m_scale_factor);
 
     // Rebuild the cached image
     rebuildImageCache();

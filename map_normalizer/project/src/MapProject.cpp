@@ -5,6 +5,7 @@
 #include <cstring>
 #include <cerrno>
 
+#include "Options.h"
 #include "Logger.h"
 #include "Constants.h"
 #include "Util.h"
@@ -36,12 +37,12 @@ bool MapNormalizer::Project::MapProject::save(const std::filesystem::path& path,
                                               std::error_code& ec)
 {
     if(!std::filesystem::exists(path)) {
-        writeDebug("Creating directory ", path);
+        WRITE_DEBUG("Creating directory ", path);
         std::filesystem::create_directory(path);
     }
 
     if(m_shape_detection_info.provinces.empty()) {
-        writeDebug("Nothing to write!");
+        WRITE_DEBUG("Nothing to write!");
         return true;
     }
 
@@ -73,7 +74,7 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
     auto input_provincemap_path = inputs_root / INPUT_PROVINCEMAP_FILENAME;
     if(!std::filesystem::exists(input_provincemap_path)) {
         ec = std::make_error_code(std::errc::no_such_file_or_directory);
-        writeWarning("Source import image does not exist, unable to finish loading data.");
+        WRITE_WARN("Source import image does not exist, unable to finish loading data.");
         return false;
     } else {
         // Memory leak prevention
@@ -86,7 +87,7 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
             // TODO: We should instead pass ec into readBMP() and let it set ec
             //  to whatever might be appropriate
             ec = std::make_error_code(std::errc::io_error);
-            writeWarning("Failed to read imported image.");
+            WRITE_WARN("Failed to read imported image.");
             return false;
         }
     }
@@ -130,7 +131,7 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
 
             // Error check
             if(label <= 0 || label > m_shape_detection_info.provinces.size()) {
-                writeWarning("Label matrix has label ", label,
+                WRITE_WARN("Label matrix has label ", label,
                              " at position (", x, ',', y, "), which is out of "
                              "the range of valid labels [1,",
                              m_shape_detection_info.provinces.size(), "]");
@@ -184,7 +185,7 @@ bool MapNormalizer::Project::MapProject::saveShapeLabels(const std::filesystem::
         out << '\0';
     } else {
         ec = std::error_code(static_cast<int>(errno), std::generic_category());
-        writeError("Failed to open file ", path, ". Reason: ", std::strerror(errno));
+        WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
         return false;
     }
 
@@ -223,7 +224,7 @@ bool MapNormalizer::Project::MapProject::saveProvinceData(const std::filesystem:
         }
     } else {
         ec = std::error_code(static_cast<int>(errno), std::generic_category());
-        writeError("Failed to open file ", path, ". Reason: ", std::strerror(errno));
+        WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
         return false;
     }
 
@@ -250,7 +251,7 @@ bool MapNormalizer::Project::MapProject::saveContinentData(const std::filesystem
         }
     } else {
         ec = std::error_code(static_cast<int>(errno), std::generic_category());
-        writeError("Failed to open file ", path, ". Reason: ", std::strerror(errno));
+        WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
         return false;
     }
 
@@ -272,7 +273,7 @@ bool MapNormalizer::Project::MapProject::loadShapeLabels(const std::filesystem::
     auto path = root / SHAPEDATA_FILENAME;
 
     if(!std::filesystem::exists(path)) {
-        writeWarning("File ", path, " does not exist.");
+        WRITE_WARN("File ", path, " does not exist.");
         return false;
     } else if(std::ifstream in(path, std::ios::binary | std::ios::in); in) {
         unsigned char magic[4];
@@ -283,7 +284,7 @@ bool MapNormalizer::Project::MapProject::loadShapeLabels(const std::filesystem::
         //  successful
         if(!safeRead(in, &magic, &width, &height)) {
             ec = std::error_code(static_cast<int>(errno), std::generic_category());
-            writeError("Failed to read in header information. Reason: ", std::strerror(errno));
+            WRITE_ERROR("Failed to read in header information. Reason: ", std::strerror(errno));
             return false;
         }
 
@@ -299,7 +300,7 @@ bool MapNormalizer::Project::MapProject::loadShapeLabels(const std::filesystem::
 
         if(!safeRead(label_matrix, label_matrix_size * sizeof(uint32_t), in)) {
             ec = std::error_code(static_cast<int>(errno), std::generic_category());
-            writeError("Failed to read full label matrix. Reason: ", std::strerror(errno));
+            WRITE_ERROR("Failed to read full label matrix. Reason: ", std::strerror(errno));
 
             delete[] label_matrix;
             label_matrix = nullptr;
@@ -307,7 +308,7 @@ bool MapNormalizer::Project::MapProject::loadShapeLabels(const std::filesystem::
         }
     } else {
         ec = std::error_code(static_cast<int>(errno), std::generic_category());
-        writeError("Failed to open file ", path, ". Reason: ", std::strerror(errno));
+        WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
         return false;
     }
 
@@ -328,7 +329,7 @@ bool MapNormalizer::Project::MapProject::loadProvinceData(const std::filesystem:
     auto path = root / PROVINCEDATA_FILENAME;
 
     if(!std::filesystem::exists(path, ec)) {
-        writeWarning("File ", path, " does not exist.");
+        WRITE_WARN("File ", path, " does not exist.");
         return false;
     } else if(std::ifstream in(path); in) {
         std::string line;
@@ -357,18 +358,18 @@ bool MapNormalizer::Project::MapProject::loadProvinceData(const std::filesystem:
                                      prov.bounding_box.top_right.y))
             {
                 ec = std::make_error_code(std::errc::bad_message);
-                writeError("Failed to parse line #", line_num, ": '", line, "'");
+                WRITE_ERROR("Failed to parse line #", line_num, ": '", line, "'");
                 return false;
             }
 
             m_shape_detection_info.provinces.push_back(prov);
         }
 
-        writeDebug("Loaded information for ",
+        WRITE_DEBUG("Loaded information for ",
                    m_shape_detection_info.provinces.size(), " provinces");
     } else {
         ec = std::error_code(static_cast<int>(errno), std::generic_category());
-        writeError("Failed to open file ", path, ". Reason: ", std::strerror(errno));
+        WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
         return false;
     }
 
@@ -392,7 +393,7 @@ bool MapNormalizer::Project::MapProject::loadContinentData(const std::filesystem
     //  after all), but don't set the error code as it is expected that the
     //  file may not exist
     if(!std::filesystem::exists(path)) {
-        writeWarning("No data to load! No continents currently exist!");
+        WRITE_WARN("No data to load! No continents currently exist!");
         return false;
     }
 
@@ -405,7 +406,7 @@ bool MapNormalizer::Project::MapProject::loadContinentData(const std::filesystem
         }
     } else {
         ec = std::error_code(static_cast<int>(errno), std::generic_category());
-        writeError("Failed to open file ", path, ". Reason: ", std::strerror(errno));
+        WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
         return false;
     }
 
@@ -598,7 +599,7 @@ void MapNormalizer::Project::MapProject::buildProvinceCache(const Province* prov
 
     auto& data = m_data_cache[id];
 
-    writeDebug("No preview data for province ", id, ". Building...");
+    WRITE_DEBUG("No preview data for province ", id, ". Building...");
 
     // Some references first, to make the following code easier to read
     //  id also starts at 1, so make sure we offset it down
@@ -614,7 +615,7 @@ void MapNormalizer::Project::MapProject::buildProvinceCache(const Province* prov
     //  We use a depth of 4 since we have RGBA
     data.reset(new unsigned char[width * height * depth]());
 
-    writeDebug("Allocated space for ", width * height * depth, " bytes.");
+    WRITE_DEBUG("Allocated space for ", width * height * depth, " bytes.");
     for(auto x = bb.bottom_left.x; x < bb.top_right.x; ++x) {
         for(auto y = bb.top_right.y; y < bb.bottom_left.y; ++y) {
             // Get the index into the label matrix
@@ -638,7 +639,7 @@ void MapNormalizer::Project::MapProject::buildProvinceCache(const Province* prov
         }
     }
 
-    writeDebug("Done.");
+    WRITE_DEBUG("Done.");
 
     if(prog_opts.debug) {
         auto path = dynamic_cast<HoI4Project&>(m_parent_project).getMetaRoot() / "debug";
@@ -648,7 +649,7 @@ void MapNormalizer::Project::MapProject::buildProvinceCache(const Province* prov
             std::filesystem::create_directory(path);
         }
 
-        writeDebug("Writing province ", width, 'x', height, " (", id, ") to ", fname);
+        WRITE_DEBUG("Writing province ", width, 'x', height, " (", id, ") to ", fname);
 
         if(std::ofstream out(fname); out) {
             out << "P7\nWIDTH " << width << "\nHEIGHT " << height << "\nDEPTH 4\nMAXVAL 255\nTUPLTYPE RGB_ALPHA\nENDHDR\n";

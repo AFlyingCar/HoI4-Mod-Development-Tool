@@ -65,10 +65,10 @@ void MapNormalizer::GUI::MainWindow::initializeFileActions() {
             auto& project = opt_project->get();
 
             if(!std::filesystem::exists(project.getPath())) {
-                writeDebug("SaveProjectAs(", project.getPath(), ")");
+                WRITE_DEBUG("SaveProjectAs(", project.getPath(), ")");
                 saveProjectAs();
             } else {
-                writeDebug("SaveProject(", project.getPath(), ")");
+                WRITE_DEBUG("SaveProject(", project.getPath(), ")");
                 saveProject();
             }
         }
@@ -222,7 +222,7 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
             // Get the label for the pixel that got clicked on
             auto label = lmatrix[xyToIndex(image, x, y)];
 
-            writeDebug("Selecting province with ID ", label);
+            WRITE_DEBUG("Selecting province with ID ", label);
             map_project.selectProvince(label - 1);
 
             // If the label is a valid province, then go ahead and mark it as
@@ -412,14 +412,14 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
         if(BitMap* image = readBMP(std::string(filename)); image != nullptr) {
             project.getMapProject().setImage(image);
         } else {
-            writeError("Failed to read bitmap from ", filename);
+            WRITE_ERROR("Failed to read bitmap from ", filename);
             return false;
         }
 
         const auto* image = project.getMapProject().getImage();
 
         if(image == nullptr) {
-            writeError("Reading bitmap failed.");
+            WRITE_ERROR("Reading bitmap failed.");
             return false;
         }
 
@@ -498,8 +498,6 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
             //  final output
             // TODO: Do we still want to do this here? Would it not be better to do
             //  it later on?
-            if(!prog_opts.quiet)
-                setInfoLine("Drawing new graphical image");
             for(auto&& shape : shapes) {
                 for(auto&& pixel : shape.pixels) {
                     // Write to both the output data and into the displayed data
@@ -517,10 +515,7 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
             worker.updateCallback({0, 0, static_cast<uint32_t>(image->info_header.width),
                                          static_cast<uint32_t>(image->info_header.height)});
 
-            deleteInfoLine();
-
-            if(!prog_opts.quiet)
-                writeStdout("Detected ", std::to_string(shapes.size()), " shapes.");
+            WRITE_STDOUT("Detected ", shapes.size(), " shapes.");
 
             // Disable the cancel button (we've already finished), and enable the
             //  done button so that the user can close the box and move on
@@ -540,7 +535,7 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
             did_estop = true;
         }
 
-        writeDebug("Waiting for ShapeFinder worker to rejoin.");
+        WRITE_DEBUG("Waiting for ShapeFinder worker to rejoin.");
         sf_worker.join();
 
         // Note: We reset the zoom here so that we can ensure that the drawing
@@ -556,14 +551,14 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
             return true;
         }
 
-        writeDebug("Assigning the found data to the map project.");
+        WRITE_DEBUG("Assigning the found data to the map project.");
         project.getMapProject().setShapeFinder(std::move(shape_finder));
         project.getMapProject().setGraphicsData(graphics_data);
 
         std::filesystem::path imported{std::string(filename)};
         std::filesystem::path input_root = project.getInputsRoot();
 
-        writeDebug("Copying the imported map into ", input_root);
+        WRITE_DEBUG("Copying the imported map into ", input_root);
         if(!std::filesystem::exists(input_root)) {
             std::filesystem::create_directory(input_root);
         }
@@ -577,11 +572,11 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
             std::filesystem::copy_file(imported, input_full_path);
         }
     } else {
-        writeError("Unable to complete importing '", filename, "'. Reason: There is no project currently loaded.");
+        WRITE_ERROR("Unable to complete importing '", filename, "'. Reason: There is no project currently loaded.");
         return false;
     }
 
-    writeStdout("Import Finished!");
+    WRITE_STDOUT("Import Finished!");
 
     return true;
 }

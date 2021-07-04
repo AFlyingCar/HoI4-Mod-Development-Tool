@@ -81,7 +81,7 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildProvinceTypeField() {
             {
                 m_province->type = static_cast<ProvinceType>(current + 1);
             } else {
-                writeError("Province type somehow set to an invalid index: ",
+                WRITE_ERROR("Province type somehow set to an invalid index: ",
                            m_provtype_menu->get_active_row_number());
             }
         }
@@ -247,7 +247,7 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildContinentField() {
             rem_button->set_sensitive(!continents.empty());
         });
     } else {
-        writeError("No project is currently loaded!");
+        WRITE_ERROR("No project is currently loaded!");
     }
 }
 

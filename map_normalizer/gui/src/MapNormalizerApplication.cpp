@@ -20,7 +20,7 @@ void MapNormalizer::GUI::MapNormalizerApplication::on_activate() {
 
     m_window.reset(new MainWindow{*this});
     if(!m_window->initialize()) {
-        writeError("Failed to initialize main window!");
+        WRITE_ERROR("Failed to initialize main window!");
         return;
     }
 
@@ -56,16 +56,16 @@ void MapNormalizer::GUI::MapNormalizerApplication::on_startup() {
 
     // Debug dump the menus
     for(auto&& [menu_name, menu] : m_menus) {
-        writeDebug<false>(menu_name, " -> {");
+        WRITE_DEBUG(menu_name, " -> {");
         for(auto&& menu_item_name : menu.menu_item_names) {
             auto opt_menu_item = getMenuItemInfo(menu_item_name);
             if(opt_menu_item) {
-                writeDebug<false>("  ", menu_item_name, " = {", opt_menu_item->get().label, ", ", opt_menu_item->get().detailed_action, "}");
+                WRITE_DEBUG("  ", menu_item_name, " = {", opt_menu_item->get().label, ", ", opt_menu_item->get().detailed_action, "}");
             } else {
-                writeError("Menu '", menu_name, "' refers to non-existant menu item '", menu_item_name);
+                WRITE_ERROR("Menu '", menu_name, "' refers to non-existant menu item '", menu_item_name);
             }
         }
-        writeDebug<false>("}");
+        WRITE_DEBUG("}");
     }
 }
 
@@ -107,7 +107,7 @@ auto MapNormalizer::GUI::MapNormalizerApplication::createMenu(
         if(m_menus.count(parent_menu_full_name)) {
             m_menus.at(parent_menu_full_name).menu->append_submenu(menu_name, menu);
         } else {
-            writeError("Failed to find parent menu at ", parent_menu_full_name);
+            WRITE_ERROR("Failed to find parent menu at ", parent_menu_full_name);
         }
     }
 

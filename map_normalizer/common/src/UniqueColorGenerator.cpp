@@ -83,7 +83,7 @@ bool verifyColorsRemain(MapNormalizer::ProvinceType bias) {
     unsigned int size = getUniqueColorPtrSize(bias);
 
     if(color_ptr >= start_ptr + size) {
-        MapNormalizer::writeWarning("NO VALUES LEFT!");
+        WRITE_WARN("NO VALUES LEFT!");
         return false;
     }
 
