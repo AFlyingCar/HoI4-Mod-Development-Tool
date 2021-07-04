@@ -40,12 +40,14 @@ void MapNormalizer::Log::Logger::update() {
     while(!m_quit) {
         std::this_thread::sleep_for(UPDATE_SLEEP_TIME);
 
-        m_messages_mutex.lock();
+        {
+            m_messages_mutex.lock();
 
-        tempMessages.insert(tempMessages.begin(), m_messages.begin(), m_messages.end());
-        m_messages.clear();
+            tempMessages.insert(tempMessages.begin(), m_messages.begin(), m_messages.end());
+            m_messages.clear();
 
-        m_messages_mutex.unlock();
+            m_messages_mutex.unlock();
+        }
 
         for(auto&& message : tempMessages) {
             results.reserve(output_funcs.size());
@@ -67,6 +69,13 @@ void MapNormalizer::Log::Logger::update() {
 
         tempMessages.clear();
     }
+
+    // Push a new output message to log what we are doing
+    // We aren't using logMessage or any of the macros because we don't want to
+    //  worry about locking the mutex
+    m_messages.push_back(buildMessage(Message::Level::STDOUT, MN_LOG_SOURCE(),
+                                      now(), "Outputting all remaining messages."
+    ));
 
     // Do not bother locking the mutexes, since m_quit will only be true if the
     //  whole program is shutting down, so no new messages should be getting
