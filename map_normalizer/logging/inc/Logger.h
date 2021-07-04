@@ -161,12 +161,12 @@ namespace MapNormalizer::Log {
 
 # define WRITE_STDOUT(...) \
     MapNormalizer::Log::Logger::getInstance().writeStdout(MN_LOG_SOURCE(), __VA_ARGS__)
+# define WRITE_DEBUG(...) \
+    MapNormalizer::Log::Logger::getInstance().writeDebug(MN_LOG_SOURCE(), __VA_ARGS__)
 # define WRITE_ERROR(...) \
     MapNormalizer::Log::Logger::getInstance().writeError(MN_LOG_SOURCE(), __VA_ARGS__)
 # define WRITE_WARN(...) \
     MapNormalizer::Log::Logger::getInstance().writeWarn(MN_LOG_SOURCE(), __VA_ARGS__)
-# define WRITE_DEBUG(...) \
-    MapNormalizer::Log::Logger::getInstance().writeDebug(MN_LOG_SOURCE(), __VA_ARGS__)
 
 #endif
 

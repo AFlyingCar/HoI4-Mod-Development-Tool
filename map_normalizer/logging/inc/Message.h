@@ -26,10 +26,10 @@ namespace MapNormalizer::Log {
              * @brief The debug level
              */
             enum class Level {
+                STDOUT,
+                DEBUG,
                 ERROR,
                 WARN,
-                STDOUT,
-                DEBUG
             };
 
             Message(const Level&, const PieceList&, const Timestamp&,
