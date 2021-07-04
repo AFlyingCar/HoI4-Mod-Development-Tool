@@ -84,8 +84,7 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
 
     uint32_t num_border_pixels = 0;
 
-    if(!prog_opts.quiet)
-        WRITE_STDOUT("Performing Pass #1 of CCL.");
+    WRITE_STDOUT("Performing Pass #1 of CCL.");
 
     // Go over every pixel of the image
     for(uint32_t y = 0; y < height; ++y) {
@@ -98,7 +97,8 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
             uint32_t index = xyToIndex(m_image, x, y);
             uint32_t& label = m_label_matrix[index] = next_label;
 
-            WRITE_DEBUG("Pixel ", Point2D{x, y}," [", color, "]");
+            if(prog_opts.debug)
+                WRITE_DEBUG("Pixel ", Point2D{x, y}," [", color, "]");
 
             // Skip this pixel if it is part of a border
             if(color == BORDER_COLOR) {
@@ -156,7 +156,7 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
                 }
             }
 
-            if(prog_opts.verbose)
+            if(prog_opts.debug)
                 WRITE_DEBUG("Pixel ", Point2D{x, y}, " [", color, "] => ",
                             std::to_string(label));
 
