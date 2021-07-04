@@ -43,6 +43,8 @@ namespace MapNormalizer::Log {
             const Level& getDebugLevel() const;
             const PieceList& getPieces() const;
 
+            std::string getTimestampAsString(const std::string& = "%Y-%m-%d %X") const;
+
         private:
             //! The debug level of the message
             Level m_level;

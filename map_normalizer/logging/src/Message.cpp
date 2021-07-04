@@ -1,6 +1,10 @@
 
 #include "Message.h"
 
+#include <chrono>
+#include <iomanip>
+#include <sstream>
+
 MapNormalizer::Log::Message::Message(const Level& debug_level,
                                      const PieceList& pieces,
                                      const Timestamp& timestamp,
@@ -36,6 +40,14 @@ auto MapNormalizer::Log::Message::getDebugLevel() const -> const Level& {
 
 auto MapNormalizer::Log::Message::getPieces() const -> const PieceList& {
     return m_pieces;
+}
+
+std::string MapNormalizer::Log::Message::getTimestampAsString(const std::string& timestamp_format) const
+{
+    auto timestamp_as_time_t = std::chrono::system_clock::to_time_t(m_timestamp);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&timestamp_as_time_t), timestamp_format.c_str());
+    return ss.str();
 }
 
 std::ostream& operator<<(std::ostream& o,
