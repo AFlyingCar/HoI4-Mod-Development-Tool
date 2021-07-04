@@ -113,6 +113,15 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
         }
     }, false);
     properties_action->set_enabled(false);
+
+    add_action("log_window", [this]() {
+        if(m_log_viewer_window == nullptr) {
+            m_log_viewer_window.reset(new LogViewerWindow());
+            m_log_viewer_window->show_all();
+        } else {
+            m_log_viewer_window->present();
+        }
+    });
 }
 
 /**
@@ -185,6 +194,16 @@ bool MapNormalizer::GUI::MainWindow::initializeWidgets() {
     });
 
     return true;
+}
+
+auto MapNormalizer::GUI::MainWindow::getLogViewerWindow()
+    -> OptionalReference<LogViewerWindow>
+{
+    if(m_log_viewer_window == nullptr) {
+        return std::nullopt;
+    } else {
+        return *m_log_viewer_window;
+    }
 }
 
 /**

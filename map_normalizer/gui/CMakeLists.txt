@@ -15,6 +15,7 @@ add_library(gui STATIC
     src/ProvincePropertiesPane.cpp
     src/ProvincePreviewDrawingArea.cpp
     src/InterruptableScrolledWindow.cpp
+    src/LogViewerWindow.cpp
 )
 
 target_include_directories(gui PUBLIC inc)
@@ -22,5 +23,5 @@ target_include_directories(gui PUBLIC inc)
 target_link_libraries(gui gtkmm native_dialogs)
 
 # Link against local libraries
-target_link_libraries(gui common province_utils project)
+target_link_libraries(gui common province_utils project logging)
 

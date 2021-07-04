@@ -7,11 +7,21 @@
 #include "Logger.h"
 
 #include "MainWindow.h"
+#include "LogViewerWindow.h"
 
 MapNormalizer::GUI::MapNormalizerApplication::MapNormalizerApplication():
     Gtk::Application(APPLICATION_ID),
     m_settings(Gtk::Settings::get_default())
 {
+    // Register a function that can send logs to a special log viewing window
+    Log::Logger::registerOutputFunction([this](const Log::Message& message) {
+        LogViewerWindow::pushMessage(message,
+                                     m_window == nullptr ? std::nullopt
+                                                         : m_window->getLogViewerWindow());
+
+        return true;
+    });
+
     Glib::set_application_name(APPLICATION_NAME);
 }
 
@@ -47,11 +57,12 @@ void MapNormalizer::GUI::MapNormalizerApplication::on_startup() {
     });
 
     createMenu("Root", "View", {
-            { "_Properties", "win.properties" }
+        { "_Properties", "win.properties" },
+        { "_Log Window", "win.log_window" }
     });
 
     createMenu("Root", "Project", {
-            { "_Import Province Map", "win.import_provincemap" }
+        { "_Import Province Map", "win.import_provincemap" }
     });
 
     // Debug dump the menus

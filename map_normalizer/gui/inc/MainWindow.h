@@ -22,6 +22,7 @@
 # include "Window.h"
 # include "MapDrawingArea.h"
 # include "ProvincePropertiesPane.h"
+# include "LogViewerWindow.h"
 
 namespace MapNormalizer::GUI {
     /**
@@ -34,6 +35,8 @@ namespace MapNormalizer::GUI {
 
             virtual bool initializeActions() override;
             virtual bool initializeWidgets() override;
+
+            OptionalReference<LogViewerWindow> getLogViewerWindow();
 
         protected:
             virtual Gtk::Orientation getDisplayOrientation() const override;
@@ -82,6 +85,9 @@ namespace MapNormalizer::GUI {
 
             //! A container holding properties for provinces
             std::unique_ptr<ProvincePropertiesPane> m_province_properties_pane;
+
+            //! The window for viewing the logs
+            std::unique_ptr<LogViewerWindow> m_log_viewer_window;
     };
 }
 
