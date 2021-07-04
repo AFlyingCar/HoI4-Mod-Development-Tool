@@ -148,7 +148,7 @@ bool MapNormalizer::Log::outputToStream(const Message& message,
         out << ANSI_RESET;
     }
 
-    out << "\n";
+    out << std::endl;
 
     return true;
 }
