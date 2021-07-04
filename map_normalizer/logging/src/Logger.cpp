@@ -37,9 +37,18 @@ void MapNormalizer::Log::Logger::update() {
     std::vector<Message> tempMessages;
     std::vector<std::future<bool>> results;
 
-    while(!m_quit) {
-        std::this_thread::sleep_for(UPDATE_SLEEP_TIME);
+    // How long the last update took
+    std::chrono::seconds update_time{0};
 
+    while(!m_quit) {
+        // Each update should take UPDATE_SLEEP_TIME at least, so if we didn't
+        //  need that much time on the last loop, go ahead and sleep the
+        //  remaining time off so that the rest of the codebase can have time to
+        //  output messages into the queue before we lock it again
+        if(update_time < UPDATE_SLEEP_TIME)
+            std::this_thread::sleep_for(UPDATE_SLEEP_TIME - update_time);
+
+        auto curr_time = now();
         {
             m_messages_mutex.lock();
 
@@ -68,6 +77,9 @@ void MapNormalizer::Log::Logger::update() {
         }
 
         tempMessages.clear();
+
+        // Calculate how long this last update call took
+        update_time = std::chrono::duration_cast<std::chrono::seconds>(now() - curr_time);
     }
 
     // Push a new output message to log what we are doing
