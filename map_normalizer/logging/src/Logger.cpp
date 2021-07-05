@@ -21,6 +21,27 @@ auto MapNormalizer::Log::Logger::now() -> Timestamp {
     return std::chrono::system_clock::now();
 }
 
+std::string MapNormalizer::Log::Logger::getTimestampAsString(const Timestamp& timestamp,
+                                                             const std::string& timestamp_format)
+{
+    auto timestamp_as_time_t = std::chrono::system_clock::to_time_t(timestamp);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&timestamp_as_time_t), timestamp_format.c_str());
+    return ss.str();
+}
+
+auto MapNormalizer::Log::Logger::getTimestampFromString(const std::string& time_str,
+                                                         const std::string& timestamp_format)
+    -> Timestamp
+{
+    std::istringstream ss{time_str};
+
+    std::tm t = { };
+
+    ss >> std::get_time(&t, timestamp_format.c_str());
+
+    return std::chrono::system_clock::from_time_t(std::mktime(&t));
+}
 
 void MapNormalizer::Log::Logger::logMessage(const Message& message) {
     // TODO: Is there a way we can send data via signals rather than locking a mutex?

@@ -32,6 +32,12 @@ namespace MapNormalizer::Log {
 
             static void registerOutputFunction(const OutputFunction&);
 
+            static std::string getTimestampAsString(const Timestamp&,
+                                                    const std::string& = "%Y-%m-%d %X");
+
+            static Timestamp getTimestampFromString(const std::string&,
+                                                    const std::string& = "%Y-%m-%d %X");
+
             bool started() const;
 
             /**
