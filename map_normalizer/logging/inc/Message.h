@@ -58,6 +58,21 @@ namespace MapNormalizer::Log {
             //! Where the message came from
             Source m_source;
     };
+
+    constexpr uint8_t getLevelDefaultColor(Message::Level level) {
+        switch(level) {
+            case Message::Level::STDOUT:
+                return 15;
+            case Message::Level::DEBUG:
+                return 12;
+            case Message::Level::ERROR:
+                return 9;
+            case Message::Level::WARN:
+                return 11;
+        }
+
+        return 0;
+    }
 }
 
 std::ostream& operator<<(std::ostream&,
