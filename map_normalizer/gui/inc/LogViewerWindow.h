@@ -18,6 +18,9 @@
 # include "Message.h"
 
 namespace MapNormalizer::GUI {
+    /**
+     * @brief A window for viewing log messages
+     */
     class LogViewerWindow: public Gtk::Window {
         public:
             struct ViewableLog {
@@ -28,7 +31,14 @@ namespace MapNormalizer::GUI {
                 std::string formatted_message;
             };
 
-            constexpr static size_t VIEWER_BUFFER_SIZE = 1024;
+            /**
+             * @brief The maximum number of messages we can display in the buffer.
+             * @details This number was chosen because the (at time of writing)
+             *          size of ViewableLog is 56 bytes, and this means the
+             *          maximum amount of logs allowed comes out to a little
+             *          less than 1 MB (917504 bytes)
+             */
+            constexpr static size_t VIEWER_BUFFER_SIZE = 16384;
 
             LogViewerWindow();
 

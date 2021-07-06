@@ -89,6 +89,7 @@ void MapNormalizer::GUI::LogViewerWindow::initWidgets() {
             m_from_time_select.append("-5min");
             m_from_time_select.signal_changed().connect([this]() {
                 auto current = m_from_time_select.get_active_row_number();
+                auto field_time = m_from_time_search.get_text();
 
                 auto now = Log::Logger::now();
 
@@ -96,9 +97,17 @@ void MapNormalizer::GUI::LogViewerWindow::initWidgets() {
                     case 1:
                         break;
                     case 2:
+                        if(!field_time.empty()) {
+                            // For some reason, an extra hour gets added when we parse here? Not sure why though
+                            now = Log::Logger::getTimestampFromString(field_time) - std::chrono::hours(1);
+                        }
                         now -= std::chrono::minutes(1);
                         break;
                     case 3:
+                        if(!field_time.empty()) {
+                            // For some reason, an extra hour gets added when we parse here? Not sure why though
+                            now = Log::Logger::getTimestampFromString(field_time) - std::chrono::hours(1);
+                        }
                         now -= std::chrono::minutes(5);
                         break;
                     case 0:
@@ -117,6 +126,7 @@ void MapNormalizer::GUI::LogViewerWindow::initWidgets() {
             m_until_time_select.append("+5min");
             m_until_time_select.signal_changed().connect([this]() {
                 auto current = m_until_time_select.get_active_row_number();
+                auto field_time = m_until_time_search.get_text();
 
                 auto now = Log::Logger::now();
 
@@ -124,9 +134,17 @@ void MapNormalizer::GUI::LogViewerWindow::initWidgets() {
                     case 1:
                         break;
                     case 2:
+                        if(!field_time.empty()) {
+                            // For some reason, an extra hour gets added when we parse here? Not sure why though
+                            now = Log::Logger::getTimestampFromString(field_time) - std::chrono::hours(1);
+                        }
                         now += std::chrono::minutes(1);
                         break;
                     case 3:
+                        if(!field_time.empty()) {
+                            // For some reason, an extra hour gets added when we parse here? Not sure why though
+                            now = Log::Logger::getTimestampFromString(field_time) - std::chrono::hours(1);
+                        }
                         now += std::chrono::minutes(5);
                         break;
                     case 0:
