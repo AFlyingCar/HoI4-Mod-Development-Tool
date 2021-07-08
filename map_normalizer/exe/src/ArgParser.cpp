@@ -27,6 +27,7 @@ void MapNormalizer::printHelp() {
     std::cout << "\t   --output-stages         Output every stage of the shape detection algorithm.";
     std::cout << "\t   --headless              Should the application run in headless mode (without the GUI). Note that this requires [INFIILE] and [OUTPATH] to be provided.";
     std::cout << "\t   --debug                 Should debugging features be enabled.";
+    std::cout << "\t   --dont-write-logfiles   Should log files get written to a file.";
     std::cout << "\t-v,--verbose               Display all output.";
     std::cout << "\t-q,--quiet                 Display only errors and warnings (does not affect this message).";
     std::cout << "\t-h,--help                  Display this message and exit.";
@@ -61,11 +62,12 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
         { "output-stages", no_argument, NULL, 6 },
         { "headless", no_argument, NULL, 7 },
         { "debug", no_argument, NULL, 8 },
+        { "dont-write-logfiles", no_argument, NULL, 9 },
         { nullptr, 0, nullptr, 0}
     };
 
     // Setup default option values
-    ProgramOptions prog_opts { 0, "", "", false, false, "", "", false, "", false, false, false };
+    ProgramOptions prog_opts { 0, "", "", false, false, "", "", false, "", false, false, false, false };
 
     int optindex = 0;
     int c = 0;
@@ -81,18 +83,16 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
 
         switch(c) {
             case 0:
-#if 0
                 // The user shouldn't be able to see this
                 //   If it is possible to see, then whatever causes that to
                 //   be seen should be fixed
-                writeDebug("opterr = "s + std::to_string(opterr));
-                writeDebug("optopt = "s + std::to_string(optopt));
-                writeDebug("optind = "s + std::to_string(optind));
+                WRITE_DEBUG("opterr = "s + std::to_string(opterr));
+                WRITE_DEBUG("optopt = "s + std::to_string(optopt));
+                WRITE_DEBUG("optind = "s + std::to_string(optind));
                 if(optarg)
-                    writeDebug("optarg = "s + optarg);
+                    WRITE_DEBUG("optarg = "s + optarg);
                 else
-                    writeDebug("optarg = 0x0");
-#endif
+                    WRITE_DEBUG("optarg = 0x0");
                 break;
             case 2: // --state-input
                 if(optarg == nullptr) {
@@ -130,6 +130,9 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
                 break;
             case 8: // --debug
                 prog_opts.debug = true;
+                break;
+            case 9: // --dont-write-logfiles
+                prog_opts.dont_write_logfiles = true;
                 break;
             case 'v': // -v,--verbose
                 if(prog_opts.quiet) {
