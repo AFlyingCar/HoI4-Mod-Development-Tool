@@ -98,15 +98,13 @@ void MapNormalizer::GUI::LogViewerWindow::initWidgets() {
                         break;
                     case 2:
                         if(!field_time.empty()) {
-                            // For some reason, an extra hour gets added when we parse here? Not sure why though
-                            now = Log::Logger::getTimestampFromString(field_time) - std::chrono::hours(1);
+                            now = Log::Logger::getTimestampFromString(field_time);
                         }
                         now -= std::chrono::minutes(1);
                         break;
                     case 3:
                         if(!field_time.empty()) {
-                            // For some reason, an extra hour gets added when we parse here? Not sure why though
-                            now = Log::Logger::getTimestampFromString(field_time) - std::chrono::hours(1);
+                            now = Log::Logger::getTimestampFromString(field_time);
                         }
                         now -= std::chrono::minutes(5);
                         break;
@@ -135,15 +133,13 @@ void MapNormalizer::GUI::LogViewerWindow::initWidgets() {
                         break;
                     case 2:
                         if(!field_time.empty()) {
-                            // For some reason, an extra hour gets added when we parse here? Not sure why though
-                            now = Log::Logger::getTimestampFromString(field_time) - std::chrono::hours(1);
+                            now = Log::Logger::getTimestampFromString(field_time);
                         }
                         now += std::chrono::minutes(1);
                         break;
                     case 3:
                         if(!field_time.empty()) {
-                            // For some reason, an extra hour gets added when we parse here? Not sure why though
-                            now = Log::Logger::getTimestampFromString(field_time) - std::chrono::hours(1);
+                            now = Log::Logger::getTimestampFromString(field_time);
                         }
                         now += std::chrono::minutes(5);
                         break;

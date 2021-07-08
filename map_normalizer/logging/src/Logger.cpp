@@ -17,28 +17,62 @@ auto MapNormalizer::Log::Logger::getInstance() -> Logger& {
     return logger;
 }
 
+/**
+ * @brief Gets the system time
+ *
+ * @return The system time
+ */
 auto MapNormalizer::Log::Logger::now() -> Timestamp {
     return std::chrono::system_clock::now();
 }
 
+/**
+ * @brief Converts a given Timestamp into a string
+ *
+ * @param timestamp The timestamp
+ * @param timestamp_format The format to convert the Timestamp into
+ *
+ * @return A string representation of timestamp in timestamp_format format.
+ */
 std::string MapNormalizer::Log::Logger::getTimestampAsString(const Timestamp& timestamp,
                                                              const std::string& timestamp_format)
 {
     auto timestamp_as_time_t = std::chrono::system_clock::to_time_t(timestamp);
     std::stringstream ss;
-    ss << std::put_time(std::localtime(&timestamp_as_time_t), timestamp_format.c_str());
+
+    auto tm = std::localtime(&timestamp_as_time_t);
+    // Make sure we enforce daylight savings on both the serialized and deserialized sides
+    tm->tm_isdst = 1;
+
+    ss << std::put_time(tm, timestamp_format.c_str());
     return ss.str();
 }
 
+/**
+ * @brief Converts a string representation of a timestamp into a Timestamp
+ *
+ * @param time_str The string representation of a timestamp
+ * @param timestamp_format The format of the string
+ *
+ * @return A Timestamp object
+ */
 auto MapNormalizer::Log::Logger::getTimestampFromString(const std::string& time_str,
-                                                         const std::string& timestamp_format)
+                                                        const std::string& timestamp_format)
     -> Timestamp
 {
+    // https://en.cppreference.com/w/cpp/io/manip/get_time
     std::istringstream ss{time_str};
 
     std::tm t = { };
 
     ss >> std::get_time(&t, timestamp_format.c_str());
+
+    if(!time_str.empty() && ss.fail()) {
+        WRITE_ERROR("Failed to parse time '", time_str, "' using format '", timestamp_format, "'");
+    }
+
+    // Make sure we enforce daylight savings on the serialized and deserialized sides
+    t.tm_isdst = 1;
 
     return std::chrono::system_clock::from_time_t(std::mktime(&t));
 }
@@ -52,6 +86,9 @@ void MapNormalizer::Log::Logger::logMessage(const Message& message) {
     m_messages_mutex.unlock();
 }
 
+/**
+ * @brief Updates the logger
+ */
 void MapNormalizer::Log::Logger::update() {
     using namespace std::chrono_literals;
 
