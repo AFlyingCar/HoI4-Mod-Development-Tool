@@ -2,6 +2,7 @@
 # define LOG_VIEWER_WINDOW_H
 
 # include <deque>
+# include <queue>
 
 # include "gtkmm/grid.h"
 # include "gtkmm/box.h"
@@ -12,6 +13,8 @@
 # include "gtkmm/scrolledwindow.h"
 # include "gtkmm/checkbutton.h"
 # include "gtkmm/comboboxtext.h"
+
+# include "glibmm/dispatcher.h"
 
 # include "Types.h"
 
@@ -62,6 +65,8 @@ namespace MapNormalizer::GUI {
 
             bool shouldBeVisible(const Gtk::TreeRow&) const;
 
+            Glib::Dispatcher* getDispatcher();
+
         private:
             /**
              * @brief The number of messages that have been removed from the
@@ -71,6 +76,9 @@ namespace MapNormalizer::GUI {
              */
             static inline size_t removed_messages = 0;
             static std::deque<Log::Message> viewable_messages;
+
+            static std::mutex next_message_mutex;
+            static std::queue<Log::Message> next_messages;
 
             struct LogRowColumns: public Gtk::TreeModel::ColumnRecord {
                 LogRowColumns();
@@ -126,6 +134,17 @@ namespace MapNormalizer::GUI {
 
             //! Used to reset filtering options
             Gtk::Button m_filter_reset;
+
+            //////////////////////////////////////////////////////
+
+            Glib::Dispatcher m_dispatcher;
+
+            /**
+             * @brief Pointer to m_dispatcher to protect against race conditions
+             *        caused by the logging thread attempting to invoke the 
+             *        dispatcher before it has been fully constructed.
+             */
+            Glib::Dispatcher* m_dispatcher_ptr;
     };
 }
 

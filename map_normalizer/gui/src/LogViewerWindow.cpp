@@ -7,6 +7,9 @@
 
 std::deque<MapNormalizer::Log::Message>
     MapNormalizer::GUI::LogViewerWindow::viewable_messages;
+std::mutex MapNormalizer::GUI::LogViewerWindow::next_message_mutex;
+std::queue<MapNormalizer::Log::Message>
+    MapNormalizer::GUI::LogViewerWindow::next_messages;
 
 MapNormalizer::GUI::LogViewerWindow::LogRowColumns::LogRowColumns() {
     add(m_level);
@@ -25,19 +28,32 @@ MapNormalizer::GUI::LogViewerWindow::LogViewerWindow():
     m_from_label("From:"),
     m_until_label("Until:"),
     m_message_search_label("Text search:"),
-    m_filter_reset("Reset Filters")
+    m_filter_reset("Reset Filters"),
+    m_dispatcher(),
+    m_dispatcher_ptr(nullptr)
 {
     set_title("Log Viewer");
     set_default_size(980, 640);
 
     initWidgets();
+
+    m_dispatcher.connect([this]() {
+        next_message_mutex.lock();
+        auto msg = next_messages.front();
+        next_messages.pop();
+        next_message_mutex.unlock();
+
+        updateTreeModelWith(msg);
+    });
+
+    // We are done constructing m_dispatcher, so make it available to be used
+    //  now
+    m_dispatcher_ptr = &m_dispatcher;
 }
 
 void MapNormalizer::GUI::LogViewerWindow::pushMessage(const Log::Message& msg,
                                                       OptionalReference<LogViewerWindow> lvw)
 {
-    // TODO: do we need a mutex here?
-
     if(viewable_messages.size() == VIEWER_BUFFER_SIZE) {
         viewable_messages.pop_front();
         ++removed_messages;
@@ -46,7 +62,13 @@ void MapNormalizer::GUI::LogViewerWindow::pushMessage(const Log::Message& msg,
     viewable_messages.push_back(msg);
 
     if(lvw) {
-        lvw->get().updateTreeModelWith(msg);
+        if(auto* dispatcher = lvw->get().getDispatcher(); dispatcher) {
+            next_message_mutex.lock();
+            next_messages.push(msg);
+            next_message_mutex.unlock();
+
+            dispatcher->emit();
+        }
     }
 }
 
@@ -370,5 +392,9 @@ void MapNormalizer::GUI::LogViewerWindow::resetFilters() {
     m_until_time_search.set_text("");
 
     m_message_search.set_text("");
+}
+
+Glib::Dispatcher* MapNormalizer::GUI::LogViewerWindow::getDispatcher() {
+    return m_dispatcher_ptr;
 }
 
