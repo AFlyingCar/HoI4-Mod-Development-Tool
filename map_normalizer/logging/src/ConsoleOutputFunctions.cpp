@@ -56,7 +56,8 @@ bool MapNormalizer::Log::outputToConsole(const Message& message,
 bool MapNormalizer::Log::outputToStream(const Message& message,
                                         bool do_formatting,
                                         bool do_prefix,
-                                        const std::function<std::ostream&(uint8_t)>& get_ostream)
+                                        const std::function<std::ostream&(uint8_t)>& get_ostream,
+                                        bool include_timestamp)
 {
     const char* default_color = "";
     std::ostream& out = get_ostream(static_cast<uint8_t>(message.getDebugLevel()));
@@ -93,7 +94,15 @@ bool MapNormalizer::Log::outputToStream(const Message& message,
 
     // Output the message prefix
     if(do_prefix) {
-        out << "[" << message.getDebugLevel() << "] ~ ";
+        out << "[" << message.getDebugLevel() << "]";
+    }
+
+    if(include_timestamp) {
+        out << "[" << message.getTimestampAsString() << "]";
+    }
+
+    if(do_prefix) {
+        out << " ~ ";
     }
 
     // Output every piece

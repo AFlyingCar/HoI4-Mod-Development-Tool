@@ -9,7 +9,8 @@ namespace MapNormalizer::Log {
 
     bool outputToConsole(const Message&, bool, bool);
     bool outputToStream(const Message&, bool, bool,
-                        const std::function<std::ostream&(uint8_t)>&);
+                        const std::function<std::ostream&(uint8_t)>&,
+                        bool = false);
 
     bool outputWithFormatting(const Message&);
     bool outputNoFormatting(const Message&);
