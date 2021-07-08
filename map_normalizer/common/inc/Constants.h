@@ -40,6 +40,9 @@ namespace MapNormalizer {
     //! The name of the application
     const std::string APPLICATION_NAME = "HoI4 Map Normalizer Tool";
 
+    //! A simplified application name
+    const std::string APPLICATION_SIMPLE_NAME = "hoi4_map_normalizer";
+
     //! The Gtk ID of the application
     const std::string APPLICATION_ID = "com.aflyingcar.tool.hoi4_map_normalizer";
 
@@ -69,6 +72,9 @@ namespace MapNormalizer {
 
     //! The filename for the imported province maps
     const std::string INPUT_PROVINCEMAP_FILENAME = "import_provincemap.bmp";
+
+    //! The file extension for the log files
+    const std::string LOG_FILE_EXTENSION = ".log";
 
     //! The 4 magic bytes 
     const std::string SHAPEDATA_MAGIC = "SDAT";
