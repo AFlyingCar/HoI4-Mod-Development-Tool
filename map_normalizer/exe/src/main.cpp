@@ -109,12 +109,12 @@ int main(int argc, char** argv) {
         });
 
     std::shared_ptr<std::ofstream> log_output_file(nullptr);
-    bool disable_file_log_output = false;
+    std::shared_ptr<bool> disable_file_log_output(new bool(false));
 
     MapNormalizer::Log::Logger::registerOutputFunction(
-        [log_output_file, &disable_file_log_output, is_exiting](const MapNormalizer::Log::Message& message) -> bool
+        [log_output_file, disable_file_log_output](const MapNormalizer::Log::Message& message) -> bool
         {
-            if((is_exiting && *is_exiting) || disable_file_log_output) return true;
+            if(disable_file_log_output || *disable_file_log_output) return true;
 
             static std::queue<MapNormalizer::Log::Message> messages;
 
@@ -146,13 +146,13 @@ int main(int argc, char** argv) {
         std::ofstream file(log_output_path);
         if(!file) {
             WRITE_ERROR("Failed to open ", log_output_path, ". Reason: ", strerror(errno));
-            disable_file_log_output = true;
+            *disable_file_log_output = true;
         } else {
             log_output_file.reset(new std::ofstream(std::move(file)));
             WRITE_INFO("Log files will get written to ", log_output_path);
         }
     } else {
-        disable_file_log_output = true;
+        *disable_file_log_output = true;
     }
 
     // Figure out if we should stop now based on the status of the parsing
@@ -172,7 +172,9 @@ int main(int argc, char** argv) {
 
     auto result = MapNormalizer::runApplication();
 
+    // Disable all other log outputs, and enable one that simply prints to the console
     *is_exiting = true;
+    MapNormalizer::Log::Logger::registerOutputFunction(MapNormalizer::Log::outputWithFormatting);
 
     return result;
 }
