@@ -173,10 +173,10 @@ TEST(LogTests, ANSIOutputTests) {
     Logger::getInstance().reset();
     RUN_AT_SCOPE_END([]() { Logger::getInstance().reset(); });
 
-#define FMT_INFO "\33[38;5;15m[OUT] ~ "
-#define FMT_DEBUG_PREFIX "\33[38;5;9m[DBG] ~ "
-#define FMT_ERROR_PREFIX "\33[38;5;12m[ERR] ~ "
-#define FMT_WARN_PREFIX "\33[38;5;11m[WRN] ~ "
+#define FMT_INFO "\33[38;5;15m[INFO] ~ "
+#define FMT_DEBUG_PREFIX "\33[38;5;9m[DEBUG] ~ "
+#define FMT_ERROR_PREFIX "\33[38;5;12m[ERROR] ~ "
+#define FMT_WARN_PREFIX "\33[38;5;11m[WARN] ~ "
 
 #define FMT_SUFFIX "\33[0m\n"
 
