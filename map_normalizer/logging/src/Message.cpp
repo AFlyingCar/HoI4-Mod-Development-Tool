@@ -49,8 +49,8 @@ std::string MapNormalizer::Log::Message::getTimestampAsString(const std::string&
     return Logger::getTimestampAsString(m_timestamp, timestamp_format);
 }
 
-std::ostream& operator<<(std::ostream& o,
-                         const MapNormalizer::Log::Message::Level& level)
+std::ostream& MapNormalizer::Log::operator<<(std::ostream& o,
+                                             const Message::Level& level)
 {
     return (o << std::to_string(level));
 }

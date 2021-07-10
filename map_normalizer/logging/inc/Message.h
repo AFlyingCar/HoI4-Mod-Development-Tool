@@ -73,10 +73,9 @@ namespace MapNormalizer::Log {
 
         return 0;
     }
-}
 
-std::ostream& operator<<(std::ostream&,
-                         const MapNormalizer::Log::Message::Level&);
+    std::ostream& operator<<(std::ostream&, const Message::Level&);
+}
 
 namespace std {
     string to_string(const MapNormalizer::Log::Message::Level&);
