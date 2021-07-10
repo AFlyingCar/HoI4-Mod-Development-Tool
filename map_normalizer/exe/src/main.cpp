@@ -77,11 +77,15 @@ int main(int argc, char** argv) {
     std::ios_base::sync_with_stdio(false);
     std::cout.setf(std::ios::unitbuf);
 
+    std::shared_ptr<bool> is_exiting(new bool(false));
+
     // First, we must register the console output function
     bool* quiet = nullptr;
     bool* verbose = nullptr;
     MapNormalizer::Log::Logger::registerOutputFunction(
-        [&quiet, &verbose](const MapNormalizer::Log::Message& message) -> bool {
+        [quiet, verbose, is_exiting](const MapNormalizer::Log::Message& message) -> bool {
+            if(is_exiting && *is_exiting) return true;
+
             bool is_quiet = quiet != nullptr && *quiet;
             bool is_verbose = verbose != nullptr && *verbose;
 
@@ -108,9 +112,9 @@ int main(int argc, char** argv) {
     bool disable_file_log_output = false;
 
     MapNormalizer::Log::Logger::registerOutputFunction(
-        [log_output_file, &disable_file_log_output](const MapNormalizer::Log::Message& message) -> bool
+        [log_output_file, &disable_file_log_output, is_exiting](const MapNormalizer::Log::Message& message) -> bool
         {
-            if(disable_file_log_output) return true;
+            if((is_exiting && *is_exiting) || disable_file_log_output) return true;
 
             static std::queue<MapNormalizer::Log::Message> messages;
 
@@ -166,6 +170,10 @@ int main(int argc, char** argv) {
     quiet = &MapNormalizer::prog_opts.quiet;
     verbose = &MapNormalizer::prog_opts.verbose;
 
-    return MapNormalizer::runApplication();
+    auto result = MapNormalizer::runApplication();
+
+    *is_exiting = true;
+
+    return result;
 }
 
