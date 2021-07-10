@@ -534,7 +534,7 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
             worker.updateCallback({0, 0, static_cast<uint32_t>(image->info_header.width),
                                          static_cast<uint32_t>(image->info_header.height)});
 
-            WRITE_STDOUT("Detected ", shapes.size(), " shapes.");
+            WRITE_INFO("Detected ", shapes.size(), " shapes.");
 
             // Disable the cancel button (we've already finished), and enable the
             //  done button so that the user can close the box and move on
@@ -595,7 +595,7 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
         return false;
     }
 
-    WRITE_STDOUT("Import Finished!");
+    WRITE_INFO("Import Finished!");
 
     return true;
 }

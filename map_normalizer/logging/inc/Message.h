@@ -26,7 +26,7 @@ namespace MapNormalizer::Log {
              * @brief The debug level
              */
             enum class Level {
-                STDOUT,
+                INFO,
                 DEBUG,
                 ERROR,
                 WARN,
@@ -61,7 +61,7 @@ namespace MapNormalizer::Log {
 
     constexpr uint8_t getLevelDefaultColor(Message::Level level) {
         switch(level) {
-            case Message::Level::STDOUT:
+            case Message::Level::INFO:
                 return 15;
             case Message::Level::DEBUG:
                 return 12;

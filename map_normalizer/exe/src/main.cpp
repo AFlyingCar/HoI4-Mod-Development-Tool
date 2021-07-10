@@ -93,10 +93,10 @@ int main(int argc, char** argv) {
                 return true;
             }
 
-            // Stdout and Debug only output if quiet is false
+            // Info and Debug only output if quiet is false
             // No need to check for debug because quiet and verbose cannot both
             //  be true at the same time
-            if(is_quiet && level == MapNormalizer::Log::Message::Level::STDOUT)
+            if(is_quiet && level == MapNormalizer::Log::Message::Level::INFO)
             {
                 return true;
             }
@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
             disable_file_log_output = true;
         } else {
             log_output_file.reset(new std::ofstream(std::move(file)));
-            WRITE_STDOUT("Log files will get written to ", log_output_path);
+            WRITE_INFO("Log files will get written to ", log_output_path);
         }
     } else {
         disable_file_log_output = true;

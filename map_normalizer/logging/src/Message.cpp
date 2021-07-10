@@ -58,13 +58,13 @@ std::ostream& MapNormalizer::Log::operator<<(std::ostream& o,
 std::string std::to_string(const MapNormalizer::Log::Message::Level& level) {
     switch(level) {
         case MapNormalizer::Log::Message::Level::ERROR:
-            return "ERR";
+            return "ERROR";
         case MapNormalizer::Log::Message::Level::WARN:
-            return "WRN";
-        case MapNormalizer::Log::Message::Level::STDOUT:
-            return "OUT";
+            return "WARN";
+        case MapNormalizer::Log::Message::Level::INFO:
+            return "INFO";
         case MapNormalizer::Log::Message::Level::DEBUG:
-            return "DBG";
+            return "DEBUG";
     }
 
     return "";

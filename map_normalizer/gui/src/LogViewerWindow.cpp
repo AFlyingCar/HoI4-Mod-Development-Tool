@@ -21,7 +21,7 @@ MapNormalizer::GUI::LogViewerWindow::LogRowColumns::LogRowColumns() {
 MapNormalizer::GUI::LogViewerWindow::LogViewerWindow():
     m_filtering_box(Gtk::ORIENTATION_HORIZONTAL),
     m_box(Gtk::ORIENTATION_VERTICAL),
-    m_stdout_enabled("Info"),
+    m_info_enabled("Info"),
     m_debug_enabled("Debug"),
     m_error_enabled("Error"),
     m_warn_enabled("Warning"),
@@ -90,14 +90,14 @@ void MapNormalizer::GUI::LogViewerWindow::initWidgets() {
     {
         // Level search field
         {
-            m_stdout_enabled.set_active(true);
+            m_info_enabled.set_active(true);
             m_debug_enabled.set_active(true);
             m_error_enabled.set_active(true);
             m_warn_enabled.set_active(true);
 
             auto update_func = [this]() { updateFilter(); };
 
-            m_stdout_enabled.signal_toggled().connect(update_func);
+            m_info_enabled.signal_toggled().connect(update_func);
             m_debug_enabled.signal_toggled().connect(update_func);
             m_error_enabled.signal_toggled().connect(update_func);
             m_warn_enabled.signal_toggled().connect(update_func);
@@ -206,7 +206,7 @@ void MapNormalizer::GUI::LogViewerWindow::initWidgets() {
         // The level search area
         {
             // m_filtering_grid.attach(m_level_select, 0, 1, 1, 1);
-            m_filtering_grid.attach(m_stdout_enabled, x, 1, 1, 1);
+            m_filtering_grid.attach(m_info_enabled, x, 1, 1, 1);
             m_filtering_grid.attach(m_debug_enabled, x, 2, 1, 1);
 
             // We want them to be in a square
@@ -313,20 +313,20 @@ std::string MapNormalizer::GUI::LogViewerWindow::formatMessage(const Log::Messag
 std::string MapNormalizer::GUI::LogViewerWindow::getEnabledLevels() const {
     std::string enabled_levels;
 
-    if(m_stdout_enabled.get_active()) {
-        enabled_levels += "OUT;";
+    if(m_info_enabled.get_active()) {
+        enabled_levels += "INFO;";
     }
 
     if(m_debug_enabled.get_active()) {
-        enabled_levels += "DBG;";
+        enabled_levels += "DEBUG;";
     }
 
     if(m_error_enabled.get_active()) {
-        enabled_levels += "ERR;";
+        enabled_levels += "ERROR;";
     }
 
     if(m_warn_enabled.get_active()) {
-        enabled_levels += "WRN;";
+        enabled_levels += "WARN;";
     }
 
     return enabled_levels;
@@ -383,7 +383,7 @@ void MapNormalizer::GUI::LogViewerWindow::updateFilter() {
 }
 
 void MapNormalizer::GUI::LogViewerWindow::resetFilters() {
-    m_stdout_enabled.set_active(true);
+    m_info_enabled.set_active(true);
     m_debug_enabled.set_active(true);
     m_error_enabled.set_active(true);
     m_warn_enabled.set_active(true);

@@ -32,7 +32,7 @@ bool MapNormalizer::Log::outputToConsole(const Message& message,
     return outputToStream(message, do_formatting, do_prefix,
             [](uint8_t debug_level) -> std::ostream& {
                 switch(static_cast<Message::Level>(debug_level)) {
-                    case Message::Level::STDOUT:
+                    case Message::Level::INFO:
                     case Message::Level::DEBUG:
                     default:
                         return std::cout;
@@ -66,7 +66,7 @@ bool MapNormalizer::Log::outputToStream(const Message& message,
     // Color mapping
     // https://i.stack.imgur.com/KTSQa.png
     switch(message.getDebugLevel()) {
-        case Message::Level::STDOUT:
+        case Message::Level::INFO:
             if(do_formatting) {
                 default_color = ANSI_FOREGROUND_COLOR_START "15" ANSI_ESCAPE_END;
             }

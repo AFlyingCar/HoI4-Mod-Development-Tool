@@ -98,12 +98,12 @@ int MapNormalizer::runHeadless() {
     //  Do this before anything else, in case we are asked to generate more state
     //  files that share a name with any vanilla ones
     if(!prog_opts.hoi4_install_path.empty()) {
-        WRITE_STDOUT("Writing blank override files.");
+        WRITE_INFO("Writing blank override files.");
         writeOverrideFiles(root_output_path,
                                           prog_opts.hoi4_install_path);
     }
 
-    WRITE_STDOUT("Reading in .BMP file.");
+    WRITE_INFO("Reading in .BMP file.");
 
     // Read the BitMap in
     BitMap* image = readBMP(prog_opts.infilename);
@@ -141,7 +141,7 @@ int MapNormalizer::runHeadless() {
     normalmap_data = new unsigned char[data_size];
 
     if(!prog_opts.quiet)
-        WRITE_STDOUT("Finding all possible shapes.");
+        WRITE_INFO("Finding all possible shapes.");
 
     // Find every shape
     EmptyGraphicsWorker worker;
@@ -151,7 +151,7 @@ int MapNormalizer::runHeadless() {
     // Redraw the new image so we can properly show how it should look in the
     //  final output
     if(!prog_opts.quiet)
-        WRITE_STDOUT("Drawing new graphical image");
+        WRITE_INFO("Drawing new graphical image");
     for(auto&& shape : shapes) {
         for(auto&& pixel : shape.pixels) {
             // Write to both the output data and into the displayed data
@@ -161,16 +161,16 @@ int MapNormalizer::runHeadless() {
         }
     }
 
-    WRITE_STDOUT("Detected ", std::to_string(shapes.size()), " shapes.");
+    WRITE_INFO("Detected ", std::to_string(shapes.size()), " shapes.");
 
-    WRITE_STDOUT("Creating Provinces List.");
+    WRITE_INFO("Creating Provinces List.");
     auto provinces = createProvinceList(shapes);
 
     StateList states;
 
     // Only produce a states list if we were given a state input file
     if(auto sif = prog_opts.state_input_file; !sif.empty()) {
-        WRITE_STDOUT("Creating States List.");
+        WRITE_INFO("Creating States List.");
         states = createStatesList(provinces, sif);
     }
 
@@ -179,16 +179,16 @@ int MapNormalizer::runHeadless() {
         generateWorldNormalMap(heightmap, normalmap_data);
 
     if(!std::filesystem::exists(output_path)) {
-        WRITE_STDOUT("Path '", output_path.generic_string(), "' does not exist, creating...");
+        WRITE_INFO("Path '", output_path.generic_string(), "' does not exist, creating...");
         std::filesystem::create_directories(output_path);
     }
 
     if(!std::filesystem::exists(state_output_root)) {
-        WRITE_STDOUT("Path '", state_output_root.generic_string(), "' does not exist, creating...");
+        WRITE_INFO("Path '", state_output_root.generic_string(), "' does not exist, creating...");
         std::filesystem::create_directories(state_output_root);
     }
 
-    WRITE_STDOUT("Writing province definition file...");
+    WRITE_INFO("Writing province definition file...");
     std::ofstream output_csv(output_path / "definition.csv");
 
     for(size_t i = 0; i < provinces.size(); ++i) {
@@ -198,7 +198,7 @@ int MapNormalizer::runHeadless() {
     // Only produce each state definition file if there are actually states to
     //  produce
     if(!states.empty()) {
-        WRITE_STDOUT("Writing state definition files...");
+        WRITE_INFO("Writing state definition files...");
         for(auto&& [state_id, state] : states) {
             // Do not write states that do not have a name unless --no-skip-no-name-state was passed
             if(state.name.empty()) {
@@ -224,24 +224,24 @@ int MapNormalizer::runHeadless() {
         }
     }
 
-    WRITE_STDOUT("Writing province bitmap to file...");
+    WRITE_INFO("Writing province bitmap to file...");
     writeBMP(output_path / "provinces.bmp", image->data,
                             image->info_header.width, image->info_header.height);
 
-    WRITE_STDOUT("Writing blank river bitmap to file...");
+    WRITE_INFO("Writing blank river bitmap to file...");
     writeBMP(output_path / "rivers.bmp", river_data,
                             image->info_header.width,
                             image->info_header.height);
 
     // Write the new world_normal map to a file
     if(heightmap != nullptr) {
-        WRITE_STDOUT("Writing normal bitmap to file...");
+        WRITE_INFO("Writing normal bitmap to file...");
         writeBMP(output_path / "world_normal.bmp", normalmap_data,
                                 heightmap->info_header.width,
                                 heightmap->info_header.height);
     }
 
-    WRITE_STDOUT("Press any key to exit.");
+    WRITE_INFO("Press any key to exit.");
 
     std::getchar();
 

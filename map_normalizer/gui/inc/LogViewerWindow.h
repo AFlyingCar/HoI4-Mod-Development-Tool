@@ -115,7 +115,7 @@ namespace MapNormalizer::GUI {
 
             //////////////////////////////////////////////////////
 
-            Gtk::CheckButton m_stdout_enabled;
+            Gtk::CheckButton m_info_enabled;
             Gtk::CheckButton m_debug_enabled;
             Gtk::CheckButton m_error_enabled;
             Gtk::CheckButton m_warn_enabled;

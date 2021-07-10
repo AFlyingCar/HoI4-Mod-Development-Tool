@@ -41,15 +41,15 @@ namespace MapNormalizer::Log {
             bool started() const;
 
             /**
-             * @brief Writes a message to STDOUT
+             * @brief Writes a message to INFO
              *
              * @tparam Args All argument types to the message
              * @param source Where the message was created at
              * @param args All arguments to build the message
              */
             template<typename... Args>
-            void writeStdout(const Source& source, Args&&... args) {
-                logMessage(buildMessage(Message::Level::STDOUT, source, now(),
+            void writeInfo(const Source& source, Args&&... args) {
+                logMessage(buildMessage(Message::Level::INFO, source, now(),
                                         std::forward<Args>(args)...));
             }
 
@@ -165,8 +165,8 @@ namespace MapNormalizer::Log {
     };
 }
 
-# define WRITE_STDOUT(...) \
-    MapNormalizer::Log::Logger::getInstance().writeStdout(MN_LOG_SOURCE(), __VA_ARGS__)
+# define WRITE_INFO(...) \
+    MapNormalizer::Log::Logger::getInstance().writeInfo(MN_LOG_SOURCE(), __VA_ARGS__)
 # define WRITE_DEBUG(...) \
     MapNormalizer::Log::Logger::getInstance().writeDebug(MN_LOG_SOURCE(), __VA_ARGS__)
 # define WRITE_ERROR(...) \

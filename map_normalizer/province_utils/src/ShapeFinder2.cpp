@@ -84,7 +84,7 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
 
     uint32_t num_border_pixels = 0;
 
-    WRITE_STDOUT("Performing Pass #1 of CCL.");
+    WRITE_INFO("Performing Pass #1 of CCL.");
 
     // Go over every pixel of the image
     for(uint32_t y = 0; y < height; ++y) {
@@ -194,7 +194,7 @@ auto MapNormalizer::ShapeFinder::pass2(LabelShapeIdxMap& label_to_shapeidx)
     m_shapes.clear();
 
     if(!prog_opts.quiet)
-        WRITE_STDOUT("Performing Pass #2 of CCL.");
+        WRITE_INFO("Performing Pass #2 of CCL.");
 
     for(uint32_t y = 0; y < height; ++y) {
         for(uint32_t x = 0; x < width; ++x) {
@@ -224,7 +224,7 @@ auto MapNormalizer::ShapeFinder::pass2(LabelShapeIdxMap& label_to_shapeidx)
     }
 
     if(!prog_opts.quiet)
-        WRITE_STDOUT("Generated ", m_shapes.size(), " shapes.");
+        WRITE_INFO("Generated ", m_shapes.size(), " shapes.");
 
     return m_shapes;
 }
@@ -246,7 +246,7 @@ bool MapNormalizer::ShapeFinder::mergeBorders(PolygonList& shapes,
     uint32_t height = m_image->info_header.height;
 
     if(!prog_opts.quiet)
-        WRITE_STDOUT("Performing Pass #3 of CCL.");
+        WRITE_INFO("Performing Pass #3 of CCL.");
 
     for(const Pixel& pixel : m_border_pixels) {
         if(m_do_estop) {
