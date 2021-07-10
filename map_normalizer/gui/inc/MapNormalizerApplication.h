@@ -22,7 +22,7 @@ namespace MapNormalizer::GUI {
     class MapNormalizerApplication: public Gtk::Application {
         public:
             MapNormalizerApplication();
-            virtual ~MapNormalizerApplication() = default;
+            virtual ~MapNormalizerApplication();
 
         protected:
             void on_activate() override;
@@ -50,6 +50,8 @@ namespace MapNormalizer::GUI {
             std::map<std::string, MenuWrapper> m_menus;
 
             Glib::RefPtr<Gtk::Settings> m_settings;
+
+            std::shared_ptr<bool> m_is_exiting;
     };
 }
 

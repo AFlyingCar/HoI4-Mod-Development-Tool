@@ -11,10 +11,16 @@
 
 MapNormalizer::GUI::MapNormalizerApplication::MapNormalizerApplication():
     Gtk::Application(APPLICATION_ID),
-    m_settings(Gtk::Settings::get_default())
+    m_settings(Gtk::Settings::get_default()),
+    m_is_exiting(new bool(false))
 {
+    std::shared_ptr<bool> is_exiting = m_is_exiting;
+
     // Register a function that can send logs to a special log viewing window
-    Log::Logger::registerOutputFunction([this](const Log::Message& message) {
+    Log::Logger::registerOutputFunction([this, is_exiting](const Log::Message& message)
+    {
+        if(is_exiting && *is_exiting) return true;
+
         LogViewerWindow::pushMessage(message,
                                      m_window == nullptr ? std::nullopt
                                                          : m_window->getLogViewerWindow());
@@ -23,6 +29,10 @@ MapNormalizer::GUI::MapNormalizerApplication::MapNormalizerApplication():
     });
 
     Glib::set_application_name(APPLICATION_NAME);
+}
+
+MapNormalizer::GUI::MapNormalizerApplication::~MapNormalizerApplication() {
+    *m_is_exiting = true;
 }
 
 void MapNormalizer::GUI::MapNormalizerApplication::on_activate() {
