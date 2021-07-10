@@ -34,6 +34,7 @@ bool MapNormalizer::Log::outputToConsole(const Message& message,
                 switch(static_cast<Message::Level>(debug_level)) {
                     case Message::Level::STDOUT:
                     case Message::Level::DEBUG:
+                    default:
                         return std::cout;
                     case Message::Level::ERROR:
                     case Message::Level::WARN:

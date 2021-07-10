@@ -13,8 +13,10 @@
 
 #ifdef WIN32
 # include <shlwapi.h>
-# pragma comment(lib,"shlwapi.lib")
 # include "shlobj.h"
+# ifdef ERROR
+#  undef ERROR // This is necessary because we define ERROR in an enum, but windows defines it as something else
+# endif
 #else
 # include <pwd.h>
 # include <unistd.h>
