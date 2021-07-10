@@ -68,7 +68,17 @@ auto MapNormalizer::Log::Logger::getTimestampFromString(const std::string& time_
     ss >> std::get_time(&t, timestamp_format.c_str());
 
     if(!time_str.empty() && ss.fail()) {
-        WRITE_ERROR("Failed to parse time '", time_str, "' using format '", timestamp_format, "'");
+        static std::string last_failed_timestamp;
+        static std::string last_failed_format;
+
+        if(last_failed_timestamp != time_str ||
+           last_failed_format != timestamp_format)
+        {
+            WRITE_ERROR("Failed to parse time '", time_str, "' using format '", timestamp_format, "'");
+        }
+
+        last_failed_timestamp = time_str;
+        last_failed_format = timestamp_format;
     }
 
     // Make sure we enforce daylight savings on the serialized and deserialized sides
