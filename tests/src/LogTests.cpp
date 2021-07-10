@@ -34,8 +34,9 @@ TEST(LogTests, SimpleLogWriteTest) {
 
     using namespace std::chrono_literals;
 
-    // Just in case it has not yet been reset
+    // Make sure that the logger is reset, and that we reset it when we are done
     Logger::getInstance().reset();
+    RUN_AT_SCOPE_END([]() { Logger::getInstance().reset(); });
 
     std::vector<Message> expected_messages {
         Message(Message::Level::STDOUT, { }, Logger::now()),
@@ -45,7 +46,8 @@ TEST(LogTests, SimpleLogWriteTest) {
     std::vector<Message> received_messages;
     received_messages.reserve(expected_messages.size());
 
-    Logger::registerOutputFunction([&received_messages](const Message& m) {
+    Logger::registerOutputFunction([&received_messages](const Message& m)
+    {
         received_messages.push_back(m);
         return true;
     });
@@ -86,6 +88,8 @@ TEST(LogTests, SimpleLogWriteTest) {
     };
 
     ASSERT_TRUE(messages_checker());
+
+    Logger::getInstance().reset();
 }
 
 TEST(LogTests, LogMacroTests) {
@@ -96,7 +100,9 @@ TEST(LogTests, LogMacroTests) {
     using namespace std::chrono_literals;
     using namespace std::string_literals;
 
+    // Make sure that the logger is reset, and that we reset it when we are done
     Logger::getInstance().reset();
+    RUN_AT_SCOPE_END([]() { Logger::getInstance().reset(); });
 
     auto doubleToPreciseString = [](long double d) -> std::string {
         std::stringstream ss;
@@ -119,7 +125,8 @@ TEST(LogTests, LogMacroTests) {
     std::vector<std::string> received_messages;
     received_messages.reserve(expected_messages.size());
 
-    Logger::registerOutputFunction([&received_messages](const Message& m) -> bool
+    Logger::registerOutputFunction([&received_messages](const Message& m)
+        -> bool
     {
         EXPECT_EQ(m.getDebugLevel(), Message::Level::STDOUT);
 
@@ -150,6 +157,8 @@ TEST(LogTests, LogMacroTests) {
     std::this_thread::sleep_for(2.5s);
 
     ASSERT_EQ(received_messages, expected_messages);
+
+    Logger::getInstance().reset();
 }
 
 TEST(LogTests, ANSIOutputTests) {
@@ -160,7 +169,9 @@ TEST(LogTests, ANSIOutputTests) {
     using namespace std::chrono_literals;
     using namespace std::string_literals;
 
+    // Make sure that the logger is reset, and that we reset it when we are done
     Logger::getInstance().reset();
+    RUN_AT_SCOPE_END([]() { Logger::getInstance().reset(); });
 
 #define FMT_STDOUT_PREFIX "\33[38;5;15m[OUT] ~ "
 #define FMT_DEBUG_PREFIX "\33[38;5;9m[DBG] ~ "
@@ -182,7 +193,8 @@ TEST(LogTests, ANSIOutputTests) {
     std::stringstream stdout_ss;
     // TODO: We should also do some minimal testing for the other 3 levels.
 
-    Logger::registerOutputFunction([&stdout_ss](const Message& m) {
+    Logger::registerOutputFunction([&stdout_ss](const Message& m)
+    {
         return MapNormalizer::Log::outputToStream(m, true, true,
             [&stdout_ss](uint8_t debug_level) -> std::ostream& {
                 switch(static_cast<Message::Level>(debug_level)) {
@@ -218,5 +230,7 @@ TEST(LogTests, ANSIOutputTests) {
     std::cout << stdout_ss.str();
 
     ASSERT_EQ(stdout_ss.str(), expected_stdout);
+
+    Logger::getInstance().reset();
 }
 
