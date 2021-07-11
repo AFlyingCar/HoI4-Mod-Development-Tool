@@ -26,8 +26,10 @@ endif()
 # TODO: What other MSVC options should we pass?
 if(MSVC)
     add_compile_options(/W4 /WX)
+    add_definitions(/DMN_PROJECT_ROOT="${CMAKE_SOURCE_DIR}/map_normalizer")
 else()
     add_compile_options(-Wall -Werror -Wextra -Wno-sign-compare -Wno-unused-label -Wno-unused-const-variable -Wno-unused-parameter -Wno-unused-function)
+    add_definitions(-DMN_PROJECT_ROOT="${CMAKE_SOURCE_DIR}/map_normalizer")
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
