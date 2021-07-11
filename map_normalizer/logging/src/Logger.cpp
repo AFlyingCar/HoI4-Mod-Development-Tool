@@ -4,13 +4,20 @@
 #include <chrono>
 #include <future>
 
+//! The vector of all output functions
 std::vector<MapNormalizer::Log::Logger::OutputFunction>
     MapNormalizer::Log::Logger::output_funcs{};
 
+/**
+ * Destroys the logger, and shuts down the logging worker thread
+ */
 MapNormalizer::Log::Logger::~Logger() {
     destroyWorkerThread();
 }
 
+/**
+ * @brief Gets the logger instance
+ */
 auto MapNormalizer::Log::Logger::getInstance() -> Logger& {
     static Logger logger;
 
@@ -182,16 +189,30 @@ MapNormalizer::Log::Logger::Logger(): m_quit(false),
                                       m_worker_thread(&Logger::update, this)
 { }
 
+/**
+ * @brief Registers a single output function
+ *
+ * @param output_func The function which defines how to output a message
+ */
 void MapNormalizer::Log::Logger::registerOutputFunction(const OutputFunction& output_func)
 {
     output_funcs.push_back(output_func);
 }
 
+/**
+ * @brief Gets if the logger has been started
+ *
+ * @return true if the logging worker thread has been started, false otherwise
+ */
 bool MapNormalizer::Log::Logger::started() const {
     return m_worker_thread.joinable();
 }
 
+/**
+ * @brief Shuts down the logging worker thread
+ */
 void MapNormalizer::Log::Logger::destroyWorkerThread() {
+    // Only try to shut down the worker thread if it is actually running
     if(m_worker_thread.joinable()) {
         m_quit = true;
 
@@ -199,6 +220,8 @@ void MapNormalizer::Log::Logger::destroyWorkerThread() {
     }
 }
 
+// No documentation on this one, nobody should be calling it outside of unit
+//  tests
 void MapNormalizer::Log::Logger::reset() {
     destroyWorkerThread();
 

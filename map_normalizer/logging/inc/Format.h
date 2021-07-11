@@ -8,23 +8,24 @@ namespace MapNormalizer::Log {
      * @brief Defines a single formatting operation
      */
     struct Format {
+        //! The number of bytes held by Format::data
         static constexpr std::size_t DATA_SIZE = 1;
 
         /**
          * @brief The type of operation to perform
          */
         enum Type: uint8_t {
-            CLEAR     = 0b00000000, // Clear formatting
-            RESET     = 0b11111111, // Reset formatting
+            CLEAR     = 0b00000000, //!< Clear formatting
+            RESET     = 0b11111111, //!< Reset formatting
 
-            BOLD      = 0b00000001, // Bold
-            FAINT     = 0b00000010, // Faint/dimming
-            ITALIC    = 0b00000100, // Italics
-            UNDERLINE = 0b00001000, // Underline
-            BLINK     = 0b00010000, // Blink
-            INVISIBLE = 0b00100000, // Invisible
-            STRIKE    = 0b01000000, // Strike-through
-            COLOR     = 0b10000000, // Color
+            BOLD      = 0b00000001, //!< Bold
+            FAINT     = 0b00000010, //!< Faint/dimming
+            ITALIC    = 0b00000100, //!< Italics
+            UNDERLINE = 0b00001000, //!< Underline
+            BLINK     = 0b00010000, //!< Blink
+            INVISIBLE = 0b00100000, //!< Invisible
+            STRIKE    = 0b01000000, //!< Strike-through
+            COLOR     = 0b10000000, //!< Color
         } type;
 
         /**
@@ -68,18 +69,43 @@ namespace MapNormalizer::Log {
 # define FTYPE(TYPE, COLOR) \
     MapNormalizer::Log::Format { MapNormalizer::Log::Format::Type::TYPE, { COLOR } }
 
+////////////////////////////////////////////////////////////////////////////////
 // Formatting types
+
+//! Defines a CLEAR formatting operation
 # define FCLEAR     FTYPE(CLEAR, 0)
+
+//! Defines a RESET formatting operation
 # define FRESET     FTYPE(RESET, 0)
+
+//! Defines a BOLD formatting operation
 # define FBOLD      FTYPE(BOLD, 0)
+
+//! Defines a FAINT formatting operation
 # define FFAINT     FTYPE(FAINT, 0)
+
+//! Defines a ITALIC formatting operation
 # define FITALIC    FTYPE(ITALIC, 0)
+
+//! Defines a UNDERLINE formatting operation
 # define FUNDERLINE FTYPE(UNDERLINE, 0)
+
+//! Defines a BLINKSLOW formatting operation
 # define FBLINKSLOW FTYPE(BLINK, 0)
+
+//! Defines a BLINKFAST formatting operation
 # define FBLINKFAST FTYPE(BLINK, 1)
+
+//! Defines a INVISIBLE formatting operation
 # define FINVISIBLE FTYPE(INVISIBLE, 0)
+
+//! Defines a STRIKE formatting operation
 # define FSTRIKE    FTYPE(STRIKE, 0)
+
+//! Defines a COLOR formatting operation
 # define FCOLOR(C)  FTYPE(COLOR, C)
+
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @brief Builds a single Format option

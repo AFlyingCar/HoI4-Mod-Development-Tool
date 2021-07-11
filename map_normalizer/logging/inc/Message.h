@@ -26,10 +26,10 @@ namespace MapNormalizer::Log {
              * @brief The debug level
              */
             enum class Level {
-                INFO,
-                DEBUG,
-                ERROR,
-                WARN,
+                INFO,  //!< Standard Information
+                DEBUG, //!< Debugging Information
+                ERROR, //!< Error messages
+                WARN,  //!< Warning messages
             };
 
             Message(const Level&, const PieceList&, const Timestamp&,
@@ -59,6 +59,13 @@ namespace MapNormalizer::Log {
             Source m_source;
     };
 
+    /**
+     * @brief Gets the default color for the given message level.
+     *
+     * @param level The message level
+     *
+     * @return The default 8-bit color code for the given level.
+     */
     constexpr uint8_t getLevelDefaultColor(Message::Level level) {
         switch(level) {
             case Message::Level::INFO:
