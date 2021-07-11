@@ -3,10 +3,10 @@
 
 #include <sstream>
 
-#include "NewLogger.h"
 #include "Message.h"
 #include "Format.h"
 #include "ConsoleOutputFunctions.h"
+#include "Logger.h"
 
 #include "TestOverrides.h"
 #include "TestUtils.h"
@@ -25,6 +25,25 @@ TEST(LogTests, SimpleFormatTests) {
     Format f2{ Format::CLEAR, { 0 } };
 
     ASSERT_EQ(f1, f2);
+}
+
+TEST(LogTests, SourceTests) {
+    using MapNormalizer::Log::Source;
+
+
+    // Do these on the same line so that we get the same line number
+    auto source = MN_LOG_SOURCE(); auto line = __LINE__;
+
+    // module name will be different depending on which system we are targetting
+#ifdef WIN32
+    EXPECT_EQ(source.getModulePath(), "");
+#else
+    EXPECT_EQ(source.getModulePath(), "");
+#endif
+
+    EXPECT_EQ(source.getFileName(), __FILE__);
+    EXPECT_EQ(source.getFunctionName(), FUNC_NAME);
+    EXPECT_EQ(source.getLineNumber(), line);
 }
 
 TEST(LogTests, SimpleLogWriteTest) {

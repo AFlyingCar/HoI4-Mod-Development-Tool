@@ -1,7 +1,8 @@
 #ifndef MN_SOURCE_H
 # define MN_SOURCE_H
 
-#include <string>
+# include <string>
+# include <filesystem>
 
 namespace MapNormalizer::Log {
     /**
@@ -9,11 +10,12 @@ namespace MapNormalizer::Log {
      */
     class Source {
         public:
-            Source(const std::string& = "", const std::string& = "",
+            Source(const std::filesystem::path& = "",
+                   const std::filesystem::path& = "",
                    const std::string& = "", uint32_t = 0);
 
-            const std::string& getModuleName() const;
-            const std::string& getFileName() const;
+            const std::filesystem::path& getModulePath() const;
+            const std::filesystem::path& getFileName() const;
             const std::string& getFunctionName() const;
             uint32_t getLineNumber() const;
 
@@ -21,10 +23,10 @@ namespace MapNormalizer::Log {
 
         private:
             //! The module the message originated from
-            std::string m_module_name;
+            std::filesystem::path m_module_name;
 
             //! The filename the message originated from
-            std::string m_filename;
+            std::filesystem::path m_filename;
 
             //! The function name the message was logged in
             std::string m_function_name;
@@ -33,7 +35,7 @@ namespace MapNormalizer::Log {
             uint32_t m_line_number;
     };
 
-    std::string getModuleName();
+    std::filesystem::path getModulePath(void*);
 }
 
 # ifdef WIN32
@@ -42,8 +44,15 @@ namespace MapNormalizer::Log {
 #  define FUNC_NAME __func__
 # endif
 
-# define MN_LOG_SOURCE() MapNormalizer::Log::Source( \
-        MapNormalizer::Log::getModuleName(), __FILE__, FUNC_NAME, __LINE__)
+/**
+ * @brief Generates a MapNormalizer::Log::Source object for the point it was
+ *        called from.
+ */
+# define MN_LOG_SOURCE() [](auto&& func_name) {                                \
+    char _; /* Blank stack variable for module information */                  \
+    return MapNormalizer::Log::Source(                                         \
+        MapNormalizer::Log::getModulePath(&_), __FILE__, func_name, __LINE__); \
+}(FUNC_NAME)
 
 #endif
 
