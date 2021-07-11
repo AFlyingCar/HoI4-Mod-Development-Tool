@@ -25,6 +25,15 @@
 #define ANSI_INVISIBLE BUILD_ANSI_CODE(8)
 #define ANSI_STRIKE BUILD_ANSI_CODE(9)
 
+/**
+ * @brief Outputs the given message to the console
+ *
+ * @param message The message to output
+ * @param do_formatting Whether to output with formatting or not
+ * @param do_prefix Whether or not to output a prefix with the message
+ *
+ * @return The result from outputToStream
+ */
 bool MapNormalizer::Log::outputToConsole(const Message& message,
                                          bool do_formatting,
                                          bool do_prefix)
@@ -95,7 +104,21 @@ bool MapNormalizer::Log::outputToStream(const Message& message,
 
     // Output the message prefix
     if(do_prefix) {
-        out << "[" << message.getDebugLevel() << "]";
+        out << "["  << message.getDebugLevel();
+
+        if(auto mod_path = message.getSource().getModulePath(); !mod_path.empty())
+        {
+            out << ":"  << mod_path.filename().generic_string();
+            if(!message.getSource().getFileName().empty()) {
+                out << ", ";
+            }
+        }
+        if(auto filename = message.getSource().getFileName(); !filename.empty())
+        {
+            out << filename.filename().generic_string()
+                << "@"  << message.getSource().getLineNumber();
+        }
+        out << "]";
     }
 
     if(include_timestamp) {
@@ -163,10 +186,24 @@ bool MapNormalizer::Log::outputToStream(const Message& message,
     return true;
 }
 
+/**
+ * @brief Outputs the given message to the console with formatting
+ *
+ * @param message The message
+ *
+ * @return Result from outputToConsole
+ */
 bool MapNormalizer::Log::outputWithFormatting(const Message& message) {
     return outputToConsole(message, true, true);
 }
 
+/**
+ * @brief Outputs the given message to the console without formatting
+ *
+ * @param message The message
+ *
+ * @return Result from outputToConsole
+ */
 bool MapNormalizer::Log::outputNoFormatting(const Message& message) {
     return outputToConsole(message, false, true);
 }

@@ -1,3 +1,9 @@
+/**
+ * @file ConsoleOutputFunctions.h
+ *
+ * @brief Defines functions for writing to the console
+ */
+
 #ifndef CONSOLE_OUTPUT_FUNCTIONS_H
 # define CONSOLE_OUTPUT_FUNCTIONS_H
 
