@@ -86,7 +86,10 @@ namespace MapNormalizer::GUI {
                 // The individual cells for the row
                 Gtk::TreeModelColumn<Glib::ustring> m_level;
                 Gtk::TreeModelColumn<Glib::ustring> m_timestamp;
-                // Log::Source source;
+
+                Gtk::TreeModelColumn<Glib::ustring> m_module;
+                Gtk::TreeModelColumn<Glib::ustring> m_filename_line;
+                Gtk::TreeModelColumn<Glib::ustring> m_function;
 
                 Gtk::TreeModelColumn<Glib::ustring> m_message;
             } m_columns;
@@ -127,6 +130,14 @@ namespace MapNormalizer::GUI {
 
             Gtk::ComboBoxText m_from_time_select;
             Gtk::ComboBoxText m_until_time_select;
+
+            // Entry field for searching for modules
+            Gtk::Label m_module_search_label;
+            Gtk::Entry m_module_search;
+
+            // Doubles as both filename and line number search
+            Gtk::Label m_filename_search_label;
+            Gtk::Entry m_filename_search;
 
             Gtk::Label m_message_search_label;
             //! The entry field for searching by string

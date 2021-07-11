@@ -14,7 +14,9 @@ std::queue<MapNormalizer::Log::Message>
 MapNormalizer::GUI::LogViewerWindow::LogRowColumns::LogRowColumns() {
     add(m_level);
     add(m_timestamp);
-    // add(m_source);
+    add(m_module);
+    add(m_filename_line);
+    add(m_function);
     add(m_message);
 }
 
@@ -27,13 +29,15 @@ MapNormalizer::GUI::LogViewerWindow::LogViewerWindow():
     m_warn_enabled("Warning"),
     m_from_label("From:"),
     m_until_label("Until:"),
+    m_module_search_label("Module search:"),
+    m_filename_search_label("Filename search:"),
     m_message_search_label("Text search:"),
     m_filter_reset("Reset Filters"),
     m_dispatcher(),
     m_dispatcher_ptr(nullptr)
 {
     set_title("Log Viewer");
-    set_default_size(980, 640);
+    set_default_size(1124, 640);
 
     initWidgets();
 
@@ -183,6 +187,20 @@ void MapNormalizer::GUI::LogViewerWindow::initWidgets() {
             });
         }
 
+        // Module Entry field
+        {
+            m_module_search.signal_changed().connect([this]() {
+                updateFilter();
+            });
+        }
+
+        // Filename Entry field
+        {
+            m_filename_search.signal_changed().connect([this]() {
+                updateFilter();
+            });
+        }
+
         // Message Entry field
         {
             m_message_search.signal_changed().connect([this]() {
@@ -231,6 +249,22 @@ void MapNormalizer::GUI::LogViewerWindow::initWidgets() {
         }
         ++x;
 
+        // The module search area
+        {
+            m_filtering_grid.attach(m_module_search_label, x, 1, 2, 1);
+            m_filtering_grid.attach(m_module_search, x, 2, 2, 1);
+            ++x; // One extra addition since the search area is 2 cells wide
+        }
+        ++x;
+
+        // The filename search area
+        {
+            m_filtering_grid.attach(m_filename_search_label, x, 1, 2, 1);
+            m_filtering_grid.attach(m_filename_search, x, 2, 2, 1);
+            ++x; // One extra addition since the search area is 2 cells wide
+        }
+        ++x;
+
         // The message search area
         {
             m_filtering_grid.attach(m_message_search_label, x, 1, 2, 1);
@@ -265,12 +299,19 @@ void MapNormalizer::GUI::LogViewerWindow::initWidgets() {
     // Add all of the columns to the view
     m_log_view.append_column("Level", m_columns.m_level);
     m_log_view.append_column("Timestamp", m_columns.m_timestamp);
-    // m_log_view.append_column("Source", m_columns.m_source);
+
+    m_log_view.append_column("Module", m_columns.m_module);
+    m_log_view.append_column("Filename:Line", m_columns.m_filename_line);
+    m_log_view.append_column("Function", m_columns.m_function);
 
     // TODO: We may want to make this a special type of cell instead, so we can control formatting on it
     m_log_view.append_column("Message", m_columns.m_message);
 
-    // TODO: Do we want to allow the columns to be re-orderable?
+    // Set properties of the columns
+    for(Gtk::TreeViewColumn* column : m_log_view.get_columns()) {
+        column->set_resizable(true);
+        column->set_reorderable(true);
+    }
 
     show_all_children();
 }
@@ -280,9 +321,13 @@ void MapNormalizer::GUI::LogViewerWindow::updateTreeModelWith(const Log::Message
     auto row = *(m_log_list->append());
     row[m_columns.m_level] = std::to_string(message.getDebugLevel());
 
-    // TODO: Do we want to allow the user to enter their own time display format?
     row[m_columns.m_timestamp] = message.getTimestampAsString();
-    // row[m_columns.m_source] = message.getSource();
+
+    auto&& source = message.getSource();
+    row[m_columns.m_module] = source.getModulePath().filename().generic_string();
+    row[m_columns.m_filename_line] = source.getFileName().lexically_relative(MN_PROJECT_ROOT).generic_string() + ":" + std::to_string(source.getLineNumber());
+    row[m_columns.m_function] = source.getFunctionName();
+
     row[m_columns.m_message] = formatMessage(message.getPieces());
 }
 
@@ -336,6 +381,8 @@ bool MapNormalizer::GUI::LogViewerWindow::shouldBeVisible(const Gtk::TreeRow& ro
 {
     const Glib::ustring& row_level = row[m_columns.m_level];
     const Glib::ustring& row_timestamp_str = row[m_columns.m_timestamp];
+    const Glib::ustring& row_module_str = row[m_columns.m_module];
+    const Glib::ustring& row_filename_line_str = row[m_columns.m_filename_line];
     const Glib::ustring& row_message = row[m_columns.m_message];
 
     // Check each individual filter in turn
@@ -369,6 +416,28 @@ bool MapNormalizer::GUI::LogViewerWindow::shouldBeVisible(const Gtk::TreeRow& ro
         }
     }
 
+    // Modules
+    if(const auto& module_filter = m_module_search.get_text();
+       !module_filter.empty() && row_module_str.find(module_filter) == std::string::npos)
+    {
+        return false;
+    }
+
+    // Filename
+    if(const auto& filename_filter = m_filename_search.get_text();
+       !filename_filter.empty())
+    {
+        // Find the filename and line number components for the text
+        auto delim_text = row_filename_line_str.find(':');
+        auto filename_text = row_filename_line_str.substr(0, delim_text);
+
+        // Check the filename
+        if(filename_text.find(filename_filter) == std::string::npos) {
+            return false;
+        }
+    }
+
+    // Message Text
     if(const auto& text_filter = m_message_search.get_text();
        !text_filter.empty() && row_message.find(text_filter) == std::string::npos)
     {
