@@ -67,7 +67,8 @@ bool MapNormalizer::Log::outputToStream(const Message& message,
                                         bool do_formatting,
                                         bool do_prefix,
                                         const std::function<std::ostream&(uint8_t)>& get_ostream,
-                                        bool include_timestamp)
+                                        bool include_timestamp,
+                                        bool include_source_info)
 {
     const char* default_color = "";
     std::ostream& out = get_ostream(static_cast<uint8_t>(message.getDebugLevel()));
@@ -106,18 +107,21 @@ bool MapNormalizer::Log::outputToStream(const Message& message,
     if(do_prefix) {
         out << "["  << message.getDebugLevel();
 
-        if(auto mod_path = message.getSource().getModulePath(); !mod_path.empty())
-        {
-            out << ":"  << mod_path.filename().generic_string();
-            if(!message.getSource().getFileName().empty()) {
-                out << ", ";
+        if(include_source_info) {
+            if(auto mod_path = message.getSource().getModulePath(); !mod_path.empty())
+            {
+                out << ":"  << mod_path.filename().generic_string();
+                if(!message.getSource().getFileName().empty()) {
+                    out << ", ";
+                }
+            }
+            if(auto filename = message.getSource().getFileName(); !filename.empty())
+            {
+                out << filename.filename().generic_string()
+                    << "@"  << message.getSource().getLineNumber();
             }
         }
-        if(auto filename = message.getSource().getFileName(); !filename.empty())
-        {
-            out << filename.filename().generic_string()
-                << "@"  << message.getSource().getLineNumber();
-        }
+
         out << "]";
     }
 

@@ -36,9 +36,9 @@ TEST(LogTests, SourceTests) {
 
     // module name will be different depending on which system we are targetting
 #ifdef WIN32
-    EXPECT_EQ(source.getModulePath(), "");
+    EXPECT_EQ(source.getModulePath().filename(), "unit_tests.exe");
 #else
-    EXPECT_EQ(source.getModulePath(), "");
+    EXPECT_EQ(source.getModulePath().filename(), "unit_tests");
 #endif
 
     EXPECT_EQ(source.getFileName(), __FILE__);
@@ -231,7 +231,7 @@ TEST(LogTests, ANSIOutputTests) {
                         return info_ss;
 #endif
                 }
-            });
+            }, false, false);
     });
 
     // Write all of the messages
