@@ -35,7 +35,7 @@ namespace MapNormalizer::Log {
             uint32_t m_line_number;
     };
 
-    std::filesystem::path getModulePath(void*);
+    std::filesystem::path getModulePath();
 }
 
 # ifdef WIN32
@@ -48,10 +48,9 @@ namespace MapNormalizer::Log {
  * @brief Generates a MapNormalizer::Log::Source object for the point it was
  *        called from.
  */
-# define MN_LOG_SOURCE() [](auto&& func_name) {                                \
-    char _; /* Blank stack variable for module information */                  \
-    return MapNormalizer::Log::Source(                                         \
-        MapNormalizer::Log::getModulePath(&_), __FILE__, func_name, __LINE__); \
+# define MN_LOG_SOURCE() [](auto&& func_name) {                              \
+    return MapNormalizer::Log::Source(                                       \
+        MapNormalizer::Log::getModulePath(), __FILE__, func_name, __LINE__); \
 }(FUNC_NAME)
 
 #endif

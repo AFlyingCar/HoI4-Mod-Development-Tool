@@ -42,10 +42,16 @@ bool MapNormalizer::Log::Source::operator==(const Source& other) const {
            m_line_number == other.m_line_number;
 }
 
-std::filesystem::path MapNormalizer::Log::getModulePath(void* address) {
+std::filesystem::path MapNormalizer::Log::getModulePath() {
 #ifdef WIN32
+# ifdef _MSC_VER
+#  define RETURN_ADDRESS() _ReturnAddress()
+# else
+#  define RETURN_ADDRESS() __builtin_return_address(0)
+# endif
+
     if(HMODULE handle; GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
-                                         reinterpret_cast<LPCSTR>(address),
+                                         reinterpret_cast<LPCSTR>(RETURN_ADDRESS()),
                                          &handle))
     {
         CHAR filename[MAX_PATH];
@@ -56,9 +62,7 @@ std::filesystem::path MapNormalizer::Log::getModulePath(void* address) {
 #else
     // Get the calling function and find out which module that is a part of
     //  https://stackoverflow.com/a/2156531
-    address = __builtin_return_address(0);
-
-    if(Dl_info info; dladdr(address, &info) != 0) {
+    if(Dl_info info; dladdr(__builtin_return_address(0), &info) != 0) {
         return info.dli_fname;
     }
 #endif
