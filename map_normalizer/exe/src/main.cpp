@@ -77,15 +77,11 @@ int main(int argc, char** argv) {
     std::ios_base::sync_with_stdio(false);
     std::cout.setf(std::ios::unitbuf);
 
-    std::shared_ptr<bool> is_exiting(new bool(false));
-
     // First, we must register the console output function
-    bool* quiet = nullptr;
-    bool* verbose = nullptr;
+    std::shared_ptr<bool> quiet(new bool(false));
+    std::shared_ptr<bool> verbose(new bool(false));
     MapNormalizer::Log::Logger::registerOutputFunction(
-        [quiet, verbose, is_exiting](const MapNormalizer::Log::Message& message) -> bool {
-            if(is_exiting && *is_exiting) return true;
-
+        [quiet, verbose](const MapNormalizer::Log::Message& message) -> bool {
             bool is_quiet = quiet != nullptr && *quiet;
             bool is_verbose = verbose != nullptr && *verbose;
 
@@ -167,15 +163,9 @@ int main(int argc, char** argv) {
             break;
     }
 
-    quiet = &MapNormalizer::prog_opts.quiet;
-    verbose = &MapNormalizer::prog_opts.verbose;
+    *quiet = MapNormalizer::prog_opts.quiet;
+    *verbose = MapNormalizer::prog_opts.verbose;
 
-    auto result = MapNormalizer::runApplication();
-
-    // Disable all other log outputs, and enable one that simply prints to the console
-    *is_exiting = true;
-    MapNormalizer::Log::Logger::registerOutputFunction(MapNormalizer::Log::outputWithFormatting);
-
-    return result;
+    return MapNormalizer::runApplication();
 }
 
