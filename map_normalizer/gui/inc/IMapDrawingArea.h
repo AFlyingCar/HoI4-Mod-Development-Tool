@@ -48,6 +48,11 @@ namespace MapNormalizer::GUI {
             bool hasData() const;
 
             virtual void graphicsUpdateCallback(const Rectangle&) = 0;
+            virtual Gtk::Widget* self() = 0;
+
+            virtual void queueDraw() = 0;
+            virtual Gtk::Widget* getParent() = 0;
+            virtual Glib::RefPtr<Gdk::Window> getWindow() = 0;
 
             void setOnProvinceSelectCallback(const SelectionCallback&);
             void setOnMultiProvinceSelectionCallback(const SelectionCallback&);
@@ -71,8 +76,6 @@ namespace MapNormalizer::GUI {
 
             const std::optional<SelectionInfo>& getSelection() const;
             std::optional<SelectionInfo>& getSelection();
-
-            virtual Gtk::Widget* getParent() = 0;
 
         private:
             const unsigned char* m_graphics_data;
@@ -103,6 +106,18 @@ namespace MapNormalizer::GUI {
 
             virtual Gtk::Widget* getParent() override final {
                 return BaseGtkWidget::get_parent();
+            }
+
+            virtual Glib::RefPtr<Gdk::Window> getWindow() override final {
+                return BaseGtkWidget::get_window();
+            }
+
+            virtual void queueDraw() override final {
+                BaseGtkWidget::queue_draw();
+            }
+
+            virtual Gtk::Widget* self() override final {
+                return this;
             }
 
         protected:

@@ -20,6 +20,7 @@
 #include "ProgressBarDialog.h"
 #include "NewProjectDialog.h"
 #include "Driver.h"
+#include "MapDrawingArea.h"
 
 /**
  * @brief Constructs the main window.
@@ -186,7 +187,7 @@ bool MapNormalizer::GUI::MainWindow::initializeWidgets() {
                 m_province_properties_pane->setProvince(nullptr, null_data);
 
                 m_drawing_area->setSelection();
-                m_drawing_area->queue_draw();
+                m_drawing_area->queueDraw();
             }
         }
 
@@ -233,7 +234,7 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                 m_province_properties_pane->setProvince(nullptr, null_data);
 
                 m_drawing_area->setSelection();
-                m_drawing_area->queue_draw();
+                m_drawing_area->queueDraw();
 
                 return;
             }
@@ -254,7 +255,7 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                 m_province_properties_pane->setProvince(province, preview_data);
 
                 m_drawing_area->setSelection({preview_data, province->bounding_box});
-                m_drawing_area->queue_draw();
+                m_drawing_area->queueDraw();
             }
         }
     });
@@ -327,7 +328,7 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
     });
 
     // Place the drawing area in a scrollable window
-    drawing_window->add(*drawing_area);
+    drawing_window->add(*drawing_area->self());
     drawing_window->show_all();
 }
 
@@ -458,8 +459,8 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
 
         // Make sure that the drawing area is sized correctly to draw the entire
         //  image
-        m_drawing_area->get_window()->resize(image->info_header.width,
-                                             image->info_header.height);
+        m_drawing_area->getWindow()->resize(image->info_header.width,
+                                            image->info_header.height);
 
         m_drawing_area->setData(image, graphics_data);
 
@@ -690,7 +691,7 @@ void MapNormalizer::GUI::MainWindow::openProject() {
 
     m_drawing_area->setData(map_project.getImage(),
                             map_project.getGraphicsData());
-    m_drawing_area->queue_draw();
+    m_drawing_area->queueDraw();
 
     // We no longer need to own the project, so give it to the Driver
     Driver::getInstance().setProject(std::move(project));
@@ -716,7 +717,7 @@ void MapNormalizer::GUI::MainWindow::onProjectClosed() {
     // Have the drawing area forget the data it was set to render
     m_drawing_area->setGraphicsData(nullptr);
     m_drawing_area->setImage(nullptr);
-    m_drawing_area->queue_draw();
+    m_drawing_area->queueDraw();
 
     // Disable all actions that can only be done on an opened project
     getAction("import_provincemap")->set_enabled(false);
@@ -729,7 +730,7 @@ void MapNormalizer::GUI::MainWindow::onProjectClosed() {
         m_province_properties_pane->setProvince(nullptr, null_data);
 
         m_drawing_area->setSelection();
-        m_drawing_area->queue_draw();
+        m_drawing_area->queueDraw();
     }
 }
 

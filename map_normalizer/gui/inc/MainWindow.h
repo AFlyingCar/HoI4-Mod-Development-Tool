@@ -20,7 +20,7 @@
 # include "Types.h"
 
 # include "Window.h"
-# include "MapDrawingArea.h"
+# include "IMapDrawingArea.h"
 # include "ProvincePropertiesPane.h"
 # include "LogViewerWindow.h"
 
@@ -81,7 +81,7 @@ namespace MapNormalizer::GUI {
             Gtk::Paned* m_paned;
 
             //! The DrawingArea that the map gets rendered to.
-            MapDrawingArea* m_drawing_area;
+            IMapDrawingAreaBase* m_drawing_area;
 
             //! A container holding properties for provinces
             std::unique_ptr<ProvincePropertiesPane> m_province_properties_pane;
