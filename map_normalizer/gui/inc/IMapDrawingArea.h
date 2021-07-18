@@ -5,6 +5,7 @@
 
 # include "gdkmm/event.h"
 # include "gtkmm/widget.h"
+# include "gtkmm/container.h"
 
 # include "BitMap.h"
 # include "MapProject.h"
