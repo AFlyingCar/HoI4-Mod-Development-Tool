@@ -123,6 +123,35 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
             m_log_viewer_window->present();
         }
     });
+
+    // Switch Renderers actions
+    {
+        auto usegl_action = add_action_bool("switch_renderers.usegl", [this]() {
+            // Change us to be enabled
+            auto self = lookup_action("switch_renderers.usegl");
+            self->change_state(true);
+
+            // Change the other actions to be disabled
+            auto usecairo = lookup_action("switch_renderers.usecairo");
+            usecairo->change_state(false);
+
+            // Swap over to use OpenGL
+        });
+
+        auto usecairo_action = add_action_bool("switch_renderers.usecairo", [this]()
+        {
+            // Change us to be enabled
+            auto self = lookup_action("switch_renderers.usecairo");
+            self->change_state(true);
+
+            // Change the other actions to be disabled
+            auto usegl = lookup_action("switch_renderers.usegl");
+            usegl->change_state(false);
+
+            // Swap over to use Cairo
+        });
+        usecairo_action->change_state(true);
+    }
 }
 
 /**
