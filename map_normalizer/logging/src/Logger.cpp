@@ -3,6 +3,7 @@
 
 #include <chrono>
 #include <future>
+#include <iostream>
 
 //! The vector of all output functions
 std::vector<MapNormalizer::Log::Logger::OutputFunction>
@@ -83,7 +84,7 @@ auto MapNormalizer::Log::Logger::getTimestampFromString(const std::string& time_
         {
             // TODO: This is a bit spammy. We should instead render text to the
             //  gui or something. But for now this will have to do.
-            std::cerr << "Failed to parse time '" << time_str << "' using format '" << timestamp_format, "'";
+            std::cerr << "Failed to parse time '" << time_str << "' using format '" << timestamp_format << "'" << std::endl;
         }
 
         last_failed_timestamp = time_str;
