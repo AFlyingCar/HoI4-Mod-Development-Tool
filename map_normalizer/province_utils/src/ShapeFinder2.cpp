@@ -97,9 +97,6 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
             uint32_t index = xyToIndex(m_image, x, y);
             uint32_t& label = m_label_matrix[index] = next_label;
 
-            if(prog_opts.debug)
-                WRITE_DEBUG("Pixel ", Point2D{x, y}," [", color, "]");
-
             // Skip this pixel if it is part of a border
             if(color == BORDER_COLOR) {
                 m_label_matrix[index] = 0; // Reset the label back to 0
@@ -155,10 +152,6 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
                     label = label_up;
                 }
             }
-
-            if(prog_opts.debug)
-                WRITE_DEBUG("Pixel ", Point2D{x, y}, " [", color, "] => ",
-                            std::to_string(label));
 
             // Only increment to the next label if we actually used this one
             if(label == next_label) {
