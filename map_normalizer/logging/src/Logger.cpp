@@ -81,7 +81,9 @@ auto MapNormalizer::Log::Logger::getTimestampFromString(const std::string& time_
         if(last_failed_timestamp != time_str ||
            last_failed_format != timestamp_format)
         {
-            WRITE_ERROR("Failed to parse time '", time_str, "' using format '", timestamp_format, "'");
+            // TODO: This is a bit spammy. We should instead render text to the
+            //  gui or something. But for now this will have to do.
+            std::cerr << "Failed to parse time '" << time_str << "' using format '" << timestamp_format, "'";
         }
 
         last_failed_timestamp = time_str;
