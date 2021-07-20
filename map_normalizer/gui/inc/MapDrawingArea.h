@@ -22,7 +22,7 @@ namespace MapNormalizer::GUI {
             MapDrawingArea() = default;
             virtual ~MapDrawingArea() = default;
 
-            virtual void graphicsUpdateCallback(const Rectangle&) override;
+            void rebuildImageCache();
 
         protected:
             virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>&) override;
@@ -30,7 +30,9 @@ namespace MapNormalizer::GUI {
             virtual void onZoom() override;
             virtual void init() override;
 
-            void rebuildImageCache();
+            virtual void onViewingModeChange(ViewingMode) override { };
+            virtual void onSetGraphicsData(const unsigned char*) override { };
+            virtual void onSetImage(const BitMap*) override { };
 
         private:
             /**

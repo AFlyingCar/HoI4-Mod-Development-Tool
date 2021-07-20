@@ -100,15 +100,6 @@ void MapNormalizer::GUI::MapDrawingArea::rebuildImageCache() {
     }
 }
 
-void MapNormalizer::GUI::MapDrawingArea::graphicsUpdateCallback(const Rectangle& rectangle)
-{
-    if(rectangle.w == 0 && rectangle.h == 0) {
-        return;
-    }
-
-    queue_draw_area(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
-}
-
 void MapNormalizer::GUI::MapDrawingArea::onZoom() {
     // Rebuild the cached image
     rebuildImageCache();
