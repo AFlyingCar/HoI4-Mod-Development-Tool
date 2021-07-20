@@ -22,11 +22,38 @@ bool MapNormalizer::GUI::IMapDrawingAreaBase::hasData() const {
 
 void MapNormalizer::GUI::IMapDrawingAreaBase::setGraphicsData(const unsigned char* data)
 {
+    onSetGraphicsData(data);
+
     m_graphics_data = data;
 }
 
 void MapNormalizer::GUI::IMapDrawingAreaBase::setImage(const BitMap* image) {
+    onSetImage(image);
+
     m_image = image;
+}
+
+/**
+ * @brief Changes the viewing mode and returns the old one
+ *
+ * @param viewing_mode The new viewing mode.
+ *
+ * @return The old viewing mode.
+ */
+auto MapNormalizer::GUI::IMapDrawingAreaBase::setViewingMode(ViewingMode viewing_mode)
+    -> ViewingMode
+{
+    onViewingModeChange(viewing_mode);
+
+    std::swap(m_viewing_mode, viewing_mode);
+
+    return viewing_mode;
+}
+
+auto MapNormalizer::GUI::IMapDrawingAreaBase::getViewingMode() const
+    -> ViewingMode
+{
+    return m_viewing_mode;
 }
 
 const unsigned char* MapNormalizer::GUI::IMapDrawingAreaBase::getGraphicsData() const

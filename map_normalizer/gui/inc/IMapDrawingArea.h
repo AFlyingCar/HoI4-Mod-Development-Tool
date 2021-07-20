@@ -36,6 +36,11 @@ namespace MapNormalizer::GUI {
                 OUT
             };
 
+            enum class ViewingMode {
+                PROVINCE_VIEW,
+                STATES_VIEW,
+            };
+
             IMapDrawingAreaBase();
             virtual ~IMapDrawingAreaBase() = default;
 
@@ -43,17 +48,22 @@ namespace MapNormalizer::GUI {
             void setImage(const BitMap*);
             void setData(const BitMap*, const unsigned char*);
 
+            ViewingMode setViewingMode(ViewingMode);
+
+            ViewingMode getViewingMode() const;
             const unsigned char* getGraphicsData() const;
             const BitMap* getImage() const;
 
             bool hasData() const;
 
             virtual void graphicsUpdateCallback(const Rectangle&) = 0;
-            virtual Gtk::Widget* self() = 0;
 
             virtual void queueDraw() = 0;
+            virtual Gtk::Widget* self() = 0;
             virtual Gtk::Widget* getParent() = 0;
             virtual Glib::RefPtr<Gdk::Window> getWindow() = 0;
+            virtual void hide() = 0;
+            virtual void show() = 0;
 
             void setOnProvinceSelectCallback(const SelectionCallback&);
             void setOnMultiProvinceSelectionCallback(const SelectionCallback&);
@@ -71,6 +81,10 @@ namespace MapNormalizer::GUI {
         protected:
             virtual void init() = 0;
             virtual void onZoom() = 0;
+
+            virtual void onViewingModeChange(ViewingMode) = 0;
+            virtual void onSetGraphicsData(const unsigned char*) = 0;
+            virtual void onSetImage(const BitMap*) = 0;
 
             const SelectionCallback& getOnSelect() const;
             const SelectionCallback& getOnMultiSelect() const;
@@ -93,6 +107,9 @@ namespace MapNormalizer::GUI {
 
             //! How much should the display be scaled.
             double m_scale_factor;
+
+            //! The current viewing mode
+            ViewingMode m_viewing_mode;
     };
 
     template<typename BaseGtkWidget>
@@ -117,8 +134,28 @@ namespace MapNormalizer::GUI {
                 BaseGtkWidget::queue_draw();
             }
 
+            virtual void hide() override final {
+                BaseGtkWidget::hide();
+            }
+
+            virtual void show() override final {
+                BaseGtkWidget::show();
+            }
+
             virtual Gtk::Widget* self() override final {
                 return this;
+            }
+
+            // NON-FINAL OVERRIDES
+
+            virtual void graphicsUpdateCallback(const Rectangle& rectangle) override
+            {
+                if(rectangle.w == 0 && rectangle.h == 0) {
+                    return;
+                }
+
+                BaseGtkWidget::queue_draw_area(rectangle.x, rectangle.y,
+                                               rectangle.w, rectangle.h);
             }
 
         protected:
