@@ -136,6 +136,15 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
             usecairo->change_state(false);
 
             // Swap over to use OpenGL
+            m_drawing_area->hide();
+            m_drawing_area = m_gl_drawing_area;
+            m_drawing_area->show();
+
+            // Make sure we update the drawing area with any new data it may have
+            //  missed
+            m_drawing_area->setImage(m_cairo_drawing_area->getImage());
+            m_drawing_area->setGraphicsData(m_cairo_drawing_area->getGraphicsData());
+            m_drawing_area->queueDraw();
         });
 
         auto usecairo_action = add_action_bool("switch_renderers.usecairo", [this]()
@@ -149,6 +158,19 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
             usegl->change_state(false);
 
             // Swap over to use Cairo
+            m_drawing_area->hide();
+            m_drawing_area = m_cairo_drawing_area;
+            m_drawing_area->show();
+
+            // Make sure we update the drawing area with any new data it may have
+            //  missed
+            m_drawing_area->setImage(m_gl_drawing_area->getImage());
+            m_drawing_area->setGraphicsData(m_gl_drawing_area->getGraphicsData());
+
+            // Special Cairo functions we need to call
+            m_cairo_drawing_area->rebuildImageCache();
+
+            m_drawing_area->queueDraw();
         });
         usecairo_action->change_state(true);
     }
@@ -244,72 +266,83 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
 
     // Setup the box+area for the map image to render
     auto drawing_window = addWidget<InterruptableScrolledWindow>();
-    auto drawing_area = m_drawing_area = new MapDrawingArea();
 
-    drawing_area->setOnProvinceSelectCallback([this](uint32_t x, uint32_t y) {
-        if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
-            auto& project = opt_project->get();
-            auto& map_project = project.getMapProject();
-
-            auto image = project.getMapProject().getImage();
-            auto lmatrix = project.getMapProject().getLabelMatrix();
-
-            // If the click happens outside of the bounds of the image, then
-            //   deselect the province
-            if(x > image->info_header.width || y > image->info_header.height) {
-                map_project.selectProvince(-1);
-
-                ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
-                m_province_properties_pane->setProvince(nullptr, null_data);
-
-                m_drawing_area->setSelection();
-                m_drawing_area->queueDraw();
-
-                return;
-            }
-
-            // Get the label for the pixel that got clicked on
-            auto label = lmatrix[xyToIndex(image, x, y)];
-
-            WRITE_DEBUG("Selecting province with ID ", label);
-            map_project.selectProvince(label - 1);
-
-            // If the label is a valid province, then go ahead and mark it as
-            //  selected everywhere that needs it to be marked as such
-            if(auto opt_selected = project.getMapProject().getSelectedProvince();
-               m_province_properties_pane != nullptr && opt_selected)
-            {
-                auto* province = &opt_selected->get();
-                auto preview_data = map_project.getPreviewData(province);
-                m_province_properties_pane->setProvince(province, preview_data);
-
-                m_drawing_area->setSelection({preview_data, province->bounding_box});
-                m_drawing_area->queueDraw();
-            }
-        }
-    });
-
-    drawing_area->setOnMultiProvinceSelectionCallback([](uint32_t x, uint32_t y)
+    auto setup_drawing_area = [this](std::shared_ptr<IMapDrawingAreaBase> drawing_area)
     {
-        if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
-            auto& project = opt_project->get();
+        drawing_area->setOnProvinceSelectCallback([this](uint32_t x, uint32_t y) {
+            if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+                auto& project = opt_project->get();
+                auto& map_project = project.getMapProject();
 
-            auto image = project.getMapProject().getImage();
-            auto lmatrix = project.getMapProject().getLabelMatrix();
+                auto image = project.getMapProject().getImage();
+                auto lmatrix = project.getMapProject().getLabelMatrix();
 
-            // Multiselect out of bounds will simply not add to the selections
-            if(x > image->info_header.width || y > image->info_header.height) {
-                return;
+                // If the click happens outside of the bounds of the image, then
+                //   deselect the province
+                if(x > image->info_header.width || y > image->info_header.height) {
+                    map_project.selectProvince(-1);
+
+                    ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
+                    m_province_properties_pane->setProvince(nullptr, null_data);
+
+                    m_drawing_area->setSelection();
+                    m_drawing_area->queueDraw();
+
+                    return;
+                }
+
+                // Get the label for the pixel that got clicked on
+                auto label = lmatrix[xyToIndex(image, x, y)];
+
+                WRITE_DEBUG("Selecting province with ID ", label);
+                map_project.selectProvince(label - 1);
+
+                // If the label is a valid province, then go ahead and mark it as
+                //  selected everywhere that needs it to be marked as such
+                if(auto opt_selected = project.getMapProject().getSelectedProvince();
+                   m_province_properties_pane != nullptr && opt_selected)
+                {
+                    auto* province = &opt_selected->get();
+                    auto preview_data = map_project.getPreviewData(province);
+                    m_province_properties_pane->setProvince(province, preview_data);
+
+                    m_drawing_area->setSelection({preview_data, province->bounding_box});
+                    m_drawing_area->queueDraw();
+                }
             }
+        });
 
-            auto label = lmatrix[xyToIndex(image, x, y)];
+        drawing_area->setOnMultiProvinceSelectionCallback([](uint32_t x, uint32_t y)
+        {
+            if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+                auto& project = opt_project->get();
 
-            // TODO: get the current province and add it to some sort of
-            //   grouping that can be acted upon
+                auto image = project.getMapProject().getImage();
+                auto lmatrix = project.getMapProject().getLabelMatrix();
 
-            project.getMapProject().selectProvince(label - 1);
-        }
-    });
+                // Multiselect out of bounds will simply not add to the selections
+                if(x > image->info_header.width || y > image->info_header.height) {
+                    return;
+                }
+
+                auto label = lmatrix[xyToIndex(image, x, y)];
+
+                // TODO: get the current province and add it to some sort of
+                //   grouping that can be acted upon
+
+                project.getMapProject().selectProvince(label - 1);
+            }
+        });
+    };
+
+    // Setup each drawing area type
+    m_gl_drawing_area.reset(new GL::MapDrawingArea);
+    setup_drawing_area(m_gl_drawing_area);
+    m_cairo_drawing_area.reset(new MapDrawingArea);
+    setup_drawing_area(m_cairo_drawing_area);
+
+    // Setup initially enabled drawing area
+    auto drawing_area = m_drawing_area = m_cairo_drawing_area;
 
     // Set up a signal callback to zoom in and out when performing CTRL+ScrollWhell
     drawing_window->signalOnScroll().connect([drawing_area](GdkEventScroll* event)
