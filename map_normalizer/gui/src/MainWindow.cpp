@@ -138,6 +138,12 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
             // Swap over to use OpenGL
             m_drawing_area->hide();
             m_drawing_area = m_gl_drawing_area;
+
+            // Replace the widget that is gettiing rendered
+            auto* drawing_window = getNamedWidget<Gtk::Bin>("drawing_window");
+            drawing_window->remove();
+            drawing_window->add(*m_gl_drawing_area);
+
             m_drawing_area->show();
 
             // Make sure we update the drawing area with any new data it may have
@@ -160,6 +166,12 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
             // Swap over to use Cairo
             m_drawing_area->hide();
             m_drawing_area = m_cairo_drawing_area;
+
+            // Replace the widget that is gettiing rendered
+            auto* drawing_window = getNamedWidget<Gtk::Bin>("drawing_window");
+            drawing_window->remove();
+            drawing_window->add(*m_cairo_drawing_area);
+
             m_drawing_area->show();
 
             // Make sure we update the drawing area with any new data it may have
@@ -265,7 +277,8 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
     m_paned->pack1(*std::get<Gtk::Frame*>(m_active_child = new Gtk::Frame()), true, false);
 
     // Setup the box+area for the map image to render
-    auto drawing_window = addWidget<InterruptableScrolledWindow>();
+    auto drawing_window = nameWidget("drawing_window",
+                                     addWidget<InterruptableScrolledWindow>());
 
     auto setup_drawing_area = [this](std::shared_ptr<IMapDrawingAreaBase> drawing_area)
     {
@@ -342,7 +355,12 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
     setup_drawing_area(m_cairo_drawing_area);
 
     // Setup initially enabled drawing area
-    auto drawing_area = m_drawing_area = m_cairo_drawing_area;
+    auto drawing_area = m_drawing_area =
+#if MN_DEFAULT_RENDERING_TO_GL
+        m_gl_drawing_area;
+#else
+        m_cairo_drawing_area;
+#endif
 
     // Set up a signal callback to zoom in and out when performing CTRL+ScrollWhell
     drawing_window->signalOnScroll().connect([drawing_area](GdkEventScroll* event)
