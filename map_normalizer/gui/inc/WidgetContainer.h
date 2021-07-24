@@ -36,6 +36,25 @@ namespace MapNormalizer::GUI {
             }
 
             virtual void addWidgetToParent(Gtk::Widget&) = 0;
+
+            template<typename W>
+            W* nameWidget(const std::string& name, W* widget) {
+                m_named_widgets.insert({name, static_cast<Gtk::Widget*>(widget)});
+
+                return widget;
+            }
+
+            template<typename W>
+            W* getNamedWidget(const std::string& name) {
+                if(m_named_widgets.count(name) != 0) {
+                    return dynamic_cast<W*>(m_named_widgets.at(name));
+                } else {
+                    return nullptr;
+                }
+            }
+
+        private:
+            std::unordered_map<std::string, Gtk::Widget*> m_named_widgets;
     };
 }
 
