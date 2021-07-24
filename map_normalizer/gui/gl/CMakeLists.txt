@@ -28,6 +28,7 @@ add_library(gui_gl STATIC
     src/Texture.cpp
 
     src/MapDrawingAreaGL.cpp
+    src/GLEWInitializationException.cpp
 )
 
 target_include_directories(gui_gl PUBLIC inc)
