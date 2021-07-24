@@ -4,6 +4,7 @@
 # include <initializer_list>
 # include <vector>
 # include <memory>
+# include <any>
 
 # include "Shader.h"
 
@@ -31,6 +32,8 @@ namespace MapNormalizer::GUI::GL {
             Program& operator=(const Program&);
 
             void use(bool = true);
+
+            void uniform(const std::string&, const std::any&) /* throws */;
 
         private:
             void attachShader(const Shader&);
