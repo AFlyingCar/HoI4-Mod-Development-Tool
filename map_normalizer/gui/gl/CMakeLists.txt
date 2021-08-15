@@ -11,21 +11,32 @@ add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/GLShaderSources.h"
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     )
 
+# Generate GLXMacro.h
+add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/GLXMacros.h"
+    COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/genGLXMacrosHeader.py" "${GLEW_INCLUDE_DIRS}" "${CMAKE_BINARY_DIR}"
+    DEPENDS "${CMAKE_SOURCE_DIR}/tools/genGLXMacrosHeader.py"
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    )
+
 # Yeah, I know the CMake documentation _says_ this isn't necessary anymore
 #   https://cmake.org/cmake/help/latest/prop_sf/OBJECT_DEPENDS.html
-# But for some reason I can't figure out, src/Constants.cpp doesn't get rebuilt
-#  when ToolsVersion.h gets regenerated without this, so just set the property 
+# But for some reason I can't figure out, src/MapDrawingAreaGL.cpp doesn't get rebuilt
+#  when GLShaderSources.h gets regenerated without this, so just set the property 
 #  anyway, the documentation is clearly lying to me.
 set_source_files_properties(src/MapDrawingAreaGL.cpp
     PROPERTIES
     OBJECT_DEPENDS "${CMAKE_BINARY_DIR}/GLShaderSources.h"
     )
-
+set_source_files_properties(src/GLUtils.cpp
+    PROPERTIES
+    OBJECT_DEPENDS "${CMAKE_BINARY_DIR}/GLXMacros.h"
+    )
 
 add_library(gui_gl STATIC
     src/Program.cpp
     src/Shader.cpp
     src/Texture.cpp
+    src/GLUtils.cpp
 
     src/MapDrawingAreaGL.cpp
     src/GLEWInitializationException.cpp
