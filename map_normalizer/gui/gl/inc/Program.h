@@ -33,7 +33,7 @@ namespace MapNormalizer::GUI::GL {
 
             void use(bool = true);
 
-            void uniform(const std::string&, const std::any&) /* throws */;
+            bool uniform(const std::string&, const std::any&) /* throws */;
 
         private:
             void attachShader(const Shader&);

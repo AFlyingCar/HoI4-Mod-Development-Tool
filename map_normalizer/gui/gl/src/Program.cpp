@@ -13,6 +13,8 @@
 
 #include "Logger.h"
 
+#include "GLUtils.h"
+
 MapNormalizer::GUI::GL::Program::LinkException::LinkException(const std::string& reason):
     m_reason(reason)
 { }
@@ -57,6 +59,7 @@ MapNormalizer::GUI::GL::Program::~Program() {
 
     if(*m_ref_count <= 0) {
         glDeleteProgram(m_program_id);
+        MN_LOG_GL_ERRORS();
     }
 }
 
@@ -80,14 +83,17 @@ void MapNormalizer::GUI::GL::Program::use(bool load) {
     } else {
         glUseProgram(0);
     }
+    MN_LOG_GL_ERRORS();
 }
 
 void MapNormalizer::GUI::GL::Program::attachShader(const Shader& shader) {
     glAttachShader(m_program_id, shader.getID());
+    MN_LOG_GL_ERRORS();
 }
 
 void MapNormalizer::GUI::GL::Program::linkProgram() {
     glLinkProgram(m_program_id);
+    MN_LOG_GL_ERRORS();
 
     int status;
     glGetProgramiv(m_program_id, GL_LINK_STATUS, &status);
@@ -110,11 +116,15 @@ void MapNormalizer::GUI::GL::Program::linkProgram() {
  *
  * @param uniform_name The name of the uniform to set
  * @param value The value to set
+ *
+ * @return true on success, false otherwise
  */
-void MapNormalizer::GUI::GL::Program::uniform(const std::string& uniform_name,
+bool MapNormalizer::GUI::GL::Program::uniform(const std::string& uniform_name,
                                               const std::any& value)
 {
     auto uniform_loc = glGetUniformLocation(m_program_id, uniform_name.c_str());
+
+    writeDebug<true>("glUniform*(", uniform_loc, ", ${...} [typeid=", value.type().name(), "])");
 
     if(value.type() == typeid(bool)) {                                 // bool
         glUniform1i(uniform_loc, std::any_cast<bool>(value));
@@ -144,5 +154,12 @@ void MapNormalizer::GUI::GL::Program::uniform(const std::string& uniform_name,
         writeError<true>("Unsupported type ", value.type().name());
         // TODO: Should we return a value on error? throw?
     }
+
+    if(MN_LOG_GL_ERRORS() >= 1) {
+        writeError<true>("Failed to set uniform ", uniform_name);
+        return false;
+    }
+
+    return true;
 }
 
