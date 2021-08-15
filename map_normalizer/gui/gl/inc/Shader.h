@@ -14,7 +14,7 @@ namespace MapNormalizer::GUI::GL {
 
             class CompileException: public std::exception {
                 public:
-                    CompileException(Type, const std::string&);
+                    CompileException(Type, const std::string&, const std::string&);
 
                     virtual const char* what() const noexcept override;
 
@@ -22,7 +22,9 @@ namespace MapNormalizer::GUI::GL {
 
                 private:
                     Type m_type;
+                    std::string m_source;
                     std::string m_reason;
+                    std::string m_what;
             };
 
 
@@ -42,6 +44,10 @@ namespace MapNormalizer::GUI::GL {
 
             uint32_t m_shader_id;
     };
+}
+
+namespace std {
+    string to_string(const MapNormalizer::GUI::GL::Shader::Type&);
 }
 
 #endif

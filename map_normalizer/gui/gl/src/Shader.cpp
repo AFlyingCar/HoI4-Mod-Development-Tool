@@ -1,16 +1,25 @@
 #include "Shader.h"
 
+#include <sstream>
+
 #include <GL/glew.h>
 
 MapNormalizer::GUI::GL::Shader::CompileException::CompileException(Type type,
+                                                                   const std::string& source,
                                                                    const std::string& reason):
     m_type(type),
+    m_source(source),
     m_reason(reason)
-{ }
+{
+    std::stringstream what;
+    what << std::to_string(m_type) << " failure: " << m_reason << "\n```"
+         << m_source << "\n```";
+    m_what = what.str();
+}
 
 const char* MapNormalizer::GUI::GL::Shader::CompileException::what() const noexcept
 {
-    return m_reason.c_str();
+    return m_what.c_str();
 }
 
 auto MapNormalizer::GUI::GL::Shader::CompileException::getType() const noexcept
@@ -21,10 +30,15 @@ auto MapNormalizer::GUI::GL::Shader::CompileException::getType() const noexcept
 
 
 MapNormalizer::GUI::GL::Shader::Shader(Type type, const std::string& source):
-    m_ref_count(new uint32_t{1}),
-    m_shader_id(glCreateShader(typeToGL(type)))
+    m_ref_count(new uint32_t{1}), m_shader_id(-1)
 {
+    m_shader_id = glCreateShader(typeToGL(type));
+
     int status;
+    auto* source_cstr = source.c_str();
+    glShaderSource(m_shader_id, 1, &(source_cstr), nullptr);
+    glCompileShader(m_shader_id);
+
     glGetShaderiv(m_shader_id, GL_COMPILE_STATUS, &status);
     if(status == GL_FALSE) {
         int log_len;
@@ -35,7 +49,7 @@ MapNormalizer::GUI::GL::Shader::Shader(Type type, const std::string& source):
 
         glDeleteShader(m_shader_id);
 
-        throw CompileException(type, info_log);
+        throw CompileException(type, source, info_log);
     }
 }
 
@@ -71,6 +85,17 @@ uint32_t MapNormalizer::GUI::GL::Shader::typeToGL(Type type) {
             return GL_FRAGMENT_SHADER;
         default:
             return -1;
+    }
+}
+
+std::string std::to_string(const MapNormalizer::GUI::GL::Shader::Type& type) {
+    switch(type) {
+        case MapNormalizer::GUI::GL::Shader::Type::VERTEX:
+            return "Vertex";
+        case MapNormalizer::GUI::GL::Shader::Type::FRAGMENT:
+            return "Fragment";
+        default:
+            return "<INVALID>";
     }
 }
 
