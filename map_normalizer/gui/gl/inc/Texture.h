@@ -20,6 +20,14 @@ namespace MapNormalizer::GUI::GL {
                     std::string m_reason;
             };
 
+            enum class Unit {
+                TEX_UNIT0, TEX_UNIT1, TEX_UNIT2, TEX_UNIT3, TEX_UNIT4,
+                TEX_UNIT5, TEX_UNIT6, TEX_UNIT7, TEX_UNIT8, TEX_UNIT9,
+                TEX_UNIT10, TEX_UNIT11, TEX_UNIT12, TEX_UNIT13, TEX_UNIT14,
+                TEX_UNIT15,
+
+                INVALID = -1
+            };
 
             enum class Target {
                 TEX_1D,
@@ -59,6 +67,7 @@ namespace MapNormalizer::GUI::GL {
 
             void setWrapping(Axis, WrapMode);
             void setFiltering(FilterType, Filter);
+            void setTextureUnitID(Unit);
 
             template<typename T>
             void setTextureData(Format format, uint32_t width, uint32_t height, const T* data) {
@@ -66,10 +75,11 @@ namespace MapNormalizer::GUI::GL {
                                typeToDataType(typeid(T)), data);
             }
 
-            void activate();
-            void deactivate();
+            uint32_t getTextureUnitID();
+            uint32_t getTextureID();
 
-            static std::queue<uint32_t> getAvailableTexUnitIds();
+            void bind(bool = true);
+            uint32_t activate();
 
         protected:
             static uint32_t typeToDataType(const std::type_info&);
@@ -80,17 +90,12 @@ namespace MapNormalizer::GUI::GL {
             static uint32_t wrapToGLWrap(WrapMode);
             static uint32_t filterToGLFilter(Filter);
             static uint32_t filterTypeToGLFilterType(FilterType);
+            static uint32_t unitToGLUnit(Unit);
 
             void setTextureData(Format, uint32_t, uint32_t, uint32_t,
                                 const void*);
 
         private:
-            static constexpr uint32_t INVALID_TEXTURE_UNIT_ID = -1;
-
-            static std::queue<uint32_t> available_tex_unit_ids;
-            static uint32_t getNextAvailableTextureUnitID();
-            static void freeTextureUnitID(uint32_t&);
-
             uint32_t m_texture_id;
             uint32_t m_texture_unit;
             Target m_target;

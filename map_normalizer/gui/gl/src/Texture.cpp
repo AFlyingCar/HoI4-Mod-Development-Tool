@@ -3,28 +3,10 @@
 
 #include <GL/glew.h>
 
+#include "Logger.h"
 #include "PreprocessorUtils.h"
 
-std::queue<uint32_t> MapNormalizer::GUI::GL::Texture::available_tex_unit_ids;
-
-ON_STATIC_INIT_BEGIN_BLOCK {
-    MapNormalizer::GUI::GL::Texture::getAvailableTexUnitIds().push(GL_TEXTURE0);
-    MapNormalizer::GUI::GL::Texture::getAvailableTexUnitIds().push(GL_TEXTURE1);
-    MapNormalizer::GUI::GL::Texture::getAvailableTexUnitIds().push(GL_TEXTURE2);
-    MapNormalizer::GUI::GL::Texture::getAvailableTexUnitIds().push(GL_TEXTURE3);
-    MapNormalizer::GUI::GL::Texture::getAvailableTexUnitIds().push(GL_TEXTURE4);
-    MapNormalizer::GUI::GL::Texture::getAvailableTexUnitIds().push(GL_TEXTURE5);
-    MapNormalizer::GUI::GL::Texture::getAvailableTexUnitIds().push(GL_TEXTURE6);
-    MapNormalizer::GUI::GL::Texture::getAvailableTexUnitIds().push(GL_TEXTURE7);
-    MapNormalizer::GUI::GL::Texture::getAvailableTexUnitIds().push(GL_TEXTURE8);
-    MapNormalizer::GUI::GL::Texture::getAvailableTexUnitIds().push(GL_TEXTURE9);
-    MapNormalizer::GUI::GL::Texture::getAvailableTexUnitIds().push(GL_TEXTURE10);
-    MapNormalizer::GUI::GL::Texture::getAvailableTexUnitIds().push(GL_TEXTURE11);
-    MapNormalizer::GUI::GL::Texture::getAvailableTexUnitIds().push(GL_TEXTURE12);
-    MapNormalizer::GUI::GL::Texture::getAvailableTexUnitIds().push(GL_TEXTURE13);
-    MapNormalizer::GUI::GL::Texture::getAvailableTexUnitIds().push(GL_TEXTURE14);
-    MapNormalizer::GUI::GL::Texture::getAvailableTexUnitIds().push(GL_TEXTURE15);
-} ON_STATIC_INIT_END_BLOCK;
+#include "GLUtils.h"
 
 MapNormalizer::GUI::GL::Texture::TextureActivationFailure::TextureActivationFailure(const std::string& reason):
     m_reason(reason)
@@ -35,12 +17,18 @@ const char* MapNormalizer::GUI::GL::Texture::TextureActivationFailure::what() co
     return m_reason.c_str();
 }
 
-MapNormalizer::GUI::GL::Texture::Texture(): m_texture_id(-1) {
+MapNormalizer::GUI::GL::Texture::Texture(): m_texture_id(-1),
+                                            m_texture_unit(-1),
+                                            m_target(Target::TEX_2D)
+{
+    writeDebug<true>("glGenTextures(1, ", &m_texture_id, ')');
     glGenTextures(1, &m_texture_id);
+    MN_LOG_GL_ERRORS();
 }
 
 MapNormalizer::GUI::GL::Texture::~Texture() {
     glDeleteTextures(1, &m_texture_id);
+    MN_LOG_GL_ERRORS();
 }
 
 void MapNormalizer::GUI::GL::Texture::setWrapping(Axis axis,
@@ -48,8 +36,10 @@ void MapNormalizer::GUI::GL::Texture::setWrapping(Axis axis,
 {
     auto gl_target = targetToGLTarget(m_target);
 
-    glBindTexture(gl_target, m_texture_id);
+    bind();
+
     glTexParameteri(gl_target, axisToGLAxis(axis), wrapToGLWrap(wrap));
+    MN_LOG_GL_ERRORS();
 }
 
 void MapNormalizer::GUI::GL::Texture::setFiltering(FilterType ftype,
@@ -57,9 +47,15 @@ void MapNormalizer::GUI::GL::Texture::setFiltering(FilterType ftype,
 {
     auto gl_target = targetToGLTarget(m_target);
 
-    glBindTexture(gl_target, m_texture_id);
+    bind();
+
     glTexParameteri(gl_target, filterTypeToGLFilterType(ftype),
                     filterToGLFilter(filter));
+    MN_LOG_GL_ERRORS();
+}
+
+void MapNormalizer::GUI::GL::Texture::setTextureUnitID(Unit unit) {
+    m_texture_unit = unitToGLUnit(unit);
 }
 
 void MapNormalizer::GUI::GL::Texture::setTarget(Target target) {
@@ -75,45 +71,61 @@ void MapNormalizer::GUI::GL::Texture::setTextureData(Format format,
     auto gl_format = formatToGLFormat(format);
     auto gl_target = targetToGLTarget(m_target);
 
-    glBindTexture(gl_target, m_texture_id);
+    bind();
+
+    writeDebug<true>("glTexImage2D(", glEnumToStrings(gl_target).front(), ',', 0 /* mipmapping */, ',',
+                     glEnumToStrings(gl_format).front(), ',', width, ',', height, ',', 0, ',', glEnumToStrings(gl_format).front(),
+                     ',', glEnumToStrings(data_type).front(), ',', data, ')');
     glTexImage2D(gl_target, 0 /* mipmapping */,
                  gl_format, width, height, 0, gl_format, data_type, data);
+    MN_LOG_GL_ERRORS();
 }
 
-/**
- * @brief Reserves a texture unit id if one is not already reserved
- */
-void MapNormalizer::GUI::GL::Texture::activate() {
-    if(m_texture_unit == INVALID_TEXTURE_UNIT_ID) {
-        m_texture_unit = getNextAvailableTextureUnitID();
-    }
+uint32_t MapNormalizer::GUI::GL::Texture::getTextureUnitID() {
+    return m_texture_unit;
+}
 
+uint32_t MapNormalizer::GUI::GL::Texture::getTextureID() {
+    return m_texture_id;
+}
+
+void MapNormalizer::GUI::GL::Texture::bind(bool do_bind) {
     auto gl_target = targetToGLTarget(m_target);
 
-    glActiveTexture(m_texture_unit);
-    glBindTexture(gl_target, m_texture_id);
+    if(do_bind) {
+        writeDebug<true>("glBindTexture(", glEnumToStrings(gl_target).front(), ',', m_texture_id, ')');
+        glBindTexture(gl_target, m_texture_id);
+    } else {
+        writeDebug<true>("glBindTexture(", glEnumToStrings(gl_target).front(), ",0)");
+        glBindTexture(gl_target, 0);
+    }
+    MN_LOG_GL_ERRORS();
 }
 
-/**
- * @brief Frees up a texture unit
- */
-void MapNormalizer::GUI::GL::Texture::deactivate() {
-    freeTextureUnitID(m_texture_unit);
+uint32_t MapNormalizer::GUI::GL::Texture::activate() {
+    writeDebug<true>("glActiveTexture(", glEnumToStrings(m_texture_unit).front(), ')');
+    glActiveTexture(m_texture_unit);
+    MN_LOG_GL_ERRORS();
+
+    bind();
+
+    return m_texture_unit;
 }
 
 uint32_t MapNormalizer::GUI::GL::Texture::typeToDataType(const std::type_info& info)
 {
-    if(info == typeid(uint8_t*)) {
+    if(info == typeid(uint8_t) || info == typeid(unsigned char)) {
         return GL_UNSIGNED_BYTE;
-    } else if(info == typeid(uint16_t*)) {
+    } else if(info == typeid(uint16_t)) {
         return GL_UNSIGNED_SHORT;
-    } else if(info == typeid(uint32_t*)) {
+    } else if(info == typeid(uint32_t)) {
         return GL_UNSIGNED_INT;
-    } else if(info == typeid(float*)) {
+    } else if(info == typeid(float)) {
         return GL_FLOAT;
-    } else if(info == typeid(double*)) {
+    } else if(info == typeid(double)) {
         return GL_DOUBLE;
     } else {
+        writeError<true>("Invalid data type given: ", info.name());
         return -1;
     }
 }
@@ -157,6 +169,10 @@ uint32_t MapNormalizer::GUI::GL::Texture::wrapToGLWrap(WrapMode wrap) {
     }
 }
 
+uint32_t MapNormalizer::GUI::GL::Texture::unitToGLUnit(Unit unit) {
+    return static_cast<uint32_t>(unit) + GL_TEXTURE0;
+}
+
 uint32_t MapNormalizer::GUI::GL::Texture::filterToGLFilter(Filter filter) {
     return filter == Filter::NEAREST ? GL_NEAREST : GL_LINEAR;
 }
@@ -164,27 +180,5 @@ uint32_t MapNormalizer::GUI::GL::Texture::filterToGLFilter(Filter filter) {
 uint32_t MapNormalizer::GUI::GL::Texture::filterTypeToGLFilterType(FilterType ftype)
 {
     return ftype == FilterType::MAG ? GL_TEXTURE_MAG_FILTER : GL_TEXTURE_MIN_FILTER;
-}
-
-uint32_t MapNormalizer::GUI::GL::Texture::getNextAvailableTextureUnitID() {
-    if(available_tex_unit_ids.empty()) {
-        throw TextureActivationFailure("No more texture unit IDs are available.");
-    } else {
-        auto next_id = available_tex_unit_ids.front();
-        available_tex_unit_ids.pop();
-
-        return next_id;
-    }
-}
-
-void MapNormalizer::GUI::GL::Texture::freeTextureUnitID(uint32_t& tex_unit_id) {
-    if(tex_unit_id != INVALID_TEXTURE_UNIT_ID) {
-        available_tex_unit_ids.push(tex_unit_id);
-        tex_unit_id = INVALID_TEXTURE_UNIT_ID;
-    }
-}
-
-std::queue<uint32_t> MapNormalizer::GUI::GL::Texture::getAvailableTexUnitIds() {
-    return available_tex_unit_ids;
 }
 
