@@ -41,6 +41,8 @@ namespace MapNormalizer::GUI {
                 STATES_VIEW,
             };
 
+            constexpr static ViewingMode DEFAULT_VIEWING_MODE = ViewingMode::PROVINCE_VIEW;
+
             IMapDrawingAreaBase();
             virtual ~IMapDrawingAreaBase() = default;
 
@@ -83,8 +85,8 @@ namespace MapNormalizer::GUI {
             virtual void onZoom() = 0;
 
             virtual void onViewingModeChange(ViewingMode) = 0;
-            virtual void onSetGraphicsData(const unsigned char*) = 0;
-            virtual void onSetImage(const BitMap*) = 0;
+            virtual void onSetData(const BitMap*, const unsigned char*) = 0;
+            virtual void onShow() = 0;
 
             const SelectionCallback& getOnSelect() const;
             const SelectionCallback& getOnMultiSelect() const;
@@ -130,15 +132,13 @@ namespace MapNormalizer::GUI {
                 return BaseGtkWidget::get_window();
             }
 
-            virtual void queueDraw() override final {
-                BaseGtkWidget::queue_draw();
-            }
-
             virtual void hide() override final {
                 BaseGtkWidget::hide();
             }
 
             virtual void show() override final {
+                onShow();
+
                 BaseGtkWidget::show();
             }
 
@@ -147,6 +147,10 @@ namespace MapNormalizer::GUI {
             }
 
             // NON-FINAL OVERRIDES
+
+            virtual void queueDraw() override {
+                BaseGtkWidget::queue_draw();
+            }
 
             virtual void graphicsUpdateCallback(const Rectangle& rectangle) override
             {
