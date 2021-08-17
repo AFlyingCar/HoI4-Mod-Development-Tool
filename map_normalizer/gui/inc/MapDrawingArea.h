@@ -30,9 +30,10 @@ namespace MapNormalizer::GUI {
             virtual void onZoom() override;
             virtual void init() override;
 
+            virtual void onShow() override { };
             virtual void onViewingModeChange(ViewingMode) override { };
-            virtual void onSetGraphicsData(const unsigned char*) override { };
-            virtual void onSetImage(const BitMap*) override { };
+            virtual void onSetData(const BitMap*, const unsigned char*) override
+            { };
 
         private:
             /**
