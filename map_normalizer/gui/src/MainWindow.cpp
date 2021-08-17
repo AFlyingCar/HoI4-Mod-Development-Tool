@@ -140,9 +140,8 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
             m_drawing_area = m_gl_drawing_area;
 
             // Replace the widget that is gettiing rendered
-            auto* drawing_window = getNamedWidget<Gtk::Bin>("drawing_window");
-            drawing_window->remove();
-            drawing_window->add(*m_gl_drawing_area);
+            // m_drawing_box->remove(); // TODO
+            m_drawing_box->pack_start(*m_gl_drawing_area, Gtk::PACK_SHRINK);
 
             m_drawing_area->show();
 
@@ -168,9 +167,8 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
             m_drawing_area = m_cairo_drawing_area;
 
             // Replace the widget that is gettiing rendered
-            auto* drawing_window = getNamedWidget<Gtk::Bin>("drawing_window");
-            drawing_window->remove();
-            drawing_window->add(*m_cairo_drawing_area);
+            // m_drawing_box->remove(); // TODO
+            m_drawing_box->pack_start(*m_cairo_drawing_area, Gtk::PACK_SHRINK);
 
             m_drawing_area->show();
 
@@ -408,7 +406,10 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
     });
 
     // Place the drawing area in a scrollable window
-    drawing_window->add(*drawing_area->self());
+    // drawing_window->add(*drawing_area->self());
+    m_drawing_box.reset(new Gtk::Box());
+    m_drawing_box->pack_start(*drawing_area->self(), Gtk::PACK_SHRINK);
+    drawing_window->add(*m_drawing_box);
     drawing_window->show_all();
 }
 
