@@ -12,7 +12,8 @@ MapNormalizer::GUI::IMapDrawingAreaBase::IMapDrawingAreaBase():
     m_image(nullptr),
     m_on_select([](auto...) { }),      // The default callback does nothing
     m_on_multiselect([](auto...) { }),
-    m_scale_factor(DEFAULT_ZOOM)
+    m_scale_factor(DEFAULT_ZOOM),
+    m_viewing_mode(DEFAULT_VIEWING_MODE)
 { }
 
 
@@ -22,15 +23,11 @@ bool MapNormalizer::GUI::IMapDrawingAreaBase::hasData() const {
 
 void MapNormalizer::GUI::IMapDrawingAreaBase::setGraphicsData(const unsigned char* data)
 {
-    onSetGraphicsData(data);
-
-    m_graphics_data = data;
+    setData(m_image, data);
 }
 
 void MapNormalizer::GUI::IMapDrawingAreaBase::setImage(const BitMap* image) {
-    onSetImage(image);
-
-    m_image = image;
+    setData(image, m_graphics_data);
 }
 
 /**
@@ -69,8 +66,10 @@ auto MapNormalizer::GUI::IMapDrawingAreaBase::getImage() const -> const BitMap*
 void MapNormalizer::GUI::IMapDrawingAreaBase::setData(const BitMap* image,
                                                       const unsigned char* data)
 {
-    setImage(image);
-    setGraphicsData(data);
+    onSetData(image, data);
+
+    m_image = image;
+    m_graphics_data = data;
 
     resetZoom();
 }
