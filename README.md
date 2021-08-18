@@ -44,7 +44,7 @@ $ mingw32-make
 ### Linux
 
 ```
-$ apt install -y python3.6 libgtkmm-3.0-dev
+$ apt install -y python3.6 libgtkmm-3.0-dev libglew-dev libopengl0 libglm-dev
 $ mkdir Binaries
 $ cd Binaries
 $ cmake ..
@@ -85,6 +85,9 @@ may work with other compilers, but I have not tested those yet.
 Libraries used are [gtkmm](https://gtkmm.org/),
 [nlohmann::json](https://github.com/nlohmann/json),
 [nlohmann::fifo_map](https://github.com/nlohmann/fifo_map),
+[OpenGL](https://www.opengl.org/),
+[GLEW](https://github.com/nigels-com/glew),
+[GLM](https://github.com/g-truc/glm),
 [gtest](https://github.com/google/googletest), and
 [Native Dialogs](https://github.com/Geequlim/NativeDialogs)
 
