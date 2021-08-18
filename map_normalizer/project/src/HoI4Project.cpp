@@ -170,7 +170,7 @@ bool MapNormalizer::Project::HoI4Project::load(const std::filesystem::path& path
         if(std::any_of(complete.begin(), complete.end(),
                         [](auto& pair) { return !pair.second; }))
         {
-            writeWarning("Project file ", path, " is missing the following expected elements: ");
+            WRITE_WARN("Project file ", path, " is missing the following expected elements: ");
 
             std::stringstream ss;
             bool first = true;
@@ -179,7 +179,7 @@ bool MapNormalizer::Project::HoI4Project::load(const std::filesystem::path& path
                     ss << (first ? "" : ",") << element;
                 }
             }
-            writeWarning<false>("\t", ss.str());
+            WRITE_WARN("\t", ss.str());
         }
     } else {
         ec = std::error_code(static_cast<int>(errno), std::generic_category());
@@ -190,10 +190,10 @@ bool MapNormalizer::Project::HoI4Project::load(const std::filesystem::path& path
     //  will not have any of the actual project's data
     // So just log a warning that the data might be missing and move on
     if(!std::filesystem::exists(getMetaRoot())) {
-        writeWarning("Project meta directory ", getMetaRoot(),
-                     " is missing. This folder contains the actual project "
-                     "data, so it missing could imply a loss of data. Please "
-                     "verify this path.");
+        WRITE_WARN("Project meta directory ", getMetaRoot(),
+                   " is missing. This folder contains the actual project "
+                   "data, so it missing could imply a loss of data. Please "
+                   "verify this path.");
         return true;
     }
 
@@ -260,7 +260,7 @@ bool MapNormalizer::Project::HoI4Project::save(const std::filesystem::path& path
         out << std::setw(4) << proj << std::endl;
     } else {
         ec = std::error_code(static_cast<int>(errno), std::generic_category());
-        writeError("Failed to write file to ", path, ". Reason: ", std::strerror(errno));
+        WRITE_ERROR("Failed to write file to ", path, ". Reason: ", std::strerror(errno));
         return false;
     }
 

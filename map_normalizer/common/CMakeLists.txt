@@ -21,7 +21,6 @@ add_library(common STATIC
     src/BitMap.cpp
     src/Types.cpp
     src/Util.cpp
-    src/Logger.cpp
     src/UniqueColorGenerator.cpp
     src/Version.cpp
     src/Constants.cpp
@@ -32,5 +31,5 @@ add_library(common STATIC
 target_include_directories(common PUBLIC inc)
 target_include_directories(common PRIVATE "${CMAKE_BINARY_DIR}")
 
-target_link_libraries(common PUBLIC unique_colors)
+target_link_libraries(common PUBLIC unique_colors logging)
 

@@ -39,9 +39,7 @@ if(NOT native_dialogs_POPULATED)
     target_include_directories(native_dialogs SYSTEM PUBLIC ${native_dialogs_SOURCE_DIR}/src)
     target_link_libraries(native_dialogs gtkmm)
 
-    if(WIN32)
-        target_compile_options(native_dialogs PRIVATE -Wno-error -fpermissive -Wno-missing-field-initializers -Wno-unknown-pragmas)
-    endif()
+    target_compile_options(native_dialogs PRIVATE -Wno-error -fpermissive -Wno-missing-field-initializers -Wno-unknown-pragmas)
 
     install(FILES ${native_dialogs_SOURCE_DIR}/LICENSE.txt
             DESTINATION ${INSTALL_DESTINATION}/share/licenses

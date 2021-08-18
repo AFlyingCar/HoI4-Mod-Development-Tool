@@ -11,14 +11,18 @@
 
 # include "gtkmm.h"
 
-# include "Window.h"
+# include "MainWindow.h"
 # include "MenuItemWrapper.h"
+
+namespace MapNormalizer::Log {
+    class Message;
+}
 
 namespace MapNormalizer::GUI {
     class MapNormalizerApplication: public Gtk::Application {
         public:
             MapNormalizerApplication();
-            virtual ~MapNormalizerApplication() = default;
+            virtual ~MapNormalizerApplication();
 
         protected:
             void on_activate() override;
@@ -40,12 +44,14 @@ namespace MapNormalizer::GUI {
             Glib::RefPtr<Gtk::Settings> getSettings();
 
         private:
-            std::unique_ptr<Window> m_window;
+            std::unique_ptr<MainWindow> m_window;
 
             std::map<std::string, MenuItemWrapper> m_menu_items;
             std::map<std::string, MenuWrapper> m_menus;
 
             Glib::RefPtr<Gtk::Settings> m_settings;
+
+            std::shared_ptr<bool> m_is_exiting;
     };
 }
 

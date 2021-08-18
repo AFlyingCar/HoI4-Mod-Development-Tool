@@ -10,8 +10,6 @@ auto MapNormalizer::createStatesList(const ProvinceList& provinces,
                                      const std::filesystem::path& state_info_path)
     -> StateList
 {
-    using namespace std::string_literals;
-
     std::ifstream state_info_file(state_info_path);
     StateList states;
 
@@ -62,7 +60,7 @@ auto MapNormalizer::createStatesList(const ProvinceList& provinces,
 
                 continue;
 csvParseFailure:
-                writeError("Failed to parse CSV file on line #"s + std::to_string(line_num));
+                WRITE_ERROR("Failed to parse CSV file on line #", line_num);
                 return StateList();
             }
         }

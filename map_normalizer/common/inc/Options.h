@@ -49,6 +49,9 @@ namespace MapNormalizer {
 
         //! --debug
         bool debug;
+
+        //! --dont-write-logfiles
+        bool dont_write_logfiles;
     };
 
     //! Global variable for storing program options.

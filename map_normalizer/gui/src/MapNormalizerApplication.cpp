@@ -7,12 +7,32 @@
 #include "Logger.h"
 
 #include "MainWindow.h"
+#include "LogViewerWindow.h"
 
 MapNormalizer::GUI::MapNormalizerApplication::MapNormalizerApplication():
     Gtk::Application(APPLICATION_ID),
-    m_settings(Gtk::Settings::get_default())
+    m_settings(Gtk::Settings::get_default()),
+    m_is_exiting(new bool(false))
 {
+    std::shared_ptr<bool> is_exiting = m_is_exiting;
+
+    // Register a function that can send logs to a special log viewing window
+    Log::Logger::registerOutputFunction([this, is_exiting](const Log::Message& message)
+    {
+        if(is_exiting && *is_exiting) return true;
+
+        LogViewerWindow::pushMessage(message,
+                                     m_window == nullptr ? std::nullopt
+                                                         : m_window->getLogViewerWindow());
+
+        return true;
+    });
+
     Glib::set_application_name(APPLICATION_NAME);
+}
+
+MapNormalizer::GUI::MapNormalizerApplication::~MapNormalizerApplication() {
+    *m_is_exiting = true;
 }
 
 void MapNormalizer::GUI::MapNormalizerApplication::on_activate() {
@@ -20,7 +40,7 @@ void MapNormalizer::GUI::MapNormalizerApplication::on_activate() {
 
     m_window.reset(new MainWindow{*this});
     if(!m_window->initialize()) {
-        writeError("Failed to initialize main window!");
+        WRITE_ERROR("Failed to initialize main window!");
         return;
     }
 
@@ -47,25 +67,26 @@ void MapNormalizer::GUI::MapNormalizerApplication::on_startup() {
     });
 
     createMenu("Root", "View", {
-            { "_Properties", "win.properties" }
+        { "_Properties", "win.properties" },
+        { "_Log Window", "win.log_window" }
     });
 
     createMenu("Root", "Project", {
-            { "_Import Province Map", "win.import_provincemap" }
+        { "_Import Province Map", "win.import_provincemap" }
     });
 
     // Debug dump the menus
     for(auto&& [menu_name, menu] : m_menus) {
-        writeDebug<false>(menu_name, " -> {");
+        WRITE_DEBUG(menu_name, " -> {");
         for(auto&& menu_item_name : menu.menu_item_names) {
             auto opt_menu_item = getMenuItemInfo(menu_item_name);
             if(opt_menu_item) {
-                writeDebug<false>("  ", menu_item_name, " = {", opt_menu_item->get().label, ", ", opt_menu_item->get().detailed_action, "}");
+                WRITE_DEBUG("  ", menu_item_name, " = {", opt_menu_item->get().label, ", ", opt_menu_item->get().detailed_action, "}");
             } else {
-                writeError("Menu '", menu_name, "' refers to non-existant menu item '", menu_item_name);
+                WRITE_ERROR("Menu '", menu_name, "' refers to non-existant menu item '", menu_item_name);
             }
         }
-        writeDebug<false>("}");
+        WRITE_DEBUG("}");
     }
 }
 
@@ -107,7 +128,7 @@ auto MapNormalizer::GUI::MapNormalizerApplication::createMenu(
         if(m_menus.count(parent_menu_full_name)) {
             m_menus.at(parent_menu_full_name).menu->append_submenu(menu_name, menu);
         } else {
-            writeError("Failed to find parent menu at ", parent_menu_full_name);
+            WRITE_ERROR("Failed to find parent menu at ", parent_menu_full_name);
         }
     }
 

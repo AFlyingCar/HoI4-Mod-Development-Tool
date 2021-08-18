@@ -14,5 +14,5 @@ add_library(map_normalizer_lib OBJECT
 target_include_directories(map_normalizer_lib PUBLIC inc)
 
 # Link against local libraries
-target_link_libraries(map_normalizer_lib common gui province_utils)
+target_link_libraries(map_normalizer_lib common gui province_utils logging)
 

@@ -84,8 +84,7 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
 
     uint32_t num_border_pixels = 0;
 
-    if(!prog_opts.quiet)
-        writeStdout("Performing Pass #1 of CCL.");
+    WRITE_INFO("Performing Pass #1 of CCL.");
 
     // Go over every pixel of the image
     for(uint32_t y = 0; y < height; ++y) {
@@ -97,9 +96,6 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
             Color color = getColorAt(m_image, x, y);
             uint32_t index = xyToIndex(m_image, x, y);
             uint32_t& label = m_label_matrix[index] = next_label;
-
-            if(!prog_opts.quiet)
-                setInfoLine("Pixel ", Point2D{x, y}," [", color, "]");
 
             // Skip this pixel if it is part of a border
             if(color == BORDER_COLOR) {
@@ -157,10 +153,6 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
                 }
             }
 
-            if(prog_opts.verbose)
-                writeDebug<false>("Pixel ", Point2D{x, y}, " [", color, "] => ",
-                                  std::to_string(label));
-
             // Only increment to the next label if we actually used this one
             if(label == next_label) {
                 ++next_label;
@@ -174,8 +166,6 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
 
         m_worker.updateCallback({0, y, width, 1});
     }
-
-    deleteInfoLine();
 
     return num_border_pixels;
 }
@@ -197,7 +187,7 @@ auto MapNormalizer::ShapeFinder::pass2(LabelShapeIdxMap& label_to_shapeidx)
     m_shapes.clear();
 
     if(!prog_opts.quiet)
-        writeStdout("Performing Pass #2 of CCL.");
+        WRITE_INFO("Performing Pass #2 of CCL.");
 
     for(uint32_t y = 0; y < height; ++y) {
         for(uint32_t x = 0; x < width; ++x) {
@@ -227,7 +217,7 @@ auto MapNormalizer::ShapeFinder::pass2(LabelShapeIdxMap& label_to_shapeidx)
     }
 
     if(!prog_opts.quiet)
-        writeStdout("Generated ", m_shapes.size(), " shapes.");
+        WRITE_INFO("Generated ", m_shapes.size(), " shapes.");
 
     return m_shapes;
 }
@@ -249,7 +239,7 @@ bool MapNormalizer::ShapeFinder::mergeBorders(PolygonList& shapes,
     uint32_t height = m_image->info_header.height;
 
     if(!prog_opts.quiet)
-        writeStdout("Performing Pass #3 of CCL.");
+        WRITE_INFO("Performing Pass #3 of CCL.");
 
     for(const Pixel& pixel : m_border_pixels) {
         if(m_do_estop) {
@@ -304,8 +294,8 @@ bool MapNormalizer::ShapeFinder::mergeBorders(PolygonList& shapes,
             //  in a worst case scenario of the entire m_image being
             //  (0,0,0)
             if(!found) {
-                writeError("No further color pixels found from ", point,
-                           ". Terminating now! Check your input m_image!");
+                WRITE_ERROR("No further color pixels found from ", point,
+                            ". Terminating now! Check your input m_image!");
                 return false;
             }
         }
@@ -462,16 +452,15 @@ std::optional<uint32_t> MapNormalizer::ShapeFinder::finalize(PolygonList& shapes
         // Check for minimum province size.
         //  See: https://hoi4.paradoxwikis.com/Map_modding
         if(shape.pixels.size() <= MIN_SHAPE_SIZE) {
-            writeWarning("Shape ", label, " has only ",
-                         shape.pixels.size(),
-                         " pixels. All provinces are required to have more than ",
-                         MIN_SHAPE_SIZE,
-                         " pixels. See: https://hoi4.paradoxwikis.com/Map_modding");
+            WRITE_WARN("Shape ", label, " has only ", shape.pixels.size(),
+                       " pixels. All provinces are required to have more than ",
+                       MIN_SHAPE_SIZE,
+                       " pixels. See: https://hoi4.paradoxwikis.com/Map_modding");
             std::stringstream ss;
             for(auto&& pix : shape.pixels) {
                 ss << pix.point << ',';
             }
-            writeWarning<false>("    Pixels: ", ss.str());
+            WRITE_DEBUG("    Pixels: ", ss.str());
             ++problematic_shapes;
         }
 
@@ -479,14 +468,14 @@ std::optional<uint32_t> MapNormalizer::ShapeFinder::finalize(PolygonList& shapes
         if(auto [width, height] = calcShapeDims(shape);
            isShapeTooLarge(width, height, m_image))
         {
-            writeWarning("Shape #", label, " has a bounding box of size ",
-                         Point2D{width, height},
-                         ". One of these is larger than the allowed ratio of 1/8 * (",
-                         m_image->info_header.width, ',', m_image->info_header.height,
-                         ") => (", (m_image->info_header.width / 8.0f), ',',
-                                   (m_image->info_header.height / 8.0f),
-                         "). Check the province borders. Bounds are: ",
-                         shape.bounding_box.bottom_left, " to ", shape.bounding_box.top_right);
+            WRITE_WARN("Shape #", label, " has a bounding box of size ",
+                       Point2D{width, height},
+                       ". One of these is larger than the allowed ratio of 1/8 * (",
+                       m_image->info_header.width, ',', m_image->info_header.height,
+                       ") => (", (m_image->info_header.width / 8.0f), ',',
+                                 (m_image->info_header.height / 8.0f),
+                       "). Check the province borders. Bounds are: ",
+                       shape.bounding_box.bottom_left, " to ", shape.bounding_box.top_right);
         }
     }
 
@@ -538,7 +527,7 @@ auto MapNormalizer::ShapeFinder::getLabelAndColor(const Point2D& point,
     Color color_at = getColorAt(m_image, point.x, point.y);
 
     if(color_at != BORDER_COLOR && color_at != color) {
-        writeWarning("Multiple colors found in shape! See pixel at ", point);
+        WRITE_WARN("Multiple colors found in shape! See pixel at ", point);
 
         // Set to the default values
         label = 0;

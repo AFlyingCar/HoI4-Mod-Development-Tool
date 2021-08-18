@@ -84,9 +84,9 @@ MapNormalizer::BitMap* MapNormalizer::readBMP(const std::filesystem::path& path,
     try {
         bm->data = new unsigned char[new_pitch * bm->info_header.height];
     } catch(const std::bad_alloc& e) {
-        writeError("Failed to allocate enough space for the bitmap's data (",
-                   new_pitch * bm->info_header.height, " bytes required): ",
-                   e.what());
+        WRITE_ERROR("Failed to allocate enough space for the bitmap's data (",
+                    new_pitch * bm->info_header.height, " bytes required): ",
+                    e.what());
         return nullptr;
     }
 
@@ -101,9 +101,8 @@ MapNormalizer::BitMap* MapNormalizer::readBMP(const std::filesystem::path& path,
     }
 
     if(orig_pitch % 4 != 0) {
-        using namespace std::string_literals;
-        writeWarning("BitMap Width is not a multiple of 4! May contain up to "s +
-                     std::to_string(orig_pitch / 4) + " padding bytes.");
+        WRITE_WARN("BitMap Width is not a multiple of 4! May contain up to ",
+                   (orig_pitch / 4), " padding bytes.");
     }
 
     // Swap B and R every 3 pixels (because BitMap is a stupid format)
@@ -119,8 +118,8 @@ MapNormalizer::BitMap* MapNormalizer::readBMP(const std::filesystem::path& path,
     try {
         temp = new unsigned char[new_pitch];
     } catch(const std::bad_alloc& e) {
-        writeError("Failed to allocate enough space for one line of pixels (",
-                   new_pitch, " bytes required): ", e.what());
+        WRITE_ERROR("Failed to allocate enough space for one line of pixels (",
+                    new_pitch, " bytes required): ", e.what());
         return nullptr;
     }
 

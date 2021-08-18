@@ -16,7 +16,7 @@ MapNormalizer::GUI::Window::~Window() {
 }
 
 bool MapNormalizer::GUI::Window::initialize() {
-    writeDebug("Window::initialize");
+    WRITE_DEBUG("Window::initialize");
 
     // Make sure the window is maximized first
     maximize();
@@ -34,7 +34,7 @@ bool MapNormalizer::GUI::Window::initialize() {
 
     show_all_children();
 
-    writeDebug("done");
+    WRITE_DEBUG("done");
 
     return true;
 }

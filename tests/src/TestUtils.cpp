@@ -28,7 +28,7 @@ bool MapNormalizer::UnitTests::useVerboseOutput() {
 }
 
 std::filesystem::path MapNormalizer::UnitTests::getTestProgramPath() {
-    char path[PATH_MAX];
+    char path[PATH_MAX] = { 0 };
 #ifdef _WIN32
     GetModuleFileName(NULL, path, PATH_MAX);
 #else
