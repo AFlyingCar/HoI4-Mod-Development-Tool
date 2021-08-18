@@ -122,6 +122,8 @@ void MapNormalizer::GUI::GL::Program::linkProgram() {
 bool MapNormalizer::GUI::GL::Program::uniform(const std::string& uniform_name,
                                               const std::any& value)
 {
+    use();
+
     auto uniform_loc = glGetUniformLocation(m_program_id, uniform_name.c_str());
 
     writeDebug<true>("glUniform*(", uniform_loc, ", ${...} [typeid=", value.type().name(), "])");
