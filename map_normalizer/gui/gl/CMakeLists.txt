@@ -38,6 +38,9 @@ add_library(gui_gl STATIC
     src/Texture.cpp
     src/GLUtils.cpp
 
+    src/MapRenderingViewBase.cpp
+    # src/ProvinceRenderingView.cpp
+
     src/MapDrawingAreaGL.cpp
     src/GLEWInitializationException.cpp
 )
