@@ -16,19 +16,13 @@
 #include "Shader.h"
 #include "GLUtils.h"
 
-namespace {
-// This is an auto-generated header which will look like the following:
-#include "GLShaderSources.h"
-}
+#include "ProvinceRenderingView.h"
 
 MapNormalizer::GUI::GL::MapDrawingArea::MapDrawingArea():
     m_initialized(false)
 { }
 
-MapNormalizer::GUI::GL::MapDrawingArea::~MapDrawingArea() {
-    glDeleteVertexArrays(1, &m_map_vao);
-    MN_LOG_GL_ERRORS();
-}
+MapNormalizer::GUI::GL::MapDrawingArea::~MapDrawingArea() { }
 
 bool MapNormalizer::GUI::GL::MapDrawingArea::on_render(const Glib::RefPtr<Gdk::GLContext>& context)
 {
@@ -55,30 +49,13 @@ bool MapNormalizer::GUI::GL::MapDrawingArea::on_render(const Glib::RefPtr<Gdk::G
         //  about doing it ourselves
 
         // Draw the scene
-        {
-            m_current_program->use();
+        auto current_rendering_view = getCurrentRenderingView();
 
-            setupAllUniforms();
+        setupAllUniforms();
 
-            for(auto&& texture : m_textures[getViewingMode()]) {
-                texture->activate();
-            }
-
-            // Draw the map object once all uniforms and textures are set up
-            writeDebug<true>("glBindVertexArray(", m_map_vao, ")");
-            glBindVertexArray(m_map_vao);
-            MN_LOG_GL_ERRORS();
-
-            writeDebug<true>("glBindVertexArray(GL_TRIANGLES, 0, 6)");
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-            MN_LOG_GL_ERRORS();
-
-            writeDebug<true>("glBindVertexArray(0)");
-            glBindVertexArray(0);
-            MN_LOG_GL_ERRORS();
-
-            m_current_program->use(false);
-        }
+        current_rendering_view->beginRender();
+        current_rendering_view->render();
+        current_rendering_view->endRender();
 
         glFlush();
         MN_LOG_GL_ERRORS();
@@ -114,63 +91,12 @@ void MapNormalizer::GUI::GL::MapDrawingArea::init() {
         throw GLEWInitializationException(result);
     }
 
-    // Set up all shaders
-    writeDebug<true>("Building all programs...");
-    m_provinceview_program = Program{Shader(Shader::Type::VERTEX,
-                                            provinceview_vertex),
-                                     Shader(Shader::Type::FRAGMENT,
-                                            provinceview_fragment)
-                                    };
-    MN_LOG_GL_ERRORS();
+    m_rendering_views[ViewingMode::PROVINCE_VIEW].reset(new ProvinceRenderingView());
 
-    writeDebug<true>("Building map object...");
-    {
-        // NOTE: We could use EBOs here, but we are only going to have this one
-        //   object, so there really isn't much of a point
-
-        // gen vertex arrays
-        writeDebug<true>("glGenVertexArrays(1, ", &m_map_vao, ')');
-        glGenVertexArrays(1, &m_map_vao);
-        MN_LOG_GL_ERRORS();
-
-        // gen buffers
-        writeDebug<true>("glGenBuffers(1, ", &m_map_vbo, ')');
-        glGenBuffers(1, &m_map_vbo);
-        MN_LOG_GL_ERRORS();
-
-        // bind buffer
-        writeDebug<true>("glBindBuffer(GL_ARRAY_BUFFER, ", m_map_vbo, ')');
-        glBindBuffer(GL_ARRAY_BUFFER, m_map_vbo);
-        MN_LOG_GL_ERRORS();
-
-        // buffer data
-        auto vertices = getMapVertices();
-        writeDebug<true>("glBufferData(GL_ARRAY_BUFFER, ",
-                                       vertices.size() * sizeof(*vertices.data()), ',',
-                                       vertices.data(), ",GL_STATIC_DRAW)");
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(*vertices.data()),
-                     vertices.data(), GL_STATIC_DRAW);
-        MN_LOG_GL_ERRORS();
-
-        // bind vertex arrays
-        writeDebug<true>("glBindVertexArray(", m_map_vao, ')');
-        glBindVertexArray(m_map_vao);
-        MN_LOG_GL_ERRORS();
-
-        writeDebug<true>("glEnableVertexAttribArray(0)");
-        glEnableVertexAttribArray(0); // Location 0
-        MN_LOG_GL_ERRORS();
-        writeDebug<true>("glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, ", 4 * sizeof(float), ", (void*)0)");
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-        MN_LOG_GL_ERRORS();
-
-        // unbind buffer and vertex array
-        writeDebug<true>("glBindBuffer(GL_ARRAY_BUFFER, 0)");
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        MN_LOG_GL_ERRORS();
-        writeDebug<true>("glBindVertexArray(0)");
-        glBindVertexArray(0);
-        MN_LOG_GL_ERRORS();
+    writeDebug<true>("Initializing each rendering view.");
+    for(auto&& [viewing_mode, rendering_view] : m_rendering_views) {
+        writeDebug<true>("Initializing ", std::to_string(static_cast<int>(viewing_mode)));
+        rendering_view->init();
     }
 
     onViewingModeChange(DEFAULT_VIEWING_MODE);
@@ -189,53 +115,24 @@ void MapNormalizer::GUI::GL::MapDrawingArea::onZoom() {
     }
 }
 
-void MapNormalizer::GUI::GL::MapDrawingArea::onViewingModeChange(ViewingMode viewing_mode)
-{
-    switch(viewing_mode) {
-        case ViewingMode::PROVINCE_VIEW:
-            m_current_program = &m_provinceview_program;
-            break;
-        case ViewingMode::STATES_VIEW:
-            // TODO
-            break;
-        default:
-            using namespace std::string_literals;
-            throw std::invalid_argument(("Invalid ViewingMode passed to GL::MapDrawingArea::onViewingModeChange: "s + std::to_string(static_cast<int>(viewing_mode))).c_str());
-    }
-}
-
 void MapNormalizer::GUI::GL::MapDrawingArea::onSetData(const BitMap* image,
                                                        const unsigned char* data)
 {
     if(image != nullptr && data != nullptr) {
         writeDebug<true>("Setting map texture data");
 
-        auto& map_texture = getTexturesFor(ViewingMode::PROVINCE_VIEW).front();
-
-        map_texture->setTextureUnitID(Texture::Unit::TEX_UNIT0);
-
         auto iwidth = image->info_header.width;
         auto iheight = image->info_header.height;
 
-        map_texture->bind();
-        {
-            // map_texture->setWrapping(Texture::Axis::S, Texture::WrapMode::CLAMP_TO_EDGE);
-            // map_texture->setWrapping(Texture::Axis::T, Texture::WrapMode::CLAMP_TO_EDGE);
-
-            map_texture->setFiltering(Texture::FilterType::MAG, Texture::Filter::LINEAR);
-            map_texture->setFiltering(Texture::FilterType::MIN, Texture::Filter::LINEAR);
-
-            map_texture->setTextureData(Texture::Format::RGB,
-                                        iwidth, iheight, data);
+        writeDebug<true>("Updating map data for each rendering view.");
+        for(auto&& [viewing_mode, rendering_view] : m_rendering_views) {
+            writeDebug<true>("Initializing ", std::to_string(static_cast<int>(viewing_mode)));
+            rendering_view->onMapDataChanged(image, data);
         }
-        map_texture->bind(false);
 
         auto siwidth = iwidth * getScaleFactor();
         auto siheight = iheight * getScaleFactor();
         set_size_request(siwidth, siheight);
-    } else {
-        // We are no longer worrying about this texture
-        m_textures[ViewingMode::PROVINCE_VIEW].clear();
     }
 }
 
@@ -248,82 +145,20 @@ void MapNormalizer::GUI::GL::MapDrawingArea::queueDraw() {
     show_all();
 }
 
-auto MapNormalizer::GUI::GL::MapDrawingArea::getTexturesFor(ViewingMode viewing_mode)
-    -> const std::vector<std::shared_ptr<Texture>>&
+auto MapNormalizer::GUI::GL::MapDrawingArea::getCurrentRenderingView()
+    -> std::shared_ptr<IRenderingView>
 {
-    auto& textures = m_textures[viewing_mode];
-
-    // Initialize the textures if they haven't been initialized yet
-    if(textures.empty()) {
-        switch(viewing_mode) {
-            case ViewingMode::PROVINCE_VIEW:
-                {
-                    std::shared_ptr<Texture> texture(new Texture);
-
-                    texture->setTarget(Texture::Target::TEX_2D);
-                    // We don't set any data on this texture because it is dependent
-                    //  on the graphics/image data
-
-                    textures.push_back(texture);
-                }
-                break;
-            case ViewingMode::STATES_VIEW:
-                // TODO
-                break;
-        }
-    }
-
-    return m_textures[viewing_mode];
-}
-
-auto MapNormalizer::GUI::GL::MapDrawingArea::getMapVertices()
-    -> std::array<glm::vec4, 6>
-{
-    return {
-        // Top-Left Triangle
-        glm::vec4{0, 1, 0, 1},
-        glm::vec4{1, 0, 1, 0},
-        glm::vec4{0, 0, 0, 0},
-
-        // Bottom-Right Triangle
-        glm::vec4{0, 1, 0, 1},
-        glm::vec4{1, 1, 1, 1},
-        glm::vec4{1, 0, 1, 0},
-    };
+    return m_rendering_views.at(getViewingMode());
 }
 
 void MapNormalizer::GUI::GL::MapDrawingArea::setupAllUniforms() {
-    switch(getViewingMode()) {
-        case ViewingMode::PROVINCE_VIEW:
-            setupProvinceViewUniforms();
-            break;
-        case ViewingMode::STATES_VIEW:
-            setupStatesViewUniforms();
-            break;
-        default:
-            using namespace std::string_literals;
-            throw std::invalid_argument(("Invalid viewing_mode"s + std::to_string(static_cast<int>(getViewingMode()))).c_str());
-    }
-}
-
-void MapNormalizer::GUI::GL::MapDrawingArea::setupProvinceViewUniforms() {
-    if(!hasData()) {
-        // TODO: writeError, this shouldn't happen
-        return;
-    }
-
-    writeDebug<true>("setupProvinceViewUniforms()");
-
-    m_current_program->use();
+    auto current_rendering_view = getCurrentRenderingView();
 
     // Set up the projection matrix
-    m_current_program->uniform("projection", getProjection());
+    current_rendering_view->getProgram().uniform("projection", getProjection());
 
     // Set up the transformation matrix
-    m_current_program->uniform("transform", getTransformation());
-
-    // Set up the map texture sampler
-    m_current_program->uniform("map_texture", 0);
+    current_rendering_view->getProgram().uniform("transform", getTransformation());
 }
 
 glm::mat4 MapNormalizer::GUI::GL::MapDrawingArea::getProjection() {
@@ -392,8 +227,5 @@ bool MapNormalizer::GUI::GL::MapDrawingArea::on_button_press_event(GdkEventButto
     }
 
     return true;
-}
-
-void MapNormalizer::GUI::GL::MapDrawingArea::setupStatesViewUniforms() {
 }
 
