@@ -23,10 +23,14 @@ gl_shader_sources_hdr.write( " */\n\n")
 gl_shader_sources_hdr.write( "#ifndef GL_SHADER_SOURCES_H\n")
 gl_shader_sources_hdr.write( "# define GL_SHADER_SOURCES_H\n\n")
 
-gl_shader_sources_hdr.write( "# include<string>\n\n")
+gl_shader_sources_hdr.write( "# include <string>\n\n")
+
+gl_shader_sources_hdr.write( "namespace MapNormalizer::GUI::GL::ShaderSources {\n")
 
 for filename, contents in glsl_sources.items():
-    gl_shader_sources_hdr.write(f"const std::string {os.path.splitext(filename)[0]} = R\"(\n{contents}\n)\";\n")
+    gl_shader_sources_hdr.write(f"const std::string {os.path.splitext(filename)[0]} = R\"(\n{contents}\n)\";\n\n")
+
+gl_shader_sources_hdr.write( "}\n")
 
 gl_shader_sources_hdr.write( "\n#endif\n")
 
