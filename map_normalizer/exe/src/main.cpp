@@ -30,6 +30,7 @@
 #include "ConsoleOutputFunctions.h"
 
 #include "Interfaces.h"
+#include "Logger.h"
 
 MapNormalizer::ProgramOptions MapNormalizer::prog_opts;
 
@@ -166,6 +167,11 @@ int main(int argc, char** argv) {
     *quiet = MapNormalizer::prog_opts.quiet;
     *verbose = MapNormalizer::prog_opts.verbose;
 
-    return MapNormalizer::runApplication();
+    try {
+        return MapNormalizer::runApplication();
+    } catch(const std::exception& e) {
+        WRITE_ERROR(e.what());
+        return -1;
+    }
 }
 
