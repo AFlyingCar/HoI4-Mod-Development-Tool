@@ -68,7 +68,7 @@ void MapNormalizer::GUI::MapNormalizerApplication::on_startup() {
 
     createMenu("Root", "View", {
         { "_Properties", "win.properties", {} },
-        { "_Log Window", "win.log_window" {} }
+        { "_Log Window", "win.log_window", {} },
         { "_Switch Renderers", "win.switch_renderers", {
             { "_Use OpenGL", "win.switch_renderers.usegl" },
             { "_Use Cairo", "win.switch_renderers.usecairo" },

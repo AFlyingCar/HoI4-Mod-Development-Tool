@@ -33,7 +33,7 @@ bool MapNormalizer::GUI::GL::MapDrawingArea::on_render(const Glib::RefPtr<Gdk::G
 
         throw_if_error();
 
-        writeDebug<true>("Re-drawing...");
+        WRITE_DEBUG("Re-drawing...");
 
         // Clear the current screen
         glClearColor(0.5, 0.5, 0.5, 0.0);
@@ -63,7 +63,7 @@ bool MapNormalizer::GUI::GL::MapDrawingArea::on_render(const Glib::RefPtr<Gdk::G
         return true;
     }
     catch(const Gdk::GLError& error) {
-        writeError<true>("An error occurred when rendering the map",
+        WRITE_ERROR("An error occurred when rendering the map",
                     error.domain(), '-', error.code(), '-', error.what());
         return false;
     }
@@ -77,7 +77,7 @@ void MapNormalizer::GUI::GL::MapDrawingArea::on_unrealize() {
 
         // Delete buffers and program
     } catch(const Gdk::GLError& error) {
-        writeError<true>("An error occurred when making the context current during unrealize. Reason: ",
+        WRITE_ERROR("An error occurred when making the context current during unrealize. Reason: ",
                     error.domain(), '-', error.code(), '-', error.what());
     }
 }
@@ -93,9 +93,9 @@ void MapNormalizer::GUI::GL::MapDrawingArea::init() {
 
     m_rendering_views[ViewingMode::PROVINCE_VIEW].reset(new ProvinceRenderingView());
 
-    writeDebug<true>("Initializing each rendering view.");
+    WRITE_DEBUG("Initializing each rendering view.");
     for(auto&& [viewing_mode, rendering_view] : m_rendering_views) {
-        writeDebug<true>("Initializing ", std::to_string(static_cast<int>(viewing_mode)));
+        WRITE_DEBUG("Initializing ", std::to_string(static_cast<int>(viewing_mode)));
         rendering_view->init();
     }
 
@@ -119,14 +119,14 @@ void MapNormalizer::GUI::GL::MapDrawingArea::onSetData(const BitMap* image,
                                                        const unsigned char* data)
 {
     if(image != nullptr && data != nullptr) {
-        writeDebug<true>("Setting map texture data");
+        WRITE_DEBUG("Setting map texture data");
 
         auto iwidth = image->info_header.width;
         auto iheight = image->info_header.height;
 
-        writeDebug<true>("Updating map data for each rendering view.");
+        WRITE_DEBUG("Updating map data for each rendering view.");
         for(auto&& [viewing_mode, rendering_view] : m_rendering_views) {
-            writeDebug<true>("Initializing ", std::to_string(static_cast<int>(viewing_mode)));
+            WRITE_DEBUG("Initializing ", std::to_string(static_cast<int>(viewing_mode)));
             rendering_view->onMapDataChanged(image, data);
         }
 
