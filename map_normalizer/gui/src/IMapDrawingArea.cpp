@@ -123,7 +123,7 @@ void MapNormalizer::GUI::IMapDrawingAreaBase::resetZoom() {
     auto* parent = getParent();
 
     if(parent == nullptr) {
-        writeWarning("MapDrawingArea has no parent, setting zoom to ", DEFAULT_ZOOM);
+        WRITE_WARN("MapDrawingArea has no parent, setting zoom to ", DEFAULT_ZOOM);
 
         m_scale_factor = DEFAULT_ZOOM;
     } else {
@@ -142,7 +142,7 @@ void MapNormalizer::GUI::IMapDrawingAreaBase::resetZoom() {
         }
     }
 
-    writeDebug("Reset zoom to ", m_scale_factor);
+    WRITE_DEBUG("Reset zoom to ", m_scale_factor);
 
     onZoom();
 }

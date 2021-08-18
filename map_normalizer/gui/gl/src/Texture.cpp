@@ -21,7 +21,7 @@ MapNormalizer::GUI::GL::Texture::Texture(): m_texture_id(-1),
                                             m_texture_unit(-1),
                                             m_target(Target::TEX_2D)
 {
-    writeDebug<true>("glGenTextures(1, ", &m_texture_id, ')');
+    WRITE_DEBUG("glGenTextures(1, ", &m_texture_id, ')');
     glGenTextures(1, &m_texture_id);
     MN_LOG_GL_ERRORS();
 }
@@ -73,7 +73,7 @@ void MapNormalizer::GUI::GL::Texture::setTextureData(Format format,
 
     bind();
 
-    writeDebug<true>("glTexImage2D(", glEnumToStrings(gl_target).front(), ',', 0 /* mipmapping */, ',',
+    WRITE_DEBUG("glTexImage2D(", glEnumToStrings(gl_target).front(), ',', 0 /* mipmapping */, ',',
                      glEnumToStrings(gl_format).front(), ',', width, ',', height, ',', 0, ',', glEnumToStrings(gl_format).front(),
                      ',', glEnumToStrings(data_type).front(), ',', data, ')');
     glTexImage2D(gl_target, 0 /* mipmapping */,
@@ -93,17 +93,17 @@ void MapNormalizer::GUI::GL::Texture::bind(bool do_bind) {
     auto gl_target = targetToGLTarget(m_target);
 
     if(do_bind) {
-        writeDebug<true>("glBindTexture(", glEnumToStrings(gl_target).front(), ',', m_texture_id, ')');
+        WRITE_DEBUG("glBindTexture(", glEnumToStrings(gl_target).front(), ',', m_texture_id, ')');
         glBindTexture(gl_target, m_texture_id);
     } else {
-        writeDebug<true>("glBindTexture(", glEnumToStrings(gl_target).front(), ",0)");
+        WRITE_DEBUG("glBindTexture(", glEnumToStrings(gl_target).front(), ",0)");
         glBindTexture(gl_target, 0);
     }
     MN_LOG_GL_ERRORS();
 }
 
 uint32_t MapNormalizer::GUI::GL::Texture::activate() {
-    writeDebug<true>("glActiveTexture(", glEnumToStrings(m_texture_unit).front(), ')');
+    WRITE_DEBUG("glActiveTexture(", glEnumToStrings(m_texture_unit).front(), ')');
     glActiveTexture(m_texture_unit);
     MN_LOG_GL_ERRORS();
 
@@ -125,7 +125,7 @@ uint32_t MapNormalizer::GUI::GL::Texture::typeToDataType(const std::type_info& i
     } else if(info == typeid(double)) {
         return GL_DOUBLE;
     } else {
-        writeError<true>("Invalid data type given: ", info.name());
+        WRITE_ERROR("Invalid data type given: ", info.name());
         return -1;
     }
 }

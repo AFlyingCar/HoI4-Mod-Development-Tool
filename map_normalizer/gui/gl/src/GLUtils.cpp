@@ -74,7 +74,7 @@ uint32_t MapNormalizer::GUI::GL::logErrors(const std::string& filename,
                                        uint32_t line)
 {
     return processAllGLErrors([&filename, &line](uint32_t error) {
-        writeError<true>(filename, ":", line, " >>> GLError: ", error, " => ",
+        WRITE_ERROR(filename, ":", line, " >>> GLError: ", error, " => ",
                          MapNormalizer::GUI::GL::glEnumToStrings(error).front());
     });
 }

@@ -126,7 +126,7 @@ bool MapNormalizer::GUI::GL::Program::uniform(const std::string& uniform_name,
 
     auto uniform_loc = glGetUniformLocation(m_program_id, uniform_name.c_str());
 
-    writeDebug<true>("glUniform*(", uniform_loc, ", ${...} [typeid=", value.type().name(), "])");
+    WRITE_DEBUG("glUniform*(", uniform_loc, ", ${...} [typeid=", value.type().name(), "])");
 
     if(value.type() == typeid(bool)) {                                 // bool
         glUniform1i(uniform_loc, std::any_cast<bool>(value));
@@ -153,12 +153,12 @@ bool MapNormalizer::GUI::GL::Program::uniform(const std::string& uniform_name,
         glUniformMatrix4fv(uniform_loc, 1, GL_FALSE,
                            glm::value_ptr(std::any_cast<glm::mat4>(value)));
     } else {
-        writeError<true>("Unsupported type ", value.type().name());
+        WRITE_ERROR("Unsupported type ", value.type().name());
         // TODO: Should we return a value on error? throw?
     }
 
     if(MN_LOG_GL_ERRORS() >= 1) {
-        writeError<true>("Failed to set uniform ", uniform_name);
+        WRITE_ERROR("Failed to set uniform ", uniform_name);
         return false;
     }
 
