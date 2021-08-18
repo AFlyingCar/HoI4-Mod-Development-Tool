@@ -39,7 +39,7 @@ add_library(gui_gl STATIC
     src/GLUtils.cpp
 
     src/MapRenderingViewBase.cpp
-    # src/ProvinceRenderingView.cpp
+    src/ProvinceRenderingView.cpp
 
     src/MapDrawingAreaGL.cpp
     src/GLEWInitializationException.cpp
