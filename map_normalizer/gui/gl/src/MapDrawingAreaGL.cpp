@@ -107,33 +107,32 @@ void MapNormalizer::GUI::GL::MapDrawingArea::init() {
 void MapNormalizer::GUI::GL::MapDrawingArea::onZoom() {
     // Make sure we update the size request of the image
     if(hasData()) {
-        auto siwidth = getImage()->info_header.width * getScaleFactor();
-        auto siheight = getImage()->info_header.height * getScaleFactor();
+        auto [iwidth, iheight] = getMapData()->getDimensions();
+        auto siwidth = iwidth * getScaleFactor();
+        auto siheight = iheight * getScaleFactor();
         set_size_request(siwidth, siheight);
 
         queue_draw();
     }
 }
 
-void MapNormalizer::GUI::GL::MapDrawingArea::onSetData(const BitMap* image,
-                                                       const unsigned char* data)
+void MapNormalizer::GUI::GL::MapDrawingArea::onSetData(std::shared_ptr<const MapData> map_data)
 {
-    if(image != nullptr && data != nullptr) {
-        WRITE_DEBUG("Setting map texture data");
+    if(map_data == nullptr) return;
 
-        auto iwidth = image->info_header.width;
-        auto iheight = image->info_header.height;
+    WRITE_DEBUG("Setting map texture data");
 
-        WRITE_DEBUG("Updating map data for each rendering view.");
-        for(auto&& [viewing_mode, rendering_view] : m_rendering_views) {
-            WRITE_DEBUG("Initializing ", std::to_string(static_cast<int>(viewing_mode)));
-            rendering_view->onMapDataChanged(image, data);
-        }
+    auto [iwidth, iheight] = map_data->getDimensions();
 
-        auto siwidth = iwidth * getScaleFactor();
-        auto siheight = iheight * getScaleFactor();
-        set_size_request(siwidth, siheight);
+    WRITE_DEBUG("Updating map data for each rendering view.");
+    for(auto&& [viewing_mode, rendering_view] : m_rendering_views) {
+        WRITE_DEBUG("Initializing ", std::to_string(static_cast<int>(viewing_mode)));
+        rendering_view->onMapDataChanged(map_data);
     }
+
+    auto siwidth = iwidth * getScaleFactor();
+    auto siheight = iheight * getScaleFactor();
+    set_size_request(siwidth, siheight);
 }
 
 void MapNormalizer::GUI::GL::MapDrawingArea::onShow() {
@@ -162,10 +161,10 @@ void MapNormalizer::GUI::GL::MapDrawingArea::setupAllUniforms() {
 }
 
 glm::mat4 MapNormalizer::GUI::GL::MapDrawingArea::getProjection() {
-    auto&& image = getImage();
+    auto [iwidth, iheight] = getMapData()->getDimensions();
 
     // The dimensions of the image
-    glm::vec2 size{image->info_header.width, image->info_header.height};
+    glm::vec2 size{iwidth, iheight};
 
     // Make sure that we scale the projection as well
     size *= getScaleFactor();
@@ -177,10 +176,10 @@ glm::mat4 MapNormalizer::GUI::GL::MapDrawingArea::getProjection() {
 }
 
 glm::mat4 MapNormalizer::GUI::GL::MapDrawingArea::getTransformation() {
-    auto&& image = getImage();
+    auto [iwidth, iheight] = getMapData()->getDimensions();
 
     // The dimensions of the image
-    glm::vec2 size{image->info_header.width, image->info_header.height};
+    glm::vec2 size{iwidth, iheight};
 
     glm::mat4 transform = glm::mat4{1.0f};
 

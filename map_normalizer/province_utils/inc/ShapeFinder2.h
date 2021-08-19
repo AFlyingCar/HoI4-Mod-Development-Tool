@@ -61,11 +61,20 @@ namespace MapNormalizer {
 
             static void calculateAdjacency(const BitMap*, const uint32_t*,
                                            std::set<uint32_t>&, const Point2D&);
+            static void calculateAdjacency(const Dimensions&,
+                                           const uint8_t*,
+                                           const uint32_t*,
+                                           std::set<uint32_t>&,
+                                           const Point2D&);
 
             static std::optional<Point2D> getAdjacentPixel(const BitMap*,
                                                            const Point2D&,
                                                            Direction);
-
+            static std::optional<Point2D> getAdjacentPixel(const Dimensions&,
+                                                           const uint8_t*,
+                                                           const Point2D&,
+                                                           Direction);
+ 
         protected:
             using LabelShapeIdxMap = std::unordered_map<uint32_t, uint32_t>;
 

@@ -147,8 +147,7 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
 
             // Make sure we update the drawing area with any new data it may have
             //  missed
-            m_drawing_area->setImage(m_cairo_drawing_area->getImage());
-            m_drawing_area->setGraphicsData(m_cairo_drawing_area->getGraphicsData());
+            m_drawing_area->setMapData(m_cairo_drawing_area->getMapData());
             m_drawing_area->queueDraw();
         });
 
@@ -174,8 +173,7 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
 
             // Make sure we update the drawing area with any new data it may have
             //  missed
-            m_drawing_area->setImage(m_gl_drawing_area->getImage());
-            m_drawing_area->setGraphicsData(m_gl_drawing_area->getGraphicsData());
+            m_drawing_area->setMapData(m_gl_drawing_area->getMapData());
 
             // Special Cairo functions we need to call
             m_cairo_drawing_area->rebuildImageCache();
@@ -285,12 +283,12 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                 auto& project = opt_project->get();
                 auto& map_project = project.getMapProject();
 
-                auto image = project.getMapProject().getImage();
+                auto map_data = project.getMapProject().getMapData();
                 auto lmatrix = project.getMapProject().getLabelMatrix();
 
                 // If the click happens outside of the bounds of the image, then
                 //   deselect the province
-                if(x > image->info_header.width || y > image->info_header.height) {
+                if(x > map_data->getWidth() || y > map_data->getHeight()) {
                     map_project.selectProvince(-1);
 
                     ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
@@ -303,7 +301,7 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                 }
 
                 // Get the label for the pixel that got clicked on
-                auto label = lmatrix[xyToIndex(image, x, y)];
+                auto label = lmatrix[xyToIndex(map_data->getWidth(), x, y)];
 
                 WRITE_DEBUG("Selecting province with ID ", label);
                 map_project.selectProvince(label - 1);
@@ -328,15 +326,15 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
             if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
                 auto& project = opt_project->get();
 
-                auto image = project.getMapProject().getImage();
+                auto map_data = project.getMapProject().getMapData();
                 auto lmatrix = project.getMapProject().getLabelMatrix();
 
                 // Multiselect out of bounds will simply not add to the selections
-                if(x > image->info_header.width || y > image->info_header.height) {
+                if(x > map_data->getWidth() || y > map_data->getHeight()) {
                     return;
                 }
 
-                auto label = lmatrix[xyToIndex(image, x, y)];
+                auto label = lmatrix[xyToIndex(map_data->getWidth(), x, y)];
 
                 // TODO: get the current province and add it to some sort of
                 //   grouping that can be acted upon
@@ -510,14 +508,11 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
         auto& project = opt_project->get();
 
         // First, load the image into memory
-        if(BitMap* image = readBMP(std::string(filename)); image != nullptr) {
-            project.getMapProject().setImage(image);
-        } else {
+        BitMap* image = nullptr;
+        if(image = readBMP(std::string(filename)); image == nullptr) {
             WRITE_ERROR("Failed to read bitmap from ", filename);
             return false;
         }
-
-        const auto* image = project.getMapProject().getImage();
 
         if(image == nullptr) {
             WRITE_ERROR("Reading bitmap failed.");
@@ -528,12 +523,12 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
 
         // We now need a new array that the graphics worker can use to display the
         //  rendered image
-        auto data_size = image->info_header.width * image->info_header.height * 3;
-        unsigned char* graphics_data = new unsigned char[data_size];
+        std::shared_ptr<MapData> map_data(new MapData(image->info_header.width,
+                                                      image->info_header.height));
 
         // No memory leak here, since the data will get deleted either at program
         //  exit, or when the next value is loaded
-        worker.init(image, graphics_data);
+        worker.init(map_data);
         worker.resetDebugData();
         worker.updateCallback({0, 0, static_cast<uint32_t>(image->info_header.width),
                                      static_cast<uint32_t>(image->info_header.height)});
@@ -543,7 +538,7 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
         m_drawing_area->getWindow()->resize(image->info_header.width,
                                             image->info_header.height);
 
-        m_drawing_area->setData(image, graphics_data);
+        m_drawing_area->setMapData(map_data);
 
         ShapeFinder shape_finder(image, GraphicsWorker::getInstance());
 
@@ -588,12 +583,15 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
         //  nothing causes thread race conditions.
 
         // Start processing the data
-        std::thread sf_worker([&shape_finder, done_button, cancel_button]() {
+        std::thread sf_worker([&shape_finder, map_data, done_button, cancel_button]()
+        {
             auto& worker = GraphicsWorker::getInstance();
 
             auto shapes = shape_finder.findAllShapes();
 
             auto* image = shape_finder.getImage();
+
+            auto prov_ptr = map_data->getProvinces().lock();
 
             // Redraw the new image so we can properly show how it should look in the
             //  final output
@@ -602,7 +600,7 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
             for(auto&& shape : shapes) {
                 for(auto&& pixel : shape.pixels) {
                     // Write to both the output data and into the displayed data
-                    writeColorTo(image->data, image->info_header.width,
+                    writeColorTo(prov_ptr.get(), image->info_header.width,
                                  pixel.point.x, pixel.point.y,
                                  shape.unique_color);
 
@@ -654,7 +652,7 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
 
         WRITE_DEBUG("Assigning the found data to the map project.");
         project.getMapProject().setShapeFinder(std::move(shape_finder));
-        project.getMapProject().setGraphicsData(graphics_data);
+        project.getMapProject().setGraphicsData(map_data);
 
         std::filesystem::path imported{std::string(filename)};
         std::filesystem::path input_root = project.getInputsRoot();
@@ -770,8 +768,7 @@ void MapNormalizer::GUI::MainWindow::openProject() {
     // Set up the drawing area
     const auto& map_project = project->getMapProject();
 
-    m_drawing_area->setData(map_project.getImage(),
-                            map_project.getGraphicsData());
+    m_drawing_area->setMapData(map_project.getMapData());
     m_drawing_area->queueDraw();
 
     // We no longer need to own the project, so give it to the Driver
@@ -796,8 +793,9 @@ void MapNormalizer::GUI::MainWindow::onProjectOpened() {
  */
 void MapNormalizer::GUI::MainWindow::onProjectClosed() {
     // Have the drawing area forget the data it was set to render
-    m_drawing_area->setGraphicsData(nullptr);
-    m_drawing_area->setImage(nullptr);
+    if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+        opt_project->get().getMapProject().getMapData()->close();
+    }
     m_drawing_area->queueDraw();
 
     // Disable all actions that can only be done on an opened project

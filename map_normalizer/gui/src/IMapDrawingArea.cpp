@@ -8,8 +8,7 @@
 #include "Util.h"
 
 MapNormalizer::GUI::IMapDrawingAreaBase::IMapDrawingAreaBase():
-    m_graphics_data(nullptr),
-    m_image(nullptr),
+    m_map_data(nullptr),
     m_on_select([](auto...) { }),      // The default callback does nothing
     m_on_multiselect([](auto...) { }),
     m_scale_factor(DEFAULT_ZOOM),
@@ -18,16 +17,7 @@ MapNormalizer::GUI::IMapDrawingAreaBase::IMapDrawingAreaBase():
 
 
 bool MapNormalizer::GUI::IMapDrawingAreaBase::hasData() const {
-    return m_graphics_data != nullptr && m_image != nullptr;
-}
-
-void MapNormalizer::GUI::IMapDrawingAreaBase::setGraphicsData(const unsigned char* data)
-{
-    setData(m_image, data);
-}
-
-void MapNormalizer::GUI::IMapDrawingAreaBase::setImage(const BitMap* image) {
-    setData(image, m_graphics_data);
+    return m_map_data != nullptr && !m_map_data->isClosed();
 }
 
 /**
@@ -53,23 +43,17 @@ auto MapNormalizer::GUI::IMapDrawingAreaBase::getViewingMode() const
     return m_viewing_mode;
 }
 
-const unsigned char* MapNormalizer::GUI::IMapDrawingAreaBase::getGraphicsData() const
+auto MapNormalizer::GUI::IMapDrawingAreaBase::getMapData() const
+    -> std::shared_ptr<const MapData>
 {
-    return m_graphics_data;
+    return m_map_data;
 }
 
-auto MapNormalizer::GUI::IMapDrawingAreaBase::getImage() const -> const BitMap*
+void MapNormalizer::GUI::IMapDrawingAreaBase::setMapData(std::shared_ptr<const MapData> map_data)
 {
-    return m_image;
-}
+    onSetData(map_data);
 
-void MapNormalizer::GUI::IMapDrawingAreaBase::setData(const BitMap* image,
-                                                      const unsigned char* data)
-{
-    onSetData(image, data);
-
-    m_image = image;
-    m_graphics_data = data;
+    m_map_data = map_data;
 
     resetZoom();
 }
@@ -130,7 +114,7 @@ void MapNormalizer::GUI::IMapDrawingAreaBase::resetZoom() {
         double pwidth = parent->get_width();
         double pheight = parent->get_height();
 
-        double iheight = m_image->info_header.height;
+        double iheight = m_map_data->getHeight();
 
         // Scale to the smallest dimension of the parent window
         // But only scale down if the image is too large, don't worry about

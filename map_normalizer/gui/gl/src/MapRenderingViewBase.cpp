@@ -78,11 +78,9 @@ void MapNormalizer::GUI::GL::MapRenderingViewBase::init() {
     }
 }
 
-void MapNormalizer::GUI::GL::MapRenderingViewBase::onMapDataChanged(const BitMap* image,
-                                                                    const unsigned char* data)
+void MapNormalizer::GUI::GL::MapRenderingViewBase::onMapDataChanged(std::shared_ptr<const MapData> map_data)
 {
-    auto iwidth = image->info_header.width;
-    auto iheight = image->info_header.height;
+    auto [iwidth, iheight] = map_data->getDimensions();
 
     m_texture.setTextureUnitID(Texture::Unit::TEX_UNIT0);
 
@@ -95,7 +93,7 @@ void MapNormalizer::GUI::GL::MapRenderingViewBase::onMapDataChanged(const BitMap
         m_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::LINEAR);
 
         m_texture.setTextureData(Texture::Format::RGB,
-                                  iwidth, iheight, data);
+                                  iwidth, iheight, map_data->getProvinces().lock().get());
     }
     m_texture.bind(false);
 }

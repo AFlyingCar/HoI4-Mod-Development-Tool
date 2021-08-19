@@ -46,15 +46,12 @@ namespace MapNormalizer::GUI {
             IMapDrawingAreaBase();
             virtual ~IMapDrawingAreaBase() = default;
 
-            void setGraphicsData(const unsigned char*);
-            void setImage(const BitMap*);
-            void setData(const BitMap*, const unsigned char*);
+            void setMapData(const std::shared_ptr<const MapData>);
 
             ViewingMode setViewingMode(ViewingMode);
 
             ViewingMode getViewingMode() const;
-            const unsigned char* getGraphicsData() const;
-            const BitMap* getImage() const;
+            std::shared_ptr<const MapData> getMapData() const;
 
             bool hasData() const;
 
@@ -85,7 +82,7 @@ namespace MapNormalizer::GUI {
             virtual void onZoom() = 0;
 
             virtual void onViewingModeChange(ViewingMode) = 0;
-            virtual void onSetData(const BitMap*, const unsigned char*) = 0;
+            virtual void onSetData(std::shared_ptr<const MapData>) = 0;
             virtual void onShow() = 0;
 
             const SelectionCallback& getOnSelect() const;
@@ -95,8 +92,7 @@ namespace MapNormalizer::GUI {
             std::optional<SelectionInfo>& getSelection();
 
         private:
-            const unsigned char* m_graphics_data;
-            const BitMap* m_image;
+            std::shared_ptr<const MapData> m_map_data;
 
             //! Called when a provice is selected
             SelectionCallback m_on_select;
