@@ -24,6 +24,7 @@ add_library(common STATIC
     src/UniqueColorGenerator.cpp
     src/Version.cpp
     src/Constants.cpp
+    src/MapData.cpp
 
     "${CMAKE_BINARY_DIR}/ToolsVersion.h"
 )
