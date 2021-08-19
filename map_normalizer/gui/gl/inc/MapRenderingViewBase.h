@@ -26,7 +26,7 @@ namespace MapNormalizer::GUI::GL {
 
             virtual Program& getProgram() override;
 
-            virtual void onMapDataChanged(const BitMap*, const unsigned char*) override;
+            virtual void onMapDataChanged(std::shared_ptr<const MapData>) override;
 
         protected:
             virtual void setupUniforms();

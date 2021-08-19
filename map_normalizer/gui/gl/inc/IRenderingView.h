@@ -1,7 +1,9 @@
 #ifndef IRENDERINGVIEW_H
 # define IRENDERINGVIEW_H
 
-# include "BitMap.h"
+# include <memory>
+
+# include "MapData.h"
 
 namespace MapNormalizer::GUI::GL {
     class Program;
@@ -20,8 +22,7 @@ namespace MapNormalizer::GUI::GL {
 
             virtual void init() = 0;
 
-            virtual void onMapDataChanged(const BitMap*,
-                                          const unsigned char*) = 0;
+            virtual void onMapDataChanged(std::shared_ptr<const MapData>) = 0;
 
             virtual void beginRender() = 0;
             virtual void render() = 0;

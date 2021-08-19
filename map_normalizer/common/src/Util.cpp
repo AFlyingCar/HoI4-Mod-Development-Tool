@@ -104,6 +104,30 @@ MapNormalizer::Color MapNormalizer::getColorAt(const BitMap* image, uint32_t x,
 }
 
 /**
+ * @brief Gets the color at the given XY coordinate from the given data
+ *
+ * @param dimensions The dimensions of the data
+ * @param data The data
+ * @param x The X coordinate to use
+ * @param y The Y coordinate to use
+ * @param depth The BitMap's color depth
+ *
+ * @return An RGB color from image at (x,y)
+ */
+MapNormalizer::Color MapNormalizer::getColorAt(const Dimensions& dimensions,
+                                               const uint8_t* data,
+                                               uint32_t x, uint32_t y,
+                                               uint32_t depth)
+{
+    auto index = xyToIndex(dimensions.w * depth, x * depth, y);
+
+    return { data[index],
+             data[index + 1],
+             data[index + 2]
+           };
+}
+
+/**
  * @brief Gets the given XY coordinate as a Pixel from the given BitMap
  *
  * @param image The BitMap to get a pixel from
@@ -142,9 +166,9 @@ bool MapNormalizer::doColorsMatch(const Color& c1, const Color& c2) {
  *
  * @return True if the point is within the bounds of the image, false otherwise
  */
-bool MapNormalizer::isInImage(const BitMap* image, uint32_t x, uint32_t y) {
-    return x < static_cast<uint32_t>(image->info_header.width) &&
-           y < static_cast<uint32_t>(image->info_header.height);
+bool MapNormalizer::isInImage(const Dimensions& dimensions, uint32_t x, uint32_t y) {
+    return x < static_cast<uint32_t>(dimensions.w) &&
+           y < static_cast<uint32_t>(dimensions.h);
 }
 
 bool MapNormalizer::isShapeTooLarge(uint32_t s_width, uint32_t s_height,

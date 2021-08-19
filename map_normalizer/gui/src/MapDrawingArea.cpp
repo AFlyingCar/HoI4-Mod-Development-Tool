@@ -84,13 +84,13 @@ bool MapNormalizer::GUI::MapDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Cont
  */
 void MapNormalizer::GUI::MapDrawingArea::rebuildImageCache() {
     if(hasData()) {
-        auto iwidth = getImage()->info_header.width;
-        auto iheight = getImage()->info_header.height;
+        auto [iwidth, iheight] = getMapData()->getDimensions();
 
         auto siwidth = iwidth * getScaleFactor();
         auto siheight = iheight * getScaleFactor();
 
-        m_image_pixbuf = Gdk::Pixbuf::create_from_data(getGraphicsData(), Gdk::Colorspace::COLORSPACE_RGB, false, 8, iwidth, iheight, iwidth * 3);
+        auto prov_ptr = getMapData()->getProvinces().lock();
+        m_image_pixbuf = Gdk::Pixbuf::create_from_data(prov_ptr.get(), Gdk::Colorspace::COLORSPACE_RGB, false, 8, iwidth, iheight, iwidth * 3);
 
         m_image_pixbuf = m_image_pixbuf->scale_simple(siwidth, siheight, Gdk::INTERP_BILINEAR);
 

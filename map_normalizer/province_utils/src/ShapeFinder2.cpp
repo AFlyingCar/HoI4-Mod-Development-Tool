@@ -584,6 +584,26 @@ auto MapNormalizer::ShapeFinder::getAdjacentPixel(const BitMap* image,
                                                   Direction dir1)
     -> std::optional<Point2D>
 {
+    return getAdjacentPixel({static_cast<uint32_t>(image->info_header.width),
+                             static_cast<uint32_t>(image->info_header.height)},
+                            image->data, point, dir1);
+}
+
+/**
+ * @brief Gets a pixel adjacent to point
+ *
+ * @param point The point to get an adjacent pixel for.
+ * @param dir1 The direction.
+ *
+ * @return The point adjacent to 'point', std::nullopt if there is no pixel
+ *         adjacent to 'point' in the directions specified
+ */
+auto MapNormalizer::ShapeFinder::getAdjacentPixel(const Dimensions& dimensions,
+                                                  const uint8_t* data,
+                                                  const Point2D& point,
+                                                  Direction dir1)
+    -> std::optional<Point2D>
+{
     Point2D adjacent = point;
 
     switch(dir1) {
@@ -601,8 +621,8 @@ auto MapNormalizer::ShapeFinder::getAdjacentPixel(const BitMap* image,
             break;
     }
 
-    if(isInImage(image, adjacent.x, adjacent.y) &&
-       getColorAt(image, adjacent.x, adjacent.y) != BORDER_COLOR)
+    if(isInImage(dimensions, adjacent.x, adjacent.y) &&
+       getColorAt(dimensions, data, adjacent.x, adjacent.y) != BORDER_COLOR)
     {
         return adjacent;
     } else {
@@ -659,28 +679,49 @@ void MapNormalizer::ShapeFinder::calculateAdjacency(const BitMap* image,
                                                     std::set<uint32_t>& adjacency_list,
                                                     const Point2D& point)
 {
-    if(auto left = getAdjacentPixel(image, point, Direction::LEFT); left) {
-        auto adj_index = xyToIndex(image, left->x, left->y);
+    calculateAdjacency({static_cast<uint32_t>(image->info_header.width),
+                        static_cast<uint32_t>(image->info_header.height)},
+                       image->data, label_matrix, adjacency_list, point);
+}
+
+/**
+ * @brief Calculates the adjacent shapes for a single point
+ *
+ * @param image The image the pixel is from
+ * @param label_matrix The matrix of labels
+ * @param adjacency_list The set of adjacent labels to insert into
+ * @param point The point to find adjacent shapes for
+ */
+void MapNormalizer::ShapeFinder::calculateAdjacency(const Dimensions& dimensions,
+                                                    const uint8_t* data,
+                                                    const uint32_t* label_matrix,
+                                                    std::set<uint32_t>& adjacency_list,
+                                                    const Point2D& point)
+{
+    if(auto left = getAdjacentPixel(dimensions, data, point, Direction::LEFT); left)
+    {
+        auto adj_index = xyToIndex(dimensions.w, left->x, left->y);
         adjacency_list.insert(label_matrix[adj_index]);
     }
 
-    if(auto right = getAdjacentPixel(image, point, Direction::RIGHT); right) {
-        auto adj_index = xyToIndex(image, right->x, right->y);
+    if(auto right = getAdjacentPixel(dimensions, data, point, Direction::RIGHT); right)
+    {
+        auto adj_index = xyToIndex(dimensions.w, right->x, right->y);
         adjacency_list.insert(label_matrix[adj_index]);
     }
 
-    if(auto up = getAdjacentPixel(image, point, Direction::UP); up) {
-        auto adj_index = xyToIndex(image, up->x, up->y);
+    if(auto up = getAdjacentPixel(dimensions, data, point, Direction::UP); up)
+    {
+        auto adj_index = xyToIndex(dimensions.w, up->x, up->y);
         adjacency_list.insert(label_matrix[adj_index]);
     }
 
-    if(auto down = getAdjacentPixel(image, point, Direction::DOWN); down) {
-        auto adj_index = xyToIndex(image, down->x, down->y);
+    if(auto down = getAdjacentPixel(dimensions, data, point, Direction::DOWN); down)
+    {
+        auto adj_index = xyToIndex(dimensions.w, down->x, down->y);
         adjacency_list.insert(label_matrix[adj_index]);
     }
 }
-
-
 
 void MapNormalizer::ShapeFinder::estop() {
     m_do_estop = true;

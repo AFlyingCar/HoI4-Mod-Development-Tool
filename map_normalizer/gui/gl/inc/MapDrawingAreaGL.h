@@ -30,7 +30,7 @@ namespace MapNormalizer::GUI::GL {
             virtual void init() override;
             virtual void onZoom() override;
             virtual void onViewingModeChange(ViewingMode) override { };
-            virtual void onSetData(const BitMap*, const unsigned char*) override;
+            virtual void onSetData(std::shared_ptr<const MapData>) override;
             virtual void onShow() override;
 
             std::shared_ptr<IRenderingView> getCurrentRenderingView();

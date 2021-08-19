@@ -32,7 +32,7 @@ namespace MapNormalizer::GUI {
 
             virtual void onShow() override { };
             virtual void onViewingModeChange(ViewingMode) override { };
-            virtual void onSetData(const BitMap*, const unsigned char*) override
+            virtual void onSetData(std::shared_ptr<const MapData>) override
             { };
 
         private:
