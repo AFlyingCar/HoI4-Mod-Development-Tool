@@ -15,3 +15,8 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
     // Then render the selected province (if there is one selected) on top of that
 }
 
+auto MapNormalizer::GUI::GL::ProvinceRenderingView::getPrograms() -> ProgramList
+{
+    return { getMapProgram(), m_outline_shader, m_selection_shader };
+}
+

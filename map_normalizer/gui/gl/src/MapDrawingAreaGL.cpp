@@ -153,11 +153,13 @@ auto MapNormalizer::GUI::GL::MapDrawingArea::getCurrentRenderingView()
 void MapNormalizer::GUI::GL::MapDrawingArea::setupAllUniforms() {
     auto current_rendering_view = getCurrentRenderingView();
 
-    // Set up the projection matrix
-    current_rendering_view->getProgram().uniform("projection", getProjection());
+    for(auto& program : current_rendering_view->getPrograms()) {
+        // Set up the projection matrix
+        program.get().uniform("projection", getProjection());
 
-    // Set up the transformation matrix
-    current_rendering_view->getProgram().uniform("transform", getTransformation());
+        // Set up the transformation matrix
+        program.get().uniform("transform", getTransformation());
+    }
 }
 
 glm::mat4 MapNormalizer::GUI::GL::MapDrawingArea::getProjection() {

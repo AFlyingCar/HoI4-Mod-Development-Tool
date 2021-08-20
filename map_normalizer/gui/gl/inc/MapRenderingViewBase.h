@@ -24,11 +24,13 @@ namespace MapNormalizer::GUI::GL {
             virtual void render() override;
             virtual void endRender() override;
 
-            virtual Program& getProgram() override;
+            virtual ProgramList getPrograms() override;
 
             virtual void onMapDataChanged(std::shared_ptr<const MapData>) override;
 
         protected:
+            Program& getMapProgram();
+
             virtual void setupUniforms();
 
             std::array<glm::vec4, 6> getMapVertices();

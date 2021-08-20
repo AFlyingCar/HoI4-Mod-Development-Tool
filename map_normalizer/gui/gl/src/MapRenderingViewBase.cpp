@@ -143,7 +143,12 @@ auto MapNormalizer::GUI::GL::MapRenderingViewBase::getMapVertices()
     };
 }
 
-auto MapNormalizer::GUI::GL::MapRenderingViewBase::getProgram() -> Program& {
+auto MapNormalizer::GUI::GL::MapRenderingViewBase::getMapProgram() -> Program&
+{
     return m_program;
+}
+
+auto MapNormalizer::GUI::GL::MapRenderingViewBase::getPrograms() -> ProgramList {
+    return { m_program };
 }
 
