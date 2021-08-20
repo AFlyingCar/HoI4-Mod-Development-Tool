@@ -2,6 +2,7 @@
 # define IRENDERINGVIEW_H
 
 # include <memory>
+# include <vector>
 
 # include "MapData.h"
 
@@ -13,6 +14,8 @@ namespace MapNormalizer::GUI::GL {
      */
     class IRenderingView {
         public:
+            using ProgramList = std::vector<std::reference_wrapper<Program>>;
+
             IRenderingView() = default;
             virtual ~IRenderingView() = default;
             IRenderingView(IRenderingView&&) = default;
@@ -28,7 +31,7 @@ namespace MapNormalizer::GUI::GL {
             virtual void render() = 0;
             virtual void endRender() = 0;
 
-            virtual Program& getProgram() = 0;
+            virtual ProgramList getPrograms() = 0;
     };
 }
 

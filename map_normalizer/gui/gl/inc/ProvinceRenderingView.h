@@ -11,6 +11,8 @@ namespace MapNormalizer::GUI::GL {
             virtual void init() override;
             virtual void render() override;
 
+            virtual ProgramList getPrograms() override;
+
         private:
             Program m_outline_shader;
             Program m_selection_shader;
