@@ -77,6 +77,9 @@ namespace MapNormalizer::GUI {
 
             double getScaleFactor() const;
 
+            const std::optional<SelectionInfo>& getSelection() const;
+            std::optional<SelectionInfo>& getSelection();
+
         protected:
             virtual void init() = 0;
             virtual void onZoom() = 0;
@@ -84,12 +87,10 @@ namespace MapNormalizer::GUI {
             virtual void onViewingModeChange(ViewingMode) = 0;
             virtual void onSetData(std::shared_ptr<const MapData>) = 0;
             virtual void onShow() = 0;
+            virtual void onSelectionChanged(std::optional<SelectionInfo>) { };
 
             const SelectionCallback& getOnSelect() const;
             const SelectionCallback& getOnMultiSelect() const;
-
-            const std::optional<SelectionInfo>& getSelection() const;
-            std::optional<SelectionInfo>& getSelection();
 
         private:
             std::shared_ptr<const MapData> m_map_data;
