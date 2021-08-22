@@ -143,8 +143,18 @@ uint32_t MapNormalizer::GUI::GL::Texture::targetToGLTarget(Target target) {
 
 uint32_t MapNormalizer::GUI::GL::Texture::formatToGLFormat(Format format) {
     switch(format) {
+        case Format::RED:
+            return GL_RED;
+        case Format::GREEN:
+            return GL_GREEN;
+        case Format::BLUE:
+            return GL_BLUE;
+        case Format::ALPHA:
+            return GL_ALPHA;
         case Format::RGB:
             return GL_RGB;
+        case Format::RGBA:
+            return GL_RGBA;
         default:
             return -1;
     }
