@@ -69,11 +69,13 @@ void MapNormalizer::GUI::IMapDrawingAreaBase::setOnMultiProvinceSelectionCallbac
 }
 
 void MapNormalizer::GUI::IMapDrawingAreaBase::setSelection() {
+    onSelectionChanged(std::nullopt);
     m_selection = std::nullopt;
 }
 
 void MapNormalizer::GUI::IMapDrawingAreaBase::setSelection(const SelectionInfo& selection)
 {
+    onSelectionChanged(selection);
     m_selection = selection;
 }
 
