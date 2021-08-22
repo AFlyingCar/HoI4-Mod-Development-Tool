@@ -105,18 +105,7 @@ void MapNormalizer::GUI::GL::MapRenderingViewBase::beginRender() {
 }
 
 void MapNormalizer::GUI::GL::MapRenderingViewBase::render() {
-    // Draw the map object
-    WRITE_DEBUG("glBindVertexArray(", m_vao, ")");
-    glBindVertexArray(m_vao);
-    MN_LOG_GL_ERRORS();
-
-    WRITE_DEBUG("glBindVertexArray(GL_TRIANGLES, 0, 6)");
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    MN_LOG_GL_ERRORS();
-
-    WRITE_DEBUG("glBindVertexArray(0)");
-    glBindVertexArray(0);
-    MN_LOG_GL_ERRORS();
+    drawMapVAO();
 }
 
 void MapNormalizer::GUI::GL::MapRenderingViewBase::endRender() {
@@ -143,9 +132,27 @@ auto MapNormalizer::GUI::GL::MapRenderingViewBase::getMapVertices()
     };
 }
 
-auto MapNormalizer::GUI::GL::MapRenderingViewBase::getMapProgram() -> Program&
-{
+void MapNormalizer::GUI::GL::MapRenderingViewBase::drawMapVAO() {
+    // Draw the map object
+    WRITE_DEBUG("glBindVertexArray(", m_vao, ")");
+    glBindVertexArray(m_vao);
+    MN_LOG_GL_ERRORS();
+
+    WRITE_DEBUG("glBindVertexArray(GL_TRIANGLES, 0, 6)");
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    MN_LOG_GL_ERRORS();
+
+    WRITE_DEBUG("glBindVertexArray(0)");
+    glBindVertexArray(0);
+    MN_LOG_GL_ERRORS();
+}
+
+auto MapNormalizer::GUI::GL::MapRenderingViewBase::getMapProgram() -> Program& {
     return m_program;
+}
+
+auto MapNormalizer::GUI::GL::MapRenderingViewBase::getMapTexture() -> Texture& {
+    return m_texture;
 }
 
 auto MapNormalizer::GUI::GL::MapRenderingViewBase::getPrograms() -> ProgramList {
