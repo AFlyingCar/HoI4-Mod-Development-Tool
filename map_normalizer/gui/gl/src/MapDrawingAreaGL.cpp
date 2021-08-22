@@ -91,12 +91,17 @@ void MapNormalizer::GUI::GL::MapDrawingArea::init() {
         throw GLEWInitializationException(result);
     }
 
+    // Enable all of our settings that we care about
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     m_rendering_views[ViewingMode::PROVINCE_VIEW].reset(new ProvinceRenderingView());
 
     WRITE_DEBUG("Initializing each rendering view.");
     for(auto&& [viewing_mode, rendering_view] : m_rendering_views) {
         WRITE_DEBUG("Initializing ", std::to_string(static_cast<int>(viewing_mode)));
         rendering_view->init();
+        rendering_view->m_owning_gl_drawing_area = this;
     }
 
     onViewingModeChange(DEFAULT_VIEWING_MODE);
@@ -139,6 +144,11 @@ void MapNormalizer::GUI::GL::MapDrawingArea::onShow() {
     set_required_version(4, 10); // Must be called before the area has been realized
 }
 
+void MapNormalizer::GUI::GL::MapDrawingArea::onSelectionChanged(std::optional<SelectionInfo> selection)
+{
+    getCurrentRenderingView()->onSelectionChanged(selection);
+}
+
 void MapNormalizer::GUI::GL::MapDrawingArea::queueDraw() {
     queue_draw();
     show_all();
@@ -162,7 +172,7 @@ void MapNormalizer::GUI::GL::MapDrawingArea::setupAllUniforms() {
     }
 }
 
-glm::mat4 MapNormalizer::GUI::GL::MapDrawingArea::getProjection() {
+glm::mat4 MapNormalizer::GUI::GL::MapDrawingArea::getProjection() const {
     auto [iwidth, iheight] = getMapData()->getDimensions();
 
     // The dimensions of the image
@@ -177,7 +187,7 @@ glm::mat4 MapNormalizer::GUI::GL::MapDrawingArea::getProjection() {
     return glm::ortho(0.0f, static_cast<float>(size.x), static_cast<float>(size.y), 0.0f);
 }
 
-glm::mat4 MapNormalizer::GUI::GL::MapDrawingArea::getTransformation() {
+glm::mat4 MapNormalizer::GUI::GL::MapDrawingArea::getTransformation() const {
     auto [iwidth, iheight] = getMapData()->getDimensions();
 
     // The dimensions of the image

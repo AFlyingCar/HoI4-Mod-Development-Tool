@@ -22,6 +22,9 @@ namespace MapNormalizer::GUI::GL {
 
             virtual void queueDraw() override;
 
+            glm::mat4 getProjection() const;
+            glm::mat4 getTransformation() const;
+
         protected:
             virtual bool on_render(const Glib::RefPtr<Gdk::GLContext>&) override;
             virtual void on_unrealize() override;
@@ -32,13 +35,11 @@ namespace MapNormalizer::GUI::GL {
             virtual void onViewingModeChange(ViewingMode) override { };
             virtual void onSetData(std::shared_ptr<const MapData>) override;
             virtual void onShow() override;
+            virtual void onSelectionChanged(std::optional<SelectionInfo>) override;
 
             std::shared_ptr<IRenderingView> getCurrentRenderingView();
 
             void setupAllUniforms();
-
-            glm::mat4 getProjection();
-            glm::mat4 getTransformation();
 
         private:
             std::map<ViewingMode, std::shared_ptr<IRenderingView>> m_rendering_views;
