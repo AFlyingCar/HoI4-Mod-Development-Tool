@@ -35,7 +35,9 @@ namespace MapNormalizer::GUI::GL {
             };
 
             enum class Format {
+                RED, GREEN, BLUE, ALPHA,
                 RGB,
+                RGBA
             };
 
             enum class Axis {
