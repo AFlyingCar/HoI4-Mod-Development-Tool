@@ -30,10 +30,13 @@ namespace MapNormalizer::GUI::GL {
 
         protected:
             Program& getMapProgram();
+            Texture& getMapTexture();
 
             virtual void setupUniforms();
 
             std::array<glm::vec4, 6> getMapVertices();
+
+            void drawMapVAO();
 
         private:
             uint32_t m_vao = -1;
