@@ -45,6 +45,10 @@ add_subdirectory(map_normalizer)
 
 add_subdirectory(tests)
 
+add_subdirectory(resources)
+
+add_dependencies(map_normalizer glib_resources)
+
 ################################################################################
 
 ######################
@@ -115,6 +119,8 @@ include(InstallRequiredSystemLibraries)
 #         DESTINATION ${INSTALL_DESTINATION})
 # install(DIRECTORY resources/share
 #         DESTINATION ${INSTALL_DESTINATION})
+install(FILES ${RESOURCE_C_SRC}
+        DESTINATION ${INSTALL_DESTINATION}/bin)
 install(FILES README.md
         DESTINATION ${INSTALL_DESTINATION}/share/doc/)
 # TODO: Install the license as well to /share/licenses/, once we have one
