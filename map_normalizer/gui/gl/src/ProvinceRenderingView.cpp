@@ -58,7 +58,6 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::init() {
             {
                 // Use NEAREST rather than LINEAR to prevent weird outlines around
                 //  the textures
-                // TODO: We've also got a weird 'fuzziness' in the transparent areas for this texture
                 m_selection_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::NEAREST);
                 m_selection_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::NEAREST);
 
@@ -70,7 +69,6 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::init() {
                                                    selection_bmp->data);
             }
             m_selection_texture.bind(false);
-
         }
     }
 }

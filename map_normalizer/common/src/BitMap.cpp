@@ -88,9 +88,11 @@ MapNormalizer::BitMap* MapNormalizer::readBMP(std::istream& file,
         return nullptr;
     }
 
+    size_t depth = bm->info_header.bitsPerPixel / 8;
+
     // Calculate how many bytes make up one line
     size_t orig_pitch = bm->info_header.width * bm->info_header.bitsPerPixel;
-    size_t new_pitch = bm->info_header.width * (bm->info_header.bitsPerPixel / 8); // This is how many we _want_ each line to take up.
+    size_t new_pitch = bm->info_header.width * depth; // This is how many we _want_ each line to take up.
 
     // Allocate space for our new image data
     try {
@@ -118,7 +120,7 @@ MapNormalizer::BitMap* MapNormalizer::readBMP(std::istream& file,
     }
 
     // Swap B and R every 3 pixels (because BitMap is a stupid format)
-    for(size_t i = 2; i < bm->info_header.sizeOfBitmap; i += 3)
+    for(size_t i = 2; i < bm->info_header.sizeOfBitmap; i += depth)
         std::swap(bm->data[i], bm->data[i - 2]);
 
     //----------------
@@ -199,7 +201,7 @@ void MapNormalizer::writeBMP(const std::filesystem::path& path, const BitMap* bm
  * @param height The height of the bitmap
  */
 void MapNormalizer::writeBMP(const std::filesystem::path& path, unsigned char* data,
-                             uint32_t width, uint32_t height)
+                             uint32_t width, uint32_t height, uint16_t depth)
 {
     BitMap bmp;
     std::memset(&bmp, 0, sizeof(BitMap));
@@ -214,7 +216,7 @@ void MapNormalizer::writeBMP(const std::filesystem::path& path, unsigned char* d
 
     // bmp->filename = filename.c_str();
     bmp.file_header.filetype = BM_TYPE;
-    bmp.file_header.fileSize = fiheader_size + num_pixels * 3;
+    bmp.file_header.fileSize = fiheader_size + num_pixels * depth;
     bmp.file_header.reserved1 = 0;
     bmp.file_header.reserved2 = 0;
     bmp.file_header.bitmapOffset = static_cast<uint32_t>(fiheader_size);
@@ -222,9 +224,9 @@ void MapNormalizer::writeBMP(const std::filesystem::path& path, unsigned char* d
     bmp.info_header.width = static_cast<int>(width);
     bmp.info_header.height = static_cast<int>(height);
     bmp.info_header.bitPlanes = 1;
-    bmp.info_header.bitsPerPixel = 24; // 3 color values, 8 bits each
+    bmp.info_header.bitsPerPixel = depth * 8; // 8 bits per pixel
     bmp.info_header.compression = 0; // For Win32 systems, this is BI_RGB
-    bmp.info_header.sizeOfBitmap = num_pixels * 3; // 3 bytes per pixel
+    bmp.info_header.sizeOfBitmap = num_pixels * depth;
     bmp.info_header.horzResolution = 0; // TODO: Do we need to set this?
     bmp.info_header.vertResolution = 0; // TODO: Do we need to set this?
     bmp.info_header.colorsUsed = 0;
