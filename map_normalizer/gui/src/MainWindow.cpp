@@ -650,6 +650,10 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
             return true;
         }
 
+        WRITE_DEBUG("Assigning the found data to the map project.");
+        project.getMapProject().setShapeFinder(std::move(shape_finder));
+        project.getMapProject().setGraphicsData(map_data);
+
         // We need to re-assign the data into the drawing area to update the
         //   texture on the drawing area
         // TODO: For OpenGL we should probably use a Pixel Buffer Object (PBO)
@@ -657,10 +661,6 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
         //   instead can be drawn as it is getting generated
         WRITE_DEBUG("Assigning the found data into the drawing area.");
         m_drawing_area->setMapData(map_data);
-
-        WRITE_DEBUG("Assigning the found data to the map project.");
-        project.getMapProject().setShapeFinder(std::move(shape_finder));
-        project.getMapProject().setGraphicsData(map_data);
 
         std::filesystem::path imported{std::string(filename)};
         std::filesystem::path input_root = project.getInputsRoot();
