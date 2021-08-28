@@ -4,8 +4,13 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(glm REQUIRED)
 
+if(WIN32)
+    set(GLEW_INCLUDE_DIRS "C:\\msys64\\mingw64\\include")
+endif()
+
 # Generate GLShaderSources.h
 add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/GLShaderSources.h"
+    COMMAND ${CMAKE_COMMAND} -E echo python3 "${CMAKE_SOURCE_DIR}/tools/genGLShaderSourcesHeader.py" "${CMAKE_CURRENT_SOURCE_DIR}/glsl" "${CMAKE_BINARY_DIR}"
     COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/genGLShaderSourcesHeader.py" "${CMAKE_CURRENT_SOURCE_DIR}/glsl" "${CMAKE_BINARY_DIR}"
     DEPENDS "${CMAKE_SOURCE_DIR}/tools/genGLShaderSourcesHeader.py" "${CMAKE_CURRENT_SOURCE_DIR}/glsl/"
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
@@ -13,6 +18,7 @@ add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/GLShaderSources.h"
 
 # Generate GLXMacro.h
 add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/GLXMacros.h"
+    COMMAND ${CMAKE_COMMAND} -E echo python3 "${CMAKE_SOURCE_DIR}/tools/genGLXMacrosHeader.py" "${GLEW_INCLUDE_DIRS}" "${CMAKE_BINARY_DIR}"
     COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/genGLXMacrosHeader.py" "${GLEW_INCLUDE_DIRS}" "${CMAKE_BINARY_DIR}"
     DEPENDS "${CMAKE_SOURCE_DIR}/tools/genGLXMacrosHeader.py"
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
@@ -21,7 +27,7 @@ add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/GLXMacros.h"
 # Yeah, I know the CMake documentation _says_ this isn't necessary anymore
 #   https://cmake.org/cmake/help/latest/prop_sf/OBJECT_DEPENDS.html
 # But for some reason I can't figure out, src/MapDrawingAreaGL.cpp doesn't get rebuilt
-#  when GLShaderSources.h gets regenerated without this, so just set the property 
+#  when GLShaderSources.h gets regenerated without this, so just set the property
 #  anyway, the documentation is clearly lying to me.
 set_source_files_properties(src/MapDrawingAreaGL.cpp
     PROPERTIES
