@@ -12,6 +12,8 @@
 # include <istream>
 # include <memory>
 # include <filesystem>
+# include <functional>
+# include <optional>
 
 #include <iostream>
 
@@ -238,6 +240,20 @@ namespace MapNormalizer {
     ProvinceList createProvincesFromShapeList(const PolygonList&);
 
     std::filesystem::path getExecutablePath();
+
+    template<typename T, typename R>
+    std::optional<R> maybe_expr(std::optional<T>&& opt,
+                                std::function<R(const T&)>&& expr)
+    {
+        if(opt) {
+            return expr(*opt);
+        } else {
+            return std::nullopt;
+        }
+    }
+
+# define MAYBE_EXPR(OPT, R, EXPR) \
+    MapNormalizer::maybe_expr<decltype(OPT)::value_type, R>(OPT, [](const auto& v) -> R { return v. EXPR ; })
 }
 
 #endif
