@@ -8,8 +8,8 @@ uniform sampler2D selection;
 in vec2 texture_coords; // Input from vertex shader
 
 void main() {
-    // TODO: Do we want to colorize the selection? Maybe based on what the color of the province is?
+    vec4 sel_color1 = texture(selection, texture_coords);
 
-    FragColor = vec4(1.0, 0.0, 0.0, 1.0) * texture(selection, texture_coords) * vec4(1, 1, 1, texture(selection_area, texture_coords).a);
+    FragColor = vec4(1, 0, 0, texture(selection_area, texture_coords).a) * sel_color1;
 }
 
