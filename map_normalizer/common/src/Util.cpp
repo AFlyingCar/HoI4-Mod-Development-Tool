@@ -4,6 +4,16 @@
 #include "Constants.h"
 #include "BitMap.h"
 
+#ifdef _WIN32
+# include "windows.h"
+# ifndef PATH_MAX
+#  define PATH_MAX FILENAME_MAX
+# endif
+#else
+# include <unistd.h>
+# include <linux/limits.h>
+#endif
+
 // Helper replacement for __builtin_ctz if on MSVC
 #ifdef MSC_VER
 # include <intrin>
@@ -248,5 +258,16 @@ auto MapNormalizer::createProvincesFromShapeList(const PolygonList& shapes)
     }
 
     return provinces;
+}
+
+std::filesystem::path MapNormalizer::getExecutablePath() {
+    char path[PATH_MAX] = { 0 };
+#ifdef _WIN32
+    GetModuleFileName(NULL, path, PATH_MAX);
+#else
+    readlink("/proc/self/exe", path, PATH_MAX);
+#endif
+
+    return std::filesystem::path(path).parent_path();
 }
 

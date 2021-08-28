@@ -11,6 +11,9 @@
 # include <algorithm>
 # include <istream>
 # include <memory>
+# include <filesystem>
+
+#include <iostream>
 
 # include "Types.h"
 
@@ -233,6 +236,8 @@ namespace MapNormalizer {
     }
 
     ProvinceList createProvincesFromShapeList(const PolygonList&);
+
+    std::filesystem::path getExecutablePath();
 }
 
 #endif
