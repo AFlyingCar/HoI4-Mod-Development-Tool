@@ -111,7 +111,6 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
 
     // Rebuild the graphics data
     auto [width, height] = map_data->getDimensions();
-    Dimensions dimensions{width, height};
 
     // TODO: Why do we actually have to do this? For some reason everything stops
     //  rendering correctly if we remove this line. Why? What? How?
@@ -119,7 +118,6 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
 
     auto input_data = map_data->getInput().lock();
     auto graphics_data = map_data->getProvinces().lock();
-    auto prov_outline_data = map_data->getProvinceOutlines().lock();
 
     // Copy the input image's data into the input_data
     std::copy(input_data.get(), input_data.get() + (width * height * 3), input_image->data);
@@ -155,43 +153,7 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
         }
     }
 
-    // Go over the map again and build extra data that depends on the previously
-    //  re-built province data
-    for(uint32_t x = 0; x < width; ++x) {
-        for(uint32_t y = 0; y < height; ++y) {
-            auto lindex = xyToIndex(width, x, y);
-            auto label = m_shape_detection_info.label_matrix[lindex];
-            auto gindex = xyToIndex(width * 4, x * 4, y);
-
-            auto& province = m_shape_detection_info.provinces[label - 1];
-
-            // Error check
-            if(label <= 0 || label > m_shape_detection_info.provinces.size()) {
-                WRITE_WARN("Label matrix has label ", label,
-                             " at position (", x, ',', y, "), which is out of "
-                             "the range of valid labels [1,",
-                             m_shape_detection_info.provinces.size(), "]");
-                continue;
-            }
-
-            // Recalculate adjacencies for this pixel
-            auto is_adjacent = ShapeFinder::calculateAdjacency(dimensions,
-                                                               graphics_data.get(),
-                                                               m_shape_detection_info.label_matrix,
-                                                               province.adjacent_provinces,
-                                                               {x, y});
-            // If this pixel is adjacent to any others, then make it visible as
-            //  an outline
-            if(is_adjacent) {
-                prov_outline_data[gindex] = 0xFF;
-                prov_outline_data[gindex + 1] = 0xFF;
-                prov_outline_data[gindex + 2] = 0xFF;
-                prov_outline_data[gindex + 3] = 0xFF;
-            }
-        }
-    }
-
-    writeBMP("./outlines.bmp", prov_outline_data.get(), width, height);
+    buildProvinceOutlines();
 
     return true;
 }
@@ -476,6 +438,8 @@ void MapNormalizer::Project::MapProject::setShapeFinder(ShapeFinder&& shape_find
 
 void MapNormalizer::Project::MapProject::setGraphicsData(std::shared_ptr<MapData> map_data) {
     m_shape_detection_info.map_data = map_data;
+
+    buildProvinceOutlines();
 }
 
 auto MapNormalizer::Project::MapProject::getMapData()
@@ -683,6 +647,51 @@ void MapNormalizer::Project::MapProject::buildProvinceCache(const Province* prov
                 // Write Alpha first
                 out.write(reinterpret_cast<char*>(&data[i + 3]), 1);
                 out.write(reinterpret_cast<char*>(&data[i + 1]), 3);
+            }
+        }
+    }
+}
+
+void MapNormalizer::Project::MapProject::buildProvinceOutlines() {
+    auto map_data = m_shape_detection_info.map_data;
+    auto prov_outline_data = map_data->getProvinceOutlines().lock();
+    auto graphics_data = map_data->getProvinces().lock();
+
+    auto [width, height] = map_data->getDimensions();
+    Dimensions dimensions{width, height};
+
+    // Go over the map again and build extra data that depends on the previously
+    //  re-built province data
+    for(uint32_t x = 0; x < width; ++x) {
+        for(uint32_t y = 0; y < height; ++y) {
+            auto lindex = xyToIndex(width, x, y);
+            auto label = m_shape_detection_info.label_matrix[lindex];
+            auto gindex = xyToIndex(width * 4, x * 4, y);
+
+            auto& province = m_shape_detection_info.provinces[label - 1];
+
+            // Error check
+            if(label <= 0 || label > m_shape_detection_info.provinces.size()) {
+                WRITE_WARN("Label matrix has label ", label,
+                             " at position (", x, ',', y, "), which is out of "
+                             "the range of valid labels [1,",
+                             m_shape_detection_info.provinces.size(), "]");
+                continue;
+            }
+
+            // Recalculate adjacencies for this pixel
+            auto is_adjacent = ShapeFinder::calculateAdjacency(dimensions,
+                                                               graphics_data.get(),
+                                                               m_shape_detection_info.label_matrix,
+                                                               province.adjacent_provinces,
+                                                               {x, y});
+            // If this pixel is adjacent to any others, then make it visible as
+            //  an outline
+            if(is_adjacent) {
+                prov_outline_data[gindex] = 0xFF;
+                prov_outline_data[gindex + 1] = 0xFF;
+                prov_outline_data[gindex + 2] = 0xFF;
+                prov_outline_data[gindex + 3] = 0xFF;
             }
         }
     }
