@@ -126,8 +126,6 @@ bool MapNormalizer::GUI::GL::Program::uniform(const std::string& uniform_name,
 
     auto uniform_loc = glGetUniformLocation(m_program_id, uniform_name.c_str());
 
-    WRITE_DEBUG("glUniform*(", uniform_loc, ", ${...} [typeid=", value.type().name(), "])");
-
     if(value.type() == typeid(bool)) {                                 // bool
         glUniform1i(uniform_loc, std::any_cast<bool>(value));
     } else if(value.type() == typeid(int)) {                           // int

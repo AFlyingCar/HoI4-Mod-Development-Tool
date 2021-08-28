@@ -33,46 +33,35 @@ void MapNormalizer::GUI::GL::MapRenderingViewBase::init() {
         //   object, so there really isn't much of a point
 
         // gen vertex arrays
-        WRITE_DEBUG("glGenVertexArrays(1, ", &m_vao, ')');
         glGenVertexArrays(1, &m_vao);
         MN_LOG_GL_ERRORS();
 
         // gen buffers
-        WRITE_DEBUG("glGenBuffers(1, ", &m_vbo, ')');
         glGenBuffers(1, &m_vbo);
         MN_LOG_GL_ERRORS();
 
         // bind buffer
-        WRITE_DEBUG("glBindBuffer(GL_ARRAY_BUFFER, ", m_vbo, ')');
         glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
         MN_LOG_GL_ERRORS();
 
         // buffer data
         auto vertices = getMapVertices();
-        WRITE_DEBUG("glBufferData(GL_ARRAY_BUFFER, ",
-                          vertices.size() * sizeof(*vertices.data()), ',',
-                          vertices.data(), ",GL_STATIC_DRAW)");
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(*vertices.data()),
                      vertices.data(), GL_STATIC_DRAW);
         MN_LOG_GL_ERRORS();
 
         // bind vertex arrays
-        WRITE_DEBUG("glBindVertexArray(", m_vao, ')');
         glBindVertexArray(m_vao);
         MN_LOG_GL_ERRORS();
 
-        WRITE_DEBUG("glEnableVertexAttribArray(0)");
         glEnableVertexAttribArray(0); // Location 0
         MN_LOG_GL_ERRORS();
-        WRITE_DEBUG("glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, ", 4 * sizeof(float), ", (void*)0)");
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
         MN_LOG_GL_ERRORS();
 
         // unbind buffer and vertex array
-        WRITE_DEBUG("glBindBuffer(GL_ARRAY_BUFFER, 0)");
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         MN_LOG_GL_ERRORS();
-        WRITE_DEBUG("glBindVertexArray(0)");
         glBindVertexArray(0);
         MN_LOG_GL_ERRORS();
     }
@@ -134,15 +123,12 @@ auto MapNormalizer::GUI::GL::MapRenderingViewBase::getMapVertices()
 
 void MapNormalizer::GUI::GL::MapRenderingViewBase::drawMapVAO() {
     // Draw the map object
-    WRITE_DEBUG("glBindVertexArray(", m_vao, ")");
     glBindVertexArray(m_vao);
     MN_LOG_GL_ERRORS();
 
-    WRITE_DEBUG("glBindVertexArray(GL_TRIANGLES, 0, 6)");
     glDrawArrays(GL_TRIANGLES, 0, 6);
     MN_LOG_GL_ERRORS();
 
-    WRITE_DEBUG("glBindVertexArray(0)");
     glBindVertexArray(0);
     MN_LOG_GL_ERRORS();
 }

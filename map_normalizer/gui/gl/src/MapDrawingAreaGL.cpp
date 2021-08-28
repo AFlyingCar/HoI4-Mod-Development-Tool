@@ -33,8 +33,6 @@ bool MapNormalizer::GUI::GL::MapDrawingArea::on_render(const Glib::RefPtr<Gdk::G
 
         throw_if_error();
 
-        WRITE_DEBUG("Re-drawing...");
-
         // Clear the current screen
         glClearColor(0.5, 0.5, 0.5, 0.0);
         glClear(GL_COLOR_BUFFER_BIT);
