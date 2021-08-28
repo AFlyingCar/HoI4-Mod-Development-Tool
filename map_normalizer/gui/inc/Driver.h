@@ -5,6 +5,7 @@
 # include <memory>
 
 # include "glibmm/refptr.h"
+# include "giomm/resource.h"
 
 # include "HoI4Project.h"
 
@@ -42,11 +43,14 @@ namespace MapNormalizer::GUI {
             void setProject(UniqueProject&&);
             void setProject();
 
+            const Glib::RefPtr<Gio::Resource> getResources() const;
+
         protected:
             Driver();
 
         private:
             Glib::RefPtr<MapNormalizerApplication> m_app;
+            Glib::RefPtr<Gio::Resource> m_resources;
 
             UniqueProject m_project;
     };
