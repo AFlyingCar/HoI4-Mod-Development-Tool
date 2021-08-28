@@ -53,8 +53,20 @@ MapNormalizer::BitMap* MapNormalizer::readBMP(const std::filesystem::path& path,
         return nullptr;
     }
 
-    // bm->filename = filename.c_str();
+    return readBMP(file, bm);
+}
 
+/**
+ * @brief Reads a bitmap file.
+ *
+ * @param file The istream containing a valid BMP file
+ * @param bm The BitMap structure to write into
+ * @return A pointer to a bitmap struct if the bitmap was successfully read,
+ *         nullptr otherwise.
+ */
+MapNormalizer::BitMap* MapNormalizer::readBMP(std::istream& file,
+                                              BitMap* bm)
+{
     // Safely read the entire header into the struct.
     if(!safeRead(&(bm->file_header.filetype), file)        ||
        !safeRead(&(bm->file_header.fileSize), file)        ||
