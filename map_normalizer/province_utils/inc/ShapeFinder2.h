@@ -59,22 +59,28 @@ namespace MapNormalizer {
             const std::map<uint32_t, Color>& getLabelToColorMap() const;
             const PolygonList& getShapes() const;
 
-            static void calculateAdjacency(const BitMap*, const uint32_t*,
+            static bool calculateAdjacency(const BitMap*, const uint32_t*,
                                            std::set<uint32_t>&, const Point2D&);
-            static void calculateAdjacency(const Dimensions&,
+            static bool calculateAdjacency(const Dimensions&,
                                            const uint8_t*,
                                            const uint32_t*,
                                            std::set<uint32_t>&,
                                            const Point2D&);
 
-            static std::optional<Point2D> getAdjacentPixel(const BitMap*,
+            static std::optional<Point2D> getAdjacentPoint(const BitMap*,
                                                            const Point2D&,
                                                            Direction);
-            static std::optional<Point2D> getAdjacentPixel(const Dimensions&,
+            static std::optional<Point2D> getAdjacentPoint(const Dimensions&,
                                                            const uint8_t*,
                                                            const Point2D&,
                                                            Direction);
- 
+            static std::optional<Pixel> getAdjacentPixel(const BitMap*,
+                                                         const Point2D&,
+                                                         Direction);
+            static std::optional<Pixel> getAdjacentPixel(const Dimensions&,
+                                                         const uint8_t*,
+                                                         const Point2D&,
+                                                         Direction);
         protected:
             using LabelShapeIdxMap = std::unordered_map<uint32_t, uint32_t>;
 
@@ -93,7 +99,7 @@ namespace MapNormalizer {
 
             uint32_t getRootLabel(uint32_t);
 
-            std::optional<Point2D> getAdjacentPixel(const Point2D&, Direction) const;
+            std::optional<Point2D> getAdjacentPoint(const Point2D&, Direction) const;
 
             void buildShape(uint32_t, const Pixel&, PolygonList&,
                             LabelShapeIdxMap&);
