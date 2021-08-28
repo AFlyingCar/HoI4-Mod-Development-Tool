@@ -11,7 +11,10 @@
 #include "Logger.h"
 #include "Util.h"
 
+#include "Driver.h"
+
 #include "MapDrawingAreaGL.h"
+#include "GuiUtils.h"
 
 void MapNormalizer::GUI::GL::ProvinceRenderingView::init() {
     MapRenderingViewBase::init();
@@ -29,6 +32,46 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::init() {
                           Shader(Shader::Type::FRAGMENT,
                                  ShaderSources::province_selection_fragment)
                          };
+
+    // Build default texture
+    {
+        auto stream = Driver::getInstance().getResources()->open_stream("/com/aflyingcar/MapNormalizerTools/textures/selection.bmp");
+
+        std::unique_ptr<BitMap> selection_bmp(new BitMap);
+        if(readBMP(stream, selection_bmp.get()) == nullptr) {
+            WRITE_ERROR("Failed to load selection texture!");
+
+            m_selection_texture.setTextureUnitID(Texture::Unit::TEX_UNIT2);
+
+            m_selection_texture.bind();
+
+            m_selection_texture.setTextureData(Texture::Format::RGBA, 1, 1,
+                                               (uint8_t*)0);
+            m_selection_texture.bind(false);
+        } else {
+            auto iwidth = selection_bmp->info_header.width;
+            auto iheight = selection_bmp->info_header.height;
+
+            m_selection_texture.setTextureUnitID(Texture::Unit::TEX_UNIT2);
+
+            m_selection_texture.bind();
+            {
+                // Use NEAREST rather than LINEAR to prevent weird outlines around
+                //  the textures
+                m_selection_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::NEAREST);
+                m_selection_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::NEAREST);
+
+                m_selection_texture.setWrapping(Texture::Axis::S, Texture::WrapMode::REPEAT);
+                m_selection_texture.setWrapping(Texture::Axis::T, Texture::WrapMode::REPEAT);
+
+                m_selection_texture.setTextureData(Texture::Format::RGBA,
+                                                   iwidth, iheight,
+                                                   selection_bmp->data);
+            }
+            m_selection_texture.bind(false);
+
+        }
+    }
 }
 
 void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
@@ -70,8 +113,10 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
 
         // Set up the transformation matrix
         m_selection_shader.uniform("transform", transform);
-        m_selection_shader.uniform("map_texture", 1);
+        m_selection_shader.uniform("selection_area", 1);
+        m_selection_shader.uniform("selection", 2);
 
+        m_selection_area_texture.activate();
         m_selection_texture.activate();
 
         // The drawn selection is still a square, so just go ahead and use the
@@ -122,20 +167,20 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::onSelectionChanged(std::opti
 
         auto [iwidth, iheight] = calcDims(selection->bounding_box);
 
-        m_selection_texture.setTextureUnitID(Texture::Unit::TEX_UNIT1);
+        m_selection_area_texture.setTextureUnitID(Texture::Unit::TEX_UNIT1);
 
-        m_selection_texture.bind();
+        m_selection_area_texture.bind();
         {
             // Use NEAREST rather than LINEAR to prevent weird outlines around
             //  the textures
-            m_selection_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::NEAREST);
-            m_selection_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::NEAREST);
+            m_selection_area_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::NEAREST);
+            m_selection_area_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::NEAREST);
 
-            m_selection_texture.setTextureData(Texture::Format::RGBA,
+            m_selection_area_texture.setTextureData(Texture::Format::RGBA,
                                                iwidth, iheight,
                                                selection->data.get());
         }
-        m_selection_texture.bind(false);
+        m_selection_area_texture.bind(false);
 
         WRITE_DEBUG("Done.");
     }

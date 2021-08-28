@@ -25,6 +25,7 @@ namespace MapNormalizer::GUI::GL {
             Program m_selection_shader;
 
             Texture m_outline_texture;
+            Texture m_selection_area_texture;
             Texture m_selection_texture;
     };
 }
