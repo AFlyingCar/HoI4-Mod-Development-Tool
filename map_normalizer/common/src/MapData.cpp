@@ -5,9 +5,9 @@
 MapNormalizer::MapData::MapData(uint32_t width, uint32_t height):
     m_width(width),
     m_height(height),
-    m_input(new uint8_t[width * height * 3]),
-    m_provinces(new uint8_t[width * height * 3]),
-    m_province_outlines(new uint8_t[width * height])
+    m_input(new uint8_t[width * height * 3]{ 0 }),
+    m_provinces(new uint8_t[width * height * 3]{ 0 }),
+    m_province_outlines(new uint8_t[width * height * 4]{ 0 })
 {
 }
 
