@@ -41,11 +41,13 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     endif()
 endif()
 
+# Set up the resources first, as they will get depended on by subsequent projects
+add_subdirectory(resources)
+add_definitions(-DMN_GLIB_RESOURCES="${RESOURCE_C_SRC_NAME}")
+
 add_subdirectory(map_normalizer)
 
 add_subdirectory(tests)
-
-add_subdirectory(resources)
 
 add_dependencies(map_normalizer glib_resources)
 
