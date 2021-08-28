@@ -18,6 +18,7 @@ add_library(gui STATIC
     src/IProvincePreviewDrawingArea.cpp
     src/InterruptableScrolledWindow.cpp
     src/LogViewerWindow.cpp
+    src/GuiUtils.cpp
 )
 
 target_include_directories(gui PUBLIC inc)
@@ -28,4 +29,6 @@ add_subdirectory(gl)
 
 # Link against local libraries
 target_link_libraries(gui common province_utils project logging gui_gl)
+
+target_compile_definitions(gui PRIVATE MN_DEFAULT_RENDERING_TO_GL)
 
