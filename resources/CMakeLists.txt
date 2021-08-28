@@ -4,10 +4,17 @@ find_program(GLIB_COMPILE_RESOURCES NAMES glib-compile-resources REQUIRED)
 
 set(RESOURCE_PREFIX "/com/aflyingcar/${PROJECT_NAME}")
 
+# Define twice so that it is available both here and in the parent scope
+set(RESOURCE_C_SRC_NAME "resources.gresource.c" PARENT_SCOPE)
+set(RESOURCE_C_SRC_NAME "resources.gresource.c")
+
 set(RESOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(RESOURCE_XML_SRC "${CMAKE_BINARY_DIR}/ResourceDefinition.gresource.xml")
 set(RESOURCE_XML_CFG_SRC "${RESOURCE_DIR}/ResourceDefinition.gresource.xml.in")
-set(RESOURCE_C_SRC "${CMAKE_BINARY_DIR}/resources.gresource.c")
+
+# Define twice so that it is available both here and in the parent scope
+set(RESOURCE_C_SRC "${CMAKE_BINARY_DIR}/${RESOURCE_C_SRC_NAME}" PARENT_SCOPE)
+set(RESOURCE_C_SRC "${CMAKE_BINARY_DIR}/${RESOURCE_C_SRC_NAME}")
 
 configure_file(${RESOURCE_XML_CFG_SRC} ${RESOURCE_XML_SRC} @ONLY)
 
