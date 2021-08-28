@@ -58,6 +58,7 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::init() {
             {
                 // Use NEAREST rather than LINEAR to prevent weird outlines around
                 //  the textures
+                // TODO: We've also got a weird 'fuzziness' in the transparent areas for this texture
                 m_selection_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::NEAREST);
                 m_selection_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::NEAREST);
 
@@ -78,19 +79,6 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
     // Render the normal map first
     MapRenderingViewBase::render();
 
-    // Now render the outlines on top of it
-#if 0
-    {
-        m_outline_shader.use();
-        setupUniforms();
-        m_outline_texture.activate();
-
-        drawMapVAO();
-
-        m_outline_shader.use(false);
-    }
-#endif
-    
     // Then render the selected province (if there is one selected) on top of that
     //  But, obviously, only do so if there _is_ a selection
     if(auto selection = getOwningGLDrawingArea()->getSelection(); selection) {
@@ -125,6 +113,24 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
 
         m_selection_shader.use(false);
     }
+
+    // Now render the outlines on top of everything
+    {
+        m_outline_shader.use();
+        setupUniforms();
+
+        float scale_factor = static_cast<float>(getOwningGLDrawingArea()->getScaleFactor());
+        glm::mat4 transform = glm::mat4{1.0f};
+        transform = glm::scale(transform, glm::vec3{scale_factor, scale_factor, 1});
+        m_selection_shader.uniform("transform", transform);
+        m_outline_shader.uniform("map_texture", 3);
+
+        m_outline_texture.activate();
+
+        drawMapVAO();
+
+        m_outline_shader.use(false);
+    }
 }
 
 void MapNormalizer::GUI::GL::ProvinceRenderingView::onMapDataChanged(std::shared_ptr<const MapData> map_data)
@@ -132,12 +138,11 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::onMapDataChanged(std::shared
     // First build the base map texture
     MapRenderingViewBase::onMapDataChanged(map_data);
 
-#if 0
     auto [iwidth, iheight] = map_data->getDimensions();
 
     // Now build the outline texture
     {
-        m_outline_texture.setTextureUnitID(Texture::Unit::TEX_UNIT0);
+        m_outline_texture.setTextureUnitID(Texture::Unit::TEX_UNIT3);
 
         m_outline_texture.bind();
         {
@@ -147,12 +152,11 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::onMapDataChanged(std::shared
             m_outline_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::LINEAR);
             m_outline_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::LINEAR);
 
-            m_outline_texture.setTextureData(Texture::Format::RED,
+            m_outline_texture.setTextureData(Texture::Format::RGBA,
                                              iwidth, iheight, map_data->getProvinceOutlines().lock().get());
         }
         m_outline_texture.bind(false);
     }
-#endif
 
     // Only build the selection texture when the selection has changed, not here
     //   as we have no data to actually build
