@@ -49,6 +49,7 @@ namespace MapNormalizer {
     };
 
     BitMap* readBMP(const std::filesystem::path&, BitMap*);
+    BitMap* readBMP(std::istream&, BitMap*);
     BitMap* readBMP(const std::filesystem::path&);
 
     void writeBMP(const std::filesystem::path&, const BitMap*);
