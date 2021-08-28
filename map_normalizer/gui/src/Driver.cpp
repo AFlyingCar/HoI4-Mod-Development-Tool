@@ -23,8 +23,9 @@ bool MapNormalizer::GUI::Driver::initialize() {
     m_app = Glib::RefPtr<MapNormalizerApplication>(new MapNormalizerApplication());
 
     try {
-        WRITE_DEBUG("Loading resources...");
-        auto resource_path = getExecutablePath() / "resources.gresource.c";
+        auto resource_path = getExecutablePath() / MN_GLIB_RESOURCES;
+
+        WRITE_DEBUG("Loading resources from ", resource_path, "...");
         m_resources = Gio::Resource::create_from_file(resource_path.generic_string());
         WRITE_DEBUG("Done.");
     } catch(const Gio::ResourceError& e) {
