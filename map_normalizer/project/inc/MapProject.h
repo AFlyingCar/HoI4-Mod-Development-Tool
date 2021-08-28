@@ -73,6 +73,7 @@ namespace MapNormalizer::Project {
 
         private:
             void buildProvinceCache(const Province*);
+            void buildProvinceOutlines();
 
             /**
              * @brief A struct which holds information about shape detection
