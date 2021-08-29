@@ -41,6 +41,21 @@ $ cd Binaries
 $ cmake .. -DCMAKE_GENERATOR="MinGW Makefiles"
 $ mingw32-make
 ```
+
+As a quick note about about compiling with GLEW: The default FindGLEW config
+which comes bundled with CMake can sometimes have trouble finding GLEW if it is
+installed in a non-standard way (or just installed with pacman from an MSYS
+shell).
+
+As such, if you get an error from `getGLXMacros.py` about being unable to find
+`some\path\include/GL/glew.h`, then modify the above cmake command to the following:
+```
+$ cmake .. -DCMAKE_GENERATOR="MinGW Makefiles" -DMSYS_PREFIX=C:\\msys64
+```
+
+Replacing `C:\\msys64` with the MSYS prefix for your system, such that
+`${MSYS_PREFIX}\mingw64\include\GL\glew.h` points to your installed GLEW header.
+
 ### Linux
 
 ```
