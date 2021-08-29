@@ -69,6 +69,10 @@ bool MapNormalizer::GUI::GL::MapDrawingArea::on_render(const Glib::RefPtr<Gdk::G
         glFlush();
         MN_LOG_GL_ERRORS();
 
+        // Make sure that we re-draw so that we don't get any weird flickering/
+        //  artifacts
+        queue_draw();
+
         return true;
     }
     catch(const Gdk::GLError& error) {
@@ -171,6 +175,8 @@ void MapNormalizer::GUI::GL::MapDrawingArea::onShow() {
 void MapNormalizer::GUI::GL::MapDrawingArea::onSelectionChanged(std::optional<SelectionInfo> selection)
 {
     getCurrentRenderingView()->onSelectionChanged(selection);
+
+    queue_draw();
 }
 
 void MapNormalizer::GUI::GL::MapDrawingArea::queueDraw() {
