@@ -180,7 +180,12 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
 
             m_drawing_area->queueDraw();
         });
+
+#if MN_DEFAULT_RENDERING_TO_GL
+        usegl_action ->change_state(true);
+#else
         usecairo_action->change_state(true);
+#endif
     }
 }
 
