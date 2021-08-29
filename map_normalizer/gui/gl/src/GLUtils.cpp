@@ -65,17 +65,14 @@ uint32_t MapNormalizer::GUI::GL::processAllGLErrors(const std::function<void(uin
 /**
  * @brief Logs all GLErrors using the logging facilities
  *
- * @param filename The filename of where this was called from
- * @param line The line number of where this was called from
- *
  * @return The number of errors logged
  */
-uint32_t MapNormalizer::GUI::GL::logErrors(const std::string& filename,
-                                       uint32_t line)
-{
-    return processAllGLErrors([&filename, &line](uint32_t error) {
-        WRITE_ERROR(filename, ":", line, " >>> GLError: ", error, " => ",
-                         MapNormalizer::GUI::GL::glEnumToStrings(error).front());
+uint32_t MapNormalizer::GUI::GL::logErrors(const Log::Source& source) {
+    return processAllGLErrors([&source](uint32_t error) {
+        // Invoke the writeError() function manually so we can control the
+        //  source object directly
+        Log::Logger::getInstance().writeError(source, " GLError: ", error, " => ",
+                                              MapNormalizer::GUI::GL::glEnumToStrings(error).front());
     });
 }
 
