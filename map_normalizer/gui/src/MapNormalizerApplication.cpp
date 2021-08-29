@@ -71,7 +71,7 @@ void MapNormalizer::GUI::MapNormalizerApplication::on_startup() {
         { "_Log Window", "win.log_window", {} },
         { "_Switch Renderers", "win.switch_renderers", {
             { "_Use OpenGL", "win.switch_renderers.usegl" },
-            { "_Use Cairo", "win.switch_renderers.usecairo" },
+            { "_Use Cairo (DEPRECATED)", "win.switch_renderers.usecairo" },
         } }
     });
 
