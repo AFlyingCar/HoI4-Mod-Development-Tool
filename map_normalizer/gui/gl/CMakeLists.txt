@@ -4,8 +4,20 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(glm REQUIRED)
 
-if(WIN32)
-    set(GLEW_INCLUDE_DIRS "C:\\msys64\\mingw64\\include")
+if(WIN32 AND NOT GLEW_INCLUDE_DIRS)
+    message(STATUS "GLEW_INCLUDE_DIRS not found, constructing one based on the provided MSYS_PREFIX environment variable, or our best guess")
+    if(DEFINED ENV{MSYS_PREFIX})
+        message(STATUS "Using MSYS_PREFIX environment varaible '$ENV{MSYS_PREFIX}'")
+        set(GLEW_INCLUDE_DIRS "$ENV{MSYS_PREFIX}\\mingw64\\include")
+    elseif(MSYS_PREFIX)
+        message(STATUS "Using MSYS_PREFIX varaible '${MSYS_PREFIX}'")
+        set(GLEW_INCLUDE_DIRS "${MSYS_PREFIX}\\mingw64\\include")
+    else()
+	    message(STATUS "No MSYS_PREFIX environment variable or cmake variable provided, assuming MSYS_PREFIX='C:\\msys64'")
+        set(GLEW_INCLUDE_DIRS "C:\\msys64\\mingw64\\include")
+    endif()
+	
+	message(STATUS "Assuming GLEW_INCLUDE_DIRS=${GLEW_INCLUDE_DIRS}")
 endif()
 
 # Generate GLShaderSources.h
