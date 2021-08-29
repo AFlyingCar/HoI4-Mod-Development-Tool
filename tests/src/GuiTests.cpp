@@ -17,13 +17,13 @@
 #include "TestUtils.h"
 
 namespace MapNormalizer::UnitTests {
-    class MockApplication: public Gtk::Application { };
-
     void GuiTests::SetUp() {
         // Set up basic outputting
         Log::Logger::registerOutputFunction(Log::outputWithFormatting);
 
-        m_app = Glib::RefPtr<MockApplication>(new MockApplication());
+        // Initialize just Gio, as the unit tests should be able to run on a
+        //  headless system
+        Gio::init();
 
         auto resource_path = getExecutablePath() / "resources.gresource.c";
         m_resources = Gio::Resource::create_from_file(resource_path.generic_string());
@@ -40,6 +40,8 @@ namespace MapNormalizer::UnitTests {
         // Stream #2 is a normal ifstream to the file on the disk
         auto real_path = getExecutablePath() / "../resources/textures/selection.bmp";
         std::ifstream stream2(real_path, std::ios::binary | std::ios::in);
+
+        ASSERT_TRUE(stream2.is_open());
 
         BitMap bm1, bm2;
 
