@@ -10,6 +10,8 @@
 
 #include <GL/glew.h>
 
+#include "GLUtils.h"
+
 MapNormalizer::GUI::GL::Shader::CompileException::CompileException(Type type,
                                                                    const std::string& source,
                                                                    const std::string& reason):
@@ -76,7 +78,15 @@ MapNormalizer::GUI::GL::Shader::Shader(const Shader& other):
 }
 
 MapNormalizer::GUI::GL::Shader::~Shader() {
-    glDeleteShader(m_shader_id);
+    // If there is no reference count defined, then do not delete
+    if(m_ref_count == nullptr) return;
+
+    --(*m_ref_count);
+
+    if(*m_ref_count <= 0) {
+        glDeleteShader(m_shader_id);
+        MN_LOG_GL_ERRORS();
+    }
 }
 
 auto MapNormalizer::GUI::GL::Shader::operator=(const Shader& other) -> Shader& {
