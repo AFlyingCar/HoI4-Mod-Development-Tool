@@ -1,3 +1,8 @@
+/**
+ * @file Program.cpp
+ *
+ * @brief Defines the Program class
+ */
 
 #include "Program.h"
 
@@ -86,11 +91,21 @@ void MapNormalizer::GUI::GL::Program::use(bool load) {
     MN_LOG_GL_ERRORS();
 }
 
+/**
+ * @brief Attaches a single Shader to this program
+ *
+ * @param shader The Shader to attach
+ */
 void MapNormalizer::GUI::GL::Program::attachShader(const Shader& shader) {
     glAttachShader(m_program_id, shader.getID());
     MN_LOG_GL_ERRORS();
 }
 
+/**
+ * @brief Links all attached shaders together
+ *
+ * @throw LinkException Will throw if GL_LINK_STATUS is not GL_TRUE after linking
+ */
 void MapNormalizer::GUI::GL::Program::linkProgram() {
     glLinkProgram(m_program_id);
     MN_LOG_GL_ERRORS();
@@ -112,7 +127,8 @@ void MapNormalizer::GUI::GL::Program::linkProgram() {
 
 /**
  * @brief Sets an OpenGL uniform
- * @details Can throw a std::bad_any_cast
+ *
+ * @throw std::bad_any_cast 
  *
  * @param uniform_name The name of the uniform to set
  * @param value The value to set
@@ -152,7 +168,7 @@ bool MapNormalizer::GUI::GL::Program::uniform(const std::string& uniform_name,
                            glm::value_ptr(std::any_cast<glm::mat4>(value)));
     } else {
         WRITE_ERROR("Unsupported type ", value.type().name());
-        // TODO: Should we return a value on error? throw?
+        return false;
     }
 
     if(MN_LOG_GL_ERRORS() >= 1) {

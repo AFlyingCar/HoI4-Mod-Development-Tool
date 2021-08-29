@@ -1,3 +1,9 @@
+/**
+ * @file GLUtils.h
+ *
+ * @brief Defines OpenGL utility functions and macros.
+ */
+
 #ifndef GLUTILS_H
 # define GLUTILS_H
 
@@ -15,6 +21,9 @@ namespace MapNormalizer::GUI::GL {
     uint32_t logErrors(const Log::Source&);
 }
 
+/**
+ * @brief Wrapper around logErrors which passes in a Log::Source object.
+ */
 # define MN_LOG_GL_ERRORS() \
     MapNormalizer::GUI::GL::logErrors(MN_LOG_SOURCE())
 

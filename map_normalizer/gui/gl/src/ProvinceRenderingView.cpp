@@ -1,3 +1,8 @@
+/**
+ * @file ProvinceRenderingView.cpp
+ *
+ * @file Defines the ProvinceRenderingView class
+ */
 
 #include "ProvinceRenderingView.h"
 
@@ -16,6 +21,9 @@
 #include "MapDrawingAreaGL.h"
 #include "GuiUtils.h"
 
+/**
+ * @brief Initializes a ProvinceRenderingView
+ */
 void MapNormalizer::GUI::GL::ProvinceRenderingView::init() {
     MapRenderingViewBase::init();
 
@@ -35,6 +43,8 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::init() {
 
     // Build default texture
     {
+        // TODO: This path shouldn't be hardcoded, we should get it instead from
+        //   the build system/from a ResourceManager
         auto stream = Driver::getInstance().getResources()->open_stream("/com/aflyingcar/MapNormalizerTools/textures/selection.bmp");
 
         std::unique_ptr<BitMap> selection_bmp(new BitMap);
@@ -73,6 +83,10 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::init() {
     }
 }
 
+/**
+ * @brief Renders the base map, then the current selection, and then the map
+ *        outlines on top of that.
+ */
 void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
     // Render the normal map first
     MapRenderingViewBase::render();
@@ -131,6 +145,9 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
     }
 }
 
+/**
+ * @brief Rebuilds the outline province outlines texture
+ */
 void MapNormalizer::GUI::GL::ProvinceRenderingView::onMapDataChanged(std::shared_ptr<const MapData> map_data)
 {
     // First build the base map texture
@@ -160,6 +177,11 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::onMapDataChanged(std::shared
     //   as we have no data to actually build
 }
 
+/**
+ * @brief If a selection is provided, then the selection area texture is rebuilt
+ *
+ * @param selection Info about the selected province, or std::nullopt
+ */
 void MapNormalizer::GUI::GL::ProvinceRenderingView::onSelectionChanged(std::optional<IMapDrawingAreaBase::SelectionInfo> selection)
 {
     // If there is no selection, then don't actually do anything, we just won't

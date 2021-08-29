@@ -1,3 +1,13 @@
+/**
+ * @file MapRenderingViewBase.h
+ *
+ * @brief A base class for rendering just the map by itself.
+ *
+ * @details While this can be used just by itself, it is meant to be inherited
+ *          from by more specific *RenderingView classes, which do extra things
+ *          on top of the basic map.
+ */
+
 #ifndef MAPRENDERINGVIEWBASE_H
 # define MAPRENDERINGVIEWBASE_H
 
@@ -39,10 +49,16 @@ namespace MapNormalizer::GUI::GL {
             void drawMapVAO();
 
         private:
+            //! The map VAO
             uint32_t m_vao = -1;
+
+            //! The map VBO
             uint32_t m_vbo = -1;
 
+            //! The basic Program for rendering the map
             Program m_program;
+
+            //! The Texture of the map
             Texture m_texture;
     };
 }
