@@ -241,6 +241,17 @@ namespace MapNormalizer {
 
     std::filesystem::path getExecutablePath();
 
+    /**
+     * @brief Invokes expr on opt, if opt holds a value.
+     *
+     * @tparam T The type held by the optional
+     * @tparam R The type to exepct from expr
+     *
+     * @param opt The optional
+     * @param expr The expression
+     *
+     * @return An optional<R>, or nullopt if opt is nullopt
+     */
     template<typename T, typename R>
     std::optional<R> maybe_expr(std::optional<T>&& opt,
                                 std::function<R(const T&)>&& expr)
@@ -252,6 +263,13 @@ namespace MapNormalizer {
         }
     }
 
+    /**
+     * @brief Executes an expression on the given optional
+     *
+     * @param OPT The optional
+     * @param R The expected type from (*OPT).EXPR
+     * @param EXPR The expression
+     */
 # define MAYBE_EXPR(OPT, R, EXPR) \
     MapNormalizer::maybe_expr<decltype(OPT)::value_type, R>(OPT, [](const auto& v) -> R { return v. EXPR ; })
 }
