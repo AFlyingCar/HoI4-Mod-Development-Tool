@@ -1,3 +1,9 @@
+/**
+ * @file Texture.h
+ *
+ * @brief Defines the Texture class
+ */
+
 #ifndef GL_TEXTURE_H
 # define GL_TEXTURE_H
 
@@ -7,19 +13,15 @@
 # include <string>
 
 namespace MapNormalizer::GUI::GL {
+    /**
+     * @brief Represents an OpenGL texture
+     */
     class Texture {
         public:
-
-            class TextureActivationFailure: public std::exception {
-                public:
-                    TextureActivationFailure(const std::string&);
-
-                    virtual const char* what() const noexcept override;
-
-                private:
-                    std::string m_reason;
-            };
-
+            /**
+             * @brief Represents each valid texture unit (at least 16 must be
+             *        supported)
+             */
             enum class Unit {
                 TEX_UNIT0, TEX_UNIT1, TEX_UNIT2, TEX_UNIT3, TEX_UNIT4,
                 TEX_UNIT5, TEX_UNIT6, TEX_UNIT7, TEX_UNIT8, TEX_UNIT9,
@@ -29,21 +31,33 @@ namespace MapNormalizer::GUI::GL {
                 INVALID = -1
             };
 
+            /**
+             * @brief Represents each valid Texture target
+             */
             enum class Target {
                 TEX_1D,
                 TEX_2D,
             };
 
+            /**
+             * @brief Represents each valid GL format
+             */
             enum class Format {
                 RED, GREEN, BLUE, ALPHA,
                 RGB,
                 RGBA
             };
 
+            /**
+             * @brief A GL texture axis for wrapping
+             */
             enum class Axis {
                 S, T
             };
 
+            /**
+             * @brief Defines each GL wrapping mode
+             */
             enum class WrapMode {
                 REPEAT,
                 MIRRORED_REPEAT,
@@ -51,10 +65,16 @@ namespace MapNormalizer::GUI::GL {
                 CLAMP_TO_BORDER
             };
 
+            /**
+             * @brief GL filtering types
+             */
             enum class FilterType {
                 MAG, MIN
             };
 
+            /**
+             * @brief GL filters 
+             */
             enum class Filter {
                 NEAREST, LINEAR
             };
@@ -71,6 +91,19 @@ namespace MapNormalizer::GUI::GL {
             void setFiltering(FilterType, Filter);
             void setTextureUnitID(Unit);
 
+            /**
+             * @brief Sends texture data to the GPU.
+             *
+             * @details Implicitly calls bind()
+             *
+             * @tparam T The type of data being passed in
+             *
+             * @param format The format of the data. Currently, both the CPU-side and
+             *               GPU-side format must match.
+             * @param width The width of the data
+             * @param height The height of the data
+             * @param data The data to send to the GPU
+             */
             template<typename T>
             void setTextureData(Format format, uint32_t width, uint32_t height, const T* data) {
                 setTextureData(format, width, height,
@@ -98,8 +131,13 @@ namespace MapNormalizer::GUI::GL {
                                 const void*);
 
         private:
+            //! The texture ID
             uint32_t m_texture_id;
+
+            //! The texture unit this takes up
             uint32_t m_texture_unit;
+
+            //! The target of this texture
             Target m_target;
     };
 }

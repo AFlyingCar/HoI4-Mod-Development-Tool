@@ -1,3 +1,8 @@
+/**
+ * @file MapDrawingAreaGL.cpp
+ *
+ * @brief Defines the OpenGL map drawing area
+ */
 
 #include "MapDrawingAreaGL.h"
 
@@ -15,7 +20,6 @@
 #include "GLEWInitializationException.h"
 #include "Shader.h"
 #include "GLUtils.h"
-
 #include "ProvinceRenderingView.h"
 
 MapNormalizer::GUI::GL::MapDrawingArea::MapDrawingArea():
@@ -24,6 +28,13 @@ MapNormalizer::GUI::GL::MapDrawingArea::MapDrawingArea():
 
 MapNormalizer::GUI::GL::MapDrawingArea::~MapDrawingArea() { }
 
+/**
+ * @brief Renders the current IRenderingView
+ *
+ * @param context The OpenGL context
+ *
+ * @return true if no Gdk::GLErrors were thrown.
+ */
 bool MapNormalizer::GUI::GL::MapDrawingArea::on_render(const Glib::RefPtr<Gdk::GLContext>& context)
 {
     try
@@ -80,6 +91,9 @@ void MapNormalizer::GUI::GL::MapDrawingArea::on_unrealize() {
     }
 }
 
+/**
+ * @brief Initializes the drawing area
+ */
 void MapNormalizer::GUI::GL::MapDrawingArea::init() {
     if(m_initialized) return;
 
@@ -107,6 +121,9 @@ void MapNormalizer::GUI::GL::MapDrawingArea::init() {
     m_initialized = true;
 }
 
+/**
+ * @brief Will adjust the size of the drawable window and re-draw
+ */
 void MapNormalizer::GUI::GL::MapDrawingArea::onZoom() {
     // Make sure we update the size request of the image
     if(hasData()) {
@@ -119,6 +136,14 @@ void MapNormalizer::GUI::GL::MapDrawingArea::onZoom() {
     }
 }
 
+/**
+ * @brief Adjusts the size of the drawable window for the new data.
+ *
+ * @details Will also invoke IRenderingView::onMapDataChanged() for every
+ *          rendering view
+ *
+ * @param map_data The new map data. May be null.
+ */
 void MapNormalizer::GUI::GL::MapDrawingArea::onSetData(std::shared_ptr<const MapData> map_data)
 {
     if(map_data == nullptr) return;
@@ -139,7 +164,8 @@ void MapNormalizer::GUI::GL::MapDrawingArea::onSetData(std::shared_ptr<const Map
 }
 
 void MapNormalizer::GUI::GL::MapDrawingArea::onShow() {
-    set_required_version(4, 10); // Must be called before the area has been realized
+    // Must be called before the area has been realized
+    set_required_version(4, 10);
 }
 
 void MapNormalizer::GUI::GL::MapDrawingArea::onSelectionChanged(std::optional<SelectionInfo> selection)
@@ -158,6 +184,10 @@ auto MapNormalizer::GUI::GL::MapDrawingArea::getCurrentRenderingView()
     return m_rendering_views.at(getViewingMode());
 }
 
+/**
+ * @brief Prepares some basic uniforms for each program for the current
+ *        rendering view
+ */
 void MapNormalizer::GUI::GL::MapDrawingArea::setupAllUniforms() {
     auto current_rendering_view = getCurrentRenderingView();
 
@@ -170,6 +200,10 @@ void MapNormalizer::GUI::GL::MapDrawingArea::setupAllUniforms() {
     }
 }
 
+/**
+ * @brief Gets an orthographic projection based on the current drawable
+ *        dimensions.
+ */
 glm::mat4 MapNormalizer::GUI::GL::MapDrawingArea::getProjection() const {
     auto [iwidth, iheight] = getMapData()->getDimensions();
 
@@ -204,6 +238,14 @@ glm::mat4 MapNormalizer::GUI::GL::MapDrawingArea::getTransformation() const {
     return transform;
 }
 
+/**
+ * @brief Callback for a mouse-click. Will call the relevant onSelection
+ *        callback, depending on if the click was done while SHIFT was held.
+ *
+ * @param event The mouse-button event
+ *
+ * @return true
+ */
 bool MapNormalizer::GUI::GL::MapDrawingArea::on_button_press_event(GdkEventButton* event)
 {
     if(!hasData()) {

@@ -1,3 +1,9 @@
+/**
+ * @file MapRenderingViewBase.h
+ *
+ * @brief A base class for rendering just the map by itself.
+ */
+
 #include "MapRenderingViewBase.h"
 
 #include <GL/glew.h>
@@ -17,6 +23,12 @@ MapNormalizer::GUI::GL::MapRenderingViewBase::~MapRenderingViewBase() {
     }
 }
 
+/**
+ * @brief Initializes this MapRenderingViewBase
+ *
+ * @details Will build the basic shader program as well as build the geometry
+ *          that will be used for drawing the map
+ */
 void MapNormalizer::GUI::GL::MapRenderingViewBase::init() {
     // Set up all shaders
     WRITE_DEBUG("Building map rendering view program...");
@@ -67,6 +79,9 @@ void MapNormalizer::GUI::GL::MapRenderingViewBase::init() {
     }
 }
 
+/**
+ * @brief Re-generates the map texture based on the data stored in map_data
+ */
 void MapNormalizer::GUI::GL::MapRenderingViewBase::onMapDataChanged(std::shared_ptr<const MapData> map_data)
 {
     auto [iwidth, iheight] = map_data->getDimensions();
@@ -105,6 +120,13 @@ void MapNormalizer::GUI::GL::MapRenderingViewBase::setupUniforms() {
     m_program.uniform("map_texture", 0);
 }
 
+/**
+ * @brief Gets the vertices for the map geometry
+ *
+ * @details Each vertex is in the form of (X, Y, U, V)
+ *
+ * @return An array of every vertex
+ */
 auto MapNormalizer::GUI::GL::MapRenderingViewBase::getMapVertices()
     -> std::array<glm::vec4, 6>
 {

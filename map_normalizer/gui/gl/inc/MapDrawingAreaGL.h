@@ -1,3 +1,9 @@
+/**
+ * @file MapDrawingAreaGL.h
+ *
+ * @brief Defines the OpenGL map drawing area
+ */
+
 #ifndef MAPDRAWINGAREAGL_H
 # define MAPDRAWINGAREAGL_H
 
@@ -15,6 +21,9 @@
 # include "IRenderingView.h"
 
 namespace MapNormalizer::GUI::GL {
+    /**
+     * @brief A MapDrawingArea using OpenGL
+     */
     class MapDrawingArea: public IMapDrawingArea<Gtk::GLArea> {
         public:
             MapDrawingArea();
@@ -42,8 +51,10 @@ namespace MapNormalizer::GUI::GL {
             void setupAllUniforms();
 
         private:
+            //! Each supported rendering view/scene, mapped to the valid viewing modes
             std::map<ViewingMode, std::shared_ptr<IRenderingView>> m_rendering_views;
 
+            //! Whether this drawing area has been initialized
             bool m_initialized;
     };
 }

@@ -1,3 +1,8 @@
+/**
+ * @file GLUtils.cpp
+ *
+ * @brief Defines OpenGL utility functions and macros.
+ */
 
 #include "GLUtils.h"
 
@@ -64,6 +69,8 @@ uint32_t MapNormalizer::GUI::GL::processAllGLErrors(const std::function<void(uin
 
 /**
  * @brief Logs all GLErrors using the logging facilities
+ *
+ * @param source The source location this function was called from.
  *
  * @return The number of errors logged
  */
