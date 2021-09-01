@@ -2,6 +2,7 @@
 #include "gtest/gtest.h"
 
 #include "Util.h"
+#include "Monad.h"
 
 #include "TestOverrides.h"
 #include "TestUtils.h"
@@ -198,5 +199,113 @@ TEST(UtilTests, ClampTests) {
     ASSERT_EQ(MapNormalizer::clamp(5, 5, 20), 5);
     ASSERT_EQ(MapNormalizer::clamp(11, 5, 20), 11);
     ASSERT_EQ(MapNormalizer::clamp(533, 5, 20), 20);
+}
+
+TEST(UtilTests, MonadBasicTest) {
+    using MapNormalizer::MonadOptional;
+
+    std::optional<int> v = 5;
+
+    MonadOptional<int> a(v);
+    MonadOptional<int> b(std::nullopt);
+
+    b = a;
+
+    ASSERT_EQ(b, a);
+    ASSERT_EQ(a.getWrapped(), v);
+    ASSERT_TRUE(a);
+    ASSERT_EQ(*a, 5);
+}
+
+TEST(UtilTests, MonadTransformTest) {
+    using MapNormalizer::MonadOptional;
+
+    struct A {
+        int a;
+        float b;
+        char c;
+    } value { 5, 3.1415f, 'z' };
+
+    MonadOptional<A> opt_value(value);
+
+    MonadOptional<float> v = opt_value.transform<float>([](const A& a) { return a.b; });
+
+    ASSERT_TRUE(v);
+    ASSERT_EQ(v.value(), value.b);
+
+    MonadOptional<float> v2 = opt_value
+        .transform<int>([](const A& a) { return a.a; })
+        .transform<int>([](const int& a) { return a + 25; })
+        .transform<float>([](const int& a) { return a * 1.254f; });
+
+    ASSERT_TRUE(v2);
+    ASSERT_EQ(v2.value(), (value.a + 25) * 1.254f);
+}
+
+TEST(UtilTests, MonadAndThenTest) {
+    using MapNormalizer::MonadOptional;
+
+    struct A {
+        int a;
+        float b;
+        char c;
+    } value { 5, 3.1415f, 'z' };
+
+    MonadOptional<A> opt_value(value);
+
+    MonadOptional<float> v = opt_value
+        .andThen<float>([](const A& a) {
+            return MonadOptional<float>(a.b);
+        });
+
+    ASSERT_TRUE(v);
+    ASSERT_EQ(v.value(), value.b);
+
+    MonadOptional<float> v2 = opt_value
+        .andThen<A>([](const A& a) { return MonadOptional<A>({ a.a, 0.0f, a.c}); })
+        .andThen<float>([](const A& a) { return MonadOptional<float>(static_cast<float>(a.a)); });
+
+    ASSERT_TRUE(v2);
+    ASSERT_EQ(v2.value(), static_cast<float>(value.a));
+}
+
+TEST(UtilTests, MonadOrElseTest) {
+    using MapNormalizer::MonadOptional;
+
+    struct A {
+        int a;
+        float b;
+        char c;
+
+        bool operator==(const A& rhs) const {
+            return a == rhs.a && b == rhs.b && c == rhs.c;
+        }
+    } value { 5, 3.1415f, 'z' };
+
+    MonadOptional<A> opt_value(value);
+
+    // Verify that orElse returns opt_value when a value is held
+    MonadOptional<A> opt_value2 = opt_value.orElse<void>([]() { });
+    ASSERT_EQ(opt_value, opt_value2);
+
+    // Verify that orElse returns std::nullopt if no value is held, and the
+    //  function returns void
+    MonadOptional<A> opt_void = MonadOptional<A>(std::nullopt)
+        .orElse<void>([]() { });
+    ASSERT_FALSE(opt_void);
+
+    // Verify that we get a value from orElse
+    MonadOptional<A> opt_value3 = MonadOptional<A>(std::nullopt)
+        .orElse<A>([]() { return A { 25, 36.65f, 't' }; });
+    ASSERT_TRUE(opt_value3);
+    ASSERT_EQ(opt_value3->a, 25);
+    ASSERT_EQ(opt_value3->b, 36.65f);
+    ASSERT_EQ(opt_value3->c, 't');
+
+    // Verify that values can be convertible
+    MonadOptional<double> opt_value4 = MonadOptional<double>(std::nullopt)
+        .orElse<float>([]() { return 3.1415f; });
+    ASSERT_TRUE(opt_value4);
+    ASSERT_EQ(opt_value4.value(), 3.1415f);
 }
 
