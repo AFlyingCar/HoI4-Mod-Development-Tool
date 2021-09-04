@@ -14,6 +14,7 @@
 # include "IGraphicsWorker.h"
 # include "Types.h"
 # include "BitMap.h"
+# include "Monad.h"
 
 namespace MapNormalizer {
     /**
@@ -67,17 +68,17 @@ namespace MapNormalizer {
                                            std::set<uint32_t>&,
                                            const Point2D&);
 
-            static std::optional<Point2D> getAdjacentPoint(const BitMap*,
+            static MonadOptional<Point2D> getAdjacentPoint(const BitMap*,
                                                            const Point2D&,
                                                            Direction);
-            static std::optional<Point2D> getAdjacentPoint(const Dimensions&,
+            static MonadOptional<Point2D> getAdjacentPoint(const Dimensions&,
                                                            const uint8_t*,
                                                            const Point2D&,
                                                            Direction);
-            static std::optional<Pixel> getAdjacentPixel(const BitMap*,
+            static MonadOptional<Pixel> getAdjacentPixel(const BitMap*,
                                                          const Point2D&,
                                                          Direction);
-            static std::optional<Pixel> getAdjacentPixel(const Dimensions&,
+            static MonadOptional<Pixel> getAdjacentPixel(const Dimensions&,
                                                          const uint8_t*,
                                                          const Point2D&,
                                                          Direction);
@@ -99,7 +100,7 @@ namespace MapNormalizer {
 
             uint32_t getRootLabel(uint32_t);
 
-            std::optional<Point2D> getAdjacentPoint(const Point2D&, Direction) const;
+            MonadOptional<Point2D> getAdjacentPoint(const Point2D&, Direction) const;
 
             void buildShape(uint32_t, const Pixel&, PolygonList&,
                             LabelShapeIdxMap&);

@@ -9,6 +9,7 @@
 #include "ProvinceMapBuilder.h" // getProvinceType
 #include "UniqueColorGenerator.h" // generateUniqueColor
 #include "Options.h"
+#include "Monad.h"
 
 /**
  * @brief Constructs a ShapeFinder
@@ -105,9 +106,9 @@ uint32_t MapNormalizer::ShapeFinder::pass1() {
             }
 
             // std::nullopt => not in image, treat as border
-            std::optional<Point2D> left = getAdjacentPoint(Point2D{x, y},
+            MonadOptional<Point2D> left = getAdjacentPoint(Point2D{x, y},
                                                            Direction::LEFT);
-            std::optional<Point2D> up = getAdjacentPoint(Point2D{x, y},
+            MonadOptional<Point2D> up = getAdjacentPoint(Point2D{x, y},
                                                          Direction::UP);
 
             uint32_t label_left = 0;
@@ -255,7 +256,7 @@ bool MapNormalizer::ShapeFinder::mergeBorders(PolygonList& shapes,
         // Merge with the closest shape
         // First, check anything to our upper-left, as those will be
         //  non-borders if they exist
-        std::optional<Point2D> opt_adjacent;
+        MonadOptional<Point2D> opt_adjacent;
 
         if(opt_adjacent = getAdjacentPoint(point, Direction::LEFT);
            opt_adjacent)
@@ -565,7 +566,7 @@ uint32_t MapNormalizer::ShapeFinder::getRootLabel(uint32_t label) {
  */
 auto MapNormalizer::ShapeFinder::getAdjacentPoint(const Point2D& point,
                                                   Direction dir1) const
-    -> std::optional<Point2D>
+    -> MonadOptional<Point2D>
 {
     return getAdjacentPoint(m_image, point, dir1);
 }
@@ -582,13 +583,12 @@ auto MapNormalizer::ShapeFinder::getAdjacentPoint(const Point2D& point,
 auto MapNormalizer::ShapeFinder::getAdjacentPoint(const BitMap* image,
                                                   const Point2D& point,
                                                   Direction dir1)
-    -> std::optional<Point2D>
+    -> MonadOptional<Point2D>
 {
-    return MAYBE_EXPR(
-            getAdjacentPixel({static_cast<uint32_t>(image->info_header.width),
+    return getAdjacentPixel({static_cast<uint32_t>(image->info_header.width),
                               static_cast<uint32_t>(image->info_header.height)},
-                             image->data, point, dir1),
-            Point2D, point);
+                             image->data, point, dir1)
+        .transform<Point2D>([](const Pixel& pix) { return pix.point; });
 }
 
 /**
@@ -603,7 +603,7 @@ auto MapNormalizer::ShapeFinder::getAdjacentPoint(const BitMap* image,
 auto MapNormalizer::ShapeFinder::getAdjacentPixel(const BitMap* image,
                                                   const Point2D& point,
                                                   Direction dir1)
-    -> std::optional<Pixel>
+    -> MonadOptional<Pixel>
 {
     return getAdjacentPixel({static_cast<uint32_t>(image->info_header.width),
                              static_cast<uint32_t>(image->info_header.height)},
@@ -623,7 +623,7 @@ auto MapNormalizer::ShapeFinder::getAdjacentPixel(const Dimensions& dimensions,
                                                   const uint8_t* data,
                                                   const Point2D& point,
                                                   Direction dir1)
-    -> std::optional<Pixel>
+    -> MonadOptional<Pixel>
 {
     Point2D adjacent = point;
 
