@@ -37,8 +37,7 @@ MapNormalizer::GUI::GL::MapDrawingArea::~MapDrawingArea() { }
  */
 bool MapNormalizer::GUI::GL::MapDrawingArea::on_render(const Glib::RefPtr<Gdk::GLContext>& context)
 {
-    try
-    {
+    try {
         make_current();
         init();
 
@@ -74,8 +73,7 @@ bool MapNormalizer::GUI::GL::MapDrawingArea::on_render(const Glib::RefPtr<Gdk::G
         queue_draw();
 
         return true;
-    }
-    catch(const Gdk::GLError& error) {
+    } catch(const Gdk::GLError& error) {
         WRITE_ERROR("An error occurred when rendering the map",
                     error.domain(), '-', error.code(), '-', error.what());
         return false;
@@ -222,7 +220,8 @@ glm::mat4 MapNormalizer::GUI::GL::MapDrawingArea::getProjection() const {
     // Note that we flip bottom and top to prevent the image from also being
     //   flipped.
     // left, right, bottom, top
-    return glm::ortho(0.0f, static_cast<float>(size.x), static_cast<float>(size.y), 0.0f);
+    return glm::ortho(0.0f, static_cast<float>(size.x),
+                            static_cast<float>(size.y), 0.0f);
 }
 
 glm::mat4 MapNormalizer::GUI::GL::MapDrawingArea::getTransformation() const {
@@ -238,8 +237,7 @@ glm::mat4 MapNormalizer::GUI::GL::MapDrawingArea::getTransformation() const {
 
     transform = glm::scale(transform, glm::vec3{size, 1} *
                                       glm::vec3{getScaleFactor(),
-                                                getScaleFactor(), 1}
-    );
+                                                getScaleFactor(), 1});
 
     return transform;
 }
