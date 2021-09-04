@@ -127,7 +127,8 @@ uint32_t MapNormalizer::GUI::GL::Shader::typeToGL(Type type) {
  *
  * @return A string representation of the given Shader::Type
  */
-std::string std::to_string(const MapNormalizer::GUI::GL::Shader::Type& type) {
+std::string_view std::to_string(const MapNormalizer::GUI::GL::Shader::Type& type)
+{
     switch(type) {
         case MapNormalizer::GUI::GL::Shader::Type::VERTEX:
             return "Vertex";

@@ -8,6 +8,7 @@
 # define GL_SHADER_H
 
 # include <string>
+# include <string_view>
 # include <memory>
 
 namespace MapNormalizer::GUI::GL {
@@ -75,7 +76,7 @@ namespace MapNormalizer::GUI::GL {
 }
 
 namespace std {
-    string to_string(const MapNormalizer::GUI::GL::Shader::Type&);
+    string_view to_string(const MapNormalizer::GUI::GL::Shader::Type&);
 }
 
 #endif
