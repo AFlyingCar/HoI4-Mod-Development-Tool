@@ -45,6 +45,7 @@ bool MapNormalizer::GUI::MainWindow::initializeActions() {
     initializeEditActions();
     initializeViewActions();
     initializeProjectActions();
+    initializeHelpActions();
 
     return true;
 }
@@ -217,6 +218,36 @@ void MapNormalizer::GUI::MainWindow::initializeProjectActions() {
 
     // This action should be disabled by default, until a project gets opened
     ipm_action->set_enabled(false);
+}
+
+/**
+ * @brief Initializes every action in the Help menu
+ */
+void MapNormalizer::GUI::MainWindow::initializeHelpActions() {
+    add_action("about", []() {
+        Gtk::AboutDialog dialog;
+
+        dialog.set_authors({ "Tyler Robbins" });
+        dialog.add_credit_section("Libraries Used:", {
+            "gtkmm", "nlohmann::json", "nlohmann::fifo_map", "GLEW", "OpenGL",
+            "GLM", "Native Dialogs", "gtest"
+        });
+        // dialog.set_artists({});
+        // dialog.set_translators({});
+
+        dialog.set_program_name(APPLICATION_NAME);
+        dialog.set_version(TOOL_VERSION.str());
+        // dialog.set_license_type(Gtk::LICENSE_MIT_X11);
+        dialog.set_license(TOOL_LICENSE);
+        dialog.set_wrap_license(true);
+        dialog.set_website_label("Source code");
+        dialog.set_website(SOURCE_LOCATION);
+        // dialog.set_logo(); // TODO
+
+        dialog.run();
+    });
+
+    // TODO: Link to the wiki once it is written
 }
 
 /**
