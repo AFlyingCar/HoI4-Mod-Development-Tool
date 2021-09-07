@@ -7,6 +7,13 @@ add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/ToolsVersion.h"
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     )
 
+# Generate License.h
+add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/License.h"
+    COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/genLicenseHeader.py" "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}"
+    DEPENDS "${CMAKE_SOURCE_DIR}/LICENSE" "${CMAKE_SOURCE_DIR}/tools/genLicenseHeader.py"
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    )
+
 # Yeah, I know the CMake documentation _says_ this isn't necessary anymore
 #   https://cmake.org/cmake/help/latest/prop_sf/OBJECT_DEPENDS.html
 # But for some reason I can't figure out, src/Constants.cpp doesn't get rebuilt
@@ -15,6 +22,10 @@ add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/ToolsVersion.h"
 set_source_files_properties(src/Constants.cpp
     PROPERTIES
     OBJECT_DEPENDS "${CMAKE_BINARY_DIR}/ToolsVersion.h"
+    )
+set_source_files_properties(src/Constants.cpp
+    PROPERTIES
+    OBJECT_DEPENDS "${CMAKE_BINARY_DIR}/License.h"
     )
 
 add_library(common STATIC
