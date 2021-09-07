@@ -76,7 +76,12 @@ void MapNormalizer::GUI::MapNormalizerApplication::on_startup() {
     });
 
     createMenu("Root", "Project", {
-            { "_Import Province Map", "win.import_provincemap", {} }
+        { "_Import Province Map", "win.import_provincemap", {} }
+    });
+
+    createMenu("Root", "Help", {
+        { "_About", "win.about", {} },
+        { "_Wiki", "win.wiki", {} }
     });
 
     // Debug dump the menus

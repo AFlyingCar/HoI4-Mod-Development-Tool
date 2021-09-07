@@ -63,6 +63,7 @@ namespace MapNormalizer::GUI {
             void initializeEditActions();
             void initializeViewActions();
             void initializeProjectActions();
+            void initializeHelpActions();
 
             void newProject();
             void openProject();
