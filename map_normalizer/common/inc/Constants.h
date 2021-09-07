@@ -8,6 +8,7 @@
 # define CONSTANTS_H
 
 # include <cstdint>
+# include <string>
 
 # include "Types.h"
 # include "Version.h"
@@ -90,8 +91,13 @@ namespace MapNormalizer {
 
     const uint32_t PROVINCE_HIGHLIGHT_COLOR = 0xFFFFFFFF;
 
+    const std::string SOURCE_LOCATION = "https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool";
+
     //! The version of the tool
     extern const Version TOOL_VERSION;
+
+    //! The license of the tool
+    extern const std::string TOOL_LICENSE;
 }
 
 #endif
