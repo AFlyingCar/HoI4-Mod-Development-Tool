@@ -15,8 +15,6 @@
 # include <functional>
 # include <optional>
 
-#include <iostream>
-
 # include "Types.h"
 
 namespace MapNormalizer {
