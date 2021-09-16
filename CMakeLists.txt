@@ -41,9 +41,15 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     endif()
 endif()
 
+# Set up the resources first, as they will get depended on by subsequent projects
+add_subdirectory(resources)
+add_definitions(-DMN_GLIB_RESOURCES="${RESOURCE_C_SRC_NAME}")
+
 add_subdirectory(map_normalizer)
 
 add_subdirectory(tests)
+
+add_dependencies(map_normalizer glib_resources)
 
 ################################################################################
 
@@ -115,6 +121,8 @@ include(InstallRequiredSystemLibraries)
 #         DESTINATION ${INSTALL_DESTINATION})
 # install(DIRECTORY resources/share
 #         DESTINATION ${INSTALL_DESTINATION})
+install(FILES ${RESOURCE_C_SRC}
+        DESTINATION ${INSTALL_DESTINATION}/bin)
 install(FILES README.md
         DESTINATION ${INSTALL_DESTINATION}/share/doc/)
 # TODO: Install the license as well to /share/licenses/, once we have one

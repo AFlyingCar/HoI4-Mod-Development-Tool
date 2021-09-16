@@ -20,6 +20,14 @@ namespace MapNormalizer {
     };
 
     /**
+     * @brief Dimensions of an image
+     */
+    struct Dimensions {
+        uint32_t w;
+        uint32_t h;
+    };
+
+    /**
      * @brief A 2D Rectangle
      */
     struct Rectangle {

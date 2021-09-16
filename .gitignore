@@ -25,3 +25,6 @@ doc/
 # Allow all bmp files in the tests/bin directory (these are test data)
 !tests/bin/*.bmp
 
+# Allow all bmp files in the resources/textures directory (these are program binary data)
+!resources/textures/*.bmp
+

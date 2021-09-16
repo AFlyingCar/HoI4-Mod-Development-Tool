@@ -54,25 +54,29 @@ void MapNormalizer::GUI::MapNormalizerApplication::on_startup() {
 
     createMenu("Root", {});
     createMenu("Root", "File", {
-        { "_New Project", "win.new" },
-        { "_Open Project", "win.open" }, // TODO: We should probably have a subsubmenu for this: different input types (province-map, heightmap, etc...)
-        { "_Save Project", "win.save" },
-        { "_Close Project", "win.close" },
-        { "_Quit", "win.quit" }
+        { "_New Project", "win.new", {} },
+        { "_Open Project", "win.open", {} }, // TODO: We should probably have a subsubmenu for this: different input types (province-map, heightmap, etc...)
+        { "_Save Project", "win.save", {} },
+        { "_Close Project", "win.close", {} },
+        { "_Quit", "win.quit", {} }
     });
 
     createMenu("Root", "Edit", {
-        { "_Undo", "win.undo" },
-        { "_Redo", "win.redo" }
+        { "_Undo", "win.undo", {} },
+        { "_Redo", "win.redo", {} }
     });
 
     createMenu("Root", "View", {
-        { "_Properties", "win.properties" },
-        { "_Log Window", "win.log_window" }
+        { "_Properties", "win.properties", {} },
+        { "_Log Window", "win.log_window", {} },
+        { "_Switch Renderers", "win.switch_renderers", {
+            { "_Use OpenGL", "win.switch_renderers.usegl" },
+            { "_Use Cairo (DEPRECATED)", "win.switch_renderers.usecairo" },
+        } }
     });
 
     createMenu("Root", "Project", {
-        { "_Import Province Map", "win.import_provincemap" }
+            { "_Import Province Map", "win.import_provincemap", {} }
     });
 
     // Debug dump the menus
@@ -101,11 +105,10 @@ auto MapNormalizer::GUI::MapNormalizerApplication::createMenu(
 auto MapNormalizer::GUI::MapNormalizerApplication::createMenu(
         const std::string& parent_menu_full_name,
         const std::string& menu_name,
-        std::initializer_list<MenuItemInfo> menu_items)
+        const std::vector<MenuItemInfo>& menu_items)
     -> MenuWrapper
 {
     auto menu = Gio::Menu::create();
-    std::vector<std::string> menu_item_names;
 
     // Build the full name of this menu
     std::string full_name = menu_name;
@@ -113,11 +116,38 @@ auto MapNormalizer::GUI::MapNormalizerApplication::createMenu(
         full_name = parent_menu_full_name + "." + full_name;
     }
 
+    // Set this up now, so that any submenus that exist can access it as soon as
+    //  possible
+    MenuWrapper& this_menu_wrapper = m_menus[full_name] = MenuWrapper {
+        menu, { }
+    };
+    std::vector<std::string>& menu_item_names = this_menu_wrapper.menu_item_names;
+
     // Add all menu items to the menu
     for(auto&& item : menu_items) {
         auto menu_item = addMenuItem(full_name, item);
 
-        menu->append_item(menu_item.menu_item);
+        // If the menuitem is a submenu
+        // The submenu is named the same as the menu item
+        if(!item.submenu_items.empty()) {
+            // Convert the list of SubMenuItemInfos into MenuItemInfos
+            std::vector<MenuItemInfo> submenu_items;
+            submenu_items.reserve(submenu_items.size());
+            std::transform(item.submenu_items.begin(), item.submenu_items.end(),
+                           std::back_inserter(submenu_items),
+                           [](auto&& submenu_item) {
+                               return MenuItemInfo{ submenu_item.label,
+                                                    submenu_item.detailed_action,
+                                                    { }
+                                                  };
+                           });
+
+            // Recursively create the menu
+            createMenu(full_name, item.label, submenu_items);
+        } else {
+            menu->append_item(menu_item.menu_item);
+        }
+
         menu_item_names.push_back(menu_item.full_name);
     }
 
@@ -132,9 +162,7 @@ auto MapNormalizer::GUI::MapNormalizerApplication::createMenu(
         }
     }
 
-    return m_menus[full_name] = MenuWrapper {
-        menu, menu_item_names
-    };
+    return this_menu_wrapper;
 }
 
 auto MapNormalizer::GUI::MapNormalizerApplication::getMenuItem(const std::string& full_name)
@@ -172,7 +200,7 @@ auto MapNormalizer::GUI::MapNormalizerApplication::addMenuItem(const std::string
 
     std::string full_name = menu_item_info.label;
     if(!parent_name.empty()) {
-        MenuItemInfo default_parent_name{parent_name, ""};
+        MenuItemInfo default_parent_name{parent_name, "", {}};
         full_name = getMenuItemInfo(parent_name).value_or(std::ref(default_parent_name)).get().label + "." + full_name;
     }
 

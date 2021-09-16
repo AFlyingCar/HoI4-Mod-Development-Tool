@@ -10,6 +10,10 @@
 # include <cstdint>
 # include <algorithm>
 # include <istream>
+# include <memory>
+# include <filesystem>
+# include <functional>
+# include <optional>
 
 # include "Types.h"
 
@@ -26,9 +30,11 @@ namespace MapNormalizer {
     uint64_t xyToIndex(const BitMap*, uint32_t, uint32_t);
     uint64_t xyToIndex(uint32_t, uint32_t, uint32_t);
     Color getColorAt(const BitMap*, uint32_t, uint32_t, uint32_t = 3);
+    Color getColorAt(const Dimensions&, const uint8_t*,
+                     uint32_t, uint32_t, uint32_t = 3);
     Pixel getAsPixel(const BitMap*, uint32_t, uint32_t, uint32_t = 3);
 
-    bool isInImage(const BitMap*, uint32_t, uint32_t);
+    bool isInImage(const Dimensions&, uint32_t, uint32_t);
 
     bool isShapeTooLarge(uint32_t, uint32_t, const BitMap*);
     std::pair<uint32_t, uint32_t> calcDims(const BoundingBox&);
@@ -230,6 +236,8 @@ namespace MapNormalizer {
     }
 
     ProvinceList createProvincesFromShapeList(const PolygonList&);
+
+    std::filesystem::path getExecutablePath();
 }
 
 #endif

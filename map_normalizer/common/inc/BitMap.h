@@ -49,10 +49,11 @@ namespace MapNormalizer {
     };
 
     BitMap* readBMP(const std::filesystem::path&, BitMap*);
+    BitMap* readBMP(std::istream&, BitMap*);
     BitMap* readBMP(const std::filesystem::path&);
 
     void writeBMP(const std::filesystem::path&, const BitMap*);
-    void writeBMP(const std::filesystem::path&, unsigned char*, uint32_t, uint32_t);
+    void writeBMP(const std::filesystem::path&, unsigned char*, uint32_t, uint32_t, uint16_t = 3);
 
     std::ostream& operator<<(std::ostream&, const MapNormalizer::BitMap&);
 }

@@ -8,9 +8,10 @@
 # define GRAPHICALDEBUGGER_H
 
 # include <functional>
+# include <memory>
 
 # include "IGraphicsWorker.h"
-# include "BitMap.h"
+# include "MapData.h"
 # include "Types.h"
 
 namespace MapNormalizer {
@@ -22,13 +23,12 @@ namespace MapNormalizer {
 
             static GraphicsWorker& getInstance();
 
-            void init(const BitMap*, unsigned char*);
+            void init(std::shared_ptr<const MapData>);
 
             void resetDebugData();
             void resetDebugDataAt(const Point2D&);
 
-            const unsigned char* getDebugData() const;
-            const BitMap* getImage() const;
+            std::shared_ptr<const MapData> getMapData() const;
 
             const UpdateCallback& getWriteCallback() const;
             void setWriteCallback(const UpdateCallback&);
@@ -40,8 +40,8 @@ namespace MapNormalizer {
         private:
             GraphicsWorker() = default;
 
-            const BitMap* m_image = nullptr;
-            unsigned char* m_debug_data = nullptr;
+            std::unique_ptr<unsigned char[]> m_debug_data;
+            std::shared_ptr<const MapData> m_map_data;
 
             UpdateCallback m_write_callback = [](auto) { };
     };

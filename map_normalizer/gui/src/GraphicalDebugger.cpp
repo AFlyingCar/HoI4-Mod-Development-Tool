@@ -31,27 +31,20 @@ MapNormalizer::GraphicsWorker& MapNormalizer::GraphicsWorker::getInstance() {
  * @param image The image being debugged
  * @param debug_data The pixel data to display
  */
-void MapNormalizer::GraphicsWorker::init(const BitMap* image,
-                                         unsigned char* debug_data)
+void MapNormalizer::GraphicsWorker::init(std::shared_ptr<const MapData> map_data)
 {
-    // Make sure we delete the old data first if we have any
-    if(m_debug_data != nullptr) {
-        delete[] m_debug_data;
-    }
+    m_map_data = map_data;
 
-    if(m_image != nullptr) {
-        delete m_image;
-    }
+    auto [iwidth, iheight] = map_data->getDimensions();
 
-    m_image = image;
-    m_debug_data = debug_data;
+    m_debug_data.reset(new unsigned char[iwidth * iheight * 3]);
 }
 
 void MapNormalizer::GraphicsWorker::writeDebugColor(uint32_t x, uint32_t y,
                                                     const Color& c)
 {
     if(m_debug_data != nullptr) {
-        uint32_t w = m_image->info_header.width;
+        uint32_t w = m_map_data->getWidth();
 
         uint32_t index = xyToIndex(w * 3, x * 3, y);
 
@@ -64,26 +57,25 @@ void MapNormalizer::GraphicsWorker::writeDebugColor(uint32_t x, uint32_t y,
 
 void MapNormalizer::GraphicsWorker::resetDebugData() {
     if(m_debug_data != nullptr) {
-        auto data_size = m_image->info_header.width * m_image->info_header.height * 3;
+        auto data_size = m_map_data->getWidth() * m_map_data->getHeight() * 3;
 
-        std::copy(m_image->data, m_image->data + data_size, m_debug_data);
+        auto prov_ptr = m_map_data->getProvinces().lock();
+        std::copy(prov_ptr.get(), prov_ptr.get() + data_size, m_debug_data.get());
     }
 }
 
 void MapNormalizer::GraphicsWorker::resetDebugDataAt(const Point2D& point) {
     if(m_debug_data != nullptr) {
-        uint32_t index = xyToIndex(m_image, point.x, point.y);
+        uint32_t index = xyToIndex(m_map_data->getWidth(), point.x, point.y);
 
-        m_debug_data[index] = m_image->data[index];
+        m_debug_data[index] = m_map_data->getProvinces().lock()[index];
     }
 }
 
-const unsigned char* MapNormalizer::GraphicsWorker::getDebugData() const {
-    return m_debug_data;
-}
-
-const MapNormalizer::BitMap* MapNormalizer::GraphicsWorker::getImage() const {
-    return m_image;
+auto MapNormalizer::GraphicsWorker::getMapData() const
+    -> std::shared_ptr<const MapData>
+{
+    return m_map_data;
 }
 
 void MapNormalizer::GraphicsWorker::updateCallback(const Rectangle& rectangle) {

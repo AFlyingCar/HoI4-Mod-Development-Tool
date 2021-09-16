@@ -70,6 +70,10 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
 
     // First we try to load the input map back up, as it holds important info
     //  about the map itself (such as dimensions, the original color value, etc...)
+    std::unique_ptr<BitMap> input_image(new BitMap);
+
+    auto& map_data = m_shape_detection_info.map_data;
+
     auto inputs_root = dynamic_cast<HoI4Project&>(m_parent_project).getInputsRoot();
     auto input_provincemap_path = inputs_root / INPUT_PROVINCEMAP_FILENAME;
     if(!std::filesystem::exists(input_provincemap_path)) {
@@ -77,19 +81,20 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
         WRITE_WARN("Source import image does not exist, unable to finish loading data.");
         return false;
     } else {
-        // Memory leak prevention
-        if(m_shape_detection_info.image != nullptr) {
-            delete m_shape_detection_info.image;
-        }
+        readBMP(input_provincemap_path, input_image.get());
 
-        m_shape_detection_info.image = readBMP(input_provincemap_path);
-        if(m_shape_detection_info.image == nullptr) {
+        if(input_image == nullptr) {
             // TODO: We should instead pass ec into readBMP() and let it set ec
             //  to whatever might be appropriate
             ec = std::make_error_code(std::errc::io_error);
             WRITE_WARN("Failed to read imported image.");
             return false;
         }
+
+        auto iwidth = input_image->info_header.width;
+        auto iheight = input_image->info_header.height;
+
+        map_data.reset(new MapData(iwidth, iheight));
     }
 
     // Now load the other related data
@@ -105,27 +110,27 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
     }
 
     // Rebuild the graphics data
-    auto* image = m_shape_detection_info.image;
-    auto*& graphics_data = m_shape_detection_info.graphics_data;
+    auto [width, height] = map_data->getDimensions();
 
-    // Do this to prevent a memory leak
-    if(graphics_data != nullptr) delete[] graphics_data;
+    // TODO: Why do we actually have to do this? For some reason everything stops
+    //  rendering correctly if we remove this line. Why? What? How?
+    map_data.reset(new MapData(width, height));
 
-    auto width = image->info_header.width;
-    auto height = image->info_header.height;
+    auto input_data = map_data->getInput().lock();
+    auto graphics_data = map_data->getProvinces().lock();
 
-    auto data_size = width * height * 3;
-    graphics_data = new unsigned char[data_size];
+    // Copy the input image's data into the input_data
+    std::copy(input_data.get(), input_data.get() + (width * height * 3), input_image->data);
 
-    // Rebuild the graphics_data array and the adjacency lists
+    // Rebuild the map_data array and the adjacency lists
     for(uint32_t x = 0; x < width; ++x) {
         for(uint32_t y = 0; y < height; ++y) {
             // Get the index into the label matrix
-            auto lindex = xyToIndex(image, x, y);
+            auto lindex = xyToIndex(width, x, y);
 
             // Get the index into the graphics data
             //  3 == the depth
-            auto gindex = xyToIndex(image->info_header.width * 3, x * 3, y);
+            auto gindex = xyToIndex(width * 3, x * 3, y);
 
             auto label = m_shape_detection_info.label_matrix[lindex];
 
@@ -145,14 +150,10 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
             graphics_data[gindex] = province.unique_color.b;
             graphics_data[gindex + 1] = province.unique_color.g;
             graphics_data[gindex + 2] = province.unique_color.r;
-
-            // Recalculate adjacencies for this pixel
-            ShapeFinder::calculateAdjacency(image,
-                                            m_shape_detection_info.label_matrix,
-                                            province.adjacent_provinces,
-                                            {x, y});
         }
     }
+
+    buildProvinceOutlines();
 
     return true;
 }
@@ -176,8 +177,8 @@ bool MapNormalizer::Project::MapProject::saveShapeLabels(const std::filesystem::
     {
         out << SHAPEDATA_MAGIC;
 
-        writeData(out, m_shape_detection_info.image->info_header.width, 
-                       m_shape_detection_info.image->info_header.height);
+        writeData(out, m_shape_detection_info.map_data->getWidth(), 
+                       m_shape_detection_info.map_data->getHeight());
 
         // Write the entire label matrix to the file
         out.write(reinterpret_cast<const char*>(m_shape_detection_info.label_matrix),
@@ -428,40 +429,29 @@ void MapNormalizer::Project::MapProject::setShapeFinder(ShapeFinder&& shape_find
     m_shape_detection_info.provinces = createProvincesFromShapeList(sf.getShapes());
     m_shape_detection_info.label_matrix = sf.getLabelMatrix();
     m_shape_detection_info.label_matrix_size = sf.getLabelMatrixSize();
-    m_shape_detection_info.graphics_data = nullptr;
+    m_shape_detection_info.map_data.reset();
 
     // Clear out which province is selected
     m_selected_province = -1;
     m_data_cache.clear();
 }
 
-void MapNormalizer::Project::MapProject::setGraphicsData(unsigned char* data) {
-    if(m_shape_detection_info.graphics_data != nullptr) {
-        delete[] m_shape_detection_info.graphics_data;
-    }
+void MapNormalizer::Project::MapProject::setGraphicsData(std::shared_ptr<MapData> map_data) {
+    m_shape_detection_info.map_data = map_data;
 
-    m_shape_detection_info.graphics_data = data;
+    buildProvinceOutlines();
 }
 
-void MapNormalizer::Project::MapProject::setImage(BitMap* image) {
-    m_shape_detection_info.image = image;
-}
-
-auto MapNormalizer::Project::MapProject::getImage() -> BitMap* {
-    return m_shape_detection_info.image;
-}
-
-auto MapNormalizer::Project::MapProject::getImage() const -> const BitMap* {
-    return m_shape_detection_info.image;
-}
-
-unsigned char* MapNormalizer::Project::MapProject::getGraphicsData() {
-    return m_shape_detection_info.graphics_data;
-}
-
-const unsigned char* MapNormalizer::Project::MapProject::getGraphicsData() const
+auto MapNormalizer::Project::MapProject::getMapData()
+    -> std::shared_ptr<MapData>
 {
-    return m_shape_detection_info.graphics_data;
+    return m_shape_detection_info.map_data;
+}
+
+auto MapNormalizer::Project::MapProject::getMapData() const
+    -> const std::shared_ptr<MapData>
+{
+    return m_shape_detection_info.map_data;
 }
 
 const uint32_t* MapNormalizer::Project::MapProject::getLabelMatrix() const {
@@ -604,12 +594,12 @@ void MapNormalizer::Project::MapProject::buildProvinceCache(const Province* prov
     // Some references first, to make the following code easier to read
     //  id also starts at 1, so make sure we offset it down
     const auto& label_matrix = m_shape_detection_info.label_matrix;
-    const auto* image = m_shape_detection_info.image;
+    auto iwidth = m_shape_detection_info.map_data->getWidth();
 
     auto&& bb = province.bounding_box;
     auto&& [width, height] = calcDims(bb);
 
-    auto depth = 4;
+    constexpr auto depth = 4;
 
     // Make sure we 0-initialize the array
     //  We use a depth of 4 since we have RGBA
@@ -619,7 +609,7 @@ void MapNormalizer::Project::MapProject::buildProvinceCache(const Province* prov
     for(auto x = bb.bottom_left.x; x < bb.top_right.x; ++x) {
         for(auto y = bb.top_right.y; y < bb.bottom_left.y; ++y) {
             // Get the index into the label matrix
-            auto lindex = xyToIndex(image, x, y);
+            auto lindex = xyToIndex(iwidth, x, y);
 
             // Offset the x,y so that we get 0-preview width/height
             auto relx = x - bb.bottom_left.x;
@@ -657,6 +647,51 @@ void MapNormalizer::Project::MapProject::buildProvinceCache(const Province* prov
                 // Write Alpha first
                 out.write(reinterpret_cast<char*>(&data[i + 3]), 1);
                 out.write(reinterpret_cast<char*>(&data[i + 1]), 3);
+            }
+        }
+    }
+}
+
+void MapNormalizer::Project::MapProject::buildProvinceOutlines() {
+    auto map_data = m_shape_detection_info.map_data;
+    auto prov_outline_data = map_data->getProvinceOutlines().lock();
+    auto graphics_data = map_data->getProvinces().lock();
+
+    auto [width, height] = map_data->getDimensions();
+    Dimensions dimensions{width, height};
+
+    // Go over the map again and build extra data that depends on the previously
+    //  re-built province data
+    for(uint32_t x = 0; x < width; ++x) {
+        for(uint32_t y = 0; y < height; ++y) {
+            auto lindex = xyToIndex(width, x, y);
+            auto label = m_shape_detection_info.label_matrix[lindex];
+            auto gindex = xyToIndex(width * 4, x * 4, y);
+
+            auto& province = m_shape_detection_info.provinces[label - 1];
+
+            // Error check
+            if(label <= 0 || label > m_shape_detection_info.provinces.size()) {
+                WRITE_WARN("Label matrix has label ", label,
+                             " at position (", x, ',', y, "), which is out of "
+                             "the range of valid labels [1,",
+                             m_shape_detection_info.provinces.size(), "]");
+                continue;
+            }
+
+            // Recalculate adjacencies for this pixel
+            auto is_adjacent = ShapeFinder::calculateAdjacency(dimensions,
+                                                               graphics_data.get(),
+                                                               m_shape_detection_info.label_matrix,
+                                                               province.adjacent_provinces,
+                                                               {x, y});
+            // If this pixel is adjacent to any others, then make it visible as
+            //  an outline
+            if(is_adjacent) {
+                prov_outline_data[gindex] = 0xFF;
+                prov_outline_data[gindex + 1] = 0xFF;
+                prov_outline_data[gindex + 2] = 0xFF;
+                prov_outline_data[gindex + 3] = 0xFF;
             }
         }
     }

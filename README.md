@@ -41,10 +41,25 @@ $ cd Binaries
 $ cmake .. -DCMAKE_GENERATOR="MinGW Makefiles"
 $ mingw32-make
 ```
+
+As a quick note about about compiling with GLEW: The default FindGLEW config
+which comes bundled with CMake can sometimes have trouble finding GLEW if it is
+installed in a non-standard way (or just installed with pacman from an MSYS
+shell).
+
+As such, if you get an error from `getGLXMacros.py` about being unable to find
+`some\path\include/GL/glew.h`, then modify the above cmake command to the following:
+```
+$ cmake .. -DCMAKE_GENERATOR="MinGW Makefiles" -DMSYS_PREFIX=C:\\msys64
+```
+
+Replacing `C:\\msys64` with the MSYS prefix for your system, such that
+`${MSYS_PREFIX}\mingw64\include\GL\glew.h` points to your installed GLEW header.
+
 ### Linux
 
 ```
-$ apt install -y python3.6 libgtkmm-3.0-dev
+$ apt install -y python3.6 libgtkmm-3.0-dev libglew-dev libopengl0 libglm-dev
 $ mkdir Binaries
 $ cd Binaries
 $ cmake ..
@@ -85,6 +100,9 @@ may work with other compilers, but I have not tested those yet.
 Libraries used are [gtkmm](https://gtkmm.org/),
 [nlohmann::json](https://github.com/nlohmann/json),
 [nlohmann::fifo_map](https://github.com/nlohmann/fifo_map),
+[OpenGL](https://www.opengl.org/),
+[GLEW](https://github.com/nigels-com/glew),
+[GLM](https://github.com/g-truc/glm),
 [gtest](https://github.com/google/googletest), and
 [Native Dialogs](https://github.com/Geequlim/NativeDialogs)
 

@@ -8,9 +8,21 @@
 # include "gtkmm.h"
 
 namespace MapNormalizer::GUI {
+    /**
+     * @brief Information about a sub-menu item. Because we probably won't need
+     *        to worry about it, we will not support completely recursive
+     *        sub-menus.
+     */
+    struct SubMenuItemInfo {
+        Glib::ustring label;
+        Glib::ustring detailed_action;
+    };
+
     struct MenuItemInfo {
         Glib::ustring label;
         Glib::ustring detailed_action;
+
+        std::vector<SubMenuItemInfo> submenu_items;
     };
 
     struct MenuItemWrapper {

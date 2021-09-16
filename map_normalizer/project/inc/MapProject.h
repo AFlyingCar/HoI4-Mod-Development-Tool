@@ -11,6 +11,7 @@
 
 # include "Types.h"
 # include "BitMap.h"
+# include "MapData.h"
 
 # include "Terrain.h"
 
@@ -33,14 +34,10 @@ namespace MapNormalizer::Project {
                               std::error_code& = last_error) override;
 
             void setShapeFinder(ShapeFinder&&);
-            void setGraphicsData(unsigned char*);
-            void setImage(BitMap*);
+            void setGraphicsData(std::shared_ptr<MapData>);
 
-            BitMap* getImage();
-            const BitMap* getImage() const;
-
-            unsigned char* getGraphicsData();
-            const unsigned char* getGraphicsData() const;
+            std::shared_ptr<MapData> getMapData();
+            const std::shared_ptr<MapData> getMapData() const;
 
             const uint32_t* getLabelMatrix() const;
 
@@ -76,18 +73,17 @@ namespace MapNormalizer::Project {
 
         private:
             void buildProvinceCache(const Province*);
+            void buildProvinceOutlines();
 
             /**
              * @brief A struct which holds information about shape detection
              */
             struct ShapeDetectionInfo {
                 ProvinceList provinces;
-                BitMap* image = nullptr;
                 uint32_t* label_matrix = nullptr;
                 uint32_t label_matrix_size = 0;
 
-                // TODO: This should really be a smart pointer
-                unsigned char* graphics_data = nullptr;
+                std::shared_ptr<MapData> map_data;
             } m_shape_detection_info;
 
             /**
