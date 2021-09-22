@@ -27,6 +27,8 @@ add_custom_command(OUTPUT ${RESOURCE_C_SRC}
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     DEPENDS
         ${RESOURCE_DIR}/textures/selection.bmp
+        ${RESOURCE_DIR}/textures/logo.png
+        ${RESOURCE_XML_CFG_SRC}
 )
 
 add_custom_target(glib_resources
