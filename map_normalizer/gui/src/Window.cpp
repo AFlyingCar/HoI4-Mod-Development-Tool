@@ -32,6 +32,10 @@ bool MapNormalizer::GUI::Window::initialize() {
         return false;
     }
 
+    if(!initializeFinal()) {
+        return false;
+    }
+
     show_all_children();
 
     WRITE_DEBUG("done");

@@ -232,7 +232,7 @@ void MapNormalizer::GUI::MainWindow::initializeHelpActions() {
             "gtkmm", "nlohmann::json", "nlohmann::fifo_map", "GLEW", "OpenGL",
             "GLM", "Native Dialogs", "gtest"
         });
-        // dialog.set_artists({});
+        dialog.set_artists({"Lapshaman"});
         // dialog.set_translators({});
 
         dialog.set_program_name(APPLICATION_NAME);
@@ -242,7 +242,8 @@ void MapNormalizer::GUI::MainWindow::initializeHelpActions() {
         dialog.set_wrap_license(true);
         dialog.set_website_label("Source code");
         dialog.set_website(SOURCE_LOCATION);
-        // dialog.set_logo(); // TODO
+
+        dialog.set_logo(Gdk::Pixbuf::create_from_resource("/com/aflyingcar/MapNormalizerTools/textures/logo.png"));
 
         dialog.run();
     });
@@ -288,6 +289,12 @@ bool MapNormalizer::GUI::MainWindow::initializeWidgets() {
 
         return false;
     });
+
+    return true;
+}
+
+bool MapNormalizer::GUI::MainWindow::initializeFinal() {
+    set_icon(Gdk::Pixbuf::create_from_resource("/com/aflyingcar/MapNormalizerTools/textures/logo.png"));
 
     return true;
 }
