@@ -2,6 +2,7 @@
 <gresources>
     <gresource prefix="@RESOURCE_PREFIX@">
         <file>textures/selection.bmp</file>
+        <file>textures/logo.png</file>
     </gresource>
 </gresources>
 
