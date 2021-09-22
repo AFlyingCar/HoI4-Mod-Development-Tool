@@ -1,3 +1,4 @@
 tests/bin/simple.bmp filter=lfs diff=lfs merge=lfs -text
 tests/bin/complex.bmp filter=lfs diff=lfs merge=lfs -text
 resources/textures/selection.bmp filter=lfs diff=lfs merge=lfs -text
+resources/textures/logo.png filter=lfs diff=lfs merge=lfs -text
