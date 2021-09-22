@@ -27,6 +27,7 @@ bool MapNormalizer::GUI::Driver::initialize() {
 
         WRITE_DEBUG("Loading resources from ", resource_path, "...");
         m_resources = Gio::Resource::create_from_file(resource_path.generic_string());
+        m_resources->register_global(); // Make sure it can be accessed anywhere
         WRITE_DEBUG("Done.");
     } catch(const Gio::ResourceError& e) {
         WRITE_ERROR(e.what());
