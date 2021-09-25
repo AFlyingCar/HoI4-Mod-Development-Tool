@@ -38,3 +38,36 @@ add_custom_target(glib_resources
 
 set_source_files_properties(${RESOURCE_C_SRC} PROPERTIES GENERATED TRUE)
 
+# Compile win32 .rc file for Win32 metadata
+if(WIN32)
+    find_program(WINDRES NAMES windres REQUIRED)
+
+    set(WIN32_RESOURCES_RC_IN "${RESOURCE_DIR}/win32_resources.rc.in")
+    set(WIN32_RESOURCES_RC "${CMAKE_BINARY_DIR}/win32_resources.rc")
+
+    # Define twice so that it is available both here and in the parent scope
+    set(WIN32_RESOURCES "${CMAKE_BINARY_DIR}/win32_resources.res" PARENT_SCOPE)
+    set(WIN32_RESOURCES "${CMAKE_BINARY_DIR}/win32_resources.res")
+
+    message("WIN32 detected, will attempt to compile ${WIN32_RESOURCES} from ${WIN32_RESOURCES_RC}, configured from ${WIN32_RESOURCES_RC_IN}")
+
+    string(REPLACE "." "," WIN32_RC_VERSION_NUMBER ${MN_TOOL_VERSION})
+
+    configure_file(${WIN32_RESOURCES_RC_IN} ${WIN32_RESOURCES_RC} @ONLY)
+
+    add_custom_command(OUTPUT ${WIN32_RESOURCES}
+        COMMAND ${WINDRES}
+        ARGS
+            ${WIN32_RESOURCES_RC}
+            -O coff
+            -o ${WIN32_RESOURCES}
+        MAIN_DEPENDENCY ${WIN32_RESOURCES_RC_IN}
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        DEPENDS
+            ${WIN32_RESOURCES_RC}
+    )
+    add_custom_target(win32_resources DEPENDS ${WIN32_RESOURCES})
+
+    set_source_files_properties(${WIN32_RESOURCES_RC} PROPERTIES GENERATED TRUE)
+    set_source_files_properties(${WIN32_RESOURCES} PROPERTIES GENERATED TRUE)
+endif()
