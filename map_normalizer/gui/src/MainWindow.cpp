@@ -227,6 +227,7 @@ void MapNormalizer::GUI::MainWindow::initializeHelpActions() {
     add_action("about", []() {
         Gtk::AboutDialog dialog;
 
+        // Credits
         dialog.set_authors({ "Tyler Robbins" });
         dialog.add_credit_section("Libraries Used:", {
             "gtkmm", "nlohmann::json", "nlohmann::fifo_map", "GLEW", "OpenGL",
@@ -235,11 +236,14 @@ void MapNormalizer::GUI::MainWindow::initializeHelpActions() {
         dialog.set_artists({"Lapshaman"});
         // dialog.set_translators({});
 
+        // Program information
         dialog.set_program_name(APPLICATION_NAME);
+
         dialog.set_version(TOOL_VERSION.str());
-        // dialog.set_license_type(Gtk::LICENSE_MIT_X11);
+
         dialog.set_license(TOOL_LICENSE);
         dialog.set_wrap_license(true);
+
         dialog.set_website_label("Source code");
         dialog.set_website(SOURCE_LOCATION);
 
