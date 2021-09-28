@@ -38,6 +38,7 @@ namespace MapNormalizer::GUI {
 
             virtual bool initializeActions() override;
             virtual bool initializeWidgets() override;
+            virtual bool initializeFinal() override;
 
             OptionalReference<LogViewerWindow> getLogViewerWindow();
 
@@ -63,6 +64,7 @@ namespace MapNormalizer::GUI {
             void initializeEditActions();
             void initializeViewActions();
             void initializeProjectActions();
+            void initializeHelpActions();
 
             void newProject();
             void openProject();

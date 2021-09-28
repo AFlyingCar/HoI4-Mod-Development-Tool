@@ -22,6 +22,7 @@ namespace MapNormalizer::GUI {
         protected:
             virtual bool initializeActions() = 0;
             virtual bool initializeWidgets() = 0;
+            virtual bool initializeFinal() = 0;
 
             virtual Gtk::Orientation getDisplayOrientation() const;
 

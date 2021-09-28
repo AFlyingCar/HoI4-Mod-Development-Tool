@@ -27,4 +27,5 @@ doc/
 
 # Allow all bmp files in the resources/textures directory (these are program binary data)
 !resources/textures/*.bmp
+!resources/textures/*.png
 

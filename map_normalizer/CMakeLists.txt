@@ -19,3 +19,12 @@ target_link_libraries(map_normalizer stdc++fs pthread)
 # Link against local libraries
 target_link_libraries(map_normalizer unique_colors common gui)
 
+# Link .res file into exe for windows
+if(WIN32)
+    message(STATUS "WIN32 detected, will attempt to link ${WIN32_RESOURCES} into executable")
+    set_target_properties(map_normalizer PROPERTIES
+        LINK_FLAGS ${WIN32_RESOURCES}
+        LINK_DEPENDS ${WIN32_RESOURCES}
+    )
+    add_dependencies(map_normalizer win32_resources)
+endif()

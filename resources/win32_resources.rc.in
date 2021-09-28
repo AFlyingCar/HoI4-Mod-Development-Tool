@@ -1,0 +1,25 @@
+
+id ICON "icons/logo.ico"
+
+1 VERSIONINFO
+FILEVERSION @WIN32_RC_VERSION_NUMBER@
+PRODUCTVERSION @WIN32_RC_VERSION_NUMBER@
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "CompanyName", ""
+            VALUE "FileDescription", "@MN_TOOL_DESCRIPTION@"
+            VALUE "FileVersion", "@MN_TOOL_VERSION@"
+            VALUE "InternalName", "map_normalizer"
+            VALUE "OriginalFilename", "map_normalizer.exe"
+            VALUE "ProductName", "@MN_TOOL_NAME@"
+            VALUE "ProductVersion", "@MN_TOOL_VERSION@"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END

@@ -23,6 +23,24 @@ else()
     set(INSTALL_DESTINATION "opt/${CPACK_PACKAGE_NAME}")
 endif()
 
+# Common variables containing information about the program
+set(MN_TOOL_NAME "HoI4MapNormalizerTool")
+set(MN_TOOL_AUTHOR "AFlyingCar")
+set(MN_TOOL_DESCRIPTION "A tool which takes BMP files as input and normalizes them to a format which can be read by Hearts of Iron 4.")
+set(MN_TOOL_WEBSITE "https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool")
+set(MN_TOOL_CONTACT "https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/issues")
+
+file(STRINGS "${CMAKE_SOURCE_DIR}/.config/version.txt" MN_TOOL_VERSION)
+
+message(STATUS "Current Tool Info:")
+list(APPEND CMAKE_MESSAGE_INDENT "  ")
+message(STATUS "MN_TOOL_NAME=${MN_TOOL_NAME}")
+message(STATUS "MN_TOOL_AUTHOR=${MN_TOOL_AUTHOR}")
+message(STATUS "MN_TOOL_DESCRIPTION=${MN_TOOL_DESCRIPTION}")
+message(STATUS "MN_TOOL_WEBSITE=${MN_TOOL_WEBSITE}")
+message(STATUS "MN_TOOL_CONTACT=${MN_TOOL_CONTACT}")
+list(POP_BACK CMAKE_MESSAGE_INDENT)
+
 # TODO: What other MSVC options should we pass?
 if(MSVC)
     add_compile_options(/W4 /WX)
@@ -60,14 +78,14 @@ add_dependencies(map_normalizer glib_resources)
 ######################
 
 # https://dominoc925.blogspot.com/2016/09/create-windows-installer-using-cmake.html
-set(CPACK_PACKAGE_NAME "MapNormalizerTool")
-set(CPACK_PACKAGE_VENDOR "AFlyingCar")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A tool which takes BMP files as input and normalizes them to a format which can be read by Hearts of Iron 4.")
+set(CPACK_PACKAGE_NAME ${MN_TOOL_NAME})
+set(CPACK_PACKAGE_VENDOR ${MN_TOOL_AUTHOR})
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY ${MN_TOOL_DESCRIPTION})
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "map_normalizer")
-set(CPACK_PACKAGE_CONTACT "https://github.com/AFlyingCar/HoI4-Map-Normalizer-Tool/issues")
+set(CPACK_PACKAGE_CONTACT ${MN_TOOL_CONTACT})
 
 # Calculate package version information
-file(STRINGS "${CMAKE_SOURCE_DIR}/.config/version.txt" CPACK_PACKAGE_VERSION)
+set(CPACK_PACKAGE_VERSION ${MN_TOOL_VERSION})
 set(CPACK_PACKAGE_VERSION_MAJOR "") # TODO: Grab from file
 set(CPACK_PACKAGE_VERSION_MINOR "") # TODO: Grab from file
 set(CPACK_PACKAGE_VERSION_PATCH "") # TODO: Grab from file

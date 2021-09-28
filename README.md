@@ -1,5 +1,6 @@
 
 # HoI4 Map Normalizer Tool 
+![HoI4 Map Normalizer Tool Logo (by Lapshaman)](./resources/textures/logo.png)
 
 ## Description
 
@@ -96,6 +97,8 @@ may work with other compilers, but I have not tested those yet.
 * Painting properties onto the map
 
 ## Credits
+
+Logo created by Lapshaman.
 
 Libraries used are [gtkmm](https://gtkmm.org/),
 [nlohmann::json](https://github.com/nlohmann/json),
