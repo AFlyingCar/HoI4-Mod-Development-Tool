@@ -170,30 +170,37 @@ if(WIN32)
     # Make sure we grab the pixbuf modules as well
     install(FILES ${MSYS_PREFIX}/mingw64/lib/gdk-pixbuf-2.0/2.10.0/loaders/libpixbufloader-png.dll
             DESTINATION ${INSTALL_DESTINATION}/lib/gdk-pixbuf-2.0/2.10.0/loaders/)
+    
+    # NOTE: This is for packaging up loaders.cache, generated from gdk-pixbuf-query-loaders
+    #   If additional dependencies have been added, make sure to re-run:
+    #     gdk-pixbuf-query-loaders.exe [OPTIONS] > resources/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache
+    install(DIRECTORY resources/lib/
+            DESTINATION ${INSTALL_DESTINATION}/lib/)
 
-    find_program(GDK_PIXBUF_QUERY_LOADERS gdk-pixbuf-query-loaders.exe
-                 PATHS "${MSYS_PREFIX}/mingw64/bin/")
-
-    if(NOT GDK_PIXBUF_QUERY_LOADERS)
-        message(WARNING "Unable to find `${MSYS_PREFIX}/mingw64/bin/gdk-pixbuf-query-loaders.exe`, which means we may not be able to correctly generate an installer!")
-    else()
-        message(STATUS "Found ${GDK_PIXBUF_QUERY_LOADERS}")
-    endif()
-
-    install(CODE "set(GDK_PIXBUF_QUERY_LOADERS \"${GDK_PIXBUF_QUERY_LOADERS}\")")
-
-    install(CODE [[
-        execute_process(COMMAND "${GDK_PIXBUF_QUERY_LOADERS}" "loaders/libpixbufloader-png.dll"
-                        COMMAND_ECHO STDOUT
-                        WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}/lib/gdk-pixbuf-2.0/2.10.0"
-                        RESULT_VARIABLE GDK_PIXBUF_QUERY_LOADERS_RESULT
-                        OUTPUT_FILE loaders.cache)
-    ]])
-    install(CODE [[
-        if(GDK_PIXBUF_QUERY_LOADERS_RESULT)
-            message(FATAL_ERROR "${GDK_PIXBUF_QUERY_LOADERS} exited with status: `${GDK_PIXBUF_QUERY_LOADERS_RESULT}")
-        endif()
-    ]])
+# TODO: Add this to the installer executable only
+#     find_program(GDK_PIXBUF_QUERY_LOADERS gdk-pixbuf-query-loaders.exe
+#                  PATHS "${MSYS_PREFIX}/mingw64/bin/")
+# 
+#     if(NOT GDK_PIXBUF_QUERY_LOADERS)
+#         message(WARNING "Unable to find `${MSYS_PREFIX}/mingw64/bin/gdk-pixbuf-query-loaders.exe`, which means we may not be able to correctly generate an installer!")
+#     else()
+#         message(STATUS "Found ${GDK_PIXBUF_QUERY_LOADERS}")
+#     endif()
+# 
+#     install(CODE "set(GDK_PIXBUF_QUERY_LOADERS \"${GDK_PIXBUF_QUERY_LOADERS}\")")
+# 
+#     install(CODE [[
+#         execute_process(COMMAND "${GDK_PIXBUF_QUERY_LOADERS}" "loaders/libpixbufloader-png.dll"
+#                         COMMAND_ECHO STDOUT
+#                         WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}/lib/gdk-pixbuf-2.0/2.10.0"
+#                         RESULT_VARIABLE GDK_PIXBUF_QUERY_LOADERS_RESULT
+#                         OUTPUT_FILE loaders.cache)
+#     ]])
+#     install(CODE [[
+#         if(GDK_PIXBUF_QUERY_LOADERS_RESULT)
+#             message(FATAL_ERROR "${GDK_PIXBUF_QUERY_LOADERS} exited with status: `${GDK_PIXBUF_QUERY_LOADERS_RESULT}")
+#         endif()
+#     ]])
 
     install(CODE [[
         # https://github.com/longturn/freeciv21/blob/d53d0181ba837d0d8e10fd76811f0aaeabd6fe5b/CMakeLists.txt
