@@ -11,6 +11,6 @@ add_library(logging SHARED
 target_include_directories(logging PUBLIC inc)
 
 if(NOT WIN32)
-    target_link_libraries(logging PRIVATE dl)
+    target_link_libraries(logging PRIVATE dl stdc++fs)
 endif()
 

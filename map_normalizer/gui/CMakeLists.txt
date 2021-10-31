@@ -23,7 +23,7 @@ add_library(gui STATIC
 
 target_include_directories(gui PUBLIC inc)
 
-target_link_libraries(gui gtkmm native_dialogs)
+target_link_libraries(gui gtkmm native_dialogs stdc++fs)
 
 add_subdirectory(gl)
 
