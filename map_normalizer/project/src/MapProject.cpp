@@ -562,6 +562,16 @@ auto MapNormalizer::Project::MapProject::getPreviewData(const Province* province
     return data;
 }
 
+auto MapNormalizer::Project::MapProject::getProvinces() const
+    -> const ProvinceList&
+{
+    return m_shape_detection_info.provinces;
+}
+
+auto MapNormalizer::Project::MapProject::getProvinces() -> ProvinceList& {
+    return m_shape_detection_info.provinces;
+}
+
 /**
  * @brief Will build the province preview for the given province. If more than
  *        MAX_CACHED_PROVINCE_PREVIEWS are already stored, then the least

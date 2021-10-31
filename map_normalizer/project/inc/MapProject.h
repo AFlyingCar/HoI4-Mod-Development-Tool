@@ -56,6 +56,9 @@ namespace MapNormalizer::Project {
             ProvinceDataPtr getPreviewData(ProvinceID);
             ProvinceDataPtr getPreviewData(const Province*);
 
+            ProvinceList& getProvinces();
+            const ProvinceList& getProvinces() const;
+
         protected:
             bool saveShapeLabels(const std::filesystem::path&,
                                  std::error_code&);
