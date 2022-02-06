@@ -105,19 +105,25 @@ int main(int argc, char** argv) {
             return MapNormalizer::Log::outputWithFormatting(message);
         });
 
-    std::shared_ptr<std::ofstream> log_output_file(nullptr);
+    std::shared_ptr<std::ofstream> log_output_file(new std::ofstream);
     std::shared_ptr<bool> disable_file_log_output(new bool(false));
 
     MapNormalizer::Log::Logger::registerOutputFunction(
-        [log_output_file, disable_file_log_output](const MapNormalizer::Log::Message& message) -> bool
+        [disable_file_log_output](const MapNormalizer::Log::Message& message,
+                                  MapNormalizer::Log::Logger::UserData user_data)
+
+            -> bool
         {
-            if(disable_file_log_output || *disable_file_log_output) return true;
+            if(*disable_file_log_output) return true;
 
             static std::queue<MapNormalizer::Log::Message> messages;
 
             messages.push(message);
 
-            if(!log_output_file) return true;
+            if(!user_data) return true;
+
+            // Cast user-data pointer back to the log_output_file type
+            std::shared_ptr<std::ofstream> log_output_file = std::static_pointer_cast<std::ofstream>(user_data);
 
             while(!messages.empty()) {
                 auto&& message = messages.front();
@@ -132,7 +138,7 @@ int main(int argc, char** argv) {
             }
 
             return true;
-        }
+        }, log_output_file
     );
 
     // Parse the command-line arguments
@@ -140,12 +146,11 @@ int main(int argc, char** argv) {
 
     if(!MapNormalizer::prog_opts.dont_write_logfiles) {
         auto log_output_path = getLogOutputFilePath();
-        std::ofstream file(log_output_path);
-        if(!file) {
+        log_output_file->open(log_output_path);
+        if(!(*log_output_file)) {
             WRITE_ERROR("Failed to open ", log_output_path, ". Reason: ", strerror(errno));
             *disable_file_log_output = true;
         } else {
-            log_output_file.reset(new std::ofstream(std::move(file)));
             WRITE_INFO("Log files will get written to ", log_output_path);
         }
     } else {
