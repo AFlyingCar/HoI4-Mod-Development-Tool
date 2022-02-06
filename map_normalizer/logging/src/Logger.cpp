@@ -211,6 +211,12 @@ void MapNormalizer::Log::Logger::registerOutputFunction(const OutputFunction& ou
 void MapNormalizer::Log::Logger::registerOutputFunction(const OutputFunctionWithUD& output_func,
                                                         UserData user_data)
 {
+    if(user_data == nullptr) {
+        WRITE_WARN("Given UserData function is null! This means that likely the"
+                   " output function will not have access to the eventual "
+                   "pointer due to the way shared_ptr works.");
+    }
+
     output_funcs.push_back(std::bind(output_func, std::placeholders::_1, user_data));
 }
 
