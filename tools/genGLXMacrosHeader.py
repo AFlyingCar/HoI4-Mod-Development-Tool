@@ -11,7 +11,20 @@ def textFinder(file_contents, line_prefix):
 
 glxmacros_hdr = open(f"{sys.argv[2]}/GLXMacros.h", 'w')
 
-glew_source = open(f"{sys.argv[1]}/GL/glew.h", 'r').read()
+mingw_inc_path = os.path.normpath(sys.argv[1])
+gl_inc_path = os.path.normpath(os.path.join(mingw_inc_path, "GL"))
+glew_path = os.path.normpath(os.path.join(gl_inc_path, "glew.h")) # Normalize the path to remove mixed slashes
+
+# Verify that the path exists
+if not os.path.exists(glew_path):
+    print(f"ERROR: Path {glew_path} does not exist.")
+    if not os.path.exists(gl_inc_path):
+        print(f"ERROR: Path {gl_inc_path} does not exist.")
+    if not os.path.exists(mingw_inc_path):
+        print(f"ERROR: Path {mingw_inc_path} does not exist.")
+    sys.exit(1)
+
+glew_source = open(glew_path, 'r').read()
 
 glenum_define_strings = textFinder(glew_source, "#define GL_")
 glenum_defines = { } # VALUE => [NAMES]
