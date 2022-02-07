@@ -105,15 +105,29 @@ int main(int argc, char** argv) {
             return MapNormalizer::Log::outputWithFormatting(message);
         });
 
-    std::shared_ptr<std::ofstream> log_output_file(nullptr);
+    // Set up a user-data pointer that will be registered with the output
+    //   function
+    using UDType = std::tuple<std::ofstream,
+                               std::queue<MapNormalizer::Log::Message>>;
+    std::shared_ptr<UDType> file_ud(new UDType);
+
+    // Simple reference to the first part of the user-data pointer, as we will
+    //  need to set this up later
+    std::ofstream& log_output_file = std::get<0>(*file_ud);
+
     std::shared_ptr<bool> disable_file_log_output(new bool(false));
 
     MapNormalizer::Log::Logger::registerOutputFunction(
-        [log_output_file, disable_file_log_output](const MapNormalizer::Log::Message& message) -> bool
-        {
-            if(disable_file_log_output || *disable_file_log_output) return true;
+        [disable_file_log_output](const MapNormalizer::Log::Message& message,
+                                  MapNormalizer::Log::Logger::UserData user_data)
 
-            static std::queue<MapNormalizer::Log::Message> messages;
+            -> bool
+        {
+            if(*disable_file_log_output) return true;
+
+            std::shared_ptr<UDType> file_ud = std::static_pointer_cast<UDType>(user_data);
+            auto& log_output_file = std::get<0>(*file_ud);
+            auto& messages = std::get<1>(*file_ud);
 
             messages.push(message);
 
@@ -123,7 +137,7 @@ int main(int argc, char** argv) {
                 auto&& message = messages.front();
                 if(!MapNormalizer::Log::outputToStream(message, false, true, 
                     [&log_output_file](uint8_t) -> std::ostream& {
-                        return *log_output_file;
+                        return log_output_file;
                     }, true))
                 {
                     return false;
@@ -132,7 +146,7 @@ int main(int argc, char** argv) {
             }
 
             return true;
-        }
+        }, file_ud
     );
 
     // Parse the command-line arguments
@@ -140,12 +154,12 @@ int main(int argc, char** argv) {
 
     if(!MapNormalizer::prog_opts.dont_write_logfiles) {
         auto log_output_path = getLogOutputFilePath();
-        std::ofstream file(log_output_path);
-        if(!file) {
+        log_output_file.open(log_output_path);
+
+        if(!log_output_file) {
             WRITE_ERROR("Failed to open ", log_output_path, ". Reason: ", strerror(errno));
             *disable_file_log_output = true;
         } else {
-            log_output_file.reset(new std::ofstream(std::move(file)));
             WRITE_INFO("Log files will get written to ", log_output_path);
         }
     } else {

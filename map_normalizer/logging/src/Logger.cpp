@@ -203,6 +203,24 @@ void MapNormalizer::Log::Logger::registerOutputFunction(const OutputFunction& ou
 }
 
 /**
+ * @brief Registers a single output function with user data
+ *
+ * @param output_func The funcction which defines how to output a message
+ * @param user_data The user data to bind to this function
+ */
+void MapNormalizer::Log::Logger::registerOutputFunction(const OutputFunctionWithUD& output_func,
+                                                        UserData user_data)
+{
+    if(user_data == nullptr) {
+        WRITE_WARN("Given UserData function is null! This means that likely the"
+                   " output function will not have access to the eventual "
+                   "pointer due to the way shared_ptr works.");
+    }
+
+    output_funcs.push_back(std::bind(output_func, std::placeholders::_1, user_data));
+}
+
+/**
  * @brief Gets if the logger has been started
  *
  * @return true if the logging worker thread has been started, false otherwise

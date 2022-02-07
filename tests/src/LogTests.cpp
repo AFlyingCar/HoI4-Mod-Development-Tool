@@ -253,3 +253,29 @@ TEST(LogTests, ANSIOutputTests) {
     Logger::getInstance().reset();
 }
 
+TEST(LogTests, UserDataTests) {
+    using MapNormalizer::Log::Logger;
+    using MapNormalizer::Log::Message;
+
+    // Test writing use count both in and out of scope
+    // This tests what happens when the function the user data was created in is
+    //   destroyed
+    {
+        std::shared_ptr<int> ud(new int);
+        Logger::registerOutputFunction([](const Message& m, Logger::UserData ud)
+            -> bool
+        {
+            EXPECT_GT(ud.use_count(), 1);
+            return true;
+        }, ud);
+        EXPECT_GT(ud.use_count(), 1);
+        WRITE_INFO("");
+        WRITE_INFO("");
+        EXPECT_GT(ud.use_count(), 1);
+    }
+
+    WRITE_INFO("");
+
+    Logger::getInstance().reset();
+}
+

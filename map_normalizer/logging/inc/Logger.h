@@ -21,6 +21,9 @@ namespace MapNormalizer::Log {
              */
             using OutputFunction = std::function<bool(const Message&)>;
 
+            using UserData = std::shared_ptr<void>;
+            using OutputFunctionWithUD = std::function<bool(const Message&, UserData)>;
+
             //! Amount of time to sleep between each update loop
             constexpr static std::chrono::seconds UPDATE_SLEEP_TIME{ 1 };
 
@@ -31,6 +34,8 @@ namespace MapNormalizer::Log {
             static Timestamp now();
 
             static void registerOutputFunction(const OutputFunction&);
+            static void registerOutputFunction(const OutputFunctionWithUD&,
+                                               UserData);
 
             static std::string getTimestampAsString(const Timestamp&,
                                                     const std::string& = "%Y-%m-%d %X");
