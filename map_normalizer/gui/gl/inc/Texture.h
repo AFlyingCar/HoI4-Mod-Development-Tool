@@ -11,6 +11,7 @@
 # include <typeinfo>
 # include <queue>
 # include <string>
+# include <optional>
 
 namespace MapNormalizer::GUI::GL {
     /**
@@ -45,7 +46,9 @@ namespace MapNormalizer::GUI::GL {
             enum class Format {
                 RED, GREEN, BLUE, ALPHA,
                 RGB,
-                RGBA
+                RGBA,
+                RED32I,
+                RED32UI
             };
 
             /**
@@ -98,20 +101,27 @@ namespace MapNormalizer::GUI::GL {
              *
              * @tparam T The type of data being passed in
              *
-             * @param format The format of the data. Currently, both the CPU-side and
-             *               GPU-side format must match.
+             * @param internal_format The format of the data. Currently, both
+             *                        the CPU-side and GPU-side format must
+             *                        match.
              * @param width The width of the data
              * @param height The height of the data
              * @param data The data to send to the GPU
              */
             template<typename T>
-            void setTextureData(Format format, uint32_t width, uint32_t height, const T* data) {
-                setTextureData(format, width, height,
-                               typeToDataType(typeid(T)), data);
+            void setTextureData(Format internal_format,
+                                uint32_t width, uint32_t height, const T* data,
+                                std::optional<uint32_t> format = std::nullopt)
+            {
+                setTextureData(internal_format, width, height,
+                               typeToDataType(typeid(T)), data, format);
             }
 
-            uint32_t getTextureUnitID();
-            uint32_t getTextureID();
+            uint32_t getTextureUnitID() const;
+            uint32_t getTextureID() const;
+            uint32_t getWidth() const;
+            uint32_t getHeight() const;
+            std::pair<uint32_t, uint32_t> getDimensions() const;
 
             void bind(bool = true);
             uint32_t activate();
@@ -128,7 +138,7 @@ namespace MapNormalizer::GUI::GL {
             static uint32_t unitToGLUnit(Unit);
 
             void setTextureData(Format, uint32_t, uint32_t, uint32_t,
-                                const void*);
+                                const void*, std::optional<uint32_t>);
 
         private:
             //! The texture ID
@@ -139,6 +149,9 @@ namespace MapNormalizer::GUI::GL {
 
             //! The target of this texture
             Target m_target;
+
+            uint32_t m_width;
+            uint32_t m_height;
     };
 }
 

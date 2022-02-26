@@ -114,7 +114,9 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
 
     // TODO: Why do we actually have to do this? For some reason everything stops
     //  rendering correctly if we remove this line. Why? What? How?
+    auto label_matrix = map_data->getLabelMatrix().lock();
     map_data.reset(new MapData(width, height));
+    map_data->setLabelMatrix(label_matrix); // WHY?!!!!
 
     auto input_data = map_data->getInput().lock();
     auto graphics_data = map_data->getProvinces().lock();
@@ -132,7 +134,7 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
             //  3 == the depth
             auto gindex = xyToIndex(width * 3, x * 3, y);
 
-            auto label = m_shape_detection_info.label_matrix[lindex];
+            auto label = label_matrix[lindex];
 
             // Error check
             if(label <= 0 || label > m_shape_detection_info.provinces.size()) {
@@ -181,7 +183,7 @@ bool MapNormalizer::Project::MapProject::saveShapeLabels(const std::filesystem::
                        m_shape_detection_info.map_data->getHeight());
 
         // Write the entire label matrix to the file
-        out.write(reinterpret_cast<const char*>(m_shape_detection_info.label_matrix),
+        out.write(reinterpret_cast<const char*>(m_shape_detection_info.map_data->getLabelMatrix().lock().get()),
                   m_shape_detection_info.label_matrix_size * sizeof(uint32_t));
         out << '\0';
     } else {
@@ -290,21 +292,15 @@ bool MapNormalizer::Project::MapProject::loadShapeLabels(const std::filesystem::
         }
 
         auto& label_matrix_size = m_shape_detection_info.label_matrix_size;
-        auto& label_matrix = m_shape_detection_info.label_matrix;
-
-        if(label_matrix != nullptr) {
-            delete[] label_matrix;
-        }
 
         label_matrix_size = width * height;
-        label_matrix = new uint32_t[label_matrix_size];
+        m_shape_detection_info.map_data->setLabelMatrix(new uint32_t[label_matrix_size]);
 
-        if(!safeRead(label_matrix, label_matrix_size * sizeof(uint32_t), in)) {
+        auto label_matrix = m_shape_detection_info.map_data->getLabelMatrix().lock();
+
+        if(!safeRead(label_matrix.get(), label_matrix_size * sizeof(uint32_t), in)) {
             ec = std::error_code(static_cast<int>(errno), std::generic_category());
             WRITE_ERROR("Failed to read full label matrix. Reason: ", std::strerror(errno));
-
-            delete[] label_matrix;
-            label_matrix = nullptr;
             return false;
         }
     } else {
@@ -427,7 +423,7 @@ void MapNormalizer::Project::MapProject::setShapeFinder(ShapeFinder&& shape_find
     ShapeFinder sf(std::move(shape_finder));
 
     m_shape_detection_info.provinces = createProvincesFromShapeList(sf.getShapes());
-    m_shape_detection_info.label_matrix = sf.getLabelMatrix();
+    m_shape_detection_info.map_data->setLabelMatrix(sf.getLabelMatrix());
     m_shape_detection_info.label_matrix_size = sf.getLabelMatrixSize();
     m_shape_detection_info.map_data.reset();
 
@@ -455,7 +451,7 @@ auto MapNormalizer::Project::MapProject::getMapData() const
 }
 
 const uint32_t* MapNormalizer::Project::MapProject::getLabelMatrix() const {
-    return m_shape_detection_info.label_matrix;
+    return m_shape_detection_info.map_data->getLabelMatrix().lock().get();
 }
 
 void MapNormalizer::Project::MapProject::selectProvince(uint32_t label) {
@@ -562,6 +558,16 @@ auto MapNormalizer::Project::MapProject::getPreviewData(const Province* province
     return data;
 }
 
+auto MapNormalizer::Project::MapProject::getProvinces() const
+    -> const ProvinceList&
+{
+    return m_shape_detection_info.provinces;
+}
+
+auto MapNormalizer::Project::MapProject::getProvinces() -> ProvinceList& {
+    return m_shape_detection_info.provinces;
+}
+
 /**
  * @brief Will build the province preview for the given province. If more than
  *        MAX_CACHED_PROVINCE_PREVIEWS are already stored, then the least
@@ -593,7 +599,7 @@ void MapNormalizer::Project::MapProject::buildProvinceCache(const Province* prov
 
     // Some references first, to make the following code easier to read
     //  id also starts at 1, so make sure we offset it down
-    const auto& label_matrix = m_shape_detection_info.label_matrix;
+    auto label_matrix = m_shape_detection_info.map_data->getLabelMatrix().lock();
     auto iwidth = m_shape_detection_info.map_data->getWidth();
 
     auto&& bb = province.bounding_box;
@@ -665,7 +671,7 @@ void MapNormalizer::Project::MapProject::buildProvinceOutlines() {
     for(uint32_t x = 0; x < width; ++x) {
         for(uint32_t y = 0; y < height; ++y) {
             auto lindex = xyToIndex(width, x, y);
-            auto label = m_shape_detection_info.label_matrix[lindex];
+            auto label = m_shape_detection_info.map_data->getLabelMatrix().lock()[lindex];
             auto gindex = xyToIndex(width * 4, x * 4, y);
 
             auto& province = m_shape_detection_info.provinces[label - 1];
@@ -682,7 +688,7 @@ void MapNormalizer::Project::MapProject::buildProvinceOutlines() {
             // Recalculate adjacencies for this pixel
             auto is_adjacent = ShapeFinder::calculateAdjacency(dimensions,
                                                                graphics_data.get(),
-                                                               m_shape_detection_info.label_matrix,
+                                                               m_shape_detection_info.map_data->getLabelMatrix().lock().get(),
                                                                province.adjacent_provinces,
                                                                {x, y});
             // If this pixel is adjacent to any others, then make it visible as

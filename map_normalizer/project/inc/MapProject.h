@@ -56,6 +56,9 @@ namespace MapNormalizer::Project {
             ProvinceDataPtr getPreviewData(ProvinceID);
             ProvinceDataPtr getPreviewData(const Province*);
 
+            ProvinceList& getProvinces();
+            const ProvinceList& getProvinces() const;
+
         protected:
             bool saveShapeLabels(const std::filesystem::path&,
                                  std::error_code&);
@@ -80,7 +83,6 @@ namespace MapNormalizer::Project {
              */
             struct ShapeDetectionInfo {
                 ProvinceList provinces;
-                uint32_t* label_matrix = nullptr;
                 uint32_t label_matrix_size = 0;
 
                 std::shared_ptr<MapData> map_data;

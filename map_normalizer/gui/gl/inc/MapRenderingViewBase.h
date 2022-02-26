@@ -41,6 +41,7 @@ namespace MapNormalizer::GUI::GL {
         protected:
             Program& getMapProgram();
             Texture& getMapTexture();
+            Texture& getLabelTexture();
 
             virtual void setupUniforms();
 
@@ -60,6 +61,9 @@ namespace MapNormalizer::GUI::GL {
 
             //! The Texture of the map
             Texture m_texture;
+
+            //! The texture of the label matrix
+            Texture m_label_texture;
     };
 }
 

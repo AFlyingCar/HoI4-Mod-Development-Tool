@@ -51,7 +51,7 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::init() {
         if(readBMP(stream, selection_bmp.get()) == nullptr) {
             WRITE_ERROR("Failed to load selection texture!");
 
-            m_selection_texture.setTextureUnitID(Texture::Unit::TEX_UNIT2);
+            m_selection_texture.setTextureUnitID(Texture::Unit::TEX_UNIT3);
 
             m_selection_texture.bind();
 
@@ -62,14 +62,14 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::init() {
             auto iwidth = selection_bmp->info_header.width;
             auto iheight = selection_bmp->info_header.height;
 
-            m_selection_texture.setTextureUnitID(Texture::Unit::TEX_UNIT2);
+            m_selection_texture.setTextureUnitID(Texture::Unit::TEX_UNIT3);
 
             m_selection_texture.bind();
             {
                 // Use NEAREST rather than LINEAR to prevent weird outlines around
                 //  the textures
-                m_selection_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::NEAREST);
-                m_selection_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::NEAREST);
+                m_selection_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::LINEAR);
+                m_selection_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::LINEAR);
 
                 m_selection_texture.setWrapping(Texture::Axis::S, Texture::WrapMode::REPEAT);
                 m_selection_texture.setWrapping(Texture::Axis::T, Texture::WrapMode::REPEAT);
@@ -96,28 +96,25 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
     if(auto selection = getOwningGLDrawingArea()->getSelection(); selection) {
         m_selection_shader.use();
 
-        auto&& [bl, tr] = selection->bounding_box;
-        auto&& [width, height] = calcDims(selection->bounding_box);
+        setupUniforms();
 
-        auto posx = bl.x;
-        auto posy = tr.y;
-
+        // TODO: What the hell is wrong with the transform?!?!?!
         float scale_factor = static_cast<float>(getOwningGLDrawingArea()->getScaleFactor());
-
-        // Calculate a custom transform for selection
         glm::mat4 transform = glm::mat4{1.0f};
-        transform = glm::translate(transform, glm::vec3{posx, posy, 0} *
-                                              scale_factor);
-        transform = glm::scale(transform, glm::vec3{width, height, 1} *
-                                          glm::vec3{scale_factor, scale_factor, 1});
+        transform = glm::scale(transform, glm::vec3{scale_factor, scale_factor, 1});
+        // m_selection_shader.uniform("transform", transform);
 
-        // Set up the transformation matrix
-        m_selection_shader.uniform("transform", transform);
-        m_selection_shader.uniform("selection_area", 1);
-        m_selection_shader.uniform("selection", 2);
+        // Set up the textures
+        // m_selection_shader.uniform("selection_area", m_selection_area_texture);
+        m_selection_shader.uniform("selection", m_selection_texture);
+        m_selection_shader.uniform("label_matrix", getLabelTexture());
 
-        m_selection_area_texture.activate();
+        // All other uniforms
+        m_selection_shader.uniform("province_label", static_cast<uint32_t>(selection->id));
+
+        // m_selection_area_texture.activate();
         m_selection_texture.activate();
+        getLabelTexture().activate();
 
         // The drawn selection is still a square, so just go ahead and use the
         //  same VAO
@@ -135,7 +132,7 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
         glm::mat4 transform = glm::mat4{1.0f};
         transform = glm::scale(transform, glm::vec3{scale_factor, scale_factor, 1});
         m_selection_shader.uniform("transform", transform);
-        m_outline_shader.uniform("map_texture", 3);
+        m_outline_shader.uniform("map_texture", m_outline_texture);
 
         m_outline_texture.activate();
 
@@ -157,7 +154,7 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::onMapDataChanged(std::shared
 
     // Now build the outline texture
     {
-        m_outline_texture.setTextureUnitID(Texture::Unit::TEX_UNIT3);
+        m_outline_texture.setTextureUnitID(Texture::Unit::TEX_UNIT4);
 
         m_outline_texture.bind();
         {
@@ -191,7 +188,7 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::onSelectionChanged(std::opti
 
         auto [iwidth, iheight] = calcDims(selection->bounding_box);
 
-        m_selection_area_texture.setTextureUnitID(Texture::Unit::TEX_UNIT1);
+        m_selection_area_texture.setTextureUnitID(Texture::Unit::TEX_UNIT2);
 
         m_selection_area_texture.bind();
         {

@@ -15,6 +15,8 @@
 # include "Shader.h"
 
 namespace MapNormalizer::GUI::GL {
+    class Texture;
+
     /**
      * @brief Represents a fully compiled and linked GLSL Shader Program
      */
@@ -48,6 +50,7 @@ namespace MapNormalizer::GUI::GL {
             void use(bool = true);
 
             bool uniform(const std::string&, const std::any&) /* throws */;
+            bool uniform(const std::string&, const Texture&) /* throws */;
 
         private:
             void attachShader(const Shader&);

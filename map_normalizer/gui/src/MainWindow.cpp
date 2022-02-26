@@ -362,7 +362,7 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                     auto preview_data = map_project.getPreviewData(province);
                     m_province_properties_pane->setProvince(province, preview_data);
 
-                    m_drawing_area->setSelection({preview_data, province->bounding_box});
+                    m_drawing_area->setSelection({preview_data, province->bounding_box, province->id});
                     m_drawing_area->queueDraw();
                 }
             }

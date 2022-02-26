@@ -100,6 +100,26 @@ void MapNormalizer::GUI::GL::MapRenderingViewBase::onMapDataChanged(std::shared_
                                   iwidth, iheight, map_data->getProvinces().lock().get());
     }
     m_texture.bind(false);
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    m_label_texture.setTextureUnitID(Texture::Unit::TEX_UNIT1);
+
+    m_label_texture.bind();
+    {
+        WRITE_DEBUG("Building label matrix texture.");
+        m_label_texture.setWrapping(Texture::Axis::S, Texture::WrapMode::REPEAT);
+        m_label_texture.setWrapping(Texture::Axis::T, Texture::WrapMode::REPEAT);
+
+        m_label_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::NEAREST);
+        m_label_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::NEAREST);
+
+        m_label_texture.setTextureData(Texture::Format::RED32UI,
+                                       iwidth, iheight,
+                                       map_data->getLabelMatrix().lock().get(),
+                                       GL_RED_INTEGER);
+    }
+    m_label_texture.bind(false);
 }
 
 void MapNormalizer::GUI::GL::MapRenderingViewBase::beginRender() {
@@ -117,7 +137,7 @@ void MapNormalizer::GUI::GL::MapRenderingViewBase::endRender() {
 }
 
 void MapNormalizer::GUI::GL::MapRenderingViewBase::setupUniforms() {
-    m_program.uniform("map_texture", 0);
+    m_program.uniform("map_texture", m_texture);
 }
 
 /**
@@ -161,6 +181,11 @@ auto MapNormalizer::GUI::GL::MapRenderingViewBase::getMapProgram() -> Program& {
 
 auto MapNormalizer::GUI::GL::MapRenderingViewBase::getMapTexture() -> Texture& {
     return m_texture;
+}
+
+auto MapNormalizer::GUI::GL::MapRenderingViewBase::getLabelTexture() -> Texture&
+{
+    return m_label_texture;
 }
 
 auto MapNormalizer::GUI::GL::MapRenderingViewBase::getPrograms() -> ProgramList {
