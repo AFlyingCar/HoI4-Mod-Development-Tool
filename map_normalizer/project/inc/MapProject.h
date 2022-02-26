@@ -83,7 +83,6 @@ namespace MapNormalizer::Project {
              */
             struct ShapeDetectionInfo {
                 ProvinceList provinces;
-                uint32_t* label_matrix = nullptr;
                 uint32_t label_matrix_size = 0;
 
                 std::shared_ptr<MapData> map_data;
