@@ -16,9 +16,12 @@
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Types.h"
+
 #include "Logger.h"
 
 #include "GLUtils.h"
+#include "Texture.h"
 
 MapNormalizer::GUI::GL::Program::LinkException::LinkException(const std::string& reason):
     m_reason(reason)
@@ -146,6 +149,8 @@ bool MapNormalizer::GUI::GL::Program::uniform(const std::string& uniform_name,
         glUniform1i(uniform_loc, std::any_cast<bool>(value));
     } else if(value.type() == typeid(int)) {                           // int
         glUniform1i(uniform_loc, std::any_cast<int>(value));
+    } else if(value.type() == typeid(uint32_t)) {                      // unsigned int
+        glUniform1ui(uniform_loc, std::any_cast<uint32_t>(value));
     } else if(value.type() == typeid(float)) {                         // float
         glUniform1f(uniform_loc, std::any_cast<float>(value));
     } else if(value.type() == typeid(glm::vec2)) {                     // vec2
@@ -154,6 +159,9 @@ bool MapNormalizer::GUI::GL::Program::uniform(const std::string& uniform_name,
     } else if(value.type() == typeid(glm::vec3)) {                     // vec3
         glUniform3fv(uniform_loc, 1,
                      glm::value_ptr(std::any_cast<glm::vec3>(value)));
+    } else if(value.type() == typeid(Color)) {                         // Color
+        auto&& color = std::any_cast<Color>(value);
+        glUniform3f(uniform_loc, color.r, color.g, color.b);
     } else if(value.type() == typeid(glm::vec4)) {                     // vec4
         glUniform4fv(uniform_loc, 1,
                      glm::value_ptr(std::any_cast<glm::vec4>(value)));
@@ -177,5 +185,11 @@ bool MapNormalizer::GUI::GL::Program::uniform(const std::string& uniform_name,
     }
 
     return true;
+}
+
+bool MapNormalizer::GUI::GL::Program::uniform(const std::string& uniform_name,
+                                              const Texture& value)
+{
+    return uniform(uniform_name, static_cast<int>(value.getTextureUnitID()) - GL_TEXTURE0);
 }
 
