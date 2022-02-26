@@ -32,6 +32,14 @@ bool MapNormalizer::MapData::isClosed() const {
     return m_closed;
 }
 
+void MapNormalizer::MapData::setLabelMatrix(uint32_t label_matrix[]) {
+    m_label_matrix.reset(label_matrix);
+}
+
+void MapNormalizer::MapData::setLabelMatrix(InternalMapType32 label_matrix) {
+    m_label_matrix = label_matrix;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 auto MapNormalizer::MapData::getInput() -> MapType {
@@ -56,5 +64,13 @@ auto MapNormalizer::MapData::getProvinceOutlines() -> MapType {
 
 auto MapNormalizer::MapData::getProvinceOutlines() const -> ConstMapType {
     return m_province_outlines;
+}
+
+auto MapNormalizer::MapData::getLabelMatrix() -> MapType32 {
+    return m_label_matrix;
+}
+
+auto MapNormalizer::MapData::getLabelMatrix() const -> ConstMapType32 {
+    return m_label_matrix;
 }
 
