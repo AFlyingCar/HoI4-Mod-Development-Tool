@@ -83,28 +83,56 @@ void MapNormalizer::GUI::GL::Texture::setTarget(Target target) {
  * @param data_type The data type being passed in
  * @param data The data to send to the GPU
  */
-void MapNormalizer::GUI::GL::Texture::setTextureData(Format format,
+void MapNormalizer::GUI::GL::Texture::setTextureData(Format internal_format,
                                                      uint32_t width,
                                                      uint32_t height,
                                                      uint32_t data_type,
-                                                     const void* data)
+                                                     const void* data,
+                                                     std::optional<uint32_t> format)
 {
-    auto gl_format = formatToGLFormat(format);
+    auto gl_int_format = formatToGLFormat(internal_format);
     auto gl_target = targetToGLTarget(m_target);
+
+    uint32_t gl_format = gl_int_format;
+    if(format) {
+        gl_format = *format;
+    }
 
     bind();
 
+    WRITE_DEBUG("Creating (", width, "x", height, ") texture with parameters: ",
+                std::hex,
+                "TARGET=", gl_target, ", INT_FORMAT=", gl_int_format,
+                ", FORMAT=", gl_format, ", DATA_TYPE=", data_type, ", DATA=0x",
+                data, std::dec);
+
     glTexImage2D(gl_target, 0 /* mipmapping */,
-                 gl_format, width, height, 0, gl_format, data_type, data);
+                 gl_int_format, width, height, 0, gl_format, data_type, data);
     MN_LOG_GL_ERRORS();
+
+    m_width = width;
+    m_height = height;
 }
 
-uint32_t MapNormalizer::GUI::GL::Texture::getTextureUnitID() {
+uint32_t MapNormalizer::GUI::GL::Texture::getTextureUnitID() const {
     return m_texture_unit;
 }
 
-uint32_t MapNormalizer::GUI::GL::Texture::getTextureID() {
+uint32_t MapNormalizer::GUI::GL::Texture::getTextureID() const {
     return m_texture_id;
+}
+
+uint32_t MapNormalizer::GUI::GL::Texture::getWidth() const {
+    return m_width;
+}
+
+uint32_t MapNormalizer::GUI::GL::Texture::getHeight() const {
+    return m_height;
+}
+
+std::pair<uint32_t, uint32_t> MapNormalizer::GUI::GL::Texture::getDimensions() const
+{
+    return std::make_pair(m_width, m_height);
 }
 
 /**
@@ -203,6 +231,10 @@ uint32_t MapNormalizer::GUI::GL::Texture::formatToGLFormat(Format format) {
             return GL_RGB;
         case Format::RGBA:
             return GL_RGBA;
+        case Format::RED32I:
+            return GL_R32I;
+        case Format::RED32UI:
+            return GL_R32UI;
         default:
             return -1;
     }
