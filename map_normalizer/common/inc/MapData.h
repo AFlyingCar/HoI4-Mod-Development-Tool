@@ -32,7 +32,6 @@ namespace MapNormalizer {
             bool isClosed() const;
 
             void setLabelMatrix(uint32_t[]);
-            void setLabelMatrix(InternalMapType32);
 
             ////////////////////////////////////////////////////////////////////
 
@@ -62,6 +61,9 @@ namespace MapNormalizer {
             // More map representations as necessary
 
             bool m_closed;
+
+        public:
+            void setLabelMatrix(InternalMapType32);
     };
 }
 
