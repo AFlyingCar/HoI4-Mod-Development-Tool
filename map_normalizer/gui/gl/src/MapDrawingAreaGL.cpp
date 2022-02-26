@@ -16,6 +16,7 @@
 
 #include "Logger.h"
 #include "Constants.h"
+#include "Options.h"
 
 #include "GLEWInitializationException.h"
 #include "Shader.h"
@@ -38,7 +39,7 @@ MapNormalizer::GUI::GL::MapDrawingArea::~MapDrawingArea() { }
 bool MapNormalizer::GUI::GL::MapDrawingArea::on_render(const Glib::RefPtr<Gdk::GLContext>& context)
 {
     try {
-        make_current();
+        makeCurrent();
         init();
 
         throw_if_error();
@@ -81,7 +82,7 @@ bool MapNormalizer::GUI::GL::MapDrawingArea::on_render(const Glib::RefPtr<Gdk::G
 }
 
 void MapNormalizer::GUI::GL::MapDrawingArea::on_unrealize() {
-    make_current();
+    makeCurrent();
 
     try {
         throw_if_error();
@@ -109,6 +110,32 @@ void MapNormalizer::GUI::GL::MapDrawingArea::init() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    if(prog_opts.debug) {
+        WRITE_DEBUG("Initializing GL Debug Output functions");
+        glEnable(GL_DEBUG_OUTPUT);
+
+        glDebugMessageCallback(+[](GLenum source, GLenum type, GLuint id,
+                                   GLenum severity, GLsizei length,
+                                   const GLchar* message, const void* /*userParam*/)
+        {
+            using namespace Log;
+
+            if(type == GL_DEBUG_TYPE_ERROR) {
+                // SEV=0x{SEVERITY}, {MESSAGE}
+                Logger::getInstance().writeError(
+                    Source("OPENGL"),
+                    "SEV=0x", std::hex, static_cast<uint32_t>(severity), std::dec,
+                    ", ", message);
+            } else {
+                Logger::getInstance().writeDebug(
+                    Source("OPENGL"),
+                    "SEV=0x", std::hex, static_cast<uint32_t>(severity), std::dec,
+                    ", ", message);
+            }
+        }, nullptr);
+        WRITE_DEBUG("Done.");
+    }
+
     m_rendering_views[ViewingMode::PROVINCE_VIEW].reset(new ProvinceRenderingView());
 
     WRITE_DEBUG("Initializing each rendering view.");
@@ -132,7 +159,7 @@ void MapNormalizer::GUI::GL::MapDrawingArea::onZoom() {
         auto [iwidth, iheight] = getMapData()->getDimensions();
         auto siwidth = iwidth * getScaleFactor();
         auto siheight = iheight * getScaleFactor();
-        set_size_request(siwidth, siheight);
+        setSizeRequest(siwidth, siheight);
 
         queue_draw();
     }
@@ -162,7 +189,7 @@ void MapNormalizer::GUI::GL::MapDrawingArea::onSetData(std::shared_ptr<const Map
 
     auto siwidth = iwidth * getScaleFactor();
     auto siheight = iheight * getScaleFactor();
-    set_size_request(siwidth, siheight);
+    setSizeRequest(siwidth, siheight);
 }
 
 void MapNormalizer::GUI::GL::MapDrawingArea::onShow() {
@@ -282,5 +309,9 @@ bool MapNormalizer::GUI::GL::MapDrawingArea::on_button_press_event(GdkEventButto
     }
 
     return true;
+}
+
+void MapNormalizer::GUI::GL::MapDrawingArea::makeCurrent() {
+    make_current();
 }
 

@@ -50,6 +50,8 @@ namespace MapNormalizer::GUI::GL {
 
             void setupAllUniforms();
 
+            virtual void makeCurrent();
+
         private:
             //! Each supported rendering view/scene, mapped to the valid viewing modes
             std::map<ViewingMode, std::shared_ptr<IRenderingView>> m_rendering_views;

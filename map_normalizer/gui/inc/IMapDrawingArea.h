@@ -26,6 +26,7 @@ namespace MapNormalizer::GUI {
             struct SelectionInfo {
                 Project::MapProject::ProvinceDataPtr data;
                 BoundingBox bounding_box;
+                ProvinceID id;
             };
 
             using SelectionCallback = std::function<void(uint32_t, uint32_t)>;
@@ -180,6 +181,10 @@ namespace MapNormalizer::GUI {
                 }
 
                 return true;
+            }
+
+            virtual void setSizeRequest(int width = -1, int height = -1) {
+                BaseGtkWidget::set_size_request(width, height);
             }
     };
 }
