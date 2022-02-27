@@ -66,6 +66,24 @@ void MapNormalizer::trim(std::string& str) {
     rtrim(str);
 }
 
+std::string MapNormalizer::ltrim(const std::string& str) {
+    std::string s = str;
+    ltrim(s);
+    return s;
+}
+
+std::string MapNormalizer::rtrim(const std::string& str) {
+    std::string s = str;
+    rtrim(s);
+    return s;
+}
+
+std::string MapNormalizer::trim(const std::string& str) {
+    std::string s = str;
+    trim(s);
+    return s;
+}
+
 /**
  * @brief Converts the given XY coordinate to a flat index value
  *

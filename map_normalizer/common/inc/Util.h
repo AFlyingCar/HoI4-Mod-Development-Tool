@@ -44,6 +44,10 @@ namespace MapNormalizer {
     void rtrim(std::string&);
     void trim(std::string&);
 
+    std::string ltrim(const std::string&);
+    std::string rtrim(const std::string&);
+    std::string trim(const std::string&);
+
     template<typename T>
     T clamp(T val, T min, T max) {
         return std::min(std::max(val, min), max);
