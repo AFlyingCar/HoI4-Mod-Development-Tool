@@ -110,7 +110,9 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
         m_selection_shader.uniform("label_matrix", getLabelTexture());
 
         // All other uniforms
-        m_selection_shader.uniform("province_label", static_cast<uint32_t>(selection->id));
+        std::vector<uint32_t> selection_ids { static_cast<uint32_t>(selection->id) }; // TODO: Temporary until more global support for multi-select is done
+        m_selection_shader.uniform("province_label", selection_ids);
+        m_selection_shader.uniform("num_selected", static_cast<uint32_t>(selection_ids.size()));
 
         // m_selection_area_texture.activate();
         m_selection_texture.activate();
