@@ -98,6 +98,8 @@ namespace MapNormalizer {
 
     //! The license of the tool
     extern const std::string TOOL_LICENSE;
+
+    const uint32_t MAX_SELECTED_PROVINCES = 128;
 }
 
 #endif
