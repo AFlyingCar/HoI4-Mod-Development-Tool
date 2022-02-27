@@ -368,13 +368,14 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
             }
         });
 
-        drawing_area->setOnMultiProvinceSelectionCallback([](uint32_t x, uint32_t y)
+        drawing_area->setOnMultiProvinceSelectionCallback([this](uint32_t x, uint32_t y)
         {
             if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
                 auto& project = opt_project->get();
+                auto& map_project = project.getMapProject();
 
-                auto map_data = project.getMapProject().getMapData();
-                auto lmatrix = project.getMapProject().getLabelMatrix();
+                auto map_data = map_project.getMapData();
+                auto lmatrix = map_project.getLabelMatrix();
 
                 // Multiselect out of bounds will simply not add to the selections
                 if(x > map_data->getWidth() || y > map_data->getHeight()) {
@@ -383,10 +384,30 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
 
                 auto label = lmatrix[xyToIndex(map_data->getWidth(), x, y)];
 
-                // TODO: get the current province and add it to some sort of
-                //   grouping that can be acted upon
+                // TODO: CHECK HERE IF PROVINCE IS ALREADY SELECTED
 
-                project.getMapProject().selectProvince(label - 1);
+                bool has_selection = map_project.getSelectedProvince() != std::nullopt;
+
+                map_project.selectProvince(label - 1);
+
+                // If the label is a valid province, then go ahead and mark it as
+                //  selected everywhere that needs it to be marked as such
+                if(auto opt_selected = project.getMapProject().getSelectedProvince();
+                   m_province_properties_pane != nullptr && opt_selected)
+                {
+                    auto* province = &opt_selected->get();
+                    auto preview_data = map_project.getPreviewData(province);
+
+                    // Do not change which province we are rendering _unless_ we
+                    //  are rendering something for the first time. Multi-select
+                    //  is only to render the _first_ selection
+                    m_province_properties_pane->setProvince(province,
+                                                            preview_data,
+                                                            has_selection);
+
+                    m_drawing_area->toggleSelection({preview_data, province->bounding_box, province->id});
+                    m_drawing_area->queueDraw();
+                }
             }
         });
     };

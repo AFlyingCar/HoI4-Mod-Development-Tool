@@ -269,15 +269,16 @@ void MapNormalizer::GUI::ProvincePropertiesPane::setEnabled(bool enabled) {
 }
 
 void MapNormalizer::GUI::ProvincePropertiesPane::setProvince(Province* prov,
-                                                             ProvincePreviewDrawingArea::DataPtr preview_data)
+                                                             ProvincePreviewDrawingArea::DataPtr preview_data,
+                                                             bool is_multiselect)
 {
     m_province = prov;
 
     setPreview(preview_data);
 
-    setEnabled(m_province != nullptr);
+    setEnabled(m_province != nullptr && !is_multiselect);
 
-    updateProperties(prov);
+    updateProperties(prov, is_multiselect);
 }
 
 void MapNormalizer::GUI::ProvincePropertiesPane::setPreview(ProvincePreviewDrawingArea::DataPtr preview_data)
@@ -300,9 +301,10 @@ void MapNormalizer::GUI::ProvincePropertiesPane::onResize() {
  *
  * @param prov The province to update the properties to.
  */
-void MapNormalizer::GUI::ProvincePropertiesPane::updateProperties(const Province* prov)
+void MapNormalizer::GUI::ProvincePropertiesPane::updateProperties(const Province* prov,
+                                                                  bool is_multiselect)
 {
-    if(prov == nullptr) {
+    if(prov == nullptr || is_multiselect) {
         // Set every field to some sort of sane default
         m_is_coastal_button->set_active(false);
         m_provtype_menu->set_active(0);
