@@ -24,8 +24,8 @@ namespace MapNormalizer::GUI {
              * @brief Holds information about the currently selected province
              */
             struct SelectionInfo {
-                Project::MapProject::ProvinceDataPtr data;
-                BoundingBox bounding_box;
+                [[deprecated]] Project::MapProject::ProvinceDataPtr data;
+                [[deprecated]] BoundingBox bounding_box;
                 ProvinceID id;
             };
 
