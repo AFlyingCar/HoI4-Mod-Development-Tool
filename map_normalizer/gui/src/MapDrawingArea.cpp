@@ -21,11 +21,11 @@ bool MapNormalizer::GUI::MapDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Cont
 
     // If a province is selected, then go ahead and draw the province preview
     //  on top of the map again
-    if(getSelection()) {
-        auto&& [width, height] = calcDims(getSelection()->bounding_box);
+    if(!getSelection().empty()) {
+        auto&& [width, height] = calcDims(getSelection().front().bounding_box);
 
         auto stride = Cairo::ImageSurface::format_stride_for_width(Cairo::FORMAT_ARGB32, width);
-        auto province_image = Cairo::ImageSurface::create(getSelection()->data.get(),
+        auto province_image = Cairo::ImageSurface::create(getSelection().front().data.get(),
                                                           Cairo::FORMAT_ARGB32,
                                                           width, height,
                                                           stride);
@@ -56,8 +56,8 @@ bool MapNormalizer::GUI::MapDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Cont
         // Paint the province onto the full image
         full_cr->set_source(province_image, getSelection()->bounding_box.bottom_left.x, getSelection()->bounding_box.top_right.y);
 #else
-        auto posx = getSelection()->bounding_box.bottom_left.x;
-        auto posy = getSelection()->bounding_box.top_right.y;
+        auto posx = getSelection().front().bounding_box.bottom_left.x;
+        auto posy = getSelection().front().bounding_box.top_right.y;
 
         full_cr->scale(getScaleFactor(), getScaleFactor());
         full_cr->set_source(province_image, posx, posy);

@@ -93,7 +93,8 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
 
     // Then render the selected province (if there is one selected) on top of that
     //  But, obviously, only do so if there _is_ a selection
-    if(auto selection = getOwningGLDrawingArea()->getSelection(); selection) {
+    if(auto selections = getOwningGLDrawingArea()->getSelection(); !selections.empty())
+    {
         m_selection_shader.use();
 
         setupUniforms();
@@ -110,7 +111,9 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
         m_selection_shader.uniform("label_matrix", getLabelTexture());
 
         // All other uniforms
-        std::vector<uint32_t> selection_ids { static_cast<uint32_t>(selection->id) }; // TODO: Temporary until more global support for multi-select is done
+        std::vector<uint32_t> selection_ids;
+        std::transform(selections.begin(), selections.end(), std::back_inserter(selection_ids), [](const auto& s) { return s.id; });
+
         m_selection_shader.uniform("province_labels", selection_ids);
         m_selection_shader.uniform("num_selected", static_cast<uint32_t>(selection_ids.size()));
 

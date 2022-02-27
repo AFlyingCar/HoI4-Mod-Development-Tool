@@ -70,13 +70,25 @@ void MapNormalizer::GUI::IMapDrawingAreaBase::setOnMultiProvinceSelectionCallbac
 
 void MapNormalizer::GUI::IMapDrawingAreaBase::setSelection() {
     onSelectionChanged(std::nullopt);
-    m_selection = std::nullopt;
+    m_selections.clear();
 }
 
 void MapNormalizer::GUI::IMapDrawingAreaBase::setSelection(const SelectionInfo& selection)
 {
     onSelectionChanged(selection);
-    m_selection = selection;
+    m_selections = { selection };
+}
+
+void MapNormalizer::GUI::IMapDrawingAreaBase::toggleSelection(const SelectionInfo& selection)
+{
+    onSelectionChanged(selection);
+
+    // Either remove the selection if it is present, or add it if it isn't
+    if(std::remove_if(m_selections.begin(), m_selections.end(),
+                      [&selection](auto&& s) { return s.id == selection.id; }) == m_selections.end())
+    {
+        m_selections.push_back(selection);
+    }
 }
 
 void MapNormalizer::GUI::IMapDrawingAreaBase::zoom(ZoomDirection direction) {
@@ -150,14 +162,14 @@ auto MapNormalizer::GUI::IMapDrawingAreaBase::getOnMultiSelect() const
 }
 
 auto MapNormalizer::GUI::IMapDrawingAreaBase::getSelection() const
-    -> const std::optional<SelectionInfo>&
+    -> const std::vector<SelectionInfo>&
 {
-    return m_selection;
+    return m_selections;
 }
 
 auto MapNormalizer::GUI::IMapDrawingAreaBase::getSelection()
-    -> std::optional<SelectionInfo>& 
+    -> std::vector<SelectionInfo>& 
 {
-    return m_selection;
+    return m_selections;
 }
 

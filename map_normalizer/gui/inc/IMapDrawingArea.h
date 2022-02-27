@@ -70,6 +70,7 @@ namespace MapNormalizer::GUI {
 
             void setSelection();
             void setSelection(const SelectionInfo&);
+            void toggleSelection(const SelectionInfo&);
 
             void zoom(ZoomDirection);
             void zoom(double);
@@ -78,8 +79,8 @@ namespace MapNormalizer::GUI {
 
             double getScaleFactor() const;
 
-            const std::optional<SelectionInfo>& getSelection() const;
-            std::optional<SelectionInfo>& getSelection();
+            const std::vector<SelectionInfo>& getSelection() const;
+            std::vector<SelectionInfo>& getSelection();
 
         protected:
             virtual void init() = 0;
@@ -103,7 +104,7 @@ namespace MapNormalizer::GUI {
             SelectionCallback m_on_multiselect;
 
             //! The current selection
-            std::optional<SelectionInfo> m_selection;
+            std::vector<SelectionInfo> m_selections;
 
             //! How much should the display be scaled.
             double m_scale_factor;
