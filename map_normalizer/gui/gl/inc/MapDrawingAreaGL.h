@@ -46,6 +46,8 @@ namespace MapNormalizer::GUI::GL {
             virtual void onShow() override;
             virtual void onSelectionChanged(std::optional<SelectionInfo>) override;
 
+            void initShaderMacros();
+
             std::shared_ptr<IRenderingView> getCurrentRenderingView();
 
             void setupAllUniforms();

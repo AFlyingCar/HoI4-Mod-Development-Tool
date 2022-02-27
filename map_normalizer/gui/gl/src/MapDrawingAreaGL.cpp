@@ -110,6 +110,8 @@ void MapNormalizer::GUI::GL::MapDrawingArea::init() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    initShaderMacros();
+
     if(prog_opts.debug) {
         WRITE_DEBUG("Initializing GL Debug Output functions");
         glEnable(GL_DEBUG_OUTPUT);
@@ -207,6 +209,13 @@ void MapNormalizer::GUI::GL::MapDrawingArea::onSelectionChanged(std::optional<Se
 void MapNormalizer::GUI::GL::MapDrawingArea::queueDraw() {
     queue_draw();
     show_all();
+}
+
+/**
+ * @brief Initializes all global shader macros
+ */
+void MapNormalizer::GUI::GL::MapDrawingArea::initShaderMacros() {
+    Shader::defineMacro("MAX_SELECTED_PROVINCES", MAX_SELECTED_PROVINCES);
 }
 
 auto MapNormalizer::GUI::GL::MapDrawingArea::getCurrentRenderingView()
