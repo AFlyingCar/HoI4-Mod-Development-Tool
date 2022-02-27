@@ -111,7 +111,7 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
 
         // All other uniforms
         std::vector<uint32_t> selection_ids { static_cast<uint32_t>(selection->id) }; // TODO: Temporary until more global support for multi-select is done
-        m_selection_shader.uniform("province_label", selection_ids);
+        m_selection_shader.uniform("province_labels", selection_ids);
         m_selection_shader.uniform("num_selected", static_cast<uint32_t>(selection_ids.size()));
 
         // m_selection_area_texture.activate();
@@ -183,30 +183,7 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::onMapDataChanged(std::shared
  */
 void MapNormalizer::GUI::GL::ProvinceRenderingView::onSelectionChanged(std::optional<IMapDrawingAreaBase::SelectionInfo> selection)
 {
-    // If there is no selection, then don't actually do anything, we just won't
-    //  render using the selection shader+texture
-    if(selection) {
-        WRITE_DEBUG("Rebuilding the selection texture...");
-
-        auto [iwidth, iheight] = calcDims(selection->bounding_box);
-
-        m_selection_area_texture.setTextureUnitID(Texture::Unit::TEX_UNIT2);
-
-        m_selection_area_texture.bind();
-        {
-            // Use NEAREST rather than LINEAR to prevent weird outlines around
-            //  the textures
-            m_selection_area_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::NEAREST);
-            m_selection_area_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::NEAREST);
-
-            m_selection_area_texture.setTextureData(Texture::Format::RGBA,
-                                               iwidth, iheight,
-                                               selection->data.get());
-        }
-        m_selection_area_texture.bind(false);
-
-        WRITE_DEBUG("Done.");
-    }
+    // TODO: We should show adjacency here if that option is turned on
 }
 
 auto MapNormalizer::GUI::GL::ProvinceRenderingView::getPrograms() -> ProgramList

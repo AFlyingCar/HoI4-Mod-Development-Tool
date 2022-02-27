@@ -5,14 +5,17 @@ out vec4 FragColor; // Output color value
 uniform sampler2D selection;
 uniform usampler2D label_matrix;
 
-uniform uint province_label[MAX_SELECTED_PROVINCES];
+uniform uint province_labels[MAX_SELECTED_PROVINCES];
 uniform uint num_selected; // Will be no larger than MAX_SELECTED_PROVINCES
 
 in vec2 texture_coords; // Input from vertex shader
 
+/**
+ * @brief Checks if the given label is selected. Only iterates up to num_selected.
+ */
 bool isSelected(uint pixel_label) {
     for(uint i = 0; i < num_selected; ++i) {
-        if(province_label[i] == pixel_label) {
+        if(province_labels[i] == pixel_label) {
             return true;
         }
     }
