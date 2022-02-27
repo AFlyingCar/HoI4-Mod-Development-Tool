@@ -12,6 +12,10 @@
 
 #include "GLUtils.h"
 
+#include "Util.h"
+
+std::map<std::string, std::string> MapNormalizer::GUI::GL::Shader::m_defined_macros;
+
 MapNormalizer::GUI::GL::Shader::CompileException::CompileException(Type type,
                                                                    const std::string& source,
                                                                    const std::string& reason):
@@ -51,8 +55,11 @@ MapNormalizer::GUI::GL::Shader::Shader(Type type, const std::string& source):
 
     // Compile the shader
     int status;
-    auto* source_cstr = source.c_str();
-    glShaderSource(m_shader_id, 1, &(source_cstr), nullptr);
+    //   Transform the source-code with any defined macros first
+    auto new_source = addMacroDefinitions(source);
+    auto* source_cstr = new_source.c_str();
+    GLint source_len = new_source.size();
+    glShaderSource(m_shader_id, 1, &(source_cstr), &source_len);
     glCompileShader(m_shader_id);
 
     // Check for compilation errors
@@ -137,5 +144,34 @@ std::string_view std::to_string(const MapNormalizer::GUI::GL::Shader::Type& type
         default:
             return "<INVALID>";
     }
+}
+
+void MapNormalizer::GUI::GL::Shader::undefineMacro(const std::string& macro_name)
+{
+    m_defined_macros.erase(macro_name);
+}
+
+std::string MapNormalizer::GUI::GL::Shader::addMacroDefinitions(const std::string& source)
+{
+    std::string src_to_version;
+    std::string src_post_version = source;
+    if(auto version_idx = source.find("#version");
+            version_idx != std::string::npos)
+    {
+        // All code up to the end of the #version line
+        auto nl = source.find("\n", version_idx);
+        src_to_version = source.substr(0, nl + 1);
+        src_post_version = source.substr(nl + 1);
+    }
+
+    // Build the source
+    std::stringstream src;
+    src << src_to_version << std::endl;
+    for(auto&& [k, v] : m_defined_macros) {
+        src << "#define " << k << ' ' << v << std::endl;
+    }
+    src << "\n" << src_post_version;
+
+    return src.str();
 }
 
