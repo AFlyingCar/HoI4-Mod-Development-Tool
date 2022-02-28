@@ -393,6 +393,16 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                     }
                 }
 
+                // Perform a check here to make sure we don't go over the maximum
+                //   number of selectable provinces if we are not deselecting one
+                if(!is_already_selected &&
+                   m_drawing_area->getSelections().size() == MAX_SELECTED_PROVINCES)
+                {
+                    WRITE_WARN("Maximum number of provinces selected! Cannot select more than ",
+                               MAX_SELECTED_PROVINCES, " at once!");
+                    return;
+                }
+
                 bool has_any_selection = map_project.getSelectedProvince() != std::nullopt;
 
                 // Do not mark this province as selected if we are deselecting it
@@ -420,7 +430,6 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                         m_drawing_area->removeSelection({nullptr, {}, province->id});
                     }
 
-                    // m_drawing_area->toggleSelection({preview_data, province->bounding_box, province->id});
                     m_drawing_area->queueDraw();
                 }
             }
