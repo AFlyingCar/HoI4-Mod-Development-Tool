@@ -384,11 +384,21 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
 
                 auto label = lmatrix[xyToIndex(map_data->getWidth(), x, y)];
 
-                // TODO: CHECK HERE IF PROVINCE IS ALREADY SELECTED
+                // Go over the list of already selected provinces and check if
+                //  we have clicked on one that is _already_ selected
+                bool is_already_selected = false;
+                for(auto&& selection : m_drawing_area->getSelections()) {
+                    if((is_already_selected = (selection.id == label))) {
+                        break;
+                    }
+                }
 
-                bool has_selection = map_project.getSelectedProvince() != std::nullopt;
+                bool has_any_selection = map_project.getSelectedProvince() != std::nullopt;
 
-                map_project.selectProvince(label - 1);
+                // Do not mark this province as selected if we are deselecting it
+                if(!is_already_selected) {
+                    map_project.selectProvince(label - 1);
+                }
 
                 // If the label is a valid province, then go ahead and mark it as
                 //  selected everywhere that needs it to be marked as such
@@ -401,11 +411,16 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                     // Do not change which province we are rendering _unless_ we
                     //  are rendering something for the first time. Multi-select
                     //  is only to render the _first_ selection
-                    m_province_properties_pane->setProvince(province,
-                                                            preview_data,
-                                                            has_selection);
+                    if(!is_already_selected) {
+                        m_province_properties_pane->setProvince(province,
+                                                                preview_data,
+                                                                has_any_selection);
+                        m_drawing_area->addSelection({preview_data, province->bounding_box, province->id});
+                    } else {
+                        m_drawing_area->removeSelection({nullptr, {}, province->id});
+                    }
 
-                    m_drawing_area->toggleSelection({preview_data, province->bounding_box, province->id});
+                    // m_drawing_area->toggleSelection({preview_data, province->bounding_box, province->id});
                     m_drawing_area->queueDraw();
                 }
             }

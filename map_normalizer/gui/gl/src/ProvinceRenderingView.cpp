@@ -93,7 +93,7 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
 
     // Then render the selected province (if there is one selected) on top of that
     //  But, obviously, only do so if there _is_ a selection
-    if(auto selections = getOwningGLDrawingArea()->getSelection(); !selections.empty())
+    if(auto selections = getOwningGLDrawingArea()->getSelections(); !selections.empty())
     {
         m_selection_shader.use();
 
