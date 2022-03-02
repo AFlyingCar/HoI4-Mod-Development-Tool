@@ -110,9 +110,6 @@ namespace MapNormalizer::Project {
             //! All terrains defined for this project
             std::vector<Terrain> m_terrains;
 
-            //! The current selected province
-            [[deprecated]] uint32_t m_selected_province;
-
             //! The currently selected provinces
             std::set<uint32_t> m_selected_provinces;
 

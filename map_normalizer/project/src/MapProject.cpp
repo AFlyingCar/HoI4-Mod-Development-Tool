@@ -18,7 +18,6 @@ MapNormalizer::Project::MapProject::MapProject(IProject& parent_project):
     m_shape_detection_info(),
     m_continents(),
     m_terrains(getDefaultTerrains()),
-    m_selected_province(-1),
     m_selected_provinces(),
     m_parent_project(parent_project)
 {
@@ -429,7 +428,6 @@ void MapNormalizer::Project::MapProject::setShapeFinder(ShapeFinder&& shape_find
     m_shape_detection_info.map_data.reset();
 
     // Clear out which province is selected
-    m_selected_province = -1;
     m_data_cache.clear();
 }
 
@@ -456,8 +454,6 @@ const uint32_t* MapNormalizer::Project::MapProject::getLabelMatrix() const {
 }
 
 void MapNormalizer::Project::MapProject::selectProvince(uint32_t label) {
-    m_selected_province = label;
-
     if(label == -1) {
         m_selected_provinces.clear();
     } else {
@@ -466,13 +462,11 @@ void MapNormalizer::Project::MapProject::selectProvince(uint32_t label) {
 }
 
 void MapNormalizer::Project::MapProject::addProvinceSelection(uint32_t label) {
-    m_selected_province = label;
     m_selected_provinces.insert(label);
 }
 
 void MapNormalizer::Project::MapProject::removeProvinceSelection(uint32_t label)
 {
-    m_selected_province = label;
     m_selected_provinces.erase(label);
 }
 
