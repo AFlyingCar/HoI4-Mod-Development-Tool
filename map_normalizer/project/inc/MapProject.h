@@ -44,6 +44,7 @@ namespace MapNormalizer::Project {
             void selectProvince(uint32_t);
             void addProvinceSelection(uint32_t);
             void removeProvinceSelection(uint32_t);
+            void clearProvinceSelection();
 
             const Province& getProvinceForLabel(uint32_t) const;
             Province& getProvinceForLabel(uint32_t);

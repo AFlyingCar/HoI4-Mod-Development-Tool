@@ -454,11 +454,7 @@ const uint32_t* MapNormalizer::Project::MapProject::getLabelMatrix() const {
 }
 
 void MapNormalizer::Project::MapProject::selectProvince(uint32_t label) {
-    if(label == -1) {
-        m_selected_provinces.clear();
-    } else {
-        m_selected_provinces = {label};
-    }
+    m_selected_provinces = {label};
 }
 
 void MapNormalizer::Project::MapProject::addProvinceSelection(uint32_t label) {
@@ -468,6 +464,10 @@ void MapNormalizer::Project::MapProject::addProvinceSelection(uint32_t label) {
 void MapNormalizer::Project::MapProject::removeProvinceSelection(uint32_t label)
 {
     m_selected_provinces.erase(label);
+}
+
+void MapNormalizer::Project::MapProject::clearProvinceSelection() {
+    m_selected_provinces.clear();
 }
 
 auto MapNormalizer::Project::MapProject::getProvinceForLabel(uint32_t label) const

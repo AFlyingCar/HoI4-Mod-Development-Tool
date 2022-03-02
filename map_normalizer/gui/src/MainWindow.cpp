@@ -281,7 +281,7 @@ bool MapNormalizer::GUI::MainWindow::initializeWidgets() {
                 auto& project = opt_project->get();
                 auto& map_project = project.getMapProject();
 
-                map_project.selectProvince(-1);
+                map_project.clearProvinceSelection();
 
                 ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
                 m_province_properties_pane->setProvince(nullptr, null_data);
@@ -336,7 +336,7 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                 // If the click happens outside of the bounds of the image, then
                 //   deselect the province
                 if(x > map_data->getWidth() || y > map_data->getHeight()) {
-                    map_project.selectProvince(-1);
+                    map_project.clearProvinceSelection();
 
                     ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
                     m_province_properties_pane->setProvince(nullptr, null_data);
