@@ -18,7 +18,7 @@ MapNormalizer::Project::MapProject::MapProject(IProject& parent_project):
     m_shape_detection_info(),
     m_continents(),
     m_terrains(getDefaultTerrains()),
-    m_selected_province(-1),
+    m_selected_provinces(),
     m_parent_project(parent_project)
 {
 }
@@ -428,7 +428,6 @@ void MapNormalizer::Project::MapProject::setShapeFinder(ShapeFinder&& shape_find
     m_shape_detection_info.map_data.reset();
 
     // Clear out which province is selected
-    m_selected_province = -1;
     m_data_cache.clear();
 }
 
@@ -455,39 +454,72 @@ const uint32_t* MapNormalizer::Project::MapProject::getLabelMatrix() const {
 }
 
 void MapNormalizer::Project::MapProject::selectProvince(uint32_t label) {
-    m_selected_province = label;
+    m_selected_provinces = {label};
+}
+
+void MapNormalizer::Project::MapProject::addProvinceSelection(uint32_t label) {
+    m_selected_provinces.insert(label);
+}
+
+void MapNormalizer::Project::MapProject::removeProvinceSelection(uint32_t label)
+{
+    m_selected_provinces.erase(label);
+}
+
+void MapNormalizer::Project::MapProject::clearProvinceSelection() {
+    m_selected_provinces.clear();
+}
+
+auto MapNormalizer::Project::MapProject::getProvinceForLabel(uint32_t label) const
+    -> const Province&
+{
+    return m_shape_detection_info.provinces.at(label);
+}
+
+auto MapNormalizer::Project::MapProject::getProvinceForLabel(uint32_t label)
+    -> Province&
+{
+    return m_shape_detection_info.provinces.at(label);
 }
 
 /**
- * @brief Will return the currently selected province, or std::nullopt if no
- *        valid province is currently selected.
+ * @brief Will return the currently selected provinces.
  *
- * @return The currently selected province, or std::nullopt.
+ * @return The currently selected provinces.
  */
-auto MapNormalizer::Project::MapProject::getSelectedProvince() const
-    -> OptionalReference<const Province>
+auto MapNormalizer::Project::MapProject::getSelectedProvinces() const
+    -> RefVector<const Province>
 {
-    if(m_selected_province < m_shape_detection_info.provinces.size()) {
-        return std::ref(m_shape_detection_info.provinces.at(m_selected_province));
-    }
-
-    return std::nullopt;
+    RefVector<const Province> provinces;
+    std::transform(m_selected_provinces.begin(), m_selected_provinces.end(),
+                   std::back_inserter(provinces),
+                   [this](uint32_t prov_id) {
+                       return std::ref(m_shape_detection_info.provinces.at(prov_id));
+                   });
+    return provinces;
 }
 
 /**
- * @brief Will return the currently selected province, or std::nullopt if no
- *        valid province is currently selected.
+ * @brief Will return the currently selected provinces.
  *
- * @return The currently selected province, or std::nullopt.
+ * @return The currently selected provinces.
  */
-auto MapNormalizer::Project::MapProject::getSelectedProvince()
-    -> OptionalReference<Province>
+auto MapNormalizer::Project::MapProject::getSelectedProvinces()
+    -> RefVector<Province>
 {
-    if(m_selected_province < m_shape_detection_info.provinces.size()) {
-        return std::ref(m_shape_detection_info.provinces.at(m_selected_province));
-    }
+    RefVector<Province> provinces;
+    std::transform(m_selected_provinces.begin(), m_selected_provinces.end(),
+                   std::back_inserter(provinces),
+                   [this](uint32_t prov_id) {
+                       return std::ref(m_shape_detection_info.provinces.at(prov_id));
+                   });
+    return provinces;
+}
 
-    return std::nullopt;
+auto MapNormalizer::Project::MapProject::getSelectedProvinceLabels() const
+    -> const std::set<uint32_t>&
+{
+    return m_selected_provinces;
 }
 
 const std::set<std::string>& MapNormalizer::Project::MapProject::getContinentList() const

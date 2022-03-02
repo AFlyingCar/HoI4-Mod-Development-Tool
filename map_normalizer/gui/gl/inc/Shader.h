@@ -10,6 +10,7 @@
 # include <string>
 # include <string_view>
 # include <memory>
+# include <map>
 
 namespace MapNormalizer::GUI::GL {
     /**
@@ -64,7 +65,15 @@ namespace MapNormalizer::GUI::GL {
 
             uint32_t getID() const;
 
+            template<typename T>
+            static void defineMacro(const std::string& macro, const T& value) {
+                m_defined_macros[macro] = std::to_string(value);
+            }
+
+            static void undefineMacro(const std::string&);
+
         private:
+            static std::string addMacroDefinitions(const std::string&);
             static uint32_t typeToGL(Type);
 
             //! The reference counter
@@ -72,6 +81,9 @@ namespace MapNormalizer::GUI::GL {
 
             //! The GL Shader ID
             uint32_t m_shader_id;
+
+            //! List of externally defined macros
+            static std::map<std::string, std::string> m_defined_macros;
     };
 }
 

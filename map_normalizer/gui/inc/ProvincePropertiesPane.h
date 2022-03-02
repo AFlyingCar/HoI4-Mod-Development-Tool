@@ -30,14 +30,14 @@ namespace MapNormalizer::GUI {
 
             void setEnabled(bool = true);
 
-            void setProvince(Province*, ProvincePreviewDrawingArea::DataPtr);
+            void setProvince(Province*, ProvincePreviewDrawingArea::DataPtr, bool = false);
 
             void onResize();
 
         protected:
             virtual void addWidgetToParent(Gtk::Widget&) override;
 
-            void updateProperties(const Province*);
+            void updateProperties(const Province*, bool);
 
             void rebuildContinentMenu(const std::set<std::string>&);
 

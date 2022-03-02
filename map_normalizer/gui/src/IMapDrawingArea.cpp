@@ -11,6 +11,7 @@ MapNormalizer::GUI::IMapDrawingAreaBase::IMapDrawingAreaBase():
     m_map_data(nullptr),
     m_on_select([](auto...) { }),      // The default callback does nothing
     m_on_multiselect([](auto...) { }),
+    m_selections(),
     m_scale_factor(DEFAULT_ZOOM),
     m_viewing_mode(DEFAULT_VIEWING_MODE)
 { }
@@ -70,13 +71,25 @@ void MapNormalizer::GUI::IMapDrawingAreaBase::setOnMultiProvinceSelectionCallbac
 
 void MapNormalizer::GUI::IMapDrawingAreaBase::setSelection() {
     onSelectionChanged(std::nullopt);
-    m_selection = std::nullopt;
+    m_selections.clear();
 }
 
 void MapNormalizer::GUI::IMapDrawingAreaBase::setSelection(const SelectionInfo& selection)
 {
     onSelectionChanged(selection);
-    m_selection = selection;
+    m_selections = { selection };
+}
+
+void MapNormalizer::GUI::IMapDrawingAreaBase::addSelection(const SelectionInfo& selection)
+{
+    onSelectionChanged(selection);
+    m_selections.insert(selection);
+}
+
+void MapNormalizer::GUI::IMapDrawingAreaBase::removeSelection(const SelectionInfo& selection)
+{
+    onSelectionChanged(selection);
+    m_selections.erase(selection);
 }
 
 void MapNormalizer::GUI::IMapDrawingAreaBase::zoom(ZoomDirection direction) {
@@ -149,15 +162,15 @@ auto MapNormalizer::GUI::IMapDrawingAreaBase::getOnMultiSelect() const
     return m_on_multiselect;
 }
 
-auto MapNormalizer::GUI::IMapDrawingAreaBase::getSelection() const
-    -> const std::optional<SelectionInfo>&
+auto MapNormalizer::GUI::IMapDrawingAreaBase::getSelections() const
+    -> const SelectionList&
 {
-    return m_selection;
+    return m_selections;
 }
 
-auto MapNormalizer::GUI::IMapDrawingAreaBase::getSelection()
-    -> std::optional<SelectionInfo>& 
+auto MapNormalizer::GUI::IMapDrawingAreaBase::getSelections()
+    -> SelectionList& 
 {
-    return m_selection;
+    return m_selections;
 }
 

@@ -24,12 +24,17 @@ namespace MapNormalizer::GUI {
              * @brief Holds information about the currently selected province
              */
             struct SelectionInfo {
-                Project::MapProject::ProvinceDataPtr data;
-                BoundingBox bounding_box;
+                [[deprecated]] Project::MapProject::ProvinceDataPtr data;
+                [[deprecated]] BoundingBox bounding_box;
                 ProvinceID id;
             };
 
+            struct SelectionInfoLess {
+                inline bool operator()(const SelectionInfo& s1, const SelectionInfo& s2) const { return s1.id < s2.id; };
+            };
+
             using SelectionCallback = std::function<void(uint32_t, uint32_t)>;
+            using SelectionList = std::set<SelectionInfo, SelectionInfoLess>;
 
             enum class ZoomDirection {
                 RESET,
@@ -70,6 +75,8 @@ namespace MapNormalizer::GUI {
 
             void setSelection();
             void setSelection(const SelectionInfo&);
+            void addSelection(const SelectionInfo&);
+            void removeSelection(const SelectionInfo&);
 
             void zoom(ZoomDirection);
             void zoom(double);
@@ -78,8 +85,9 @@ namespace MapNormalizer::GUI {
 
             double getScaleFactor() const;
 
-            const std::optional<SelectionInfo>& getSelection() const;
-            std::optional<SelectionInfo>& getSelection();
+            // const SelectionList& getSelections() const;
+            const SelectionList& getSelections() const;
+            SelectionList& getSelections();
 
         protected:
             virtual void init() = 0;
@@ -103,7 +111,7 @@ namespace MapNormalizer::GUI {
             SelectionCallback m_on_multiselect;
 
             //! The current selection
-            std::optional<SelectionInfo> m_selection;
+            SelectionList m_selections;
 
             //! How much should the display be scaled.
             double m_scale_factor;

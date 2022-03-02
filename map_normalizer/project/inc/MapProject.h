@@ -42,9 +42,17 @@ namespace MapNormalizer::Project {
             const uint32_t* getLabelMatrix() const;
 
             void selectProvince(uint32_t);
+            void addProvinceSelection(uint32_t);
+            void removeProvinceSelection(uint32_t);
+            void clearProvinceSelection();
 
-            OptionalReference<const Province> getSelectedProvince() const;
-            OptionalReference<Province> getSelectedProvince();
+            const Province& getProvinceForLabel(uint32_t) const;
+            Province& getProvinceForLabel(uint32_t);
+
+            RefVector<const Province> getSelectedProvinces() const;
+            RefVector<Province> getSelectedProvinces();
+
+            const std::set<uint32_t>& getSelectedProvinceLabels() const;
 
             const std::set<std::string>& getContinentList() const;
 
@@ -103,8 +111,8 @@ namespace MapNormalizer::Project {
             //! All terrains defined for this project
             std::vector<Terrain> m_terrains;
 
-            //! The current selected province
-            uint32_t m_selected_province;
+            //! The currently selected provinces
+            std::set<uint32_t> m_selected_provinces;
 
             //! The parent project that this MapProject belongs to
             IProject& m_parent_project;

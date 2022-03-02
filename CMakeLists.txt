@@ -43,10 +43,10 @@ list(POP_BACK CMAKE_MESSAGE_INDENT)
 
 # TODO: What other MSVC options should we pass?
 if(MSVC)
-    add_compile_options(/W4 /WX)
+    add_compile_options(/W4 /WX /WX-:C4996)
     add_definitions(/DMN_PROJECT_ROOT="${CMAKE_SOURCE_DIR}/map_normalizer")
 else()
-    add_compile_options(-Wall -Werror -Wextra -Wno-sign-compare -Wno-unused-label -Wno-unused-const-variable -Wno-unused-parameter -Wno-unused-function)
+    add_compile_options(-Wall -Werror -Wextra -Wno-sign-compare -Wno-unused-label -Wno-unused-const-variable -Wno-unused-parameter -Wno-unused-function -Wno-error=deprecated -Wno-error=deprecated-declarations)
     add_definitions(-DMN_PROJECT_ROOT="${CMAKE_SOURCE_DIR}/map_normalizer")
 endif()
 

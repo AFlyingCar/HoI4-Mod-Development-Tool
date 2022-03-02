@@ -146,13 +146,23 @@ bool MapNormalizer::GUI::GL::Program::uniform(const std::string& uniform_name,
     auto uniform_loc = glGetUniformLocation(m_program_id, uniform_name.c_str());
 
     if(value.type() == typeid(bool)) {                                 // bool
+        // NOTE: No support at the moment for bool[] due to issues with std::vector<bool>
         glUniform1i(uniform_loc, std::any_cast<bool>(value));
     } else if(value.type() == typeid(int)) {                           // int
         glUniform1i(uniform_loc, std::any_cast<int>(value));
+    } else if(value.type() == typeid(std::vector<int>)) {              // int[]
+        auto vec = std::any_cast<std::vector<int>>(value);
+        glUniform1iv(uniform_loc, vec.size(), vec.data());
     } else if(value.type() == typeid(uint32_t)) {                      // unsigned int
         glUniform1ui(uniform_loc, std::any_cast<uint32_t>(value));
+    } else if(value.type() == typeid(std::vector<unsigned int>)) {     // unsigned int[]
+        auto vec = std::any_cast<std::vector<unsigned int>>(value);
+        glUniform1uiv(uniform_loc, vec.size(), vec.data());
     } else if(value.type() == typeid(float)) {                         // float
         glUniform1f(uniform_loc, std::any_cast<float>(value));
+    } else if(value.type() == typeid(std::vector<float>)) {            // float[]
+        auto vec = std::any_cast<std::vector<float>>(value);
+        glUniform1fv(uniform_loc, vec.size(), vec.data());
     } else if(value.type() == typeid(glm::vec2)) {                     // vec2
         glUniform2fv(uniform_loc, 1,
                      glm::value_ptr(std::any_cast<glm::vec2>(value)));
