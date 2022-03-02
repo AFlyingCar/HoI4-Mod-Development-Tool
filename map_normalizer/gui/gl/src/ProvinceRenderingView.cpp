@@ -106,7 +106,6 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
         // m_selection_shader.uniform("transform", transform);
 
         // Set up the textures
-        // m_selection_shader.uniform("selection_area", m_selection_area_texture);
         m_selection_shader.uniform("selection", m_selection_texture);
         m_selection_shader.uniform("label_matrix", getLabelTexture());
 
@@ -117,7 +116,6 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
         m_selection_shader.uniform("province_labels", selection_ids);
         m_selection_shader.uniform("num_selected", static_cast<uint32_t>(selection_ids.size()));
 
-        // m_selection_area_texture.activate();
         m_selection_texture.activate();
         getLabelTexture().activate();
 
