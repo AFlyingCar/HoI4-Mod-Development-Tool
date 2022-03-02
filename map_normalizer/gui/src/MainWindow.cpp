@@ -355,12 +355,13 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
 
                 // If the label is a valid province, then go ahead and mark it as
                 //  selected everywhere that needs it to be marked as such
-                if(auto opt_selected = project.getMapProject().getSelectedProvince();
-                   m_province_properties_pane != nullptr && opt_selected)
+                if(auto selected = map_project.getSelectedProvinces(); !selected.empty())
                 {
-                    auto* province = &opt_selected->get();
+                    auto* province = &selected.begin()->get();
                     auto preview_data = map_project.getPreviewData(province);
-                    m_province_properties_pane->setProvince(province, preview_data);
+                    if(m_province_properties_pane != nullptr) {
+                        m_province_properties_pane->setProvince(province, preview_data);
+                    }
 
                     m_drawing_area->setSelection({preview_data, province->bounding_box, province->id});
                     m_drawing_area->queueDraw();
@@ -386,45 +387,44 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
 
                 // Go over the list of already selected provinces and check if
                 //  we have clicked on one that is _already_ selected
-                bool is_already_selected = false;
-                for(auto&& selection : m_drawing_area->getSelections()) {
-                    if((is_already_selected = (selection.id == label))) {
-                        break;
-                    }
-                }
+                const auto& selected_labels = map_project.getSelectedProvinceLabels();
+                bool is_already_selected = selected_labels.count(label - 1);
 
                 // Perform a check here to make sure we don't go over the maximum
                 //   number of selectable provinces if we are not deselecting one
-                if(!is_already_selected &&
-                   m_drawing_area->getSelections().size() == MAX_SELECTED_PROVINCES)
+                if(!is_already_selected && selected_labels.size() == MAX_SELECTED_PROVINCES)
                 {
                     WRITE_WARN("Maximum number of provinces selected! Cannot select more than ",
                                MAX_SELECTED_PROVINCES, " at once!");
                     return;
                 }
 
-                bool has_any_selection = map_project.getSelectedProvince() != std::nullopt;
+                bool has_any_selection = !selected_labels.empty();
 
                 // Do not mark this province as selected if we are deselecting it
-                if(!is_already_selected) {
-                    map_project.selectProvince(label - 1);
+                if(is_already_selected) {
+                    map_project.removeProvinceSelection(label - 1);
+                } else {
+                    map_project.addProvinceSelection(label - 1);
                 }
 
                 // If the label is a valid province, then go ahead and mark it as
                 //  selected everywhere that needs it to be marked as such
-                if(auto opt_selected = project.getMapProject().getSelectedProvince();
-                   m_province_properties_pane != nullptr && opt_selected)
+                if(auto selected = map_project.getSelectedProvinces(); !selected.empty())
                 {
-                    auto* province = &opt_selected->get();
+                    // auto* province = &selected.begin()->get();
+                    auto* province = &map_project.getProvinceForLabel(label - 1);
                     auto preview_data = map_project.getPreviewData(province);
 
                     // Do not change which province we are rendering _unless_ we
                     //  are rendering something for the first time. Multi-select
                     //  is only to render the _first_ selection
                     if(!is_already_selected) {
-                        m_province_properties_pane->setProvince(province,
-                                                                preview_data,
-                                                                has_any_selection);
+                        if(m_province_properties_pane != nullptr) {
+                            m_province_properties_pane->setProvince(province,
+                                                                    preview_data,
+                                                                    has_any_selection);
+                        }
                         m_drawing_area->addSelection({preview_data, province->bounding_box, province->id});
                     } else {
                         m_drawing_area->removeSelection({nullptr, {}, province->id});
@@ -554,10 +554,10 @@ Gtk::Frame* MapNormalizer::GUI::MainWindow::buildPropertiesPane() {
         auto& map_project = project.getMapProject();
 
         // Provinces Tab
-        if(auto opt_selected = map_project.getSelectedProvince(); opt_selected)
+        if(auto selected = map_project.getSelectedProvinces(); !selected.empty())
         {
-            auto label = opt_selected->get().id;
-            m_province_properties_pane->setProvince(&opt_selected->get(),
+            auto label = selected.begin()->get().id;
+            m_province_properties_pane->setProvince(&selected.begin()->get(),
                                                     map_project.getPreviewData(label));
         }
     }
