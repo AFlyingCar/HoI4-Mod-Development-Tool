@@ -166,6 +166,12 @@ namespace MapNormalizer {
      */
     template<typename T>
     using OptionalReference = std::optional<std::reference_wrapper<T>>;
+
+    /**
+     * @brief A helper alias
+     */
+    template<typename T>
+    using RefVector = std::vector<std::reference_wrapper<T>>;
 }
 
 #endif
