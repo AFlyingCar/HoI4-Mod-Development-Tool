@@ -399,7 +399,11 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                     return;
                 }
 
-                bool has_any_selection = !selected_labels.empty();
+                // This will be true if there are already any selections in the
+                //  list. In other words, the first selection should always
+                //  populate the properties pane, but subsequent selections
+                //  should not.
+                bool has_selections_already = !selected_labels.empty();
 
                 // Do not mark this province as selected if we are deselecting it
                 if(is_already_selected) {
@@ -412,7 +416,6 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                 //  selected everywhere that needs it to be marked as such
                 if(auto selected = map_project.getSelectedProvinces(); !selected.empty())
                 {
-                    // auto* province = &selected.begin()->get();
                     auto* province = &map_project.getProvinceForLabel(label - 1);
                     auto preview_data = map_project.getPreviewData(province);
 
@@ -423,7 +426,7 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                         if(m_province_properties_pane != nullptr) {
                             m_province_properties_pane->setProvince(province,
                                                                     preview_data,
-                                                                    has_any_selection);
+                                                                    has_selections_already);
                         }
                         m_drawing_area->addSelection({preview_data, province->bounding_box, province->id});
                     } else {
@@ -556,9 +559,11 @@ Gtk::Frame* MapNormalizer::GUI::MainWindow::buildPropertiesPane() {
         // Provinces Tab
         if(auto selected = map_project.getSelectedProvinces(); !selected.empty())
         {
-            auto label = selected.begin()->get().id;
-            m_province_properties_pane->setProvince(&selected.begin()->get(),
-                                                    map_project.getPreviewData(label));
+            auto* province = &selected.begin()->get();
+            auto label = province->id;
+            m_province_properties_pane->setProvince(province,
+                                                    map_project.getPreviewData(label),
+                                                    selected.size() > 1);
         }
     }
 
