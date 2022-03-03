@@ -455,11 +455,17 @@ const uint32_t* MapNormalizer::Project::MapProject::getLabelMatrix() const {
 }
 
 void MapNormalizer::Project::MapProject::selectProvince(uint32_t label) {
-    m_selected_provinces = {label};
+    // Do not select if the label isn't valid
+    if(isValidProvinceLabel(label)) {
+        m_selected_provinces = {label};
+    }
 }
 
 void MapNormalizer::Project::MapProject::addProvinceSelection(uint32_t label) {
-    m_selected_provinces.insert(label);
+    // Do not select if the label isn't valid
+    if(isValidProvinceLabel(label)) {
+        m_selected_provinces.insert(label);
+    }
 }
 
 void MapNormalizer::Project::MapProject::removeProvinceSelection(uint32_t label)
@@ -469,6 +475,39 @@ void MapNormalizer::Project::MapProject::removeProvinceSelection(uint32_t label)
 
 void MapNormalizer::Project::MapProject::clearProvinceSelection() {
     m_selected_provinces.clear();
+}
+
+void MapNormalizer::Project::MapProject::selectState(StateID state_id) {
+    // Do not select if the state_id isn't valid
+    if(isValidStateID(state_id)) {
+        m_selected_states = {state_id};
+    }
+}
+
+void MapNormalizer::Project::MapProject::addStateSelection(StateID state_id) {
+    // Do not select if the state_id isn't valid
+    if(isValidStateID(state_id)) {
+        m_selected_states.insert(state_id);
+    }
+}
+
+void MapNormalizer::Project::MapProject::removeStateSelection(StateID state_id)
+{
+    m_selected_states.erase(state_id);
+}
+
+void MapNormalizer::Project::MapProject::clearStateSelection() {
+    m_selected_states.clear();
+}
+
+bool MapNormalizer::Project::MapProject::isValidStateID(StateID state_id) const
+{
+    return m_states.count(state_id) != 0;
+}
+
+bool MapNormalizer::Project::MapProject::isValidProvinceLabel(uint32_t label) const
+{
+    return label < m_shape_detection_info.provinces.size();
 }
 
 auto MapNormalizer::Project::MapProject::getProvinceForLabel(uint32_t label) const
@@ -521,6 +560,46 @@ auto MapNormalizer::Project::MapProject::getSelectedProvinceLabels() const
     -> const std::set<uint32_t>&
 {
     return m_selected_provinces;
+}
+
+/**
+ * @brief Will return the currently selected states.
+ *
+ * @return The currently selected states.
+ */
+auto MapNormalizer::Project::MapProject::getSelectedStates() const
+    -> RefVector<const State>
+{
+    RefVector<const State> states;
+    std::transform(m_selected_states.begin(), m_selected_states.end(),
+                   std::back_inserter(states),
+                   [this](StateID state_id) {
+                       return std::ref(m_states.at(state_id));
+                   });
+    return states;
+}
+
+/**
+ * @brief Will return the currently selected states.
+ *
+ * @return The currently selected states.
+ */
+auto MapNormalizer::Project::MapProject::getSelectedStates()
+    -> RefVector<State>
+{
+    RefVector<State> states;
+    std::transform(m_selected_states.begin(), m_selected_states.end(),
+                   std::back_inserter(states),
+                   [this](StateID state_id) {
+                       return std::ref(m_states.at(state_id));
+                   });
+    return states;
+}
+
+auto MapNormalizer::Project::MapProject::getSelectedStateIDs() const
+    -> const std::set<uint32_t>&
+{
+    return m_selected_states;
 }
 
 const std::set<std::string>& MapNormalizer::Project::MapProject::getContinentList() const

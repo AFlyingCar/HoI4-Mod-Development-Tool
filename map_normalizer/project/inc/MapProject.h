@@ -48,13 +48,24 @@ namespace MapNormalizer::Project {
             void removeProvinceSelection(uint32_t);
             void clearProvinceSelection();
 
+            void selectState(StateID);
+            void addStateSelection(StateID);
+            void removeStateSelection(StateID);
+            void clearStateSelection();
+
+            bool isValidProvinceLabel(uint32_t) const;
+            bool isValidStateID(StateID) const;
+
             const Province& getProvinceForLabel(uint32_t) const;
             Province& getProvinceForLabel(uint32_t);
 
             RefVector<const Province> getSelectedProvinces() const;
             RefVector<Province> getSelectedProvinces();
-
             const std::set<uint32_t>& getSelectedProvinceLabels() const;
+
+            RefVector<const State> getSelectedStates() const;
+            RefVector<State> getSelectedStates();
+            const std::set<uint32_t>& getSelectedStateIDs() const;
 
             const std::set<std::string>& getContinentList() const;
 
@@ -128,6 +139,9 @@ namespace MapNormalizer::Project {
 
             //! The currently selected provinces
             std::set<uint32_t> m_selected_provinces;
+
+            //! The currently selected states
+            std::set<uint32_t> m_selected_states;
 
             //! The parent project that this MapProject belongs to
             IProject& m_parent_project;
