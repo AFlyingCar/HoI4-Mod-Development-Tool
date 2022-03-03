@@ -22,6 +22,7 @@
 # include "Window.h"
 # include "IMapDrawingArea.h"
 # include "ProvincePropertiesPane.h"
+# include "StatePropertiesPane.h"
 # include "LogViewerWindow.h"
 
 # include "MapDrawingAreaGL.h"
@@ -96,6 +97,9 @@ namespace MapNormalizer::GUI {
 
             //! A container holding properties for provinces
             std::unique_ptr<ProvincePropertiesPane> m_province_properties_pane;
+
+            //! A container holding properties for states
+            std::unique_ptr<StatePropertiesPane> m_state_properties_pane;
 
             //! The window for viewing the logs
             std::unique_ptr<LogViewerWindow> m_log_viewer_window;

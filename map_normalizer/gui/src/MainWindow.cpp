@@ -521,33 +521,29 @@ Gtk::Frame* MapNormalizer::GUI::MainWindow::buildPropertiesPane() {
     // Province Tab
     auto properties_tab = addActiveWidget<Gtk::Notebook>();
 
-    m_province_properties_pane.reset(new ProvincePropertiesPane);
-    m_province_properties_pane->init();
-    properties_tab->append_page(m_province_properties_pane->getParent(), "Province");
+    {
+        m_province_properties_pane.reset(new ProvincePropertiesPane);
+        m_province_properties_pane->init();
+        properties_tab->append_page(m_province_properties_pane->getParent(), "Province");
+    }
+
+    // State Tab
+    {
+        m_state_properties_pane.reset(new StatePropertiesPane);
+        m_state_properties_pane->init();
+
+        properties_tab->append_page(m_state_properties_pane->getParent(), "State");
+    }
 
     m_paned->property_position().signal_changed().connect([this]() {
         if(m_province_properties_pane) {
             m_province_properties_pane->onResize();
         }
+
+        if(m_state_properties_pane) {
+            m_state_properties_pane->onResize();
+        }
     });
-
-    // State Tab
-    {
-        // We want to possibly be able to scroll in the properties window
-        auto properties_window = new Gtk::ScrolledWindow();
-        // Do this so all future widgets we add get put into this one
-        m_active_child = properties_window;
-
-        properties_window->set_size_request(MINIMUM_PROPERTIES_PANE_WIDTH, -1);
-
-        properties_tab->append_page(*properties_window, "State");
-
-        // Begin defining the contents of the tab-window
-
-        // TODO: Add all of the properties stuff
-        //   We may want a custom widget that knows what is currently selected?
-        addWidget<Gtk::Label>("State Properties");
-    }
 
     m_active_child = std::monostate();
 

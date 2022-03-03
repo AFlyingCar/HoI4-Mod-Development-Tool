@@ -14,6 +14,7 @@ add_library(gui STATIC
     src/ProgressBarDialog.cpp
     src/NewProjectDialog.cpp
     src/ProvincePropertiesPane.cpp
+    src/StatePropertiesPane.cpp
     src/ProvincePreviewDrawingArea.cpp
     src/IProvincePreviewDrawingArea.cpp
     src/InterruptableScrolledWindow.cpp
