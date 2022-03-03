@@ -578,6 +578,8 @@ void MapNormalizer::Project::MapProject::addNewState(const std::vector<uint32_t>
         "", /* name */
         0, /* manpower */
         "", /* category */
+        0.0f, /* buildings_max_level_factor */
+        false, /* impassable */
         province_ids
     };
 }
