@@ -18,6 +18,7 @@ MapNormalizer::Project::MapProject::MapProject(IProject& parent_project):
     m_shape_detection_info(),
     m_continents(),
     m_terrains(getDefaultTerrains()),
+    m_states(),
     m_selected_provinces(),
     m_parent_project(parent_project)
 {
@@ -541,6 +542,99 @@ void MapNormalizer::Project::MapProject::addNewContinent(const std::string& cont
 void MapNormalizer::Project::MapProject::removeContinent(const std::string& continent)
 {
     m_continents.erase(continent);
+}
+
+/**
+ * @brief Creates a new state composed of all provinces in province_ids.
+ * @details The provinces detailed in province_ids will get removed from their
+ *          original states. Note however that the original states will still
+ *          exist.
+ *
+ * @param province_ids The list of provinces to add to the new state.
+ */
+void MapNormalizer::Project::MapProject::addNewState(const std::vector<uint32_t>& province_ids)
+{
+    RefVector<Province> provinces;
+    std::transform(province_ids.begin(), province_ids.end(),
+                   std::back_inserter(provinces),
+                   [this](uint32_t prov_id) -> std::reference_wrapper<Province> {
+                       return std::ref(m_shape_detection_info.provinces.at(prov_id));
+                   });
+
+    StateID id = m_states.size();
+    if(m_available_state_ids.size() > 0) {
+        id = m_available_state_ids.front();
+        m_available_state_ids.pop();
+    }
+
+    // Make sure that the provinces are decoupled from their original state
+    for(auto&& prov : provinces) {
+        removeProvinceFromState(prov);
+        prov.get().state = id;
+    }
+
+    m_states[id] = State {
+        id,
+        "", /* name */
+        0, /* manpower */
+        "", /* category */
+        province_ids
+    };
+}
+
+/**
+ * @brief Deletes the state at id
+ *
+ * @param id The ID of the state to delete
+ */
+void MapNormalizer::Project::MapProject::removeState(StateID id) {
+    m_available_state_ids.push(id);
+    m_states.erase(id);
+}
+
+/**
+ * @brief Moves a province to another state.
+ *
+ * @param prov_id The ID of the province to move.
+ * @param state_id The ID of the state to move the province to.
+ */
+void MapNormalizer::Project::MapProject::moveProvinceToState(uint32_t prov_id,
+                                                             StateID state_id)
+{
+    moveProvinceToState(m_shape_detection_info.provinces.at(prov_id), state_id);
+}
+
+/**
+ * @brief Moves a province to another state.
+ *
+ * @param province The province to move.
+ * @param state_id The ID of the state to move the province to.
+ */
+void MapNormalizer::Project::MapProject::moveProvinceToState(Province& province,
+                                                             StateID state_id)
+{
+    removeProvinceFromState(province);
+    province.state = state_id;
+    m_states[state_id].provinces.push_back(province.id);
+}
+
+/**
+ * @brief Removes a province from its state.
+ *
+ * @param province The province to remove.
+ */
+void MapNormalizer::Project::MapProject::removeProvinceFromState(Province& province)
+{
+    // Remove from its old state
+    if(auto prov_state_id = province.state; m_states.count(prov_state_id) != 0)
+    {
+        auto& state_provinces = m_states[prov_state_id].provinces;
+
+        state_provinces.erase(std::find(state_provinces.begin(),
+                                        state_provinces.end(),
+                                        province.id));
+    }
+    province.state = -1;
 }
 
 /**

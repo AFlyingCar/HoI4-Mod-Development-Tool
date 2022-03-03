@@ -2,6 +2,8 @@
 # define MAPPROJECT_H
 
 # include <set>
+# include <queue>
+# include <vector>
 # include <string>
 # include <filesystem>
 
@@ -59,6 +61,13 @@ namespace MapNormalizer::Project {
             void addNewContinent(const std::string&);
             void removeContinent(const std::string&);
 
+            void addNewState(const std::vector<uint32_t>&);
+            void removeState(StateID);
+
+            void moveProvinceToState(uint32_t, StateID);
+            void moveProvinceToState(Province&, StateID);
+            void removeProvinceFromState(Province&);
+
             const std::vector<Terrain>& getTerrains() const;
 
             ProvinceDataPtr getPreviewData(ProvinceID);
@@ -110,6 +119,12 @@ namespace MapNormalizer::Project {
 
             //! All terrains defined for this project
             std::vector<Terrain> m_terrains;
+
+            //! All states defined for this project
+            std::map<uint32_t, State> m_states;
+
+            //! All available state ids, which should be used before new ones
+            std::queue<StateID> m_available_state_ids;
 
             //! The currently selected provinces
             std::set<uint32_t> m_selected_provinces;
