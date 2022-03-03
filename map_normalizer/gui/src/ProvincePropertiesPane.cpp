@@ -47,6 +47,9 @@ void MapNormalizer::GUI::ProvincePropertiesPane::init() {
     buildContinentField();
     addWidget<Gtk::Label>("");
 
+    buildStateCreationButton();
+    addWidget<Gtk::Label>("");
+
     setEnabled(false);
 
     m_parent.show_all();
@@ -251,6 +254,23 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildContinentField() {
     }
 }
 
+void MapNormalizer::GUI::ProvincePropertiesPane::buildStateCreationButton() {
+    m_create_state_button = addWidget<Gtk::Button>("Create State");
+
+    m_create_state_button->signal_clicked().connect([]() {
+        if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+            auto& map_project = opt_project->get().getMapProject();
+
+            map_project.addNewState(std::vector<uint32_t>(map_project.getSelectedProvinceLabels().begin(),
+                                                          map_project.getSelectedProvinceLabels().end()));
+
+            // TODO: If we have a State view, we should switch to it here
+            // TODO: We should also switch from the province properties pane to
+            //       the state properties pane
+        }
+    });
+}
+
 void MapNormalizer::GUI::ProvincePropertiesPane::addWidgetToParent(Gtk::Widget& widget)
 {
     m_box.add(widget);
@@ -266,6 +286,8 @@ void MapNormalizer::GUI::ProvincePropertiesPane::setEnabled(bool enabled) {
     m_provtype_menu->set_sensitive(enabled);
     m_terrain_menu->set_sensitive(enabled);
     m_continent_menu->set_sensitive(enabled);
+
+    m_create_state_button->set_sensitive(enabled);
 }
 
 void MapNormalizer::GUI::ProvincePropertiesPane::setProvince(Province* prov,
@@ -277,6 +299,11 @@ void MapNormalizer::GUI::ProvincePropertiesPane::setProvince(Province* prov,
     setPreview(preview_data);
 
     setEnabled(m_province != nullptr && !is_multiselect);
+
+    // Set this to be enabled afterwards without worrying about multiselect
+    if(is_multiselect) {
+        m_create_state_button->set_sensitive(m_province != nullptr);
+    }
 
     updateProperties(prov, is_multiselect);
 }
