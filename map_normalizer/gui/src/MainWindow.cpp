@@ -302,31 +302,6 @@ bool MapNormalizer::GUI::MainWindow::initializeFinal() {
 }
 
 void MapNormalizer::GUI::MainWindow::initializeCallbacks() {
-#if 0
-        // If the label is a valid province, then go ahead and mark it as
-        //  selected everywhere that needs it to be marked as such
-        if(auto selected = SelectionManager::getInstance().getSelectedProvinces(); !selected.empty())
-        {
-            auto* province = &map_project.getProvinceForLabel(label - 1);
-            auto preview_data = map_project.getPreviewData(province);
-
-            // Do not change which province we are rendering _unless_ we
-            //  are rendering something for the first time. Multi-select
-            //  is only to render the _first_ selection
-            if(!is_already_selected) {
-                if(m_province_properties_pane != nullptr) {
-                    m_province_properties_pane->setProvince(province,
-                                                            preview_data,
-                                                            has_selections_already);
-                }
-                m_drawing_area->addSelection({preview_data, province->bounding_box, province->id});
-            } else {
-                m_drawing_area->removeSelection({nullptr, {}, province->id});
-            }
-
-            m_drawing_area->queueDraw();
-        }
-#endif
     SelectionManager::getInstance().setOnSelectProvinceCallback(
         [this](uint32_t prov_id, SelectionManager::Action action)
         {
@@ -418,7 +393,6 @@ void MapNormalizer::GUI::MainWindow::initializeCallbacks() {
                 // TODO: Update state drawing area once we have that
             }
         });
-
 }
 
 auto MapNormalizer::GUI::MainWindow::getLogViewerWindow()
