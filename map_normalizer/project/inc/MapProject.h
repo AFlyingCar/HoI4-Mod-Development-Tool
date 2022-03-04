@@ -43,36 +43,21 @@ namespace MapNormalizer::Project {
 
             const uint32_t* getLabelMatrix() const;
 
-            void selectProvince(uint32_t);
-            void addProvinceSelection(uint32_t);
-            void removeProvinceSelection(uint32_t);
-            void clearProvinceSelection();
-
-            void selectState(StateID);
-            void addStateSelection(StateID);
-            void removeStateSelection(StateID);
-            void clearStateSelection();
-
             bool isValidProvinceLabel(uint32_t) const;
             bool isValidStateID(StateID) const;
 
             const Province& getProvinceForLabel(uint32_t) const;
             Province& getProvinceForLabel(uint32_t);
 
-            RefVector<const Province> getSelectedProvinces() const;
-            RefVector<Province> getSelectedProvinces();
-            const std::set<uint32_t>& getSelectedProvinceLabels() const;
-
-            RefVector<const State> getSelectedStates() const;
-            RefVector<State> getSelectedStates();
-            const std::set<uint32_t>& getSelectedStateIDs() const;
+            const State& getStateForID(StateID) const;
+            State& getStateForID(StateID);
 
             const std::set<std::string>& getContinentList() const;
 
             void addNewContinent(const std::string&);
             void removeContinent(const std::string&);
 
-            void addNewState(const std::vector<uint32_t>&);
+            StateID addNewState(const std::vector<uint32_t>&);
             void removeState(StateID);
 
             void moveProvinceToState(uint32_t, StateID);
@@ -136,12 +121,6 @@ namespace MapNormalizer::Project {
 
             //! All available state ids, which should be used before new ones
             std::queue<StateID> m_available_state_ids;
-
-            //! The currently selected provinces
-            std::set<uint32_t> m_selected_provinces;
-
-            //! The currently selected states
-            std::set<uint32_t> m_selected_states;
 
             //! The parent project that this MapProject belongs to
             IProject& m_parent_project;

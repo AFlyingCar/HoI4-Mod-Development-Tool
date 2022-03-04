@@ -21,6 +21,7 @@
 #include "NewProjectDialog.h"
 #include "Driver.h"
 #include "MapDrawingArea.h"
+#include "SelectionManager.h"
 
 /**
  * @brief Constructs the main window.
@@ -277,18 +278,13 @@ bool MapNormalizer::GUI::MainWindow::initializeWidgets() {
     // If the escape key is pressed, deselect the current province
     signal_key_press_event().connect([this](GdkEventKey* event) {
         if(event->keyval == GDK_KEY_Escape) {
-            if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
-                auto& project = opt_project->get();
-                auto& map_project = project.getMapProject();
+            SelectionManager::getInstance().clearProvinceSelection();
 
-                map_project.clearProvinceSelection();
+            ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
+            m_province_properties_pane->setProvince(nullptr, null_data);
 
-                ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
-                m_province_properties_pane->setProvince(nullptr, null_data);
-
-                m_drawing_area->setSelection();
-                m_drawing_area->queueDraw();
-            }
+            m_drawing_area->setSelection();
+            m_drawing_area->queueDraw();
         }
 
         return false;
@@ -300,7 +296,51 @@ bool MapNormalizer::GUI::MainWindow::initializeWidgets() {
 bool MapNormalizer::GUI::MainWindow::initializeFinal() {
     set_icon(Gdk::Pixbuf::create_from_resource("/com/aflyingcar/MapNormalizerTools/textures/logo.png"));
 
+    initializeCallbacks();
+
     return true;
+}
+
+void MapNormalizer::GUI::MainWindow::initializeCallbacks() {
+#if 0
+    SelectionManager::getInstance().setOnProvinceSelectedCallback(
+        [this](uint32_t prov_id, SelectionManager::Action action)
+        {
+            // If the label is a valid province, then go ahead and mark it as
+            //  selected everywhere that needs it to be marked as such
+            if(auto selected = map_project.getSelectedProvinces(); !selected.empty())
+            {
+                auto* province = &selected.begin()->get();
+                auto preview_data = map_project.getPreviewData(province);
+                if(m_province_properties_pane != nullptr) {
+                    m_province_properties_pane->setProvince(province, preview_data);
+                }
+
+                m_drawing_area->setSelection({preview_data, province->bounding_box, province->id});
+                m_drawing_area->queueDraw();
+            }
+        });
+
+
+    SelectionManager::getInstance().setOnStateSelectedCallback(
+        [this](uint32_t prov_id, SelectionManager::Action action)
+        {
+            if(auto selected = map_project.getSelectedStates(); !selected.empty())
+            {
+                auto* state = &selected.begin()->get();
+
+                // TODO: we can't use the above is_already_selected or
+                //   has_selections_already variables since those are
+                //   referring to provinces, so we need to do similar
+                //   calculations again but for states
+                if(m_state_properties_pane != nullptr) {
+                    m_state_properties_pane->setState(state);
+                }
+
+                // TODO: Update state drawing area once we have that
+            }
+        });
+#endif
 }
 
 auto MapNormalizer::GUI::MainWindow::getLogViewerWindow()
@@ -336,10 +376,12 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                 // If the click happens outside of the bounds of the image, then
                 //   deselect the province
                 if(x > map_data->getWidth() || y > map_data->getHeight()) {
-                    map_project.clearProvinceSelection();
+                    SelectionManager::getInstance().clearProvinceSelection();
 
                     ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
                     m_province_properties_pane->setProvince(nullptr, null_data);
+
+                    m_state_properties_pane->setState(nullptr);
 
                     m_drawing_area->setSelection();
                     m_drawing_area->queueDraw();
@@ -351,11 +393,23 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                 auto label = lmatrix[xyToIndex(map_data->getWidth(), x, y)];
 
                 WRITE_DEBUG("Selecting province with ID ", label);
-                map_project.selectProvince(label - 1);
+                SelectionManager::getInstance().selectProvince(label - 1);
+
+                // If this is a valid province, then select the state that it is
+                //  a part of (if it is a part of one at all, that is)
+                if(map_project.isValidProvinceLabel(label - 1)) {
+                    auto& prov = map_project.getProvinceForLabel(label -1);
+
+                    // Don't bother checking for if it's valid or not, as
+                    //  MapProject will do that for us
+                    SelectionManager::getInstance().selectState(prov.state);
+                } else {
+                    SelectionManager::getInstance().clearStateSelection();
+                }
 
                 // If the label is a valid province, then go ahead and mark it as
                 //  selected everywhere that needs it to be marked as such
-                if(auto selected = map_project.getSelectedProvinces(); !selected.empty())
+                if(auto selected = SelectionManager::getInstance().getSelectedProvinces(); !selected.empty())
                 {
                     auto* province = &selected.begin()->get();
                     auto preview_data = map_project.getPreviewData(province);
@@ -365,6 +419,22 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
 
                     m_drawing_area->setSelection({preview_data, province->bounding_box, province->id});
                     m_drawing_area->queueDraw();
+                }
+
+
+                if(auto selected = SelectionManager::getInstance().getSelectedStates(); !selected.empty())
+                {
+                    auto* state = &selected.begin()->get();
+
+                    // TODO: we can't use the above is_already_selected or
+                    //   has_selections_already variables since those are
+                    //   referring to provinces, so we need to do similar
+                    //   calculations again but for states
+                    if(m_state_properties_pane != nullptr) {
+                        m_state_properties_pane->setState(state);
+                    }
+
+                    // TODO: Update state drawing area once we have that
                 }
             }
         });
@@ -387,7 +457,7 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
 
                 // Go over the list of already selected provinces and check if
                 //  we have clicked on one that is _already_ selected
-                const auto& selected_labels = map_project.getSelectedProvinceLabels();
+                const auto& selected_labels = SelectionManager::getInstance().getSelectedProvinceLabels();
                 bool is_already_selected = selected_labels.count(label - 1);
 
                 // Perform a check here to make sure we don't go over the maximum
@@ -407,14 +477,26 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
 
                 // Do not mark this province as selected if we are deselecting it
                 if(is_already_selected) {
-                    map_project.removeProvinceSelection(label - 1);
+                    SelectionManager::getInstance().removeProvinceSelection(label - 1);
                 } else {
-                    map_project.addProvinceSelection(label - 1);
+                    SelectionManager::getInstance().addProvinceSelection(label - 1);
+                }
+
+                // If this is a valid province, then select the state that it is
+                //  a part of (if it is a part of one at all, that is)
+                if(map_project.isValidProvinceLabel(label - 1)) {
+                    auto& prov = map_project.getProvinceForLabel(label -1);
+
+                    // Don't bother checking for if it's valid or not, as
+                    //  MapProject will do that for us
+                    SelectionManager::getInstance().addStateSelection(prov.state);
+                } else {
+                    SelectionManager::getInstance().removeStateSelection(label - 1);
                 }
 
                 // If the label is a valid province, then go ahead and mark it as
                 //  selected everywhere that needs it to be marked as such
-                if(auto selected = map_project.getSelectedProvinces(); !selected.empty())
+                if(auto selected = SelectionManager::getInstance().getSelectedProvinces(); !selected.empty())
                 {
                     auto* province = &map_project.getProvinceForLabel(label - 1);
                     auto preview_data = map_project.getPreviewData(province);
@@ -434,6 +516,21 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                     }
 
                     m_drawing_area->queueDraw();
+                }
+
+                if(auto selected = SelectionManager::getInstance().getSelectedStates(); !selected.empty())
+                {
+                    auto* state = &selected.begin()->get();
+
+                    // TODO: we can't use the above is_already_selected or
+                    //   has_selections_already variables since those are
+                    //   referring to provinces, so we need to do similar
+                    //   calculations again but for states
+                    if(m_state_properties_pane != nullptr) {
+                        m_state_properties_pane->setState(state);
+                    }
+
+                    // TODO: Update state drawing area once we have that
                 }
             }
         });
@@ -553,7 +650,7 @@ Gtk::Frame* MapNormalizer::GUI::MainWindow::buildPropertiesPane() {
         auto& map_project = project.getMapProject();
 
         // Provinces Tab
-        if(auto selected = map_project.getSelectedProvinces(); !selected.empty())
+        if(auto selected = SelectionManager::getInstance().getSelectedProvinces(); !selected.empty())
         {
             auto* province = &selected.begin()->get();
             auto label = province->id;

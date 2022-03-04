@@ -19,7 +19,6 @@ MapNormalizer::Project::MapProject::MapProject(IProject& parent_project):
     m_continents(),
     m_terrains(getDefaultTerrains()),
     m_states(),
-    m_selected_provinces(),
     m_parent_project(parent_project)
 {
 }
@@ -428,7 +427,7 @@ void MapNormalizer::Project::MapProject::setShapeFinder(ShapeFinder&& shape_find
     m_shape_detection_info.label_matrix_size = sf.getLabelMatrixSize();
     m_shape_detection_info.map_data.reset();
 
-    // Clear out which province is selected
+    // Clear out the province preview data
     m_data_cache.clear();
 }
 
@@ -454,52 +453,6 @@ const uint32_t* MapNormalizer::Project::MapProject::getLabelMatrix() const {
     return m_shape_detection_info.map_data->getLabelMatrix().lock().get();
 }
 
-void MapNormalizer::Project::MapProject::selectProvince(uint32_t label) {
-    // Do not select if the label isn't valid
-    if(isValidProvinceLabel(label)) {
-        m_selected_provinces = {label};
-    }
-}
-
-void MapNormalizer::Project::MapProject::addProvinceSelection(uint32_t label) {
-    // Do not select if the label isn't valid
-    if(isValidProvinceLabel(label)) {
-        m_selected_provinces.insert(label);
-    }
-}
-
-void MapNormalizer::Project::MapProject::removeProvinceSelection(uint32_t label)
-{
-    m_selected_provinces.erase(label);
-}
-
-void MapNormalizer::Project::MapProject::clearProvinceSelection() {
-    m_selected_provinces.clear();
-}
-
-void MapNormalizer::Project::MapProject::selectState(StateID state_id) {
-    // Do not select if the state_id isn't valid
-    if(isValidStateID(state_id)) {
-        m_selected_states = {state_id};
-    }
-}
-
-void MapNormalizer::Project::MapProject::addStateSelection(StateID state_id) {
-    // Do not select if the state_id isn't valid
-    if(isValidStateID(state_id)) {
-        m_selected_states.insert(state_id);
-    }
-}
-
-void MapNormalizer::Project::MapProject::removeStateSelection(StateID state_id)
-{
-    m_selected_states.erase(state_id);
-}
-
-void MapNormalizer::Project::MapProject::clearStateSelection() {
-    m_selected_states.clear();
-}
-
 bool MapNormalizer::Project::MapProject::isValidStateID(StateID state_id) const
 {
     return m_states.count(state_id) != 0;
@@ -520,86 +473,6 @@ auto MapNormalizer::Project::MapProject::getProvinceForLabel(uint32_t label)
     -> Province&
 {
     return m_shape_detection_info.provinces.at(label);
-}
-
-/**
- * @brief Will return the currently selected provinces.
- *
- * @return The currently selected provinces.
- */
-auto MapNormalizer::Project::MapProject::getSelectedProvinces() const
-    -> RefVector<const Province>
-{
-    RefVector<const Province> provinces;
-    std::transform(m_selected_provinces.begin(), m_selected_provinces.end(),
-                   std::back_inserter(provinces),
-                   [this](uint32_t prov_id) {
-                       return std::ref(m_shape_detection_info.provinces.at(prov_id));
-                   });
-    return provinces;
-}
-
-/**
- * @brief Will return the currently selected provinces.
- *
- * @return The currently selected provinces.
- */
-auto MapNormalizer::Project::MapProject::getSelectedProvinces()
-    -> RefVector<Province>
-{
-    RefVector<Province> provinces;
-    std::transform(m_selected_provinces.begin(), m_selected_provinces.end(),
-                   std::back_inserter(provinces),
-                   [this](uint32_t prov_id) {
-                       return std::ref(m_shape_detection_info.provinces.at(prov_id));
-                   });
-    return provinces;
-}
-
-auto MapNormalizer::Project::MapProject::getSelectedProvinceLabels() const
-    -> const std::set<uint32_t>&
-{
-    return m_selected_provinces;
-}
-
-/**
- * @brief Will return the currently selected states.
- *
- * @return The currently selected states.
- */
-auto MapNormalizer::Project::MapProject::getSelectedStates() const
-    -> RefVector<const State>
-{
-    RefVector<const State> states;
-    std::transform(m_selected_states.begin(), m_selected_states.end(),
-                   std::back_inserter(states),
-                   [this](StateID state_id) {
-                       return std::ref(m_states.at(state_id));
-                   });
-    return states;
-}
-
-/**
- * @brief Will return the currently selected states.
- *
- * @return The currently selected states.
- */
-auto MapNormalizer::Project::MapProject::getSelectedStates()
-    -> RefVector<State>
-{
-    RefVector<State> states;
-    std::transform(m_selected_states.begin(), m_selected_states.end(),
-                   std::back_inserter(states),
-                   [this](StateID state_id) {
-                       return std::ref(m_states.at(state_id));
-                   });
-    return states;
-}
-
-auto MapNormalizer::Project::MapProject::getSelectedStateIDs() const
-    -> const std::set<uint32_t>&
-{
-    return m_selected_states;
 }
 
 const std::set<std::string>& MapNormalizer::Project::MapProject::getContinentList() const
@@ -630,8 +503,11 @@ void MapNormalizer::Project::MapProject::removeContinent(const std::string& cont
  *          exist.
  *
  * @param province_ids The list of provinces to add to the new state.
+ *
+ * @return The ID of the new state
  */
-void MapNormalizer::Project::MapProject::addNewState(const std::vector<uint32_t>& province_ids)
+auto MapNormalizer::Project::MapProject::addNewState(const std::vector<uint32_t>& province_ids)
+    -> StateID
 {
     RefVector<Province> provinces;
     std::transform(province_ids.begin(), province_ids.end(),
@@ -661,6 +537,8 @@ void MapNormalizer::Project::MapProject::addNewState(const std::vector<uint32_t>
         false, /* impassable */
         province_ids
     };
+
+    return id;
 }
 
 /**
@@ -773,6 +651,18 @@ auto MapNormalizer::Project::MapProject::getProvinces() const
 
 auto MapNormalizer::Project::MapProject::getProvinces() -> ProvinceList& {
     return m_shape_detection_info.provinces;
+}
+
+auto MapNormalizer::Project::MapProject::getStateForID(StateID state_id) const
+    -> const State&
+{
+    return m_states.at(state_id);
+}
+
+auto MapNormalizer::Project::MapProject::getStateForID(StateID state_id)
+    -> State&
+{
+    return m_states.at(state_id);
 }
 
 /**

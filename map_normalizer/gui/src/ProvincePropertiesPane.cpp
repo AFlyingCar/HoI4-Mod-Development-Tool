@@ -10,6 +10,7 @@
 #include "Util.h"
 
 #include "Driver.h"
+#include "SelectionManager.h"
 
 MapNormalizer::GUI::ProvincePropertiesPane::ProvincePropertiesPane():
     m_province(nullptr),
@@ -261,8 +262,9 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildStateCreationButton() {
         if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
             auto& map_project = opt_project->get().getMapProject();
 
-            map_project.addNewState(std::vector<uint32_t>(map_project.getSelectedProvinceLabels().begin(),
-                                                          map_project.getSelectedProvinceLabels().end()));
+            auto selected = SelectionManager::getInstance().getSelectedProvinceLabels();
+            map_project.addNewState(std::vector<uint32_t>(selected.begin(),
+                                                          selected.end()));
 
             // TODO: If we have a State view, we should switch to it here
             // TODO: We should also switch from the province properties pane to

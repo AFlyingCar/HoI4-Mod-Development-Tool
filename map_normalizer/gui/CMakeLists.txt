@@ -20,6 +20,7 @@ add_library(gui STATIC
     src/InterruptableScrolledWindow.cpp
     src/LogViewerWindow.cpp
     src/GuiUtils.cpp
+    src/SelectionManager.cpp
 )
 
 target_include_directories(gui PUBLIC inc)

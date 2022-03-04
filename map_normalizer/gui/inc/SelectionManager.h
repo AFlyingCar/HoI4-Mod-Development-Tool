@@ -1,0 +1,67 @@
+#ifndef SELECTION_MANAGER_H
+# define SELECTION_MANAGER_H
+
+# include <set>
+# include <functional>
+
+# include "Types.h"
+# include "MapProject.h"
+
+namespace MapNormalizer::GUI {
+    class SelectionManager final {
+        public:
+            enum class Action {
+                ADD,
+                REMOVE,
+                CLEAR
+            };
+
+            static SelectionManager& getInstance();
+
+            void selectProvince(uint32_t);
+            void addProvinceSelection(uint32_t);
+            void removeProvinceSelection(uint32_t);
+            void clearProvinceSelection();
+
+            void selectState(StateID);
+            void addStateSelection(StateID);
+            void removeStateSelection(StateID);
+            void clearStateSelection();
+
+            RefVector<const Province> getSelectedProvinces() const;
+            RefVector<Province> getSelectedProvinces();
+            const std::set<uint32_t>& getSelectedProvinceLabels() const;
+
+            RefVector<const State> getSelectedStates() const;
+            RefVector<State> getSelectedStates();
+            const std::set<uint32_t>& getSelectedStateIDs() const;
+
+            void setOnSelectProvinceCallback(const std::function<void(uint32_t, Action)>&);
+            void setOnSelectStateCallback(const std::function<void(StateID, Action)>&);
+
+            /////////////////////////////////
+
+            void onProjectLoaded();
+            void onProjectUnloaded();
+
+        private:
+            SelectionManager() = default;
+
+            OptionalReference<Project::MapProject> getCurrentMapProject() const;
+
+            //! The currently selected provinces
+            std::set<uint32_t> m_selected_provinces;
+
+            //! The currently selected states
+            std::set<StateID> m_selected_states;
+
+            //! Callback for when a province is selected
+            std::function<void(uint32_t, Action)> m_on_province_selected_callback;
+
+            //! Callback for when a province is selected
+            std::function<void(StateID, Action)> m_on_state_selected_callback;
+    };
+}
+
+#endif
+

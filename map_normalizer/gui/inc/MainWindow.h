@@ -61,6 +61,8 @@ namespace MapNormalizer::GUI {
             void buildViewPane();
             Gtk::Frame* buildPropertiesPane();
 
+            void initializeCallbacks();
+
             void initializeFileActions();
             void initializeEditActions();
             void initializeViewActions();
