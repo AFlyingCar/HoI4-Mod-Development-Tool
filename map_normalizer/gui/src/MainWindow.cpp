@@ -276,15 +276,9 @@ bool MapNormalizer::GUI::MainWindow::initializeWidgets() {
     m_active_child = std::monostate{};
 
     // If the escape key is pressed, deselect the current province
-    signal_key_press_event().connect([this](GdkEventKey* event) {
+    signal_key_press_event().connect([](GdkEventKey* event) {
         if(event->keyval == GDK_KEY_Escape) {
             SelectionManager::getInstance().clearProvinceSelection();
-
-            ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
-            m_province_properties_pane->setProvince(nullptr, null_data);
-
-            m_drawing_area->setSelection();
-            m_drawing_area->queueDraw();
         }
 
         return false;
