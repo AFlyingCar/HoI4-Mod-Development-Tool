@@ -11,10 +11,14 @@ namespace MapNormalizer::GUI {
     class SelectionManager final {
         public:
             enum class Action {
+                SET,
                 ADD,
                 REMOVE,
                 CLEAR
             };
+
+            static constexpr uint32_t INVALID_PROVINCE_ID = -1;
+            static constexpr StateID INVALID_STATE_ID = -1;
 
             static SelectionManager& getInstance();
 
@@ -36,6 +40,9 @@ namespace MapNormalizer::GUI {
             RefVector<State> getSelectedStates();
             const std::set<uint32_t>& getSelectedStateIDs() const;
 
+            bool isProvinceSelected(uint32_t) const;
+            bool isStateSelected(uint32_t) const;
+
             void setOnSelectProvinceCallback(const std::function<void(uint32_t, Action)>&);
             void setOnSelectStateCallback(const std::function<void(StateID, Action)>&);
 
@@ -45,7 +52,7 @@ namespace MapNormalizer::GUI {
             void onProjectUnloaded();
 
         private:
-            SelectionManager() = default;
+            SelectionManager();
 
             OptionalReference<Project::MapProject> getCurrentMapProject() const;
 

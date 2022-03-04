@@ -15,6 +15,7 @@ void MapNormalizer::GUI::SelectionManager::selectProvince(uint32_t label) {
     // Do not select if the label isn't valid
     if(auto opt_mproj = getCurrentMapProject(); opt_mproj && opt_mproj->get().isValidProvinceLabel(label))
     {
+        m_on_province_selected_callback(label, Action::SET);
         m_selected_provinces = {label};
     }
 }
@@ -23,16 +24,19 @@ void MapNormalizer::GUI::SelectionManager::addProvinceSelection(uint32_t label) 
     // Do not select if the label isn't valid
     if(auto opt_mproj = getCurrentMapProject(); opt_mproj && opt_mproj->get().isValidProvinceLabel(label))
     {
+        m_on_province_selected_callback(label, Action::ADD);
         m_selected_provinces.insert(label);
     }
 }
 
 void MapNormalizer::GUI::SelectionManager::removeProvinceSelection(uint32_t label)
 {
+    m_on_province_selected_callback(label, Action::REMOVE);
     m_selected_provinces.erase(label);
 }
 
 void MapNormalizer::GUI::SelectionManager::clearProvinceSelection() {
+    m_on_province_selected_callback(INVALID_PROVINCE_ID, Action::CLEAR);
     m_selected_provinces.clear();
 }
 
@@ -40,6 +44,7 @@ void MapNormalizer::GUI::SelectionManager::selectState(StateID state_id) {
     // Do not select if the state_id isn't valid
     if(auto opt_mproj = getCurrentMapProject(); opt_mproj && opt_mproj->get().isValidStateID(state_id))
     {
+        m_on_state_selected_callback(state_id, Action::SET);
         m_selected_states = {state_id};
     }
 }
@@ -48,16 +53,19 @@ void MapNormalizer::GUI::SelectionManager::addStateSelection(StateID state_id) {
     // Do not select if the state_id isn't valid
     if(auto opt_mproj = getCurrentMapProject(); opt_mproj && opt_mproj->get().isValidStateID(state_id))
     {
+        m_on_state_selected_callback(state_id, Action::ADD);
         m_selected_states.insert(state_id);
     }
 }
 
 void MapNormalizer::GUI::SelectionManager::removeStateSelection(StateID state_id)
 {
+    m_on_state_selected_callback(state_id, Action::REMOVE);
     m_selected_states.erase(state_id);
 }
 
 void MapNormalizer::GUI::SelectionManager::clearStateSelection() {
+    m_on_state_selected_callback(INVALID_STATE_ID, Action::CLEAR);
     m_selected_states.clear();
 }
 
@@ -176,6 +184,13 @@ void MapNormalizer::GUI::SelectionManager::onProjectUnloaded() {
     m_selected_provinces.clear();
     m_selected_states.clear();
 }
+
+MapNormalizer::GUI::SelectionManager::SelectionManager():
+    m_selected_provinces(),
+    m_selected_states(),
+    m_on_province_selected_callback([](auto...) { }),
+    m_on_state_selected_callback([](auto...) { })
+{ }
 
 auto MapNormalizer::GUI::SelectionManager::getCurrentMapProject() const
     -> OptionalReference<Project::MapProject>
