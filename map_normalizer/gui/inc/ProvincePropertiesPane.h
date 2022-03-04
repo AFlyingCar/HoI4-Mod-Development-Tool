@@ -31,6 +31,7 @@ namespace MapNormalizer::GUI {
             void setEnabled(bool = true);
 
             void setProvince(Province*, ProvincePreviewDrawingArea::DataPtr, bool = false);
+            Province* getProvince();
 
             void onResize();
 

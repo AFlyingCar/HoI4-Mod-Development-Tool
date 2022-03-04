@@ -263,8 +263,9 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildStateCreationButton() {
             auto& map_project = opt_project->get().getMapProject();
 
             auto selected = SelectionManager::getInstance().getSelectedProvinceLabels();
-            map_project.addNewState(std::vector<uint32_t>(selected.begin(),
-                                                          selected.end()));
+            auto id = map_project.addNewState(std::vector<uint32_t>(selected.begin(),
+                                                                    selected.end()));
+            SelectionManager::getInstance().selectState(id);
 
             // TODO: If we have a State view, we should switch to it here
             // TODO: We should also switch from the province properties pane to
@@ -308,6 +309,10 @@ void MapNormalizer::GUI::ProvincePropertiesPane::setProvince(Province* prov,
     }
 
     updateProperties(prov, is_multiselect);
+}
+
+auto MapNormalizer::GUI::ProvincePropertiesPane::getProvince() -> Province* {
+    return m_province;
 }
 
 void MapNormalizer::GUI::ProvincePropertiesPane::setPreview(ProvincePreviewDrawingArea::DataPtr preview_data)
