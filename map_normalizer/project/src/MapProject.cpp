@@ -690,10 +690,13 @@ void MapNormalizer::Project::MapProject::removeProvinceFromState(Province& provi
     if(auto prov_state_id = province.state; m_states.count(prov_state_id) != 0)
     {
         auto& state_provinces = m_states[prov_state_id].provinces;
-
-        state_provinces.erase(std::find(state_provinces.begin(),
-                                        state_provinces.end(),
-                                        province.id));
+        for(auto it = state_provinces.begin(); it != state_provinces.end(); ++it)
+        {
+            if(*it == province.id) {
+                state_provinces.erase(it);
+                break;
+            }
+        }
     }
     province.state = -1;
 }
