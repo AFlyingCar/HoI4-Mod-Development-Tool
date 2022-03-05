@@ -47,7 +47,7 @@ bool MapNormalizer::Project::MapProject::save(const std::filesystem::path& path,
     }
 
     return saveShapeLabels(path, ec) && saveProvinceData(path, ec) &&
-           saveContinentData(path, ec);
+           saveContinentData(path, ec) && saveStateData(path, ec);
 }
 
 /**
@@ -261,6 +261,50 @@ bool MapNormalizer::Project::MapProject::saveContinentData(const std::filesystem
     return true;
 }
 
+/**
+ * @brief Writes all state data to root/$STATEDATA_FILENAME
+ *
+ * @param root The root where all state data should go
+ * @param ec The error code
+ *
+ * @return True if state data was successfully saved, false otherwise
+ */
+bool MapNormalizer::Project::MapProject::saveStateData(const std::filesystem::path& root,
+                                                       std::error_code& ec)
+{
+    auto path = root / CONTINENTDATA_FILENAME;
+
+    if(std::ofstream out(path); out) {
+        // FORMAT:
+        //   ID <State Name> ; MANPOWER <CATEGORY> ; BUILDINGS_MAX_LEVEL_FACTOR IMPASSABLE PROVID1 PROVID2 ...
+
+        // TODO: We may end up supporting State history as well. If we do, then
+        //   the best way to do so while still supporting this format is to
+        //   have another file holding this info that's tied to the state
+        //   (perhaps a 'hist/<STATEID>.hist' file)
+
+        for(auto&& [_, state] : m_states) {
+            out << state.id << ' '
+                << state.name << " ; "
+                << state.manpower
+                << state.category << " ; "
+                << state.buildings_max_level_factor
+                << (size_t)state.impassable;
+
+            for(ProvinceID p : state.provinces) {
+                out << p << ' ';
+            }
+            out << std::endl;
+        }
+    } else {
+        ec = std::error_code(static_cast<int>(errno), std::generic_category());
+        WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
+        return false;
+    }
+
+    return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -400,6 +444,64 @@ bool MapNormalizer::Project::MapProject::loadContinentData(const std::filesystem
             if(line.empty()) continue;
 
             m_continents.insert(line);
+        }
+    } else {
+        ec = std::error_code(static_cast<int>(errno), std::generic_category());
+        WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * @brief Loads all state data from a file
+ *
+ * @param root The root where the state data file should be found
+ * @param ec The error code
+ *
+ * @return True if data was loaded correctly, false otherwise
+ */
+bool MapNormalizer::Project::MapProject::loadStateData(const std::filesystem::path& root,
+                                                       std::error_code& ec)
+{
+    auto path = root / STATEDATA_FILENAME;
+
+    // If the file doesn't exist, then return false (we didn't actually load it
+    //  after all), but don't set the error code as it is expected that the
+    //  file may not exist
+    if(!std::filesystem::exists(path)) {
+        WRITE_WARN("No data to load! No states currently exist!");
+        return false;
+    }
+
+    if(std::ifstream in(path); in) {
+        // FORMAT:
+        //   ID <State Name> ; MANPOWER <CATEGORY> ; BUILDINGS_MAX_LEVEL_FACTOR IMPASSABLE PROVID1 PROVID2 ...
+        std::string line;
+        while(std::getline(in, line)) {
+            if(line.empty()) continue;
+
+            std::istringstream iss(line);
+
+            State state;
+            iss >> state.id;
+            std::getline(iss, state.name, ';'); // Get the entire name up until the first ';'
+            iss >> state.manpower;
+            std::getline(iss, state.category, ';'); // Get the entire category up until the first ';'
+            iss >> state.buildings_max_level_factor;
+            iss >> state.impassable;
+
+            // Consume the rest of the line as province IDs
+            for(ProvinceID prov_id; iss; iss >> prov_id) {
+                state.provinces.push_back(prov_id);
+            }
+
+            if(m_states.count(state.id) != 0) {
+                WRITE_ERROR("Found multiple states with the same ID of ", state.id, "! We will skip the second one '", state.name, "' and keep '", m_states.at(state.id).name, '\'');
+            } else {
+                m_states[state.id] = state;
+            }
         }
     } else {
         ec = std::error_code(static_cast<int>(errno), std::generic_category());

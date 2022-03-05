@@ -79,6 +79,8 @@ namespace MapNormalizer::Project {
                                  std::error_code&);
             bool saveContinentData(const std::filesystem::path&,
                                    std::error_code&);
+            bool saveStateData(const std::filesystem::path&,
+                               std::error_code&);
 
             bool loadShapeLabels(const std::filesystem::path&,
                                  std::error_code&);
@@ -86,6 +88,8 @@ namespace MapNormalizer::Project {
                                  std::error_code&);
             bool loadContinentData(const std::filesystem::path&,
                                    std::error_code&);
+            bool loadStateData(const std::filesystem::path&,
+                               std::error_code&);
 
         private:
             void buildProvinceCache(const Province*);
