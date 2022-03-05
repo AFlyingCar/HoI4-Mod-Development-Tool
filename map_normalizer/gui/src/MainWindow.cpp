@@ -364,27 +364,37 @@ void MapNormalizer::GUI::MainWindow::initializeCallbacks() {
                     m_drawing_area->setSelection();
                     m_drawing_area->queueDraw();
 
-
                     break;
             }
         });
 
     SelectionManager::getInstance().setOnSelectStateCallback(
-        [this](uint32_t prov_id, SelectionManager::Action action)
+        [this](StateID state_id, SelectionManager::Action action)
         {
-            if(auto selected = SelectionManager::getInstance().getSelectedStates(); !selected.empty())
-            {
-                auto* state = &selected.begin()->get();
+            auto& map_project = Driver::getInstance().getProject()->get().getMapProject();
 
-                // TODO: we can't use the above is_already_selected or
-                //   has_selections_already variables since those are
-                //   referring to provinces, so we need to do similar
-                //   calculations again but for states
-                if(m_state_properties_pane != nullptr) {
-                    m_state_properties_pane->setState(state);
-                }
+            switch(action) {
+                case SelectionManager::Action::SET:
+                case SelectionManager::Action::ADD:
+                    // TODO: we can't use the above is_already_selected or
+                    //   has_selections_already variables since those are
+                    //   referring to provinces, so we need to do similar
+                    //   calculations again but for states
+                    if(m_state_properties_pane != nullptr) {
+                        auto* state = &map_project.getStateForID(state_id);
+                        m_state_properties_pane->setState(state);
+                    }
 
-                // TODO: Update state drawing area once we have that
+                    // TODO: Update state drawing area once we have that
+                    //   Use different behavior for add/select
+                    break;
+                case SelectionManager::Action::REMOVE:
+                    // TODO: Update state drawing area once we have that for removal
+                case SelectionManager::Action::CLEAR:
+                    if(m_state_properties_pane != nullptr) {
+                        m_state_properties_pane->setState(nullptr);
+                    }
+                    break;
             }
         });
 }
@@ -423,16 +433,6 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                 //   deselect the province
                 if(x > map_data->getWidth() || y > map_data->getHeight()) {
                     SelectionManager::getInstance().clearProvinceSelection();
-
-#if 0
-                    ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
-                    m_province_properties_pane->setProvince(nullptr, null_data);
-
-                    m_state_properties_pane->setState(nullptr);
-
-                    m_drawing_area->setSelection();
-                    m_drawing_area->queueDraw();
-#endif
 
                     return;
                 }
