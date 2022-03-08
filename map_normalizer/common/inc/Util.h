@@ -193,23 +193,32 @@ namespace MapNormalizer {
 
     /**
      * @brief Parses a type out of a string, with a known delimiter
+     * @details If the value is missing from the string, the stream is left in
+     *          the same position as it started
      *
      * @tparam T The type to parse out
      * @param stream The stream to parse from
      * @param result The location to place the parsed value
      * @param delim The delimiter to use when parsing out the string
+     * @param skip_missing Whether the value should be skipped if it's missing
      *
      * @return True if the value was successfully parsed, false otherwise
      */
     template<typename T>
-    bool parseValue(std::istream& stream, T& result, char delim = ' ') noexcept {
+    bool parseValue(std::istream& stream, T& result, char delim = ' ',
+                    bool skip_missing = false) noexcept
+    {
+        // Save the stream's position first so we can rollback if needed
+        std::streampos orig_pos = stream.tellg();
         if(std::string s; std::getline(stream, s, delim)) {
             if(auto opt_result = fromString<T>(s); opt_result) {
                 result = *opt_result;
                 return true;
             }
 
-            return false;
+            stream.seekg(orig_pos);
+
+            return skip_missing;
         }
 
         // If we failed to get a line from the stream, see if we can parse an
@@ -221,7 +230,28 @@ namespace MapNormalizer {
             return true;
         }
 
-        return false;
+        stream.seekg(orig_pos);
+
+        return skip_missing;
+    }
+
+    template<char Delim = ' '>
+    bool parseValuesSkipMissing(std::istream& stream) noexcept {
+        return true;
+    }
+
+    template<char Delim = ' ', typename T, typename... Ts>
+    bool parseValuesSkipMissing(std::istream& stream, T* result1, bool b, Ts... results) noexcept
+    {
+        return parseValue(stream, *result1, Delim, b) &&
+               parseValuesSkipMissing<Delim>(stream, results...);
+    }
+
+    template<char Delim = ' ', typename T, typename... Ts>
+    bool parseValuesSkipMissing(std::istream& stream, T* result1, Ts... results) noexcept
+    {
+        return parseValue(stream, *result1, Delim, false) &&
+               parseValuesSkipMissing<Delim>(stream, results...);
     }
 
     /**
@@ -235,8 +265,8 @@ namespace MapNormalizer {
      * @return True if the value was successfully parsed, false otherwise
      */
     template<char Delim = ' ', typename... Ts>
-    bool parseValues(std::istream& stream, Ts&... results) noexcept {
-        return (parseValue(stream, results, Delim) && ...);
+    bool parseValues(std::istream& stream, Ts*... results) noexcept {
+        return (parseValue(stream, *results, Delim, false) && ...);
     }
 
     ProvinceList createProvincesFromShapeList(const PolygonList&);

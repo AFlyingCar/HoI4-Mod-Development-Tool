@@ -109,6 +109,10 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
         return false;
     }
 
+    if(!loadStateData(path, ec) && ec.value() != 0) {
+        return false;
+    }
+
     // Rebuild the graphics data
     auto [width, height] = map_data->getDimensions();
 
@@ -222,7 +226,8 @@ bool MapNormalizer::Project::MapProject::saveProvinceData(const std::filesystem:
                 << province.bounding_box.bottom_left.x << ';'
                 << province.bounding_box.bottom_left.y << ';'
                 << province.bounding_box.top_right.x << ';'
-                << province.bounding_box.top_right.y
+                << province.bounding_box.top_right.y << ';'
+                << province.state
                 << std::endl;
         }
     } else {
@@ -272,11 +277,11 @@ bool MapNormalizer::Project::MapProject::saveContinentData(const std::filesystem
 bool MapNormalizer::Project::MapProject::saveStateData(const std::filesystem::path& root,
                                                        std::error_code& ec)
 {
-    auto path = root / CONTINENTDATA_FILENAME;
+    auto path = root / STATEDATA_FILENAME;
 
     if(std::ofstream out(path); out) {
         // FORMAT:
-        //   ID <State Name> ; MANPOWER <CATEGORY> ; BUILDINGS_MAX_LEVEL_FACTOR IMPASSABLE PROVID1 PROVID2 ...
+        //   ID <State Name> ; MANPOWER <CATEGORY> ; BUILDINGS_MAX_LEVEL_FACTOR IMPASSABLE NUMPROVINCES PROVID1 PROVID2 ...
 
         // TODO: We may end up supporting State history as well. If we do, then
         //   the best way to do so while still supporting this format is to
@@ -284,12 +289,15 @@ bool MapNormalizer::Project::MapProject::saveStateData(const std::filesystem::pa
         //   (perhaps a 'hist/<STATEID>.hist' file)
 
         for(auto&& [_, state] : m_states) {
+            WRITE_DEBUG("Writing state ID ", state.id);
+
             out << state.id << ' '
-                << state.name << " ; "
-                << state.manpower
-                << state.category << " ; "
-                << state.buildings_max_level_factor
-                << (size_t)state.impassable;
+                << (state.name.empty() ? "#" : state.name) << " ; "
+                << state.manpower << ' '
+                << (state.category.empty() ? "#" : state.category) << " ; "
+                << state.buildings_max_level_factor << ' '
+                << (size_t)state.impassable << ' '
+                << (size_t)state.provinces.size() << ' ';
 
             for(ProvinceID p : state.provinces) {
                 out << p << ' ';
@@ -387,16 +395,20 @@ bool MapNormalizer::Project::MapProject::loadProvinceData(const std::filesystem:
             Province prov;
 
             // Attempt to parse the entire CSV line, we expect it to look like:
-            //  ID;R;G;B;ProvinceType;IsCoastal;TerrainType;ContinentID;BB.BottomLeft.X;BB.BottomLeft.Y;BB.TopRight.X;BB.TopRight.Y
-            if(!parseValues<';'>(ss, prov.id, prov.unique_color.r,
-                                              prov.unique_color.g,
-                                              prov.unique_color.b,
-                                     prov.type, prov.coastal, prov.terrain,
-                                     prov.continent,
-                                     prov.bounding_box.bottom_left.x,
-                                     prov.bounding_box.bottom_left.y,
-                                     prov.bounding_box.top_right.x,
-                                     prov.bounding_box.top_right.y))
+            //  ID;R;G;B;ProvinceType;IsCoastal;TerrainType;ContinentID;BB.BottomLeft.X;BB.BottomLeft.Y;BB.TopRight.X;BB.TopRight.Y;StateID
+            if(!parseValuesSkipMissing<';'>(ss, &prov.id,
+                                                &prov.unique_color.r,
+                                                &prov.unique_color.g,
+                                                &prov.unique_color.b,
+                                                &prov.type,
+                                                &prov.coastal,
+                                                &prov.terrain,
+                                                &prov.continent,
+                                                &prov.bounding_box.bottom_left.x,
+                                                &prov.bounding_box.bottom_left.y,
+                                                &prov.bounding_box.top_right.x,
+                                                &prov.bounding_box.top_right.y,
+                                                &prov.state, true))
             {
                 ec = std::make_error_code(std::errc::bad_message);
                 WRITE_ERROR("Failed to parse line #", line_num, ": '", line, "'");
@@ -477,30 +489,59 @@ bool MapNormalizer::Project::MapProject::loadStateData(const std::filesystem::pa
 
     if(std::ifstream in(path); in) {
         // FORMAT:
-        //   ID <State Name> ; MANPOWER <CATEGORY> ; BUILDINGS_MAX_LEVEL_FACTOR IMPASSABLE PROVID1 PROVID2 ...
+        //   ID <State Name> ; MANPOWER <CATEGORY> ; BUILDINGS_MAX_LEVEL_FACTOR IMPASSABLE NUMPROVINCES PROVID1 PROVID2 ...
         std::string line;
-        while(std::getline(in, line)) {
+        for(size_t line_num = 0; std::getline(in, line); ++line_num) {
             if(line.empty()) continue;
 
             std::istringstream iss(line);
 
             State state;
             iss >> state.id;
+
             std::getline(iss, state.name, ';'); // Get the entire name up until the first ';'
+
+            // If the name is a '#' then that means it is supposed to be empty
+            if(state.name == "#") state.name = "";
+
             iss >> state.manpower;
+
             std::getline(iss, state.category, ';'); // Get the entire category up until the first ';'
+            // If the category is a '#' then that means it is supposed to be empty
+            if(state.category == "#") state.category = "";
+
             iss >> state.buildings_max_level_factor;
             iss >> state.impassable;
 
-            // Consume the rest of the line as province IDs
-            for(ProvinceID prov_id; iss; iss >> prov_id) {
+            size_t num_provinces;
+            iss >> num_provinces;
+
+            for(size_t i = 0; i < num_provinces; ++i) {
+                if(iss.eof()) {
+                    WRITE_ERROR("[STATE#", state.id, "] -- LINE=", line_num, "; Received EOF after only ", i, " provinces, but we expected ", num_provinces, "!");
+                    ec = std::make_error_code(std::errc::bad_message);
+                    return false; // TODO: Should we fail here? Or try to finish loading the rest of them?
+                }
+
+                ProvinceID prov_id;
+                iss >> prov_id;
                 state.provinces.push_back(prov_id);
             }
 
             if(m_states.count(state.id) != 0) {
                 WRITE_ERROR("Found multiple states with the same ID of ", state.id, "! We will skip the second one '", state.name, "' and keep '", m_states.at(state.id).name, '\'');
             } else {
+                WRITE_DEBUG("Successfully loaded state ID ", state.id,
+                            " named ", state.name);
                 m_states[state.id] = state;
+            }
+        }
+
+        // Now that we've loaded every single state, we need to track which IDs
+        //  have not been used yet
+        for(StateID id = 0; id < m_states.size(); ++id) {
+            if(m_states.count(id) == 0) {
+                m_available_state_ids.push(id);
             }
         }
     } else {
@@ -618,7 +659,8 @@ auto MapNormalizer::Project::MapProject::addNewState(const std::vector<uint32_t>
                        return std::ref(m_shape_detection_info.provinces.at(prov_id));
                    });
 
-    StateID id = m_states.size();
+    // Increment by 1 because we do not want 0 to be a state ID
+    StateID id = m_states.size() + 1;
     if(m_available_state_ids.size() > 0) {
         id = m_available_state_ids.front();
         m_available_state_ids.pop();
