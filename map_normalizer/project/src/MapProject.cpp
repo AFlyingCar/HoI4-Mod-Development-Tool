@@ -672,12 +672,14 @@ auto MapNormalizer::Project::MapProject::addNewState(const std::vector<uint32_t>
         prov.get().state = id;
     }
 
+    // Note that we default the name to 'STATE#'
+    using namespace std::string_literals;
     m_states[id] = State {
         id,
-        "", /* name */
+        "STATE"s + std::to_string(id), /* name */
         0, /* manpower */
         "", /* category */
-        0.0f, /* buildings_max_level_factor */
+        DEFAULT_BUILDINGS_MAX_LEVEL_FACTOR, /* buildings_max_level_factor */
         false, /* impassable */
         province_ids
     };
