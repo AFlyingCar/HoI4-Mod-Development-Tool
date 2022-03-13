@@ -448,9 +448,14 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                 if(map_project.isValidProvinceLabel(label - 1)) {
                     auto& prov = map_project.getProvinceForLabel(label -1);
 
-                    // Don't bother checking for if it's valid or not, as
-                    //  MapProject will do that for us
-                    SelectionManager::getInstance().selectState(prov.state);
+                    // Make sure we check for if the state ID is valid first so
+                    //  that we deselect the state for provinces that aren't in
+                    //  one
+                    if(map_project.isValidStateID(prov.state)) {
+                        SelectionManager::getInstance().selectState(prov.state);
+                    } else {
+                        SelectionManager::getInstance().clearStateSelection();
+                    }
                 } else {
                     SelectionManager::getInstance().clearStateSelection();
                 }
