@@ -72,7 +72,7 @@ namespace MapNormalizer {
     const std::string CONTINENTDATA_FILENAME = "continents";
 
     //! The filename for storing data about states
-    const std::string STATEDATA_FILENAME = "states";
+    const std::string STATEDATA_FILENAME = "states.csv";
 
     //! The filename for the imported province maps
     const std::string INPUT_PROVINCEMAP_FILENAME = "import_provincemap.bmp";

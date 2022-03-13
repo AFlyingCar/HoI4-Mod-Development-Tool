@@ -281,7 +281,7 @@ bool MapNormalizer::Project::MapProject::saveStateData(const std::filesystem::pa
 
     if(std::ofstream out(path); out) {
         // FORMAT:
-        //   ID <State Name> ; MANPOWER <CATEGORY> ; BUILDINGS_MAX_LEVEL_FACTOR IMPASSABLE NUMPROVINCES PROVID1 PROVID2 ...
+        //   ID;<State Name>;MANPOWER;<CATEGORY>;BUILDINGS_MAX_LEVEL_FACTOR;IMPASSABLE;PROVID1,PROVID2,...
 
         // TODO: We may end up supporting State history as well. If we do, then
         //   the best way to do so while still supporting this format is to
@@ -291,17 +291,17 @@ bool MapNormalizer::Project::MapProject::saveStateData(const std::filesystem::pa
         for(auto&& [_, state] : m_states) {
             WRITE_DEBUG("Writing state ID ", state.id);
 
-            out << state.id << ' '
-                << (state.name.empty() ? "#" : state.name) << " ; "
-                << state.manpower << ' '
-                << (state.category.empty() ? "#" : state.category) << " ; "
-                << state.buildings_max_level_factor << ' '
-                << (size_t)state.impassable << ' '
-                << (size_t)state.provinces.size() << ' ';
+            out << state.id << ';'
+                << state.name << ';'
+                << state.manpower << ';'
+                << state.category << ';'
+                << state.buildings_max_level_factor << ';'
+                << (size_t)state.impassable << ';';
 
             for(ProvinceID p : state.provinces) {
-                out << p << ' ';
+                out << p << ',';
             }
+
             out << std::endl;
         }
     } else {
@@ -489,7 +489,7 @@ bool MapNormalizer::Project::MapProject::loadStateData(const std::filesystem::pa
 
     if(std::ifstream in(path); in) {
         // FORMAT:
-        //   ID <State Name> ; MANPOWER <CATEGORY> ; BUILDINGS_MAX_LEVEL_FACTOR IMPASSABLE NUMPROVINCES PROVID1 PROVID2 ...
+        //   ID;<State Name>;MANPOWER;<CATEGORY>;BUILDINGS_MAX_LEVEL_FACTOR;IMPASSABLE;PROVID1,PROVID2,...
         std::string line;
         for(size_t line_num = 0; std::getline(in, line); ++line_num) {
             if(line.empty()) continue;
@@ -497,36 +497,26 @@ bool MapNormalizer::Project::MapProject::loadStateData(const std::filesystem::pa
             std::istringstream iss(line);
 
             State state;
-            iss >> state.id;
 
-            std::getline(iss, state.name, ';'); // Get the entire name up until the first ';'
-
-            // If the name is a '#' then that means it is supposed to be empty
-            if(state.name == "#") state.name = "";
-
-            iss >> state.manpower;
-
-            std::getline(iss, state.category, ';'); // Get the entire category up until the first ';'
-            // If the category is a '#' then that means it is supposed to be empty
-            if(state.category == "#") state.category = "";
-
-            iss >> state.buildings_max_level_factor;
-            iss >> state.impassable;
-
-            size_t num_provinces;
-            iss >> num_provinces;
-
-            for(size_t i = 0; i < num_provinces; ++i) {
-                if(iss.eof()) {
-                    WRITE_ERROR("[STATE#", state.id, "] -- LINE=", line_num, "; Received EOF after only ", i, " provinces, but we expected ", num_provinces, "!");
-                    ec = std::make_error_code(std::errc::bad_message);
-                    return false; // TODO: Should we fail here? Or try to finish loading the rest of them?
-                }
-
-                ProvinceID prov_id;
-                iss >> prov_id;
-                state.provinces.push_back(prov_id);
+            std::string prov_id_data;
+            if(!parseValuesSkipMissing<';'>(iss, &state.id,
+                                                 &state.name,
+                                                 &state.manpower,
+                                                 &state.category,
+                                                 &state.buildings_max_level_factor,
+                                                 &state.impassable,
+                                                 &prov_id_data, true))
+            {
+                ec = std::make_error_code(std::errc::bad_message);
+                WRITE_ERROR("Failed to parse line #", line_num, ": '", line, "'");
+                return false;
             }
+
+            // We need to parse the provinces seperately
+            state.provinces = splitAndTransform<ProvinceID>(prov_id_data, ',',
+                    [](const std::string& v) {
+                        return std::atoi(v.c_str());
+                    });
 
             if(m_states.count(state.id) != 0) {
                 WRITE_ERROR("Found multiple states with the same ID of ", state.id, "! We will skip the second one '", state.name, "' and keep '", m_states.at(state.id).name, '\'');

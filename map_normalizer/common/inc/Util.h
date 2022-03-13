@@ -272,6 +272,28 @@ namespace MapNormalizer {
     ProvinceList createProvincesFromShapeList(const PolygonList&);
 
     std::filesystem::path getExecutablePath();
+
+    template<typename T, typename C>
+    void splitAndTransform(const std::string& str, char delim, C out,
+                           const std::function<T(const std::string&)>& func)
+    {
+        std::stringstream stream(str);
+        std::string item;
+
+        while(std::getline(stream, item, delim)) {
+            if(item[0] == '\0') continue;
+            *(out++) = func(item);
+        }
+    }
+
+    template<typename T>
+    std::vector<T> splitAndTransform(const std::string& str, char delim,
+                                     const std::function<T(const std::string&)>& func)
+    {
+        std::vector<T> result;
+        splitAndTransform<T>(str, delim, std::back_inserter(result), func);
+        return result;
+    }
 }
 
 #endif
