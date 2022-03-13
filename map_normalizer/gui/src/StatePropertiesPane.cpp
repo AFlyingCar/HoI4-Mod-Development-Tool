@@ -66,7 +66,11 @@ void MapNormalizer::GUI::StatePropertiesPane::buildNameField() {
 }
 
 void MapNormalizer::GUI::StatePropertiesPane::buildManpowerField() {
-    m_manpower_field = addWidget<Gtk::SpinButton>();
+    m_manpower_field = addWidget<ConstrainedEntry>();
+
+    // We aren't allowing '-' because manpower cannot be negative
+    m_manpower_field->setAllowedChars("0123456789");
+    m_manpower_field->set_placeholder_text("Manpower amount (default:0)");
 
     m_manpower_field->signal_changed().connect([this]() {
         if(m_state != nullptr) {
@@ -82,11 +86,14 @@ void MapNormalizer::GUI::StatePropertiesPane::buildCategoryField() {
 }
 
 void MapNormalizer::GUI::StatePropertiesPane::buildBuildingsMaxLevelFactorField() {
-    m_buildings_max_level_factor_field = addWidget<Gtk::SpinButton>();
+    m_buildings_max_level_factor_field = addWidget<ConstrainedEntry>();
 
-    m_buildings_max_level_factor_field ->signal_changed().connect([this]() {
+    m_buildings_max_level_factor_field->setAllowedChars("0123456789.");
+    m_buildings_max_level_factor_field->set_placeholder_text("Buildings Max Level Factor (default:1.0)");
+
+    m_buildings_max_level_factor_field->signal_changed().connect([this]() {
         if(m_state != nullptr) {
-            m_state->buildings_max_level_factor = std::atof(m_buildings_max_level_factor_field ->get_text().c_str());
+            m_state->buildings_max_level_factor = std::atof(m_buildings_max_level_factor_field->get_text().c_str());
         }
     });
 }
@@ -147,9 +154,9 @@ void MapNormalizer::GUI::StatePropertiesPane::updateProperties(const State* stat
     if(state == nullptr || is_multiselect) {
         // Set every field to some sort of sane default
         m_name_field->set_text("");
-        m_manpower_field->set_text("0");
+        m_manpower_field->set_text("");
         m_category_field->set_text("");
-        m_buildings_max_level_factor_field->set_text("0");
+        m_buildings_max_level_factor_field->set_text(std::to_string(DEFAULT_BUILDINGS_MAX_LEVEL_FACTOR));
         m_is_impassable_button->set_active(false);
     } else {
         // Set every field to state

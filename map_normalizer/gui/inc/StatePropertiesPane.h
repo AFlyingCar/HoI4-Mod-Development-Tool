@@ -8,10 +8,11 @@
 # include "gtkmm/comboboxtext.h"
 # include "gtkmm/entry.h"
 # include "gtkmm/box.h"
-# include "gtkmm/spinbutton.h"
 # include "gtkmm/listbox.h"
 
 # include "Types.h"
+
+# include "ConstrainedEntry.h"
 
 namespace MapNormalizer::GUI {
     /**
@@ -52,9 +53,9 @@ namespace MapNormalizer::GUI {
             Gtk::ScrolledWindow m_parent;
 
             Gtk::Entry* m_name_field;     // String field
-            Gtk::SpinButton* m_manpower_field; // Integer field
+            ConstrainedEntry* m_manpower_field; // Integer field
             Gtk::Entry* m_category_field; // TODO: Dropdown menu???
-            Gtk::Entry* m_buildings_max_level_factor_field; // Float field
+            ConstrainedEntry* m_buildings_max_level_factor_field; // Float field
             Gtk::CheckButton* m_is_impassable_button;
             Gtk::ListBox* m_province_list;
             // TODO: Province-list field? What should this be?
