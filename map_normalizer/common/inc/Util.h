@@ -235,18 +235,67 @@ namespace MapNormalizer {
         return skip_missing;
     }
 
+    /**
+     * @brief No-op parser. Returns true
+     *
+     * @return true
+     */
     template<char Delim = ' '>
-    bool parseValuesSkipMissing(std::istream& stream) noexcept {
+    bool parseValuesSkipMissing(std::istream&) noexcept {
         return true;
     }
 
+    /**
+     * @brief Parses the next value out of a string, with a known delimiter. May
+     *        skip the value if it is missing and skip_missing == true.
+     * @details This function has optional boolean parameters after each
+     *          location to output into. Usage is as follows:
+     * @code{.cpp}
+     * parseValuesSkipMissing(my_stream, &v1, &v2,
+     *                                   &v3, true, // This value will be skipped if it is missing
+     *                                   &v4);
+     * @endcode
+     *
+     * @tparam Delim The delimiter to use when parsing out the string
+     * @tparam T The next type to parse out of the stream
+     * @tparam Ts The rest of the types to parse out of the stream
+     *
+     * @param stream The stream to parse from
+     * @param result1 The next location to place the parsed value
+     * @param skip_missing Whether this value should be skipped if it is missing
+     *                     from the stream
+     * @param results The rest of the locations to place the parsed values.
+     *
+     * @return True if the values were successfully parsed, false otherwise.
+     */
     template<char Delim = ' ', typename T, typename... Ts>
-    bool parseValuesSkipMissing(std::istream& stream, T* result1, bool b, Ts... results) noexcept
+    bool parseValuesSkipMissing(std::istream& stream, T* result1,
+                                bool skip_missing, Ts... results) noexcept
     {
-        return parseValue(stream, *result1, Delim, b) &&
+        return parseValue(stream, *result1, Delim, skip_missing) &&
                parseValuesSkipMissing<Delim>(stream, results...);
     }
 
+    /**
+     * @brief Parses the next value out of a string, with a known delimiter.
+     * @details This function has optional boolean parameters after each
+     *          location to output into. Usage is as follows:
+     * @code{.cpp}
+     * parseValuesSkipMissing(my_stream, &v1, &v2,
+     *                                   &v3, true, // This value will be skipped if it is missing
+     *                                   &v4);
+     * @endcode
+     *
+     * @tparam Delim The delimiter to use when parsing out the string
+     * @tparam T The next type to parse out of the stream
+     * @tparam Ts The rest of the types to parse out of the stream
+     *
+     * @param stream The stream to parse from
+     * @param result1 The next location to place the parsed value
+     * @param results The rest of the locations to place the parsed values.
+     *
+     * @return True if the values were successfully parsed, false otherwise.
+     */
     template<char Delim = ' ', typename T, typename... Ts>
     bool parseValuesSkipMissing(std::istream& stream, T* result1, Ts... results) noexcept
     {
@@ -273,6 +322,19 @@ namespace MapNormalizer {
 
     std::filesystem::path getExecutablePath();
 
+    /**
+     * @brief Will split the given string, transform each value using the
+     *        given unary function, and place each result into the output
+     *        iterator 'out'.
+     *
+     * @tparam T The result type of the transform function.
+     * @tparam C The output iterator type.
+     *
+     * @param str The string to split.
+     * @param delim The delimiter to split the string at.
+     * @param out The output iterator to place each transformed value.
+     * @param func The function to use to transform each split value.
+     */
     template<typename T, typename C>
     void splitAndTransform(const std::string& str, char delim, C out,
                            const std::function<T(const std::string&)>& func)
@@ -286,6 +348,18 @@ namespace MapNormalizer {
         }
     }
 
+    /**
+     * @brief Will split the given string, transform each value using the
+     *        given unary function, and return a vector of all values.
+     *
+     * @tparam T The result type of the transform function.
+     *
+     * @param str The string to split.
+     * @param delim The delimiter to split the string at.
+     * @param func The function to use to transform each split value.
+     *
+     * @return A vector containing the transformed components of the split.
+     */
     template<typename T>
     std::vector<T> splitAndTransform(const std::string& str, char delim,
                                      const std::function<T(const std::string&)>& func)

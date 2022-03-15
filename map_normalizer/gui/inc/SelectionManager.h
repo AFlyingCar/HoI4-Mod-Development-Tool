@@ -8,8 +8,14 @@
 # include "MapProject.h"
 
 namespace MapNormalizer::GUI {
+    /**
+     * @brief Final singleton class which manages all selection logic
+     */
     class SelectionManager final {
         public:
+            /**
+             * @brief The action taken for a selection, used for callbacks.
+             */
             enum class Action {
                 SET,
                 ADD,
