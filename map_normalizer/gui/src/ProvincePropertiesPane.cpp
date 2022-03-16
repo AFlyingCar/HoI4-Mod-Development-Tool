@@ -10,6 +10,7 @@
 #include "Util.h"
 
 #include "Driver.h"
+#include "SelectionManager.h"
 
 MapNormalizer::GUI::ProvincePropertiesPane::ProvincePropertiesPane():
     m_province(nullptr),
@@ -45,6 +46,9 @@ void MapNormalizer::GUI::ProvincePropertiesPane::init() {
     addWidget<Gtk::Label>("");
 
     buildContinentField();
+    addWidget<Gtk::Label>("");
+
+    buildStateCreationButton();
     addWidget<Gtk::Label>("");
 
     setEnabled(false);
@@ -251,6 +255,25 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildContinentField() {
     }
 }
 
+void MapNormalizer::GUI::ProvincePropertiesPane::buildStateCreationButton() {
+    m_create_state_button = addWidget<Gtk::Button>("Create State");
+
+    m_create_state_button->signal_clicked().connect([]() {
+        if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+            auto& map_project = opt_project->get().getMapProject();
+
+            auto selected = SelectionManager::getInstance().getSelectedProvinceLabels();
+            auto id = map_project.addNewState(std::vector<uint32_t>(selected.begin(),
+                                                                    selected.end()));
+            SelectionManager::getInstance().selectState(id);
+
+            // TODO: If we have a State view, we should switch to it here
+            // TODO: We should also switch from the province properties pane to
+            //       the state properties pane
+        }
+    });
+}
+
 void MapNormalizer::GUI::ProvincePropertiesPane::addWidgetToParent(Gtk::Widget& widget)
 {
     m_box.add(widget);
@@ -266,6 +289,8 @@ void MapNormalizer::GUI::ProvincePropertiesPane::setEnabled(bool enabled) {
     m_provtype_menu->set_sensitive(enabled);
     m_terrain_menu->set_sensitive(enabled);
     m_continent_menu->set_sensitive(enabled);
+
+    m_create_state_button->set_sensitive(enabled);
 }
 
 void MapNormalizer::GUI::ProvincePropertiesPane::setProvince(Province* prov,
@@ -278,7 +303,16 @@ void MapNormalizer::GUI::ProvincePropertiesPane::setProvince(Province* prov,
 
     setEnabled(m_province != nullptr && !is_multiselect);
 
+    // Set this to be enabled afterwards without worrying about multiselect
+    if(is_multiselect) {
+        m_create_state_button->set_sensitive(m_province != nullptr);
+    }
+
     updateProperties(prov, is_multiselect);
+}
+
+auto MapNormalizer::GUI::ProvincePropertiesPane::getProvince() -> Province* {
+    return m_province;
 }
 
 void MapNormalizer::GUI::ProvincePropertiesPane::setPreview(ProvincePreviewDrawingArea::DataPtr preview_data)

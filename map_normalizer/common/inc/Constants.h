@@ -48,7 +48,7 @@ namespace MapNormalizer {
     const std::string APPLICATION_ID = "com.aflyingcar.tool.hoi4_map_normalizer";
 
     //! Default width of the properties pane, 30% of the minimum window width of 512
-    const size_t MINIMUM_PROPERTIES_PANE_WIDTH = 170;
+    const size_t MINIMUM_PROPERTIES_PANE_WIDTH = 185;
 
     //! The minimum width of the window
     const size_t MINIMUM_WINDOW_W = 512;
@@ -70,6 +70,9 @@ namespace MapNormalizer {
 
     //! The filename for storing data about continents
     const std::string CONTINENTDATA_FILENAME = "continents";
+
+    //! The filename for storing data about states
+    const std::string STATEDATA_FILENAME = "states.csv";
 
     //! The filename for the imported province maps
     const std::string INPUT_PROVINCEMAP_FILENAME = "import_provincemap.bmp";
@@ -101,6 +104,9 @@ namespace MapNormalizer {
 
     //! The maximum number of provinces that can be selected
     const uint32_t MAX_SELECTED_PROVINCES = 128;
+
+    //! The default value of buildings_max_level_factor
+    const float DEFAULT_BUILDINGS_MAX_LEVEL_FACTOR = 1.0f;
 }
 
 #endif

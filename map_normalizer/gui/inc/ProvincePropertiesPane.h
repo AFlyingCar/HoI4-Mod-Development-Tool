@@ -31,6 +31,7 @@ namespace MapNormalizer::GUI {
             void setEnabled(bool = true);
 
             void setProvince(Province*, ProvincePreviewDrawingArea::DataPtr, bool = false);
+            Province* getProvince();
 
             void onResize();
 
@@ -47,6 +48,7 @@ namespace MapNormalizer::GUI {
             void buildProvinceTypeField();
             void buildTerrainTypeField();
             void buildContinentField();
+            void buildStateCreationButton();
 
             void setPreview(ProvincePreviewDrawingArea::DataPtr);
 
@@ -63,6 +65,8 @@ namespace MapNormalizer::GUI {
             Gtk::ComboBoxText* m_provtype_menu;
             Gtk::ComboBoxText* m_terrain_menu;
             Gtk::ComboBoxText* m_continent_menu;
+
+            Gtk::Button* m_create_state_button;
     };
 }
 

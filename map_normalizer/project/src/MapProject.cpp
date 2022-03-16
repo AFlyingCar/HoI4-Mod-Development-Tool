@@ -18,7 +18,7 @@ MapNormalizer::Project::MapProject::MapProject(IProject& parent_project):
     m_shape_detection_info(),
     m_continents(),
     m_terrains(getDefaultTerrains()),
-    m_selected_provinces(),
+    m_states(),
     m_parent_project(parent_project)
 {
 }
@@ -47,7 +47,7 @@ bool MapNormalizer::Project::MapProject::save(const std::filesystem::path& path,
     }
 
     return saveShapeLabels(path, ec) && saveProvinceData(path, ec) &&
-           saveContinentData(path, ec);
+           saveContinentData(path, ec) && saveStateData(path, ec);
 }
 
 /**
@@ -106,6 +106,10 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
     // This data is not required (only fail if loading it failed), not if it 
     //  doesn't exist
     if(!loadContinentData(path, ec) && ec.value() != 0) {
+        return false;
+    }
+
+    if(!loadStateData(path, ec) && ec.value() != 0) {
         return false;
     }
 
@@ -222,7 +226,8 @@ bool MapNormalizer::Project::MapProject::saveProvinceData(const std::filesystem:
                 << province.bounding_box.bottom_left.x << ';'
                 << province.bounding_box.bottom_left.y << ';'
                 << province.bounding_box.top_right.x << ';'
-                << province.bounding_box.top_right.y
+                << province.bounding_box.top_right.y << ';'
+                << province.state
                 << std::endl;
         }
     } else {
@@ -251,6 +256,53 @@ bool MapNormalizer::Project::MapProject::saveContinentData(const std::filesystem
     if(std::ofstream out(path); out) {
         for(auto&& continent : m_continents) {
             out << continent << '\n';
+        }
+    } else {
+        ec = std::error_code(static_cast<int>(errno), std::generic_category());
+        WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * @brief Writes all state data to root/$STATEDATA_FILENAME
+ *
+ * @param root The root where all state data should go
+ * @param ec The error code
+ *
+ * @return True if state data was successfully saved, false otherwise
+ */
+bool MapNormalizer::Project::MapProject::saveStateData(const std::filesystem::path& root,
+                                                       std::error_code& ec)
+{
+    auto path = root / STATEDATA_FILENAME;
+
+    if(std::ofstream out(path); out) {
+        // FORMAT:
+        //   ID;<State Name>;MANPOWER;<CATEGORY>;BUILDINGS_MAX_LEVEL_FACTOR;IMPASSABLE;PROVID1,PROVID2,...
+
+        // TODO: We may end up supporting State history as well. If we do, then
+        //   the best way to do so while still supporting this format is to
+        //   have another file holding this info that's tied to the state
+        //   (perhaps a 'hist/<STATEID>.hist' file)
+
+        for(auto&& [_, state] : m_states) {
+            WRITE_DEBUG("Writing state ID ", state.id);
+
+            out << state.id << ';'
+                << state.name << ';'
+                << state.manpower << ';'
+                << state.category << ';'
+                << state.buildings_max_level_factor << ';'
+                << (size_t)state.impassable << ';';
+
+            for(ProvinceID p : state.provinces) {
+                out << p << ',';
+            }
+
+            out << std::endl;
         }
     } else {
         ec = std::error_code(static_cast<int>(errno), std::generic_category());
@@ -343,16 +395,20 @@ bool MapNormalizer::Project::MapProject::loadProvinceData(const std::filesystem:
             Province prov;
 
             // Attempt to parse the entire CSV line, we expect it to look like:
-            //  ID;R;G;B;ProvinceType;IsCoastal;TerrainType;ContinentID;BB.BottomLeft.X;BB.BottomLeft.Y;BB.TopRight.X;BB.TopRight.Y
-            if(!parseValues<';'>(ss, prov.id, prov.unique_color.r,
-                                              prov.unique_color.g,
-                                              prov.unique_color.b,
-                                     prov.type, prov.coastal, prov.terrain,
-                                     prov.continent,
-                                     prov.bounding_box.bottom_left.x,
-                                     prov.bounding_box.bottom_left.y,
-                                     prov.bounding_box.top_right.x,
-                                     prov.bounding_box.top_right.y))
+            //  ID;R;G;B;ProvinceType;IsCoastal;TerrainType;ContinentID;BB.BottomLeft.X;BB.BottomLeft.Y;BB.TopRight.X;BB.TopRight.Y;StateID
+            if(!parseValuesSkipMissing<';'>(ss, &prov.id,
+                                                &prov.unique_color.r,
+                                                &prov.unique_color.g,
+                                                &prov.unique_color.b,
+                                                &prov.type,
+                                                &prov.coastal,
+                                                &prov.terrain,
+                                                &prov.continent,
+                                                &prov.bounding_box.bottom_left.x,
+                                                &prov.bounding_box.bottom_left.y,
+                                                &prov.bounding_box.top_right.x,
+                                                &prov.bounding_box.top_right.y,
+                                                &prov.state, true))
             {
                 ec = std::make_error_code(std::errc::bad_message);
                 WRITE_ERROR("Failed to parse line #", line_num, ": '", line, "'");
@@ -411,6 +467,83 @@ bool MapNormalizer::Project::MapProject::loadContinentData(const std::filesystem
 }
 
 /**
+ * @brief Loads all state data from a file
+ *
+ * @param root The root where the state data file should be found
+ * @param ec The error code
+ *
+ * @return True if data was loaded correctly, false otherwise
+ */
+bool MapNormalizer::Project::MapProject::loadStateData(const std::filesystem::path& root,
+                                                       std::error_code& ec)
+{
+    auto path = root / STATEDATA_FILENAME;
+
+    // If the file doesn't exist, then return false (we didn't actually load it
+    //  after all), but don't set the error code as it is expected that the
+    //  file may not exist
+    if(!std::filesystem::exists(path)) {
+        WRITE_WARN("No data to load! No states currently exist!");
+        return false;
+    }
+
+    if(std::ifstream in(path); in) {
+        // FORMAT:
+        //   ID;<State Name>;MANPOWER;<CATEGORY>;BUILDINGS_MAX_LEVEL_FACTOR;IMPASSABLE;PROVID1,PROVID2,...
+        std::string line;
+        for(size_t line_num = 0; std::getline(in, line); ++line_num) {
+            if(line.empty()) continue;
+
+            std::istringstream iss(line);
+
+            State state;
+
+            std::string prov_id_data;
+            if(!parseValuesSkipMissing<';'>(iss, &state.id,
+                                                 &state.name,
+                                                 &state.manpower,
+                                                 &state.category,
+                                                 &state.buildings_max_level_factor,
+                                                 &state.impassable,
+                                                 &prov_id_data, true))
+            {
+                ec = std::make_error_code(std::errc::bad_message);
+                WRITE_ERROR("Failed to parse line #", line_num, ": '", line, "'");
+                return false;
+            }
+
+            // We need to parse the provinces seperately
+            state.provinces = splitAndTransform<ProvinceID>(prov_id_data, ',',
+                    [](const std::string& v) {
+                        return std::atoi(v.c_str());
+                    });
+
+            if(m_states.count(state.id) != 0) {
+                WRITE_ERROR("Found multiple states with the same ID of ", state.id, "! We will skip the second one '", state.name, "' and keep '", m_states.at(state.id).name, '\'');
+            } else {
+                WRITE_DEBUG("Successfully loaded state ID ", state.id,
+                            " named ", state.name);
+                m_states[state.id] = state;
+            }
+        }
+
+        // Now that we've loaded every single state, we need to track which IDs
+        //  have not been used yet
+        for(StateID id = 0; id < m_states.size(); ++id) {
+            if(m_states.count(id) == 0) {
+                m_available_state_ids.push(id);
+            }
+        }
+    } else {
+        ec = std::error_code(static_cast<int>(errno), std::generic_category());
+        WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
+        return false;
+    }
+
+    return true;
+}
+
+/**
  * @brief Loads data out of a ShapeFinder. We invalidate the original ShapeFinder
  *        as we want to take ownership of all pointers it holds
  *
@@ -427,7 +560,7 @@ void MapNormalizer::Project::MapProject::setShapeFinder(ShapeFinder&& shape_find
     m_shape_detection_info.label_matrix_size = sf.getLabelMatrixSize();
     m_shape_detection_info.map_data.reset();
 
-    // Clear out which province is selected
+    // Clear out the province preview data
     m_data_cache.clear();
 }
 
@@ -453,21 +586,14 @@ const uint32_t* MapNormalizer::Project::MapProject::getLabelMatrix() const {
     return m_shape_detection_info.map_data->getLabelMatrix().lock().get();
 }
 
-void MapNormalizer::Project::MapProject::selectProvince(uint32_t label) {
-    m_selected_provinces = {label};
-}
-
-void MapNormalizer::Project::MapProject::addProvinceSelection(uint32_t label) {
-    m_selected_provinces.insert(label);
-}
-
-void MapNormalizer::Project::MapProject::removeProvinceSelection(uint32_t label)
+bool MapNormalizer::Project::MapProject::isValidStateID(StateID state_id) const
 {
-    m_selected_provinces.erase(label);
+    return m_states.count(state_id) != 0;
 }
 
-void MapNormalizer::Project::MapProject::clearProvinceSelection() {
-    m_selected_provinces.clear();
+bool MapNormalizer::Project::MapProject::isValidProvinceLabel(uint32_t label) const
+{
+    return label < m_shape_detection_info.provinces.size();
 }
 
 auto MapNormalizer::Project::MapProject::getProvinceForLabel(uint32_t label) const
@@ -480,46 +606,6 @@ auto MapNormalizer::Project::MapProject::getProvinceForLabel(uint32_t label)
     -> Province&
 {
     return m_shape_detection_info.provinces.at(label);
-}
-
-/**
- * @brief Will return the currently selected provinces.
- *
- * @return The currently selected provinces.
- */
-auto MapNormalizer::Project::MapProject::getSelectedProvinces() const
-    -> RefVector<const Province>
-{
-    RefVector<const Province> provinces;
-    std::transform(m_selected_provinces.begin(), m_selected_provinces.end(),
-                   std::back_inserter(provinces),
-                   [this](uint32_t prov_id) {
-                       return std::ref(m_shape_detection_info.provinces.at(prov_id));
-                   });
-    return provinces;
-}
-
-/**
- * @brief Will return the currently selected provinces.
- *
- * @return The currently selected provinces.
- */
-auto MapNormalizer::Project::MapProject::getSelectedProvinces()
-    -> RefVector<Province>
-{
-    RefVector<Province> provinces;
-    std::transform(m_selected_provinces.begin(), m_selected_provinces.end(),
-                   std::back_inserter(provinces),
-                   [this](uint32_t prov_id) {
-                       return std::ref(m_shape_detection_info.provinces.at(prov_id));
-                   });
-    return provinces;
-}
-
-auto MapNormalizer::Project::MapProject::getSelectedProvinceLabels() const
-    -> const std::set<uint32_t>&
-{
-    return m_selected_provinces;
 }
 
 const std::set<std::string>& MapNormalizer::Project::MapProject::getContinentList() const
@@ -541,6 +627,112 @@ void MapNormalizer::Project::MapProject::addNewContinent(const std::string& cont
 void MapNormalizer::Project::MapProject::removeContinent(const std::string& continent)
 {
     m_continents.erase(continent);
+}
+
+/**
+ * @brief Creates a new state composed of all provinces in province_ids.
+ * @details The provinces detailed in province_ids will get removed from their
+ *          original states. Note however that the original states will still
+ *          exist.
+ *
+ * @param province_ids The list of provinces to add to the new state.
+ *
+ * @return The ID of the new state
+ */
+auto MapNormalizer::Project::MapProject::addNewState(const std::vector<uint32_t>& province_ids)
+    -> StateID
+{
+    RefVector<Province> provinces;
+    std::transform(province_ids.begin(), province_ids.end(),
+                   std::back_inserter(provinces),
+                   [this](uint32_t prov_id) -> std::reference_wrapper<Province> {
+                       return std::ref(m_shape_detection_info.provinces.at(prov_id));
+                   });
+
+    // Increment by 1 because we do not want 0 to be a state ID
+    StateID id = m_states.size() + 1;
+    if(m_available_state_ids.size() > 0) {
+        id = m_available_state_ids.front();
+        m_available_state_ids.pop();
+    }
+
+    // Make sure that the provinces are decoupled from their original state
+    for(auto&& prov : provinces) {
+        removeProvinceFromState(prov);
+        prov.get().state = id;
+    }
+
+    // Note that we default the name to 'STATE#'
+    using namespace std::string_literals;
+    m_states[id] = State {
+        id,
+        "STATE"s + std::to_string(id), /* name */
+        0, /* manpower */
+        "", /* category */
+        DEFAULT_BUILDINGS_MAX_LEVEL_FACTOR, /* buildings_max_level_factor */
+        false, /* impassable */
+        province_ids
+    };
+
+    return id;
+}
+
+/**
+ * @brief Deletes the state at id
+ *
+ * @param id The ID of the state to delete
+ */
+void MapNormalizer::Project::MapProject::removeState(StateID id) {
+    m_available_state_ids.push(id);
+    m_states.erase(id);
+}
+
+/**
+ * @brief Moves a province to another state.
+ *
+ * @param prov_id The ID of the province to move.
+ * @param state_id The ID of the state to move the province to.
+ */
+void MapNormalizer::Project::MapProject::moveProvinceToState(uint32_t prov_id,
+                                                             StateID state_id)
+{
+    moveProvinceToState(m_shape_detection_info.provinces.at(prov_id), state_id);
+}
+
+/**
+ * @brief Moves a province to another state.
+ *
+ * @param province The province to move.
+ * @param state_id The ID of the state to move the province to.
+ */
+void MapNormalizer::Project::MapProject::moveProvinceToState(Province& province,
+                                                             StateID state_id)
+{
+    removeProvinceFromState(province);
+    province.state = state_id;
+    m_states[state_id].provinces.push_back(province.id);
+}
+
+/**
+ * @brief Removes a province from its state.
+ *
+ * @param province The province to remove.
+ */
+void MapNormalizer::Project::MapProject::removeProvinceFromState(Province& province)
+{
+    // Remove from its old state
+    if(auto prov_state_id = province.state; m_states.count(prov_state_id) != 0)
+    {
+        auto& state_provinces = m_states[prov_state_id].provinces;
+        for(auto it = state_provinces.begin(); it != state_provinces.end(); ++it)
+        {
+            if(*it == province.id) {
+                state_provinces.erase(it);
+                break;
+            }
+        }
+    }
+    province.state = -1;
 }
 
 /**
@@ -598,6 +790,18 @@ auto MapNormalizer::Project::MapProject::getProvinces() const
 
 auto MapNormalizer::Project::MapProject::getProvinces() -> ProvinceList& {
     return m_shape_detection_info.provinces;
+}
+
+auto MapNormalizer::Project::MapProject::getStateForID(StateID state_id) const
+    -> const State&
+{
+    return m_states.at(state_id);
+}
+
+auto MapNormalizer::Project::MapProject::getStateForID(StateID state_id)
+    -> State&
+{
+    return m_states.at(state_id);
 }
 
 /**

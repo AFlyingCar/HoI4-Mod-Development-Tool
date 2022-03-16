@@ -14,7 +14,7 @@ auto MapNormalizer::createStatesList(const ProvinceList& provinces,
     StateList states;
 
     // CSV file is of the following format:
-    //  <State ID>;<State Name>;<Manpower>;<Category>
+    //  <State ID>;<State Name>;<Manpower>;<Category>;<BuildingsMaxLevelFactor>;<Impassable>
     if(state_info_file) {
         auto line_num = 0;
         for(std::string line; std::getline(state_info_file, line); ++line_num) {
@@ -55,7 +55,7 @@ auto MapNormalizer::createStatesList(const ProvinceList& provinces,
                 manpower = std::atoi(raw_manpower.c_str());
 
                 states[id] = {
-                    id, raw_name, manpower, raw_category, std::vector<ProvinceID>()
+                    id, raw_name, manpower, raw_category, 0.0f, false, std::vector<ProvinceID>()
                 };
 
                 continue;
@@ -79,7 +79,7 @@ csvParseFailure:
                 std::string category = "";
 
                 states[state_id] = {
-                    state_id, state_name, manpower, category, std::vector<ProvinceID>()
+                    state_id, state_name, manpower, category, 0.0f, false, std::vector<ProvinceID>()
                 };
             }
         }

@@ -139,7 +139,7 @@ TEST(UtilTests, SimpleWriteDataTests) {
     ASSERT_FLOAT_EQ(fdata, *reinterpret_cast<const float*>(sstream.str().c_str() + sizeof(uint32_t) + sizeof(bool)));
 }
 
-TEST(UtilTests, ParseValueTests) {
+TEST(UtilTests, ParseValuesTests) {
     std::string data("1234 foobar true land 3.14");
     std::stringstream ss;
     ss << data;
@@ -150,7 +150,7 @@ TEST(UtilTests, ParseValueTests) {
     MapNormalizer::ProvinceType pdata;
     float fdata;
 
-    ASSERT_TRUE(MapNormalizer::parseValues(ss, idata, sdata, bdata, pdata, fdata));
+    ASSERT_TRUE(MapNormalizer::parseValues(ss, &idata, &sdata, &bdata, &pdata, &fdata));
 
     // Make sure the data got parsed out correctly
     ASSERT_EQ(idata, 1234);
@@ -158,6 +158,50 @@ TEST(UtilTests, ParseValueTests) {
     ASSERT_EQ(bdata, true);
     ASSERT_EQ(pdata, MapNormalizer::ProvinceType::LAND);
     ASSERT_FLOAT_EQ(fdata, 3.14f);
+}
+
+TEST(UtilTests, ParseValuesSkipMissingTests) {
+    std::string data("1234 foobar true land 3.14");
+    std::stringstream ss;
+    ss << data;
+
+    uint32_t idata;
+    std::string sdata;
+    bool bdata;
+    char cdata = 'a';
+    MapNormalizer::ProvinceType pdata;
+    float fdata;
+    uint32_t idata2 = 4321;
+
+    ASSERT_TRUE(MapNormalizer::parseValuesSkipMissing(ss, &idata, &sdata, &cdata, true, &bdata, &pdata, &fdata, &idata2, true));
+
+    // Make sure the data got parsed out correctly
+    ASSERT_EQ(idata, 1234);
+    ASSERT_EQ(sdata, "foobar");
+    ASSERT_EQ(bdata, true);
+    ASSERT_EQ(cdata, 'a');
+    ASSERT_EQ(pdata, MapNormalizer::ProvinceType::LAND);
+    ASSERT_FLOAT_EQ(fdata, 3.14f);
+    ASSERT_EQ(idata2, 4321);
+}
+
+TEST(UtilTests, ParseValuePositionTest) {
+    std::string data(" a b c d");
+    std::stringstream ss;
+
+    ss << data;
+
+    auto start = ss.tellg();
+
+    uint32_t idata = 1234;
+
+    ASSERT_FALSE(MapNormalizer::parseValue(ss, idata));
+
+    // First make sure the data wasn't touched
+    ASSERT_EQ(idata, 1234);
+
+    // Next make sure the stream is in the same position as before
+    ASSERT_EQ(ss.tellg(), start);
 }
 
 TEST(UtilTests, TrimTests) {

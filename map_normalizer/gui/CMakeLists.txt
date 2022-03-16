@@ -14,11 +14,14 @@ add_library(gui STATIC
     src/ProgressBarDialog.cpp
     src/NewProjectDialog.cpp
     src/ProvincePropertiesPane.cpp
+    src/StatePropertiesPane.cpp
     src/ProvincePreviewDrawingArea.cpp
     src/IProvincePreviewDrawingArea.cpp
     src/InterruptableScrolledWindow.cpp
     src/LogViewerWindow.cpp
     src/GuiUtils.cpp
+    src/SelectionManager.cpp
+    src/ConstrainedEntry.cpp
 )
 
 target_include_directories(gui PUBLIC inc)

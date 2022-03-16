@@ -2,6 +2,8 @@
 # define MAPPROJECT_H
 
 # include <set>
+# include <queue>
+# include <vector>
 # include <string>
 # include <filesystem>
 
@@ -41,23 +43,26 @@ namespace MapNormalizer::Project {
 
             const uint32_t* getLabelMatrix() const;
 
-            void selectProvince(uint32_t);
-            void addProvinceSelection(uint32_t);
-            void removeProvinceSelection(uint32_t);
-            void clearProvinceSelection();
+            bool isValidProvinceLabel(uint32_t) const;
+            bool isValidStateID(StateID) const;
 
             const Province& getProvinceForLabel(uint32_t) const;
             Province& getProvinceForLabel(uint32_t);
 
-            RefVector<const Province> getSelectedProvinces() const;
-            RefVector<Province> getSelectedProvinces();
-
-            const std::set<uint32_t>& getSelectedProvinceLabels() const;
+            const State& getStateForID(StateID) const;
+            State& getStateForID(StateID);
 
             const std::set<std::string>& getContinentList() const;
 
             void addNewContinent(const std::string&);
             void removeContinent(const std::string&);
+
+            StateID addNewState(const std::vector<uint32_t>&);
+            void removeState(StateID);
+
+            void moveProvinceToState(uint32_t, StateID);
+            void moveProvinceToState(Province&, StateID);
+            void removeProvinceFromState(Province&);
 
             const std::vector<Terrain>& getTerrains() const;
 
@@ -74,6 +79,8 @@ namespace MapNormalizer::Project {
                                  std::error_code&);
             bool saveContinentData(const std::filesystem::path&,
                                    std::error_code&);
+            bool saveStateData(const std::filesystem::path&,
+                               std::error_code&);
 
             bool loadShapeLabels(const std::filesystem::path&,
                                  std::error_code&);
@@ -81,6 +88,8 @@ namespace MapNormalizer::Project {
                                  std::error_code&);
             bool loadContinentData(const std::filesystem::path&,
                                    std::error_code&);
+            bool loadStateData(const std::filesystem::path&,
+                               std::error_code&);
 
         private:
             void buildProvinceCache(const Province*);
@@ -111,8 +120,11 @@ namespace MapNormalizer::Project {
             //! All terrains defined for this project
             std::vector<Terrain> m_terrains;
 
-            //! The currently selected provinces
-            std::set<uint32_t> m_selected_provinces;
+            //! All states defined for this project
+            std::map<uint32_t, State> m_states;
+
+            //! All available state ids, which should be used before new ones
+            std::queue<StateID> m_available_state_ids;
 
             //! The parent project that this MapProject belongs to
             IProject& m_parent_project;

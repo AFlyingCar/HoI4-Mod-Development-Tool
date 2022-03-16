@@ -140,8 +140,13 @@ namespace MapNormalizer {
         std::string name;
         size_t manpower;
         std::string category;
+        float buildings_max_level_factor;
+        bool impassable;
         
         std::vector<ProvinceID> provinces;
+
+        // std::map<???, uint32_t> resources;
+        // TODO: history?
     };
 
     /**
