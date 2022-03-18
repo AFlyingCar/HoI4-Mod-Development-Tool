@@ -1,6 +1,8 @@
 
 #include "gtest/gtest.h"
 
+#include <random>
+
 #include "Util.h"
 #include "Monad.h"
 
@@ -353,3 +355,53 @@ TEST(UtilTests, MonadOrElseTest) {
     ASSERT_EQ(opt_value4.value(), 3.1415f);
 }
 
+TEST(UtilTests, SimpleParallelTransformTest) {
+    const uint32_t input_data[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    const uint32_t expected_output_data[] = { 0, 3, 6, 9, 12, 15, 18, 21, 24, 27 };
+    uint32_t output_data[10];
+
+    MapNormalizer::parallelTransform(input_data, input_data + 10, output_data,
+                                     [](uint32_t v) {
+                                         return v * 3;
+                                     });
+
+    TEST_COUT << "Verifying results:" << std::endl;
+    for(auto i = 0; i < 10; ++i) {
+        TEST_COUT << "  ID#" << i << std::endl;
+        ASSERT_EQ(output_data[i], expected_output_data[i]);
+    }
+}
+
+TEST(UtilTests, LargeParallelTransformTest) {
+    auto thread_count = std::thread::hardware_concurrency();
+    auto num_test_values = thread_count * 10;
+
+    std::mt19937_64 generator(static_cast<std::mt19937::result_type>(time(0)));
+    std::uniform_real_distribution<double> distribution(0, num_test_values);
+
+    // Fill our input array with random data
+    std::vector<uint32_t> input_data(num_test_values);
+    std::generate(input_data.begin(), input_data.end(),
+                  [&distribution, &generator]() {
+                      return distribution(generator);
+                  });
+
+    auto transform_func = [](uint32_t v) { return v * 3; };
+
+    // Build the expected data array (every
+    std::vector<uint32_t> expected_output_data;
+    expected_output_data.reserve(num_test_values);
+    std::transform(input_data.begin(), input_data.end(),
+                   std::back_inserter(expected_output_data), transform_func);
+
+    //
+    std::unique_ptr<uint32_t[]> output_data(new uint32_t[num_test_values]);
+    MapNormalizer::parallelTransform(input_data.begin(), input_data.end(), output_data.get(),
+                                     transform_func);
+
+    TEST_COUT << "Verifying results:" << std::endl;
+    for(auto i = 0; i < num_test_values; ++i) {
+        TEST_COUT << "  ID#" << i << std::endl;
+        ASSERT_EQ(output_data[i], expected_output_data[i]);
+    }
+}

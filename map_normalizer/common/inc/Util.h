@@ -14,6 +14,8 @@
 # include <filesystem>
 # include <functional>
 # include <optional>
+# include <thread>
+# include <future>
 
 # include "Types.h"
 
@@ -367,6 +369,62 @@ namespace MapNormalizer {
         std::vector<T> result;
         splitAndTransform<T>(str, delim, std::back_inserter(result), func);
         return result;
+    }
+
+    template<typename InputIt, typename OutputIt, typename UnaryOperation>
+    void parallelTransform(InputIt first, InputIt last, OutputIt d_first,
+                           UnaryOperation unary_op)
+    {
+        auto thread_count = std::thread::hardware_concurrency();
+
+        if(thread_count <= 1) {
+            std::transform(first, last, d_first, unary_op);
+        } else {
+            using namespace std::chrono_literals;
+
+            // The actual transformation function
+            auto func = [&unary_op](InputIt first, InputIt last, OutputIt d_first)
+            {
+                for(; first != last; ++first) {
+                    *d_first++ = unary_op(*first);
+                }
+            };
+
+            std::vector<std::shared_future<void>> futures;
+
+            auto length = std::distance(first, last);
+
+            // If we have less data than cores, just spin up one core per value,
+            //  and don't bother spinning up more cores for empty data
+            if(length < thread_count) {
+                thread_count = length;
+            }
+
+            auto it_step = length / thread_count;
+
+            // start transforming each section of the input range in parallel
+            for(auto i = 0; i < thread_count; ++i) {
+                auto d_first2 = d_first;
+
+                futures.push_back(std::async(std::launch::async, func,
+                                             first, first + it_step, d_first2));
+
+                // Advance all 3 iterators to the next part
+                std::advance(first, it_step);
+                std::advance(d_first, it_step);
+            }
+
+            // Keep checking each future until they have completed
+            while(!futures.empty()) {
+                for(auto it = futures.begin(); it != futures.end();) {
+                    if(it->wait_for(1s) == std::future_status::ready) {
+                        it = futures.erase(it);
+                    } else {
+                        ++it;
+                    }
+                }
+            }
+        }
     }
 }
 
