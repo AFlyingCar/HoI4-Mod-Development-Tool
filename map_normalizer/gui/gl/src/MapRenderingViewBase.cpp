@@ -79,53 +79,9 @@ void MapNormalizer::GUI::GL::MapRenderingViewBase::init() {
     }
 }
 
-/**
- * @brief Re-generates the map texture based on the data stored in map_data
- */
-void MapNormalizer::GUI::GL::MapRenderingViewBase::onMapDataChanged(std::shared_ptr<const MapData> map_data)
-{
-    auto [iwidth, iheight] = map_data->getDimensions();
-
-    m_texture.setTextureUnitID(Texture::Unit::TEX_UNIT0);
-
-    m_texture.bind();
-    {
-        // map_texture->setWrapping(Texture::Axis::S, Texture::WrapMode::CLAMP_TO_EDGE);
-        // map_texture->setWrapping(Texture::Axis::T, Texture::WrapMode::CLAMP_TO_EDGE);
-
-        m_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::LINEAR);
-        m_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::LINEAR);
-
-        m_texture.setTextureData(Texture::Format::RGB,
-                                  iwidth, iheight, map_data->getProvinces().lock().get());
-    }
-    m_texture.bind(false);
-
-    ////////////////////////////////////////////////////////////////////////////
-
-    m_label_texture.setTextureUnitID(Texture::Unit::TEX_UNIT1);
-
-    m_label_texture.bind();
-    {
-        WRITE_DEBUG("Building label matrix texture.");
-        m_label_texture.setWrapping(Texture::Axis::S, Texture::WrapMode::REPEAT);
-        m_label_texture.setWrapping(Texture::Axis::T, Texture::WrapMode::REPEAT);
-
-        m_label_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::NEAREST);
-        m_label_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::NEAREST);
-
-        m_label_texture.setTextureData(Texture::Format::RED32UI,
-                                       iwidth, iheight,
-                                       map_data->getLabelMatrix().lock().get(),
-                                       GL_RED_INTEGER);
-    }
-    m_label_texture.bind(false);
-}
-
 void MapNormalizer::GUI::GL::MapRenderingViewBase::beginRender() {
     m_program.use();
     setupUniforms();
-    m_texture.activate();
 }
 
 void MapNormalizer::GUI::GL::MapRenderingViewBase::render() {
@@ -134,10 +90,6 @@ void MapNormalizer::GUI::GL::MapRenderingViewBase::render() {
 
 void MapNormalizer::GUI::GL::MapRenderingViewBase::endRender() {
     m_program.use(false);
-}
-
-void MapNormalizer::GUI::GL::MapRenderingViewBase::setupUniforms() {
-    m_program.uniform("map_texture", m_texture);
 }
 
 /**
@@ -177,15 +129,6 @@ void MapNormalizer::GUI::GL::MapRenderingViewBase::drawMapVAO() {
 
 auto MapNormalizer::GUI::GL::MapRenderingViewBase::getMapProgram() -> Program& {
     return m_program;
-}
-
-auto MapNormalizer::GUI::GL::MapRenderingViewBase::getMapTexture() -> Texture& {
-    return m_texture;
-}
-
-auto MapNormalizer::GUI::GL::MapRenderingViewBase::getLabelTexture() -> Texture&
-{
-    return m_label_texture;
 }
 
 auto MapNormalizer::GUI::GL::MapRenderingViewBase::getPrograms() -> ProgramList {

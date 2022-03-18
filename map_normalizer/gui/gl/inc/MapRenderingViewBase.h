@@ -36,14 +36,10 @@ namespace MapNormalizer::GUI::GL {
 
             virtual ProgramList getPrograms() override;
 
-            virtual void onMapDataChanged(std::shared_ptr<const MapData>) override;
-
         protected:
             Program& getMapProgram();
-            Texture& getMapTexture();
-            Texture& getLabelTexture();
 
-            virtual void setupUniforms();
+            virtual void setupUniforms() = 0;
 
             virtual const std::string& getVertexShaderSource() const = 0;
             virtual const std::string& getFragmentShaderSource() const = 0;
@@ -62,11 +58,6 @@ namespace MapNormalizer::GUI::GL {
             //! The basic Program for rendering the map
             Program m_program;
 
-            //! The Texture of the map
-            Texture m_texture;
-
-            //! The texture of the label matrix
-            Texture m_label_texture;
     };
 }
 

@@ -19,6 +19,7 @@ namespace MapNormalizer::GUI::GL {
             ProvinceRenderingView() = default;
 
             virtual void init() override;
+            virtual void beginRender() override;
             virtual void render() override;
 
             virtual ProgramList getPrograms() override;
@@ -27,7 +28,10 @@ namespace MapNormalizer::GUI::GL {
             virtual void onSelectionChanged(std::optional<IMapDrawingAreaBase::SelectionInfo>) override;
 
         protected:
+            Texture& getMapTexture();
+            Texture& getLabelTexture();
 
+            virtual void setupUniforms() override;
             virtual const std::string& getVertexShaderSource() const override;
             virtual const std::string& getFragmentShaderSource() const override;
 
@@ -37,6 +41,12 @@ namespace MapNormalizer::GUI::GL {
 
             //! The shader for rendering the selection of a single province
             Program m_selection_shader;
+
+            //! The Texture of the map
+            Texture m_texture;
+
+            //! The texture of the label matrix
+            Texture m_label_texture;
 
             //! The outline texture
             Texture m_outline_texture;

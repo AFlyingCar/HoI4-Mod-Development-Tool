@@ -6,6 +6,8 @@
 
 #include "ProvinceRenderingView.h"
 
+#include <GL/glew.h>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -83,6 +85,12 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::init() {
     }
 }
 
+void MapNormalizer::GUI::GL::ProvinceRenderingView::beginRender() {
+    MapRenderingViewBase::beginRender();
+
+    m_texture.activate();
+}
+
 /**
  * @brief Renders the base map, then the current selection, and then the map
  *        outlines on top of that.
@@ -145,13 +153,54 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
     }
 }
 
+void MapNormalizer::GUI::GL::ProvinceRenderingView::setupUniforms() {
+    getMapProgram().uniform("map_texture", m_texture);
+}
+
 /**
  * @brief Rebuilds the outline province outlines texture
  */
 void MapNormalizer::GUI::GL::ProvinceRenderingView::onMapDataChanged(std::shared_ptr<const MapData> map_data)
 {
     // First build the base map texture
-    MapRenderingViewBase::onMapDataChanged(map_data);
+    {
+        auto [iwidth, iheight] = map_data->getDimensions();
+
+        m_texture.setTextureUnitID(Texture::Unit::TEX_UNIT0);
+
+        m_texture.bind();
+        {
+            // map_texture->setWrapping(Texture::Axis::S, Texture::WrapMode::CLAMP_TO_EDGE);
+            // map_texture->setWrapping(Texture::Axis::T, Texture::WrapMode::CLAMP_TO_EDGE);
+
+            m_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::LINEAR);
+            m_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::LINEAR);
+
+            m_texture.setTextureData(Texture::Format::RGB,
+                                      iwidth, iheight, map_data->getProvinces().lock().get());
+        }
+        m_texture.bind(false);
+
+        ////////////////////////////////////////////////////////////////////////////
+
+        m_label_texture.setTextureUnitID(Texture::Unit::TEX_UNIT1);
+
+        m_label_texture.bind();
+        {
+            WRITE_DEBUG("Building label matrix texture.");
+            m_label_texture.setWrapping(Texture::Axis::S, Texture::WrapMode::REPEAT);
+            m_label_texture.setWrapping(Texture::Axis::T, Texture::WrapMode::REPEAT);
+
+            m_label_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::NEAREST);
+            m_label_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::NEAREST);
+
+            m_label_texture.setTextureData(Texture::Format::RED32UI,
+                                           iwidth, iheight,
+                                           map_data->getLabelMatrix().lock().get(),
+                                           GL_RED_INTEGER);
+        }
+        m_label_texture.bind(false);
+    }
 
     auto [iwidth, iheight] = map_data->getDimensions();
 
@@ -200,5 +249,14 @@ const std::string& MapNormalizer::GUI::GL::ProvinceRenderingView::getVertexShade
 const std::string& MapNormalizer::GUI::GL::ProvinceRenderingView::getFragmentShaderSource() const
 {
     return ShaderSources::provinceview_fragment;
+}
+
+auto MapNormalizer::GUI::GL::ProvinceRenderingView::getMapTexture() -> Texture& {
+    return m_texture;
+}
+
+auto MapNormalizer::GUI::GL::ProvinceRenderingView::getLabelTexture() -> Texture&
+{
+    return m_label_texture;
 }
 
