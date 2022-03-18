@@ -534,6 +534,8 @@ bool MapNormalizer::Project::MapProject::loadStateData(const std::filesystem::pa
                 m_available_state_ids.push(id);
             }
         }
+
+        updateStateIDMatrix();
     } else {
         ec = std::error_code(static_cast<int>(errno), std::generic_category());
         WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
@@ -658,7 +660,7 @@ auto MapNormalizer::Project::MapProject::addNewState(const std::vector<uint32_t>
 
     // Make sure that the provinces are decoupled from their original state
     for(auto&& prov : provinces) {
-        removeProvinceFromState(prov);
+        removeProvinceFromState(prov, false);
         prov.get().state = id;
     }
 
@@ -674,6 +676,8 @@ auto MapNormalizer::Project::MapProject::addNewState(const std::vector<uint32_t>
         province_ids
     };
 
+    updateStateIDMatrix();
+
     return id;
 }
 
@@ -685,6 +689,8 @@ auto MapNormalizer::Project::MapProject::addNewState(const std::vector<uint32_t>
 void MapNormalizer::Project::MapProject::removeState(StateID id) {
     m_available_state_ids.push(id);
     m_states.erase(id);
+
+    updateStateIDMatrix();
 }
 
 /**
@@ -711,6 +717,8 @@ void MapNormalizer::Project::MapProject::moveProvinceToState(Province& province,
     removeProvinceFromState(province);
     province.state = state_id;
     m_states[state_id].provinces.push_back(province.id);
+
+    updateStateIDMatrix();
 }
 
 /**
@@ -718,7 +726,8 @@ void MapNormalizer::Project::MapProject::moveProvinceToState(Province& province,
  *
  * @param province The province to remove.
  */
-void MapNormalizer::Project::MapProject::removeProvinceFromState(Province& province)
+void MapNormalizer::Project::MapProject::removeProvinceFromState(Province& province,
+                                                                 bool update_state_id_matrix)
 {
     // Remove from its old state
     if(auto prov_state_id = province.state; m_states.count(prov_state_id) != 0)
@@ -733,6 +742,36 @@ void MapNormalizer::Project::MapProject::removeProvinceFromState(Province& provi
         }
     }
     province.state = -1;
+
+    if(update_state_id_matrix) updateStateIDMatrix();
+}
+
+void MapNormalizer::Project::MapProject::updateStateIDMatrix() {
+    WRITE_DEBUG("Updating State ID matrix.");
+
+    auto matrix_size = m_shape_detection_info.label_matrix_size;
+
+    uint32_t* state_id_matrix = new uint32_t[matrix_size];
+
+    auto label_matrix = m_shape_detection_info.map_data->getLabelMatrix().lock();
+
+    auto* label_matrix_start = label_matrix.get();
+
+    parallelTransform(label_matrix_start, label_matrix_start + matrix_size,
+                      state_id_matrix,
+                      [this](uint32_t prov_id) -> uint32_t {
+                          if(isValidProvinceLabel(prov_id - 1)) {
+                              return getProvinceForLabel(prov_id - 1).state;
+                          } else {
+                              WRITE_WARN("Invalid province ID ", prov_id - 1,
+                                         " detected when building state id matrix. Treating as though there's no state here.");
+                              return 0;
+                          }
+                      });
+
+    m_shape_detection_info.map_data->setStateIDMatrix(state_id_matrix);
+
+    WRITE_DEBUG("Done updating State ID matrix.");
 }
 
 /**

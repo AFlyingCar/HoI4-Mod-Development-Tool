@@ -32,6 +32,7 @@ namespace MapNormalizer {
             bool isClosed() const;
 
             void setLabelMatrix(uint32_t[]);
+            void setStateIDMatrix(uint32_t[]);
 
             ////////////////////////////////////////////////////////////////////
 
@@ -47,6 +48,9 @@ namespace MapNormalizer {
             MapType32 getLabelMatrix();
             ConstMapType32 getLabelMatrix() const;
 
+            MapType32 getStateIDMatrix();
+            ConstMapType32 getStateIDMatrix() const;
+
         private:
             using InternalMapType = std::shared_ptr<uint8_t[]>;
             using InternalMapType32 = std::shared_ptr<uint32_t[]>;
@@ -58,12 +62,14 @@ namespace MapNormalizer {
             InternalMapType m_provinces;
             InternalMapType m_province_outlines;
             InternalMapType32 m_label_matrix;
+            InternalMapType32 m_state_id_matrix;
             // More map representations as necessary
 
             bool m_closed;
 
         public:
             void setLabelMatrix(InternalMapType32);
+            void setStateIDMatrix(InternalMapType32);
     };
 }
 

@@ -62,7 +62,7 @@ namespace MapNormalizer::Project {
 
             void moveProvinceToState(uint32_t, StateID);
             void moveProvinceToState(Province&, StateID);
-            void removeProvinceFromState(Province&);
+            void removeProvinceFromState(Province&, bool = true);
 
             const std::vector<Terrain>& getTerrains() const;
 
@@ -90,6 +90,8 @@ namespace MapNormalizer::Project {
                                    std::error_code&);
             bool loadStateData(const std::filesystem::path&,
                                std::error_code&);
+
+            void updateStateIDMatrix();
 
         private:
             void buildProvinceCache(const Province*);
