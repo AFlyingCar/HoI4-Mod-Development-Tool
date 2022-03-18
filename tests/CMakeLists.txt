@@ -13,13 +13,14 @@ set(TEST_SOURCES
     ${TEST_SRC_DIR}/ProjectTests.cpp
     ${TEST_SRC_DIR}/LogTests.cpp
     ${TEST_SRC_DIR}/GuiTests.cpp
+    ${TEST_SRC_DIR}/ActionTests.cpp
 
     ${TEST_SRC_DIR}/TestOverrides.cpp
     ${TEST_SRC_DIR}/TestUtils.cpp
 )
 
 add_executable(unit_tests ${TEST_SOURCES})
-target_link_libraries(unit_tests PRIVATE gtest gtest_main common province_utils unique_colors project logging gui)
+target_link_libraries(unit_tests PRIVATE gtest gtest_main common province_utils unique_colors project logging gui actions)
 target_link_libraries(unit_tests PUBLIC stdc++fs pthread)
 target_include_directories(unit_tests PRIVATE inc)
 

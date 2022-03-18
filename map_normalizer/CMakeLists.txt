@@ -7,6 +7,7 @@ add_subdirectory(common)
 add_subdirectory(project)
 add_subdirectory(province_utils)
 add_subdirectory(gui)
+add_subdirectory(actions)
 
 # This should be last
 add_subdirectory(exe)
