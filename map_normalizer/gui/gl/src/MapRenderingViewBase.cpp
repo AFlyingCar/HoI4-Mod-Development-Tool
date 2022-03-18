@@ -33,9 +33,9 @@ void MapNormalizer::GUI::GL::MapRenderingViewBase::init() {
     // Set up all shaders
     WRITE_DEBUG("Building map rendering view program...");
     m_program = Program{Shader(Shader::Type::VERTEX,
-                               ShaderSources::provinceview_vertex),
+                               getVertexShaderSource()),
                         Shader(Shader::Type::FRAGMENT,
-                               ShaderSources::provinceview_fragment)
+                               getFragmentShaderSource())
                        };
     MN_LOG_GL_ERRORS();
 

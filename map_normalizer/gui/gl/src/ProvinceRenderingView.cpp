@@ -192,3 +192,13 @@ auto MapNormalizer::GUI::GL::ProvinceRenderingView::getPrograms() -> ProgramList
     return { getMapProgram(), m_outline_shader, m_selection_shader };
 }
 
+const std::string& MapNormalizer::GUI::GL::ProvinceRenderingView::getVertexShaderSource() const
+{
+    return ShaderSources::provinceview_vertex;
+}
+
+const std::string& MapNormalizer::GUI::GL::ProvinceRenderingView::getFragmentShaderSource() const
+{
+    return ShaderSources::provinceview_fragment;
+}
+

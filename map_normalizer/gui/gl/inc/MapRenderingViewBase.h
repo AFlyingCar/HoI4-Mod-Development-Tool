@@ -45,6 +45,9 @@ namespace MapNormalizer::GUI::GL {
 
             virtual void setupUniforms();
 
+            virtual const std::string& getVertexShaderSource() const = 0;
+            virtual const std::string& getFragmentShaderSource() const = 0;
+
             std::array<glm::vec4, 6> getMapVertices();
 
             void drawMapVAO();

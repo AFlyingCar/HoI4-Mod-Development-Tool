@@ -26,6 +26,11 @@ namespace MapNormalizer::GUI::GL {
             virtual void onMapDataChanged(std::shared_ptr<const MapData>) override;
             virtual void onSelectionChanged(std::optional<IMapDrawingAreaBase::SelectionInfo>) override;
 
+        protected:
+
+            virtual const std::string& getVertexShaderSource() const override;
+            virtual const std::string& getFragmentShaderSource() const override;
+
         private:
             //! The shader for rendering the map outlines
             Program m_outline_shader;
