@@ -9,6 +9,7 @@
 #include "Logger.h"
 #include "Constants.h"
 #include "Util.h"
+#include "UniqueColorGenerator.h"
 
 #include "ProvinceMapBuilder.h"
 
@@ -119,8 +120,10 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
     // TODO: Why do we actually have to do this? For some reason everything stops
     //  rendering correctly if we remove this line. Why? What? How?
     auto label_matrix = map_data->getLabelMatrix().lock();
+    auto state_id_matrix = map_data->getStateIDMatrix().lock();
     map_data.reset(new MapData(width, height));
     map_data->setLabelMatrix(label_matrix); // WHY?!!!!
+    map_data->setStateIDMatrix(state_id_matrix); // I'll re-iterate: WHY?!!!!
 
     auto input_data = map_data->getInput().lock();
     auto graphics_data = map_data->getProvinces().lock();
@@ -301,6 +304,9 @@ bool MapNormalizer::Project::MapProject::saveStateData(const std::filesystem::pa
             for(ProvinceID p : state.provinces) {
                 out << p << ',';
             }
+            out << ';';
+
+            out << state.color;
 
             out << std::endl;
         }
@@ -497,6 +503,7 @@ bool MapNormalizer::Project::MapProject::loadStateData(const std::filesystem::pa
             std::istringstream iss(line);
 
             State state;
+            state.color = Color{0,0,0}; // Initialize this to nothing
 
             std::string prov_id_data;
             if(!parseValuesSkipMissing<';'>(iss, &state.id,
@@ -505,11 +512,19 @@ bool MapNormalizer::Project::MapProject::loadStateData(const std::filesystem::pa
                                                  &state.category,
                                                  &state.buildings_max_level_factor,
                                                  &state.impassable,
-                                                 &prov_id_data, true))
+                                                 &prov_id_data, true,
+                                                 &state.color, true))
             {
                 ec = std::make_error_code(std::errc::bad_message);
                 WRITE_ERROR("Failed to parse line #", line_num, ": '", line, "'");
                 return false;
+            }
+
+            // If we did not load a state color, then the color should be 0,0,0
+            // In that case, we want to generate a new unique color value
+            if(state.color == Color{0,0,0}) {
+                WRITE_WARN("Saved state data did not have a color value, generating a new one...");
+                state.color = generateUniqueColor(ProvinceType::UNKNOWN);
             }
 
             // We need to parse the provinces seperately
@@ -673,7 +688,8 @@ auto MapNormalizer::Project::MapProject::addNewState(const std::vector<uint32_t>
         "", /* category */
         DEFAULT_BUILDINGS_MAX_LEVEL_FACTOR, /* buildings_max_level_factor */
         false, /* impassable */
-        province_ids
+        province_ids,
+        generateUniqueColor(ProvinceType::UNKNOWN)
     };
 
     updateStateIDMatrix();
@@ -829,6 +845,12 @@ auto MapNormalizer::Project::MapProject::getProvinces() const
 
 auto MapNormalizer::Project::MapProject::getProvinces() -> ProvinceList& {
     return m_shape_detection_info.provinces;
+}
+
+auto MapNormalizer::Project::MapProject::getStates() const
+    -> const std::map<uint32_t, State>&
+{
+    return m_states;
 }
 
 auto MapNormalizer::Project::MapProject::getStateForID(StateID state_id) const

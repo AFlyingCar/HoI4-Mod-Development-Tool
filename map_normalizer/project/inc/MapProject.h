@@ -72,6 +72,8 @@ namespace MapNormalizer::Project {
             ProvinceList& getProvinces();
             const ProvinceList& getProvinces() const;
 
+            const std::map<uint32_t, State>& getStates() const;
+
         protected:
             bool saveShapeLabels(const std::filesystem::path&,
                                  std::error_code&);
