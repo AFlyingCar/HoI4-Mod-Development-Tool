@@ -195,6 +195,9 @@ namespace MapNormalizer::GUI {
                 BaseGtkWidget::set_size_request(width, height);
             }
     };
+
+    std::ostream& operator<<(std::ostream&,
+                             const IMapDrawingAreaBase::ViewingMode&);
 }
 
 #endif
