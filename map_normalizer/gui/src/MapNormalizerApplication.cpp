@@ -72,7 +72,11 @@ void MapNormalizer::GUI::MapNormalizerApplication::on_startup() {
         { "_Switch Renderers", "win.switch_renderers", {
             { "_Use OpenGL", "win.switch_renderers.usegl" },
             { "_Use Cairo (DEPRECATED)", "win.switch_renderers.usecairo" },
-        } }
+        } },
+        { "_Switch Views", "win.switch_views", {
+            { "_Province View", "win.switch_views.province" },
+            { "_State View", "win.switch_views.state" },
+        } },
     });
 
     createMenu("Root", "Project", {
