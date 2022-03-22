@@ -83,6 +83,8 @@ void MapNormalizer::GUI::GL::StateRenderingView::init() {
 
 
     {
+        // We set these values away from the texture, as there is no real need
+        //  to set them multiple times.
         m_state_id_texture.setTextureUnitID(Texture::Unit::TEX_UNIT2);
 
         m_state_id_texture.setWrapping(Texture::Axis::S, Texture::WrapMode::REPEAT);
@@ -90,18 +92,29 @@ void MapNormalizer::GUI::GL::StateRenderingView::init() {
 
         m_state_id_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::NEAREST);
         m_state_id_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::NEAREST);
+
+        updateStateIDTexture();
     }
 }
 
 void MapNormalizer::GUI::GL::StateRenderingView::beginRender() {
-    // TODO: It feels a bit wasteful to re-generate this texture every run,
-    //   is there a way we can only generate it when states are updated?
+    MapRenderingViewBase::beginRender();
+
+    // Only update the state ID texture if the matrix has changed
+    if(m_map_data != nullptr &&
+       m_last_state_id_matrix_updated_tag != m_map_data->getStateIDMatrixUpdatedTag())
+    {
+        updateStateIDTexture();
+    }
+}
+
+void MapNormalizer::GUI::GL::StateRenderingView::updateStateIDTexture() {
     if(m_map_data != nullptr) {
         if(auto state_id_mtx = m_map_data->getStateIDMatrix(); !state_id_mtx.expired())
         {
-            MapRenderingViewBase::beginRender();
-
             auto [iwidth, iheight] = m_map_data->getDimensions();
+
+            WRITE_DEBUG("Updating State ID Matrix Texture.");
 
             m_state_id_texture.bind();
             {
@@ -111,6 +124,9 @@ void MapNormalizer::GUI::GL::StateRenderingView::beginRender() {
                                                   GL_RED_INTEGER);
             }
             m_state_id_texture.bind(false);
+
+            // Make sure we update what the current tag is
+            m_last_state_id_matrix_updated_tag = m_map_data->getStateIDMatrixUpdatedTag();
         }
     }
 }
@@ -120,6 +136,10 @@ void MapNormalizer::GUI::GL::StateRenderingView::beginRender() {
  *        outlines on top of that.
  */
 void MapNormalizer::GUI::GL::StateRenderingView::render() {
+    // Return early if m_map_data is null, as that likely means we do not have
+    //  any state_id_matrix texture uploaded
+    if(m_map_data == nullptr) return;
+
     if(auto opt_map_project = Driver::getInstance().getProject(); opt_map_project)
     {
         auto& map_project = opt_map_project->get().getMapProject();

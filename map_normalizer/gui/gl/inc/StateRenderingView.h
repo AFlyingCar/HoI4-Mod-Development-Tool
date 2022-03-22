@@ -33,11 +33,15 @@ namespace MapNormalizer::GUI::GL {
 
             Texture& getStateIDMatrixTexture();
 
+            void updateStateIDTexture();
+
         private:
             std::shared_ptr<const MapData> m_map_data;
 
             //! The state ID texture
             Texture m_state_id_texture;
+
+            uint32_t m_last_state_id_matrix_updated_tag;
 
             //! The texture to draw on top of a selected province
             // Texture m_selection_texture;
