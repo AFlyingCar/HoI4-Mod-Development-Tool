@@ -171,7 +171,9 @@ bool MapNormalizer::GUI::GL::Program::uniform(const std::string& uniform_name,
                      glm::value_ptr(std::any_cast<glm::vec3>(value)));
     } else if(value.type() == typeid(Color)) {                         // Color
         auto&& color = std::any_cast<Color>(value);
-        glUniform3f(uniform_loc, color.r, color.g, color.b);
+        glUniform3f(uniform_loc, color.r / 255.0f,
+                                 color.g / 255.0f,
+                                 color.b / 255.0f);
     } else if(value.type() == typeid(glm::vec4)) {                     // vec4
         glUniform4fv(uniform_loc, 1,
                      glm::value_ptr(std::any_cast<glm::vec4>(value)));
