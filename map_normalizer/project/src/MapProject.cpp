@@ -306,7 +306,9 @@ bool MapNormalizer::Project::MapProject::saveStateData(const std::filesystem::pa
             }
             out << ';';
 
-            out << state.color;
+            out << static_cast<uint32_t>(state.color.r) << ';'
+                << static_cast<uint32_t>(state.color.g) << ';'
+                << static_cast<uint32_t>(state.color.b);
 
             out << std::endl;
         }
@@ -513,7 +515,9 @@ bool MapNormalizer::Project::MapProject::loadStateData(const std::filesystem::pa
                                                  &state.buildings_max_level_factor,
                                                  &state.impassable,
                                                  &prov_id_data, true,
-                                                 &state.color, true))
+                                                 &state.color.r, true,
+                                                 &state.color.g, true,
+                                                 &state.color.b, true))
             {
                 ec = std::make_error_code(std::errc::bad_message);
                 WRITE_ERROR("Failed to parse line #", line_num, ": '", line, "'");
