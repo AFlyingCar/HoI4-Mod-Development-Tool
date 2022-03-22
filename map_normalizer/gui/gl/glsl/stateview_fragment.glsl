@@ -15,10 +15,10 @@ void main() {
     bool is_state_id = (pixel_id == state_id);
     // bool is_border = ???;
 
-    vec3 color_array[2];
-    color_array[0] = vec3(0, 0, 0);
-    color_array[1] = state_color;
+    vec4 color_array[2];
+    color_array[0] = vec4(0, 0, 0, 0);
+    color_array[1] = vec4(state_color, 1.0);
 
-    FragColor = vec4(color_array[uint(is_state_id)].rgb, 1.0);
+    FragColor = color_array[uint(is_state_id)];
 }
 

@@ -136,6 +136,9 @@ void MapNormalizer::GUI::GL::StateRenderingView::updateStateIDTexture() {
  *        outlines on top of that.
  */
 void MapNormalizer::GUI::GL::StateRenderingView::render() {
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+
     // Return early if m_map_data is null, as that likely means we do not have
     //  any state_id_matrix texture uploaded
     if(m_map_data == nullptr) return;
