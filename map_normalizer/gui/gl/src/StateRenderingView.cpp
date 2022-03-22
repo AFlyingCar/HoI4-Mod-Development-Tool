@@ -147,6 +147,8 @@ void MapNormalizer::GUI::GL::StateRenderingView::render() {
     {
         auto& map_project = opt_map_project->get().getMapProject();
 
+        getMapProgram().uniform("tex_dimensions", glm::ivec2(m_state_id_texture.getWidth(),
+                                                             m_state_id_texture.getHeight()));
         getMapProgram().uniform("state_id_matrix", m_state_id_texture);
         m_state_id_texture.activate();
 
