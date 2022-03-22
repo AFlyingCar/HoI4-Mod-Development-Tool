@@ -199,7 +199,7 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
             self->change_state(true);
 
             // Change the state view to be disabled
-            auto state_option = lookup_action("switch_renderers.state");
+            auto state_option = lookup_action("switch_views.state");
             state_option->change_state(false);
 
             auto prev_mode = m_drawing_area->setViewingMode(IMapDrawingAreaBase::ViewingMode::PROVINCE_VIEW);
@@ -213,7 +213,7 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
             self->change_state(true);
 
             // Change the province view to be disabled
-            auto province_option = lookup_action("switch_renderers.province");
+            auto province_option = lookup_action("switch_views.province");
             province_option->change_state(false);
 
             auto prev_mode = m_drawing_area->setViewingMode(IMapDrawingAreaBase::ViewingMode::STATES_VIEW);
