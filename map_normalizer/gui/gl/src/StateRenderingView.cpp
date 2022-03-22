@@ -80,6 +80,17 @@ void MapNormalizer::GUI::GL::StateRenderingView::init() {
         }
     }
 #endif
+
+
+    {
+        m_state_id_texture.setTextureUnitID(Texture::Unit::TEX_UNIT2);
+
+        m_state_id_texture.setWrapping(Texture::Axis::S, Texture::WrapMode::REPEAT);
+        m_state_id_texture.setWrapping(Texture::Axis::T, Texture::WrapMode::REPEAT);
+
+        m_state_id_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::NEAREST);
+        m_state_id_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::NEAREST);
+    }
 }
 
 void MapNormalizer::GUI::GL::StateRenderingView::beginRender() {
@@ -92,17 +103,8 @@ void MapNormalizer::GUI::GL::StateRenderingView::beginRender() {
 
             auto [iwidth, iheight] = m_map_data->getDimensions();
 
-            m_state_id_texture.setTextureUnitID(Texture::Unit::TEX_UNIT2);
-
             m_state_id_texture.bind();
             {
-                WRITE_DEBUG("Building state ID matrix texture.");
-                m_state_id_texture.setWrapping(Texture::Axis::S, Texture::WrapMode::REPEAT);
-                m_state_id_texture.setWrapping(Texture::Axis::T, Texture::WrapMode::REPEAT);
-
-                m_state_id_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::NEAREST);
-                m_state_id_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::NEAREST);
-
                 m_state_id_texture.setTextureData(Texture::Format::RED32UI,
                                                   iwidth, iheight,
                                                   state_id_mtx.lock().get(),
