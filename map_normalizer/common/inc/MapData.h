@@ -51,6 +51,8 @@ namespace MapNormalizer {
             MapType32 getStateIDMatrix();
             ConstMapType32 getStateIDMatrix() const;
 
+            uint32_t getStateIDMatrixUpdatedTag() const;
+
         private:
             using InternalMapType = std::shared_ptr<uint8_t[]>;
             using InternalMapType32 = std::shared_ptr<uint32_t[]>;
@@ -66,6 +68,8 @@ namespace MapNormalizer {
             // More map representations as necessary
 
             bool m_closed;
+
+            uint32_t m_state_id_matrix_updated_tag;
 
         public:
             void setLabelMatrix(InternalMapType32);

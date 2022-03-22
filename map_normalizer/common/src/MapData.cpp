@@ -10,7 +10,8 @@ MapNormalizer::MapData::MapData(uint32_t width, uint32_t height):
     m_province_outlines(new uint8_t[width * height * 4]{ 0 }),
     m_label_matrix(nullptr),
     m_state_id_matrix(nullptr),
-    m_closed(false)
+    m_closed(false),
+    m_state_id_matrix_updated_tag(0)
 {
 }
 
@@ -44,10 +45,12 @@ void MapNormalizer::MapData::setLabelMatrix(InternalMapType32 label_matrix) {
 
 void MapNormalizer::MapData::setStateIDMatrix(uint32_t state_id_matrix[]) {
     m_state_id_matrix.reset(state_id_matrix);
+    ++m_state_id_matrix_updated_tag;
 }
 
 void MapNormalizer::MapData::setStateIDMatrix(InternalMapType32 state_id_matrix) {
     m_state_id_matrix = state_id_matrix;
+    ++m_state_id_matrix_updated_tag;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -91,3 +94,8 @@ auto MapNormalizer::MapData::getStateIDMatrix() -> MapType32 {
 auto MapNormalizer::MapData::getStateIDMatrix() const -> ConstMapType32 {
     return m_state_id_matrix;
 }
+
+uint32_t MapNormalizer::MapData::getStateIDMatrixUpdatedTag() const {
+    return m_state_id_matrix_updated_tag;
+}
+
