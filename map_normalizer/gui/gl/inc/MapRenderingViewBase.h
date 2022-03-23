@@ -46,6 +46,8 @@ namespace MapNormalizer::GUI::GL {
 
             std::array<glm::vec4, 6> getMapVertices();
 
+            Texture& getSelectionTexture();
+
             void drawMapVAO();
 
         private:
@@ -58,6 +60,8 @@ namespace MapNormalizer::GUI::GL {
             //! The basic Program for rendering the map
             Program m_program;
 
+            //! The texture to draw on top of a selected province
+            Texture m_selection_texture;
     };
 }
 

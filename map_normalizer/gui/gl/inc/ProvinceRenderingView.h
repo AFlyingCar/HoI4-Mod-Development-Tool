@@ -50,9 +50,6 @@ namespace MapNormalizer::GUI::GL {
 
             //! The outline texture
             Texture m_outline_texture;
-
-            //! The texture to draw on top of a selected province
-            Texture m_selection_texture;
     };
 }
 
