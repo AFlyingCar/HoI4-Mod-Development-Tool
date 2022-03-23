@@ -529,6 +529,8 @@ bool MapNormalizer::Project::MapProject::loadStateData(const std::filesystem::pa
             if(state.color == Color{0,0,0}) {
                 WRITE_WARN("Saved state data did not have a color value, generating a new one...");
                 state.color = generateUniqueColor(ProvinceType::UNKNOWN);
+            } else {
+                generateUniqueColor(ProvinceType::UNKNOWN); // "generate" a color to advance the number of colors by 1
             }
 
             // We need to parse the provinces seperately
