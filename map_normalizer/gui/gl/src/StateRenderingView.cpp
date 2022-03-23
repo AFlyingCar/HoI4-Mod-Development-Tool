@@ -154,6 +154,8 @@ void MapNormalizer::GUI::GL::StateRenderingView::render() {
 
         // Render the normal map first for each state that exists
         for(auto&& [id, state] : map_project.getStates()) {
+            if(state.provinces.empty()) continue;
+
             getMapProgram().uniform("state_color", state.color);
             getMapProgram().uniform("state_id", id);
 
