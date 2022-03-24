@@ -143,14 +143,35 @@ void MapNormalizer::GUI::GL::StateRenderingView::render() {
     //  any state_id_matrix texture uploaded
     if(m_map_data == nullptr) return;
 
-    if(auto opt_map_project = Driver::getInstance().getProject(); opt_map_project)
-    {
-        auto& map_project = opt_map_project->get().getMapProject();
+    if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+        auto& map_project = opt_project->get().getMapProject();
 
         getMapProgram().uniform("tex_dimensions", glm::ivec2(m_state_id_texture.getWidth(),
                                                              m_state_id_texture.getHeight()));
         getMapProgram().uniform("state_id_matrix", m_state_id_texture);
         m_state_id_texture.activate();
+
+        // Set uniforms related to selection
+        {
+            getMapProgram().uniform("selection", getSelectionTexture());
+            getSelectionTexture().activate();
+
+            auto selections = getOwningGLDrawingArea()->getSelections();
+
+            std::set<uint32_t> selection_ids;
+            std::transform(selections.begin(), selections.end(),
+                           std::inserter(selection_ids, selection_ids.begin()),
+                           [&map_project](const auto& s) {
+                               return map_project.isValidProvinceLabel(s.id) ?
+                                      map_project.getProvinceForLabel(s.id).state :
+                                      0;
+                           });
+
+            getMapProgram().uniform("selected_state_ids",
+                                    std::vector<uint32_t>(selection_ids.begin(),
+                                                          selection_ids.end()));
+            getMapProgram().uniform("num_selected", static_cast<uint32_t>(selection_ids.size()));
+        }
 
         // Render the normal map first for each state that exists
         for(auto&& [id, state] : map_project.getStates()) {

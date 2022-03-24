@@ -2,6 +2,7 @@
 
 out vec4 FragColor; // Output color value
 
+uniform sampler2D selection;
 uniform usampler2D state_id_matrix;
 
 uniform vec3 state_color;
@@ -9,6 +10,9 @@ uniform uint state_id;
 
 // This is necessary for dFd*Exact to work
 uniform ivec2 tex_dimensions;
+
+uniform uint selected_state_ids[MAX_SELECTED_PROVINCES];
+uniform uint num_selected; // Will be no larger than MAX_SELECTED_PROVINCES
 
 in vec2 texture_coords; // Input from vertex shader
 
@@ -42,6 +46,23 @@ float fwidthExact(float p) {
     return abs(dFdxExact(p)) + abs(dFdyExact(p));
 }
 
+vec4 layerColors(vec4 foreground, vec4 background) {
+    return (foreground * foreground.a) + (background * (1.0 - foreground.a));
+}
+
+/**
+ * @brief Checks if the given label is selected. Only iterates up to num_selected.
+ */
+bool isSelected(uint pixel_label) {
+    for(uint i = 0; i < num_selected; ++i) {
+        if(selected_state_ids[i] == pixel_label) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void main() {
     uint pixel_id = texture(state_id_matrix, texture_coords).r;
 
@@ -57,6 +78,15 @@ void main() {
     vec4 color_array[2];
     color_array[0] = vec4(0, 0, 0, 0);
     color_array[1] = vec4(state_color, 1.0);
+
+    {
+        float alpha = uint(isSelected(pixel_id));
+
+        // TODO: This should either be a constant, or passed in via uniform
+        vec4 sel_color = texture(selection, texture_coords * 16) * vec4(1, 0, 0, alpha);
+
+        color_array[1] = layerColors(sel_color, color_array[1]);
+    }
 
     // Commented out code allows us to view just the border. Leaving here in
     //   case we want a debug utility to switch to viewing _only_ the borders or
