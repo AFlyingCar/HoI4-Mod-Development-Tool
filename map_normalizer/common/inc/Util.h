@@ -426,6 +426,28 @@ namespace MapNormalizer {
             }
         }
     }
+
+    /**
+     * @brief Joins a range of values together into a string.
+     *
+     * @tparam Iter The type of iterator for traversing the range.
+     *
+     * @param begin The start of the range.
+     * @param end The end of the range.
+     * @param glue The string to use in between each value in the range.
+     *
+     * @return A string containing every value in the range, separated by 'glue'
+     */
+    template<typename Iter>
+    std::string join(Iter begin, Iter end, const std::string& glue = "") {
+        std::stringstream ss;
+        for(Iter it = begin; it != end; ++it) {
+            if(it != begin) ss << glue;
+            ss << *it;
+        }
+
+        return ss.str();
+    }
 }
 
 #endif
