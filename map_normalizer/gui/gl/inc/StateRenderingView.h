@@ -41,10 +41,8 @@ namespace MapNormalizer::GUI::GL {
             //! The state ID texture
             Texture m_state_id_texture;
 
+            //! A tag for the last state ID matrix value, used to know if it needs to be refreshed
             uint32_t m_last_state_id_matrix_updated_tag;
-
-            //! The texture to draw on top of a selected province
-            // Texture m_selection_texture;
     };
 }
 
