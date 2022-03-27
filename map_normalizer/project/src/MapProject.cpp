@@ -791,6 +791,29 @@ void MapNormalizer::Project::MapProject::updateStateIDMatrix() {
                           }
                       });
 
+    if(prog_opts.debug) {
+        auto path = dynamic_cast<HoI4Project&>(m_parent_project).getMetaRoot() / "debug";
+        auto fname = path / "stateidmtx.txt";
+
+        if(!std::filesystem::exists(path)) {
+            std::filesystem::create_directory(path);
+        }
+
+        WRITE_DEBUG("Writing state id matrix to ", fname);
+
+        if(std::ofstream out(fname); out) {
+            auto [width, height] = m_shape_detection_info.map_data->getDimensions();
+            uint32_t i = 0;
+            for(auto y = 0; y < height; ++y) {
+                for(auto x = 0; x < width; ++x) {
+                    out << state_id_matrix[i] << ' ';
+                    ++i;
+                }
+                out << '\n';
+            }
+        }
+    }
+
     m_shape_detection_info.map_data->setStateIDMatrix(state_id_matrix);
 
     WRITE_DEBUG("Done updating State ID matrix.");
