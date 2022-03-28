@@ -52,6 +52,9 @@ namespace MapNormalizer {
 
         //! --dont-write-logfiles
         bool dont_write_logfiles;
+
+        //! --fix-warnings-on-load
+        bool fix_warnings_on_load;
     };
 
     //! Global variable for storing program options.

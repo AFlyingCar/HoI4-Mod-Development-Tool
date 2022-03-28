@@ -28,6 +28,7 @@ void MapNormalizer::printHelp() {
     std::cout << "\t   --headless              Should the application run in headless mode (without the GUI). Note that this requires [INFIILE] and [OUTPATH] to be provided.";
     std::cout << "\t   --debug                 Should debugging features be enabled.";
     std::cout << "\t   --dont-write-logfiles   Should log files get written to a file.";
+    std::cout << "\t   --fix-warnings-on-load  Whether or not problems in a project file should attempt to be fixed when they are loaded.";
     std::cout << "\t-v,--verbose               Display all output.";
     std::cout << "\t-q,--quiet                 Display only errors and warnings (does not affect this message).";
     std::cout << "\t-h,--help                  Display this message and exit.";
@@ -63,11 +64,12 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
         { "headless", no_argument, NULL, 7 },
         { "debug", no_argument, NULL, 8 },
         { "dont-write-logfiles", no_argument, NULL, 9 },
+        { "fix-warnings-on-load", no_argument, NULL, 10 },
         { nullptr, 0, nullptr, 0}
     };
 
     // Setup default option values
-    ProgramOptions prog_opts { 0, "", "", false, false, "", "", false, "", false, false, false, false };
+    ProgramOptions prog_opts { 0, "", "", false, false, "", "", false, "", false, false, false, false, false };
 
     int optindex = 0;
     int c = 0;
@@ -133,6 +135,9 @@ auto MapNormalizer::parseArgs(int argc, char** argv) -> ProgramOptions {
                 break;
             case 9: // --dont-write-logfiles
                 prog_opts.dont_write_logfiles = true;
+                break;
+            case 10: // --fix-warnings-on-load
+                prog_opts.fix_warnings_on_load = true;
                 break;
             case 'v': // -v,--verbose
                 if(prog_opts.quiet) {
