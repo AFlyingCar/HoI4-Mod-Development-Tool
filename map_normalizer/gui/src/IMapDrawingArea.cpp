@@ -174,3 +174,18 @@ auto MapNormalizer::GUI::IMapDrawingAreaBase::getSelections()
     return m_selections;
 }
 
+std::ostream& MapNormalizer::GUI::operator<<(std::ostream& stream,
+                                             const IMapDrawingAreaBase::ViewingMode& mode)
+{
+    switch(mode) {
+        case IMapDrawingAreaBase::ViewingMode::PROVINCE_VIEW:
+            stream << "PROVINCE_VIEW";
+            break;
+        case IMapDrawingAreaBase::ViewingMode::STATES_VIEW:
+            stream << "STATES_VIEW";
+            break;
+    }
+
+    return stream;
+}
+

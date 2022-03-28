@@ -22,6 +22,7 @@
 #include "Shader.h"
 #include "GLUtils.h"
 #include "ProvinceRenderingView.h"
+#include "StateRenderingView.h"
 
 MapNormalizer::GUI::GL::MapDrawingArea::MapDrawingArea():
     m_initialized(false)
@@ -139,6 +140,7 @@ void MapNormalizer::GUI::GL::MapDrawingArea::init() {
     }
 
     m_rendering_views[ViewingMode::PROVINCE_VIEW].reset(new ProvinceRenderingView());
+    m_rendering_views[ViewingMode::STATES_VIEW].reset(new StateRenderingView());
 
     WRITE_DEBUG("Initializing each rendering view.");
     for(auto&& [viewing_mode, rendering_view] : m_rendering_views) {

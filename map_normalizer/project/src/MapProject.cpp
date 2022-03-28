@@ -9,6 +9,7 @@
 #include "Logger.h"
 #include "Constants.h"
 #include "Util.h"
+#include "UniqueColorGenerator.h"
 
 #include "ProvinceMapBuilder.h"
 
@@ -119,8 +120,10 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
     // TODO: Why do we actually have to do this? For some reason everything stops
     //  rendering correctly if we remove this line. Why? What? How?
     auto label_matrix = map_data->getLabelMatrix().lock();
+    auto state_id_matrix = map_data->getStateIDMatrix().lock();
     map_data.reset(new MapData(width, height));
     map_data->setLabelMatrix(label_matrix); // WHY?!!!!
+    map_data->setStateIDMatrix(state_id_matrix); // I'll re-iterate: WHY?!!!!
 
     auto input_data = map_data->getInput().lock();
     auto graphics_data = map_data->getProvinces().lock();
@@ -301,6 +304,11 @@ bool MapNormalizer::Project::MapProject::saveStateData(const std::filesystem::pa
             for(ProvinceID p : state.provinces) {
                 out << p << ',';
             }
+            out << ';';
+
+            out << static_cast<uint32_t>(state.color.r) << ';'
+                << static_cast<uint32_t>(state.color.g) << ';'
+                << static_cast<uint32_t>(state.color.b);
 
             out << std::endl;
         }
@@ -497,6 +505,7 @@ bool MapNormalizer::Project::MapProject::loadStateData(const std::filesystem::pa
             std::istringstream iss(line);
 
             State state;
+            state.color = Color{0,0,0}; // Initialize this to nothing
 
             std::string prov_id_data;
             if(!parseValuesSkipMissing<';'>(iss, &state.id,
@@ -505,11 +514,23 @@ bool MapNormalizer::Project::MapProject::loadStateData(const std::filesystem::pa
                                                  &state.category,
                                                  &state.buildings_max_level_factor,
                                                  &state.impassable,
-                                                 &prov_id_data, true))
+                                                 &prov_id_data, true,
+                                                 &state.color.r, true,
+                                                 &state.color.g, true,
+                                                 &state.color.b, true))
             {
                 ec = std::make_error_code(std::errc::bad_message);
                 WRITE_ERROR("Failed to parse line #", line_num, ": '", line, "'");
                 return false;
+            }
+
+            // If we did not load a state color, then the color should be 0,0,0
+            // In that case, we want to generate a new unique color value
+            if(state.color == Color{0,0,0}) {
+                WRITE_WARN("Saved state data did not have a color value, generating a new one...");
+                state.color = generateUniqueColor(ProvinceType::UNKNOWN);
+            } else {
+                generateUniqueColor(ProvinceType::UNKNOWN); // "generate" a color to advance the number of colors by 1
             }
 
             // We need to parse the provinces seperately
@@ -534,6 +555,8 @@ bool MapNormalizer::Project::MapProject::loadStateData(const std::filesystem::pa
                 m_available_state_ids.push(id);
             }
         }
+
+        updateStateIDMatrix();
     } else {
         ec = std::error_code(static_cast<int>(errno), std::generic_category());
         WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
@@ -658,7 +681,7 @@ auto MapNormalizer::Project::MapProject::addNewState(const std::vector<uint32_t>
 
     // Make sure that the provinces are decoupled from their original state
     for(auto&& prov : provinces) {
-        removeProvinceFromState(prov);
+        removeProvinceFromState(prov, false);
         prov.get().state = id;
     }
 
@@ -671,8 +694,11 @@ auto MapNormalizer::Project::MapProject::addNewState(const std::vector<uint32_t>
         "", /* category */
         DEFAULT_BUILDINGS_MAX_LEVEL_FACTOR, /* buildings_max_level_factor */
         false, /* impassable */
-        province_ids
+        province_ids,
+        generateUniqueColor(ProvinceType::UNKNOWN)
     };
+
+    updateStateIDMatrix();
 
     return id;
 }
@@ -685,6 +711,8 @@ auto MapNormalizer::Project::MapProject::addNewState(const std::vector<uint32_t>
 void MapNormalizer::Project::MapProject::removeState(StateID id) {
     m_available_state_ids.push(id);
     m_states.erase(id);
+
+    updateStateIDMatrix();
 }
 
 /**
@@ -711,6 +739,8 @@ void MapNormalizer::Project::MapProject::moveProvinceToState(Province& province,
     removeProvinceFromState(province);
     province.state = state_id;
     m_states[state_id].provinces.push_back(province.id);
+
+    updateStateIDMatrix();
 }
 
 /**
@@ -718,7 +748,8 @@ void MapNormalizer::Project::MapProject::moveProvinceToState(Province& province,
  *
  * @param province The province to remove.
  */
-void MapNormalizer::Project::MapProject::removeProvinceFromState(Province& province)
+void MapNormalizer::Project::MapProject::removeProvinceFromState(Province& province,
+                                                                 bool update_state_id_matrix)
 {
     // Remove from its old state
     if(auto prov_state_id = province.state; m_states.count(prov_state_id) != 0)
@@ -733,6 +764,59 @@ void MapNormalizer::Project::MapProject::removeProvinceFromState(Province& provi
         }
     }
     province.state = -1;
+
+    if(update_state_id_matrix) updateStateIDMatrix();
+}
+
+void MapNormalizer::Project::MapProject::updateStateIDMatrix() {
+    WRITE_DEBUG("Updating State ID matrix.");
+
+    auto matrix_size = m_shape_detection_info.label_matrix_size;
+
+    uint32_t* state_id_matrix = new uint32_t[matrix_size];
+
+    auto label_matrix = m_shape_detection_info.map_data->getLabelMatrix().lock();
+
+    auto* label_matrix_start = label_matrix.get();
+
+    parallelTransform(label_matrix_start, label_matrix_start + matrix_size,
+                      state_id_matrix,
+                      [this](uint32_t prov_id) -> uint32_t {
+                          if(isValidProvinceLabel(prov_id - 1)) {
+                              return getProvinceForLabel(prov_id - 1).state;
+                          } else {
+                              WRITE_WARN("Invalid province ID ", prov_id - 1,
+                                         " detected when building state id matrix. Treating as though there's no state here.");
+                              return 0;
+                          }
+                      });
+
+    if(prog_opts.debug) {
+        auto path = dynamic_cast<HoI4Project&>(m_parent_project).getMetaRoot() / "debug";
+        auto fname = path / "stateidmtx.txt";
+
+        if(!std::filesystem::exists(path)) {
+            std::filesystem::create_directory(path);
+        }
+
+        WRITE_DEBUG("Writing state id matrix to ", fname);
+
+        if(std::ofstream out(fname); out) {
+            auto [width, height] = m_shape_detection_info.map_data->getDimensions();
+            uint32_t i = 0;
+            for(auto y = 0; y < height; ++y) {
+                for(auto x = 0; x < width; ++x) {
+                    out << state_id_matrix[i] << ' ';
+                    ++i;
+                }
+                out << '\n';
+            }
+        }
+    }
+
+    m_shape_detection_info.map_data->setStateIDMatrix(state_id_matrix);
+
+    WRITE_DEBUG("Done updating State ID matrix.");
 }
 
 /**
@@ -790,6 +874,12 @@ auto MapNormalizer::Project::MapProject::getProvinces() const
 
 auto MapNormalizer::Project::MapProject::getProvinces() -> ProvinceList& {
     return m_shape_detection_info.provinces;
+}
+
+auto MapNormalizer::Project::MapProject::getStates() const
+    -> const std::map<uint32_t, State>&
+{
+    return m_states;
 }
 
 auto MapNormalizer::Project::MapProject::getStateForID(StateID state_id) const

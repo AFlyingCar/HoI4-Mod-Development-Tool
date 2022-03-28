@@ -10,8 +10,12 @@
 
 #include "Logger.h"
 
+#include "Driver.h"
+#include "Util.h"
+
 #include "GLUtils.h"
 #include "GLShaderSources.h"
+#include "GuiUtils.h"
 
 MapNormalizer::GUI::GL::MapRenderingViewBase::MapRenderingViewBase() {
 }
@@ -33,9 +37,9 @@ void MapNormalizer::GUI::GL::MapRenderingViewBase::init() {
     // Set up all shaders
     WRITE_DEBUG("Building map rendering view program...");
     m_program = Program{Shader(Shader::Type::VERTEX,
-                               ShaderSources::provinceview_vertex),
+                               getVertexShaderSource()),
                         Shader(Shader::Type::FRAGMENT,
-                               ShaderSources::provinceview_fragment)
+                               getFragmentShaderSource())
                        };
     MN_LOG_GL_ERRORS();
 
@@ -77,55 +81,52 @@ void MapNormalizer::GUI::GL::MapRenderingViewBase::init() {
         glBindVertexArray(0);
         MN_LOG_GL_ERRORS();
     }
-}
 
-/**
- * @brief Re-generates the map texture based on the data stored in map_data
- */
-void MapNormalizer::GUI::GL::MapRenderingViewBase::onMapDataChanged(std::shared_ptr<const MapData> map_data)
-{
-    auto [iwidth, iheight] = map_data->getDimensions();
-
-    m_texture.setTextureUnitID(Texture::Unit::TEX_UNIT0);
-
-    m_texture.bind();
+    WRITE_DEBUG("Building Selection Texture...");
     {
-        // map_texture->setWrapping(Texture::Axis::S, Texture::WrapMode::CLAMP_TO_EDGE);
-        // map_texture->setWrapping(Texture::Axis::T, Texture::WrapMode::CLAMP_TO_EDGE);
+        // TODO: This path shouldn't be hardcoded, we should get it instead from
+        //   the build system/from a ResourceManager
+        auto stream = Driver::getInstance().getResources()->open_stream("/com/aflyingcar/MapNormalizerTools/textures/selection.bmp");
 
-        m_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::LINEAR);
-        m_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::LINEAR);
+        std::unique_ptr<BitMap> selection_bmp(new BitMap);
+        if(readBMP(stream, selection_bmp.get()) == nullptr) {
+            WRITE_ERROR("Failed to load selection texture!");
 
-        m_texture.setTextureData(Texture::Format::RGB,
-                                  iwidth, iheight, map_data->getProvinces().lock().get());
+            m_selection_texture.setTextureUnitID(Texture::Unit::TEX_UNIT3);
+
+            m_selection_texture.bind();
+
+            m_selection_texture.setTextureData(Texture::Format::RGBA, 1, 1,
+                                               (uint8_t*)0);
+            m_selection_texture.bind(false);
+        } else {
+            auto iwidth = selection_bmp->info_header.width;
+            auto iheight = selection_bmp->info_header.height;
+
+            m_selection_texture.setTextureUnitID(Texture::Unit::TEX_UNIT3);
+
+            m_selection_texture.bind();
+            {
+                // Use NEAREST rather than LINEAR to prevent weird outlines around
+                //  the textures
+                m_selection_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::LINEAR);
+                m_selection_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::LINEAR);
+
+                m_selection_texture.setWrapping(Texture::Axis::S, Texture::WrapMode::REPEAT);
+                m_selection_texture.setWrapping(Texture::Axis::T, Texture::WrapMode::REPEAT);
+
+                m_selection_texture.setTextureData(Texture::Format::RGBA,
+                                                   iwidth, iheight,
+                                                   selection_bmp->data);
+            }
+            m_selection_texture.bind(false);
+        }
     }
-    m_texture.bind(false);
-
-    ////////////////////////////////////////////////////////////////////////////
-
-    m_label_texture.setTextureUnitID(Texture::Unit::TEX_UNIT1);
-
-    m_label_texture.bind();
-    {
-        WRITE_DEBUG("Building label matrix texture.");
-        m_label_texture.setWrapping(Texture::Axis::S, Texture::WrapMode::REPEAT);
-        m_label_texture.setWrapping(Texture::Axis::T, Texture::WrapMode::REPEAT);
-
-        m_label_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::NEAREST);
-        m_label_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::NEAREST);
-
-        m_label_texture.setTextureData(Texture::Format::RED32UI,
-                                       iwidth, iheight,
-                                       map_data->getLabelMatrix().lock().get(),
-                                       GL_RED_INTEGER);
-    }
-    m_label_texture.bind(false);
 }
 
 void MapNormalizer::GUI::GL::MapRenderingViewBase::beginRender() {
     m_program.use();
     setupUniforms();
-    m_texture.activate();
 }
 
 void MapNormalizer::GUI::GL::MapRenderingViewBase::render() {
@@ -134,10 +135,6 @@ void MapNormalizer::GUI::GL::MapRenderingViewBase::render() {
 
 void MapNormalizer::GUI::GL::MapRenderingViewBase::endRender() {
     m_program.use(false);
-}
-
-void MapNormalizer::GUI::GL::MapRenderingViewBase::setupUniforms() {
-    m_program.uniform("map_texture", m_texture);
 }
 
 /**
@@ -163,6 +160,12 @@ auto MapNormalizer::GUI::GL::MapRenderingViewBase::getMapVertices()
     };
 }
 
+auto MapNormalizer::GUI::GL::MapRenderingViewBase::getSelectionTexture()
+    -> Texture&
+{
+    return m_selection_texture;
+}
+
 void MapNormalizer::GUI::GL::MapRenderingViewBase::drawMapVAO() {
     // Draw the map object
     glBindVertexArray(m_vao);
@@ -177,15 +180,6 @@ void MapNormalizer::GUI::GL::MapRenderingViewBase::drawMapVAO() {
 
 auto MapNormalizer::GUI::GL::MapRenderingViewBase::getMapProgram() -> Program& {
     return m_program;
-}
-
-auto MapNormalizer::GUI::GL::MapRenderingViewBase::getMapTexture() -> Texture& {
-    return m_texture;
-}
-
-auto MapNormalizer::GUI::GL::MapRenderingViewBase::getLabelTexture() -> Texture&
-{
-    return m_label_texture;
 }
 
 auto MapNormalizer::GUI::GL::MapRenderingViewBase::getPrograms() -> ProgramList {

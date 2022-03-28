@@ -166,15 +166,26 @@ bool MapNormalizer::GUI::GL::Program::uniform(const std::string& uniform_name,
     } else if(value.type() == typeid(glm::vec2)) {                     // vec2
         glUniform2fv(uniform_loc, 1,
                      glm::value_ptr(std::any_cast<glm::vec2>(value)));
+    } else if(value.type() == typeid(glm::ivec2)) {                    // ivec2
+        glUniform2iv(uniform_loc, 1,
+                     glm::value_ptr(std::any_cast<glm::ivec2>(value)));
     } else if(value.type() == typeid(glm::vec3)) {                     // vec3
         glUniform3fv(uniform_loc, 1,
                      glm::value_ptr(std::any_cast<glm::vec3>(value)));
+    } else if(value.type() == typeid(glm::ivec3)) {                    // ivec3
+        glUniform3iv(uniform_loc, 1,
+                     glm::value_ptr(std::any_cast<glm::ivec3>(value)));
     } else if(value.type() == typeid(Color)) {                         // Color
         auto&& color = std::any_cast<Color>(value);
-        glUniform3f(uniform_loc, color.r, color.g, color.b);
+        glUniform3f(uniform_loc, color.r / 255.0f,
+                                 color.g / 255.0f,
+                                 color.b / 255.0f);
     } else if(value.type() == typeid(glm::vec4)) {                     // vec4
         glUniform4fv(uniform_loc, 1,
                      glm::value_ptr(std::any_cast<glm::vec4>(value)));
+    } else if(value.type() == typeid(glm::ivec4)) {                    // ivec4
+        glUniform4iv(uniform_loc, 1,
+                     glm::value_ptr(std::any_cast<glm::ivec4>(value)));
     } else if(value.type() == typeid(glm::mat2)) {                     // mat2
         glUniformMatrix2fv(uniform_loc, 1, GL_FALSE,
                            glm::value_ptr(std::any_cast<glm::mat2>(value)));

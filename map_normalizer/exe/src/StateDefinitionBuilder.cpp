@@ -55,7 +55,7 @@ auto MapNormalizer::createStatesList(const ProvinceList& provinces,
                 manpower = std::atoi(raw_manpower.c_str());
 
                 states[id] = {
-                    id, raw_name, manpower, raw_category, 0.0f, false, std::vector<ProvinceID>()
+                    id, raw_name, manpower, raw_category, 0.0f, false, std::vector<ProvinceID>(), Color{0,0,0}
                 };
 
                 continue;
@@ -79,7 +79,7 @@ csvParseFailure:
                 std::string category = "";
 
                 states[state_id] = {
-                    state_id, state_name, manpower, category, 0.0f, false, std::vector<ProvinceID>()
+                    state_id, state_name, manpower, category, 0.0f, false, std::vector<ProvinceID>(), Color{0,0,0}
                 };
             }
         }

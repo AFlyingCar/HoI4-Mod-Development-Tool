@@ -189,6 +189,40 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
         usecairo_action->change_state(true);
 #endif
     }
+
+    // Switch Views actions
+    {
+        auto provinceview_action = add_action_bool("switch_views.province", [this]()
+        {
+            // Change us to be enabled
+            auto self = lookup_action("switch_views.province");
+            self->change_state(true);
+
+            // Change the state view to be disabled
+            auto state_option = lookup_action("switch_views.state");
+            state_option->change_state(false);
+
+            auto prev_mode = m_drawing_area->setViewingMode(IMapDrawingAreaBase::ViewingMode::PROVINCE_VIEW);
+            WRITE_DEBUG("Switched from rendering view ", prev_mode, " to ",
+                        IMapDrawingAreaBase::ViewingMode::PROVINCE_VIEW);
+        });
+
+        auto stateview_action = add_action_bool("switch_views.state", [this]() {
+            // Change us to be enabled
+            auto self = lookup_action("switch_views.state");
+            self->change_state(true);
+
+            // Change the province view to be disabled
+            auto province_option = lookup_action("switch_views.province");
+            province_option->change_state(false);
+
+            auto prev_mode = m_drawing_area->setViewingMode(IMapDrawingAreaBase::ViewingMode::STATES_VIEW);
+            WRITE_DEBUG("Switched from rendering view ", prev_mode, " to ",
+                        IMapDrawingAreaBase::ViewingMode::STATES_VIEW);
+        });
+
+        provinceview_action->change_state(true);
+    }
 }
 
 /**

@@ -145,6 +145,8 @@ namespace MapNormalizer {
         
         std::vector<ProvinceID> provinces;
 
+        Color color;
+
         // std::map<???, uint32_t> resources;
         // TODO: history?
     };
