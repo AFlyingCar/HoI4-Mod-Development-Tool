@@ -855,8 +855,7 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
         }
 
         WRITE_DEBUG("Assigning the found data to the map project.");
-        project.getMapProject().setShapeFinder(std::move(shape_finder));
-        project.getMapProject().setGraphicsData(map_data);
+        project.getMapProject().importMapData(std::move(shape_finder), map_data);
 
         // We need to re-assign the data into the drawing area to update the
         //   texture on the drawing area

@@ -622,23 +622,23 @@ bool MapNormalizer::Project::MapProject::loadStateData(const std::filesystem::pa
  *
  * @param shape_finder The ShapeFinder to load data from
  */
-void MapNormalizer::Project::MapProject::setShapeFinder(ShapeFinder&& shape_finder)
+void MapNormalizer::Project::MapProject::importMapData(ShapeFinder&& shape_finder,
+                                                       std::shared_ptr<MapData> map_data)
 {
-    // We want to take ownership of all the internal data here
-    //  TODO: Do we actually _need_ to do this?
-    ShapeFinder sf(std::move(shape_finder));
-
-    m_shape_detection_info.provinces = createProvincesFromShapeList(sf.getShapes());
-    m_shape_detection_info.map_data->setLabelMatrix(sf.getLabelMatrix());
-    m_shape_detection_info.label_matrix_size = sf.getLabelMatrixSize();
-    m_shape_detection_info.map_data.reset();
-
-    // Clear out the province preview data
-    m_data_cache.clear();
-}
-
-void MapNormalizer::Project::MapProject::setGraphicsData(std::shared_ptr<MapData> map_data) {
     m_shape_detection_info.map_data = map_data;
+
+    {
+        // We want to take ownership of all the internal data here
+        //  TODO: Do we actually _need_ to do this?
+        ShapeFinder sf(std::move(shape_finder));
+
+        m_shape_detection_info.provinces = createProvincesFromShapeList(sf.getShapes());
+        m_shape_detection_info.map_data->setLabelMatrix(sf.getLabelMatrix());
+        m_shape_detection_info.label_matrix_size = sf.getLabelMatrixSize();
+
+        // Clear out the province preview data
+        m_data_cache.clear();
+    }
 
     buildProvinceOutlines();
 }
