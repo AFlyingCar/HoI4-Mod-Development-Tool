@@ -18,6 +18,7 @@
 # include <future>
 
 # include "Types.h"
+# include "Logger.h"
 
 namespace MapNormalizer {
     // Forward declare this, as we don't need to include the whole file yet.
@@ -165,10 +166,30 @@ namespace MapNormalizer {
                 return std::nullopt;
             }
         } else if constexpr(std::is_integral_v<T>) {
-            try {
-                return static_cast<T>(std::stoi(s));
-            } catch(const std::invalid_argument&) {
-                return std::nullopt; // TODO: print error
+            if constexpr(std::is_unsigned_v<T>) {
+                try {
+                    return static_cast<T>(std::stoul(s));
+                } catch(const std::invalid_argument& e) {
+                    WRITE_ERROR("Received invalid argument, cannot convert '", s,
+                                "' to int: what()=", e.what());
+                    return std::nullopt;
+                } catch(const std::out_of_range& e) {
+                    WRITE_ERROR("Received out-of-range argument, cannot convert '",
+                                s, "' to int: what()=", e.what());
+                    return std::nullopt;
+                }
+            } else {
+                try {
+                    return static_cast<T>(std::stoi(s));
+                } catch(const std::invalid_argument& e) {
+                    WRITE_ERROR("Received invalid argument, cannot convert '", s,
+                                "' to int: what()=", e.what());
+                    return std::nullopt;
+                } catch(const std::out_of_range& e) {
+                    WRITE_ERROR("Received out-of-range argument, cannot convert '",
+                                s, "' to int: what()=", e.what());
+                    return std::nullopt;
+                }
             }
         } else if constexpr(std::is_floating_point_v<T>) {
             try {
