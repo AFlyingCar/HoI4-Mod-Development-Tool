@@ -93,6 +93,8 @@ namespace MapNormalizer::Project {
             bool loadStateData(const std::filesystem::path&,
                                std::error_code&);
 
+            bool validateData();
+
             void updateStateIDMatrix();
 
         private:

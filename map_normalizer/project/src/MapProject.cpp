@@ -153,7 +153,7 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
             }
 
             // Rebuild color data
-            auto& province = m_shape_detection_info.provinces[label - 1];
+            auto& province = getProvinceForLabel(label);
 
             // Flip the colors from RGB to BGR because BitMap is a bad format
             graphics_data[gindex] = province.unique_color.b;
@@ -164,7 +164,57 @@ bool MapNormalizer::Project::MapProject::load(const std::filesystem::path& path,
 
     buildProvinceOutlines();
 
-    return true;
+    return validateData();
+}
+
+bool MapNormalizer::Project::MapProject::validateData() {
+    WRITE_DEBUG("Validating all project data.");
+
+    bool success = true;
+
+    for(auto&& province : m_shape_detection_info.provinces) {
+        if(province.state != -1) {
+            if(!isValidStateID(province.state)) {
+                WRITE_WARN("Province has state ID of ", province.state, " which is invalid!");
+                if(prog_opts.fix_warnings_on_load) {
+                    WRITE_INFO("Setting province state ID to -1.");
+                    province.state = -1;
+                }
+                continue;
+            }
+
+            if(auto& state = getStateForID(province.state);
+                    std::find(state.provinces.begin(), state.provinces.end(), province.id) == state.provinces.end())
+            {
+                WRITE_WARN("State ", state.id, " does not contain province #", province.id, "!");
+
+                if(prog_opts.fix_warnings_on_load) {
+                    WRITE_INFO("Adding province ", province.id, " to state ", state.id);
+                    state.provinces.push_back(province.id);
+
+                    WRITE_INFO("Searching for any state that currently has this province...");
+                    std::vector<ProvinceID>::iterator province_it;
+                    auto it = std::find_if(m_states.begin(),
+                                           m_states.end(),
+                                           [&province, &province_it](auto& id_state_pair)
+                                           {
+                                               return (province_it = std::find(id_state_pair.second.provinces.begin(),
+                                                                               id_state_pair.second.provinces.end(),
+                                                                               province.id)) != id_state_pair.second.provinces.end();
+                                           });
+
+                    if(it == m_states.end()) {
+                        WRITE_INFO("No states found containing this province.");
+                    } else {
+                        WRITE_INFO("Found state ", it->second.id, " that contains province ", province.id, ". Removing the province from the state.");
+                        it->second.provinces.erase(province_it);
+                    }
+                }
+            }
+        }
+    }
+
+    return success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -550,7 +600,7 @@ bool MapNormalizer::Project::MapProject::loadStateData(const std::filesystem::pa
 
         // Now that we've loaded every single state, we need to track which IDs
         //  have not been used yet
-        for(StateID id = 0; id < m_states.size(); ++id) {
+        for(StateID id = 1; id < m_states.size(); ++id) {
             if(m_states.count(id) == 0) {
                 m_available_state_ids.push(id);
             }
@@ -616,19 +666,19 @@ bool MapNormalizer::Project::MapProject::isValidStateID(StateID state_id) const
 
 bool MapNormalizer::Project::MapProject::isValidProvinceLabel(uint32_t label) const
 {
-    return label < m_shape_detection_info.provinces.size();
+    return (label - 1) < m_shape_detection_info.provinces.size();
 }
 
 auto MapNormalizer::Project::MapProject::getProvinceForLabel(uint32_t label) const
     -> const Province&
 {
-    return m_shape_detection_info.provinces.at(label);
+    return m_shape_detection_info.provinces.at(label - 1);
 }
 
 auto MapNormalizer::Project::MapProject::getProvinceForLabel(uint32_t label)
     -> Province&
 {
-    return m_shape_detection_info.provinces.at(label);
+    return m_shape_detection_info.provinces.at(label - 1);
 }
 
 const std::set<std::string>& MapNormalizer::Project::MapProject::getContinentList() const
@@ -669,7 +719,7 @@ auto MapNormalizer::Project::MapProject::addNewState(const std::vector<uint32_t>
     std::transform(province_ids.begin(), province_ids.end(),
                    std::back_inserter(provinces),
                    [this](uint32_t prov_id) -> std::reference_wrapper<Province> {
-                       return std::ref(m_shape_detection_info.provinces.at(prov_id));
+                       return std::ref(getProvinceForLabel(prov_id));
                    });
 
     // Increment by 1 because we do not want 0 to be a state ID
@@ -678,6 +728,8 @@ auto MapNormalizer::Project::MapProject::addNewState(const std::vector<uint32_t>
         id = m_available_state_ids.front();
         m_available_state_ids.pop();
     }
+
+    WRITE_DEBUG("Creating new state with ID ", id);
 
     // Make sure that the provinces are decoupled from their original state
     for(auto&& prov : provinces) {
@@ -724,7 +776,7 @@ void MapNormalizer::Project::MapProject::removeState(StateID id) {
 void MapNormalizer::Project::MapProject::moveProvinceToState(uint32_t prov_id,
                                                              StateID state_id)
 {
-    moveProvinceToState(m_shape_detection_info.provinces.at(prov_id), state_id);
+    moveProvinceToState(getProvinceForLabel(prov_id), state_id);
 }
 
 /**
@@ -782,10 +834,10 @@ void MapNormalizer::Project::MapProject::updateStateIDMatrix() {
     parallelTransform(label_matrix_start, label_matrix_start + matrix_size,
                       state_id_matrix,
                       [this](uint32_t prov_id) -> uint32_t {
-                          if(isValidProvinceLabel(prov_id - 1)) {
-                              return getProvinceForLabel(prov_id - 1).state;
+                          if(isValidProvinceLabel(prov_id)) {
+                              return getProvinceForLabel(prov_id).state;
                           } else {
-                              WRITE_WARN("Invalid province ID ", prov_id - 1,
+                              WRITE_WARN("Invalid province ID ", prov_id,
                                          " detected when building state id matrix. Treating as though there's no state here.");
                               return 0;
                           }
@@ -829,8 +881,8 @@ void MapNormalizer::Project::MapProject::updateStateIDMatrix() {
 auto MapNormalizer::Project::MapProject::getPreviewData(ProvinceID id)
     -> ProvinceDataPtr
 {
-    if(id - 1 < m_shape_detection_info.provinces.size()) {
-        return getPreviewData(&m_shape_detection_info.provinces.at(id - 1));
+    if(isValidProvinceLabel(id)) {
+        return getPreviewData(&getProvinceForLabel(id));
     }
 
     return nullptr;
@@ -1000,7 +1052,7 @@ void MapNormalizer::Project::MapProject::buildProvinceOutlines() {
             auto label = m_shape_detection_info.map_data->getLabelMatrix().lock()[lindex];
             auto gindex = xyToIndex(width * 4, x * 4, y);
 
-            auto& province = m_shape_detection_info.provinces[label - 1];
+            auto& province = getProvinceForLabel(label);
 
             // Error check
             if(label <= 0 || label > m_shape_detection_info.provinces.size()) {
