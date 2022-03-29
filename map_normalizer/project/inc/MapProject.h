@@ -35,8 +35,7 @@ namespace MapNormalizer::Project {
             virtual bool load(const std::filesystem::path&,
                               std::error_code& = last_error) override;
 
-            void setShapeFinder(ShapeFinder&&);
-            void setGraphicsData(std::shared_ptr<MapData>);
+            void importMapData(ShapeFinder&&, std::shared_ptr<MapData>);
 
             std::shared_ptr<MapData> getMapData();
             const std::shared_ptr<MapData> getMapData() const;
@@ -92,6 +91,8 @@ namespace MapNormalizer::Project {
                                    std::error_code&);
             bool loadStateData(const std::filesystem::path&,
                                std::error_code&);
+
+            bool validateData();
 
             void updateStateIDMatrix();
 

@@ -46,12 +46,16 @@ TEST(UtilTests, FromStringTests) {
     {
         std::string small_number("12345");
         std::string negative_number("-456789");
+        std::string very_large_number(std::to_string(static_cast<uint32_t>(-1)));
 
         auto result = fromString<int>(small_number);
         ASSERT_OPTIONAL(result, 12345);
 
         result = fromString<int>(negative_number);
         ASSERT_OPTIONAL(result, -456789);
+
+        result = fromString<uint32_t>(very_large_number);
+        ASSERT_OPTIONAL(result, -1);
     }
 
     // Test Floating Points

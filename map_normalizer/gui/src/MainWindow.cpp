@@ -393,7 +393,9 @@ void MapNormalizer::GUI::MainWindow::initializeCallbacks() {
                         m_province_properties_pane->setProvince(nullptr, null_data);
                     }
 
-                    m_state_properties_pane->setState(nullptr);
+                    if(m_state_properties_pane != nullptr) {
+                        m_state_properties_pane->setState(nullptr);
+                    }
 
                     m_drawing_area->setSelection();
                     m_drawing_area->queueDraw();
@@ -475,11 +477,11 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                 auto label = lmatrix[xyToIndex(map_data->getWidth(), x, y)];
 
                 WRITE_DEBUG("Selecting province with ID ", label);
-                SelectionManager::getInstance().selectProvince(label - 1);
+                SelectionManager::getInstance().selectProvince(label);
 
                 // If this is a valid province, then select the state that it is
                 //  a part of (if it is a part of one at all, that is)
-                if(map_project.isValidProvinceLabel(label - 1)) {
+                if(map_project.isValidProvinceLabel(label)) {
                     auto& prov = map_project.getProvinceForLabel(label -1);
 
                     // Make sure we check for if the state ID is valid first so
@@ -515,7 +517,7 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
                 // Go over the list of already selected provinces and check if
                 //  we have clicked on one that is _already_ selected
                 const auto& selected_labels = SelectionManager::getInstance().getSelectedProvinceLabels();
-                bool is_already_selected = selected_labels.count(label - 1);
+                bool is_already_selected = selected_labels.count(label);
 
                 // Perform a check here to make sure we don't go over the maximum
                 //   number of selectable provinces if we are not deselecting one
@@ -528,21 +530,21 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
 
                 // Do not mark this province as selected if we are deselecting it
                 if(is_already_selected) {
-                    SelectionManager::getInstance().removeProvinceSelection(label - 1);
+                    SelectionManager::getInstance().removeProvinceSelection(label);
                 } else {
-                    SelectionManager::getInstance().addProvinceSelection(label - 1);
+                    SelectionManager::getInstance().addProvinceSelection(label);
                 }
 
                 // If this is a valid province, then select the state that it is
                 //  a part of (if it is a part of one at all, that is)
-                if(map_project.isValidProvinceLabel(label - 1)) {
+                if(map_project.isValidProvinceLabel(label)) {
                     auto& prov = map_project.getProvinceForLabel(label -1);
 
                     // Don't bother checking for if it's valid or not, as
                     //  MapProject will do that for us
                     SelectionManager::getInstance().addStateSelection(prov.state);
                 } else {
-                    SelectionManager::getInstance().removeStateSelection(label - 1);
+                    SelectionManager::getInstance().removeStateSelection(label);
                 }
             }
         });
@@ -853,8 +855,7 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
         }
 
         WRITE_DEBUG("Assigning the found data to the map project.");
-        project.getMapProject().setShapeFinder(std::move(shape_finder));
-        project.getMapProject().setGraphicsData(map_data);
+        project.getMapProject().importMapData(std::move(shape_finder), map_data);
 
         // We need to re-assign the data into the drawing area to update the
         //   texture on the drawing area
