@@ -3,6 +3,7 @@
 
 # include <stack>
 # include <memory>
+# include <functional>
 
 # include "IAction.h"
 
@@ -16,6 +17,8 @@ namespace MapNormalizer::Action {
      */
     class ActionManager final {
         public:
+            using ActionUpdateCallbackType = std::function<void(const IAction&)>;
+
             static ActionManager& getInstance();
 
             template<typename T>
@@ -37,6 +40,10 @@ namespace MapNormalizer::Action {
             uint32_t getHistorySize() const;
             uint32_t getUndoneHistorySize() const;
 
+            void setOnDoActionCallback(const ActionUpdateCallbackType&);
+            void setOnUndoActionCallback(const ActionUpdateCallbackType&);
+            void setOnRedoActionCallback(const ActionUpdateCallbackType&);
+
         private:
             ActionManager();
 
@@ -45,6 +52,13 @@ namespace MapNormalizer::Action {
 
             //! Stack of undone actions from newest to oldest
             std::stack<std::unique_ptr<IAction>> m_undone_actions;
+
+            //! Called when an action is performed
+            ActionUpdateCallbackType m_on_do_action;
+            //! Called when an action is undone
+            ActionUpdateCallbackType m_on_undo_action;
+            //! Called when an action is redone
+            ActionUpdateCallbackType m_on_redo_action;
     };
 }
 
