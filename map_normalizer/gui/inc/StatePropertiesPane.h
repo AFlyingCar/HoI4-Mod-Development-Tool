@@ -32,6 +32,8 @@ namespace MapNormalizer::GUI {
 
             void onResize();
 
+            void updateProperties(bool);
+
         protected:
             /**
              * @brief A special ListBox row for representing a single row in the

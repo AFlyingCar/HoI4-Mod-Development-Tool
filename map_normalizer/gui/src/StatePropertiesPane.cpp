@@ -288,6 +288,11 @@ void MapNormalizer::GUI::StatePropertiesPane::setState(State* state,
 
 void MapNormalizer::GUI::StatePropertiesPane::onResize() { }
 
+void MapNormalizer::GUI::StatePropertiesPane::updateProperties(bool is_multiselect)
+{
+    updateProperties(m_state, is_multiselect);
+}
+
 /**
  * @brief Will update all of the values stored in every field to the given
  *        province. If prov is nullptr, then the values are changed to defaults.

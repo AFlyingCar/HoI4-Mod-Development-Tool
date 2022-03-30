@@ -35,6 +35,8 @@ namespace MapNormalizer::GUI {
 
             void onResize();
 
+            void updateProperties(bool);
+
         protected:
             virtual void addWidgetToParent(Gtk::Widget&) override;
 
