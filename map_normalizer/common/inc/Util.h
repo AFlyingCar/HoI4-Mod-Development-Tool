@@ -19,6 +19,7 @@
 
 # include "Types.h"
 # include "Logger.h"
+# include "PreprocessorUtils.h"
 
 namespace MapNormalizer {
     // Forward declare this, as we don't need to include the whole file yet.
@@ -500,6 +501,20 @@ namespace MapNormalizer {
     [[maybe_unused]] void __void_if_no_value();
 /// @endcond
 
+    /**
+     * @brief Runs the given function when the current scope ends
+     */
+    struct RunAtScopeEnd {
+        RunAtScopeEnd(const std::function<void()>& f): m_f(f) { }
+
+        ~RunAtScopeEnd() {
+            m_f();
+        }
+
+        std::function<void()> m_f;
+    };
+
+# define RUN_AT_SCOPE_END(...) MapNormalizer::RunAtScopeEnd UNIQUE_NAME(___AT_SCOPE_END) ( __VA_ARGS__ )
 }
 
 #endif
