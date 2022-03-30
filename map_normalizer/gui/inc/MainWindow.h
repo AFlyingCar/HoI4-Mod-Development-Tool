@@ -24,6 +24,7 @@
 # include "ProvincePropertiesPane.h"
 # include "StatePropertiesPane.h"
 # include "LogViewerWindow.h"
+# include "Toolbar.h"
 
 # include "MapDrawingAreaGL.h"
 # include "MapDrawingArea.h"
@@ -58,6 +59,7 @@ namespace MapNormalizer::GUI {
                 return std::get<W*>(m_active_child = addWidget<W>(std::forward<Args>(args)...));
             }
 
+            void buildToolbar();
             void buildViewPane();
             Gtk::Frame* buildPropertiesPane();
 
@@ -84,6 +86,9 @@ namespace MapNormalizer::GUI {
 
             //! The currently active widget to be added to
             ActiveChildVariant<Gtk::Box, Gtk::Frame, Gtk::ScrolledWindow, Gtk::Notebook> m_active_child;
+
+            //! The toolbar of the application
+            Toolbar* m_toolbar;
 
             //! The main pane where all child widgets will be inside
             Gtk::Paned* m_paned;
