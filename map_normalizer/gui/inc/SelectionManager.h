@@ -52,6 +52,9 @@ namespace MapNormalizer::GUI {
             void setOnSelectProvinceCallback(const std::function<void(uint32_t, Action)>&);
             void setOnSelectStateCallback(const std::function<void(StateID, Action)>&);
 
+            size_t getSelectedProvinceCount() const;
+            size_t getSelectedStateCount() const;
+
             /////////////////////////////////
 
             void onProjectLoaded();
