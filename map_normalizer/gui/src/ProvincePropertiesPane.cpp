@@ -11,6 +11,7 @@
 
 #include "ActionManager.h"
 #include "SetPropertyAction.h"
+#include "CreateRemoveContinentAction.h"
 
 #include "Driver.h"
 #include "SelectionManager.h"
@@ -202,11 +203,15 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildContinentField() {
             const int result = add_dialog.run();
             switch(result) {
                 case Gtk::RESPONSE_ACCEPT:
-                    map_project.addNewContinent(continent_name_entry.get_text());
-
-                    // Rebuild the continent menu here so that they remain
-                    //  in the same order as in the internal std::set
-                    rebuildContinentMenu(continents);
+                    if(Action::ActionManager::getInstance().doAction(
+                        new Action::CreateRemoveContinentAction(map_project,
+                                                                continent_name_entry.get_text(),
+                                                                Action::CreateRemoveContinentAction::Type::CREATE)))
+                    {
+                        // Rebuild the continent menu here so that they remain
+                        //  in the same order as in the internal std::set
+                        rebuildContinentMenu(continents);
+                    }
                     break;
                 case Gtk::RESPONSE_CANCEL:
                 default:
@@ -250,9 +255,15 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildContinentField() {
 
             switch(rem_dialog.run()) {
                 case Gtk::RESPONSE_ACCEPT:
-                    map_project.removeContinent(continent_name_entry.get_text());
-
-                    rebuildContinentMenu(continents);
+                    if(Action::ActionManager::getInstance().doAction(
+                        new Action::CreateRemoveContinentAction(map_project,
+                                                                continent_name_entry.get_text(),
+                                                                Action::CreateRemoveContinentAction::Type::REMOVE)))
+                    {
+                        // Rebuild the continent menu here so that they remain
+                        //  in the same order as in the internal std::set
+                        rebuildContinentMenu(continents);
+                    }
                     break;
                 case Gtk::RESPONSE_CANCEL:
                 default:
