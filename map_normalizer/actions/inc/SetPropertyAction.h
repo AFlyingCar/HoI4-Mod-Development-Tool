@@ -2,6 +2,8 @@
 #ifndef SETPROPERTYACTION_H
 # define SETPROPERTYACTION_H
 
+# include "Logger.h"
+
 # include "IAction.h"
 
 namespace MapNormalizer::Action {
@@ -36,8 +38,10 @@ namespace MapNormalizer::Action {
 
                 auto& curr_val = m_structure->*m_field;
                 if(curr_val != m_old_value) {
-                    // WRITE_WARN()
+                    WRITE_ERROR("Current value does not match the old value!");
+                    return false;
                 }
+                WRITE_DEBUG("Setting field.");
                 (m_structure->*m_field) = m_new_value;
 
                 // Set back if we are told of a failure
@@ -55,8 +59,10 @@ namespace MapNormalizer::Action {
 
                 auto& curr_val = m_structure->*m_field;
                 if(curr_val != m_new_value) {
-                    // WRITE_WARN()
+                    WRITE_ERROR("Current value does not match the old value!");
+                    return false;
                 }
+                WRITE_DEBUG("UnSetting field.");
                 (m_structure->*m_field) = m_old_value;
 
                 // Set back if we are told of a failure
