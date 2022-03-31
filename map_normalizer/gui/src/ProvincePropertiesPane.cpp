@@ -9,6 +9,9 @@
 #include "Logger.h"
 #include "Util.h"
 
+#include "ActionManager.h"
+#include "SetPropertyAction.h"
+
 #include "Driver.h"
 #include "SelectionManager.h"
 
@@ -61,7 +64,10 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildIsCoastalField() {
 
     m_is_coastal_button->signal_toggled().connect([this]() {
         if(m_province != nullptr) {
-            m_province->coastal = m_is_coastal_button->get_active();
+            Action::ActionManager::getInstance().doAction(
+                NewSetPropertyAction(m_province, coastal,
+                                     m_is_coastal_button->get_active())
+            );
         }
     });
 }
@@ -83,7 +89,9 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildProvinceTypeField() {
             if(auto current = m_provtype_menu->get_active_row_number();
                     current != -1)
             {
-                m_province->type = static_cast<ProvinceType>(current + 1);
+                Action::ActionManager::getInstance().doAction(
+                    NewSetPropertyAction(m_province, type,
+                                         static_cast<ProvinceType>(current + 1)));
             } else {
                 WRITE_ERROR("Province type somehow set to an invalid index: ",
                            m_provtype_menu->get_active_row_number());
@@ -110,7 +118,9 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildTerrainTypeField() {
     m_terrain_menu->signal_changed().connect([this]() {
         if(m_province != nullptr) {
             // TODO: Verify that the active text is a valid terrain type
-            m_province->terrain = m_terrain_menu->get_active_text();
+            Action::ActionManager::getInstance().doAction(
+                NewSetPropertyAction(m_province, terrain,
+                                     m_terrain_menu->get_active_text()));
         }
     });
 }
@@ -123,7 +133,9 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildContinentField() {
 
     m_continent_menu->signal_changed().connect([this]() {
         if(m_province != nullptr) {
-            m_province->continent = m_continent_menu->get_active_text();
+            Action::ActionManager::getInstance().doAction(
+                NewSetPropertyAction(m_province, continent,
+                                     m_continent_menu->get_active_text()));
         }
     });
 
