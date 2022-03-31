@@ -702,6 +702,11 @@ void MapNormalizer::Project::MapProject::removeContinent(const std::string& cont
     m_continents.erase(continent);
 }
 
+bool MapNormalizer::Project::MapProject::doesContinentExist(const std::string& continent) const
+{
+    return m_continents.count(continent) != 0;
+}
+
 /**
  * @brief Creates a new state composed of all provinces in province_ids.
  * @details The provinces detailed in province_ids will get removed from their
