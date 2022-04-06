@@ -6,6 +6,8 @@
 #include "IAction.h"
 #include "ActionManager.h"
 
+#include "SetPropertyAction.h"
+
 namespace MapNormalizer::UnitTests {
     void ActionTests::SetUp() { }
 
@@ -124,6 +126,58 @@ namespace MapNormalizer::UnitTests {
         Action::ActionManager::getInstance().clearHistory();
 
         ASSERT_FALSE(Action::ActionManager::getInstance().canUndo());
+    }
+
+////////////////////////////////////////////////////////////////////////////////
+    TEST_F(ActionTests, SetPropertyActionTests) {
+        struct TestStructure {
+            int a;
+            char b;
+            float c;
+        };
+
+        TestStructure s1{ 5, 'a', 3.1415f };
+
+        // Verify that the action succeeds when we do it
+        ASSERT_TRUE(Action::ActionManager::getInstance().doAction(
+                    NewSetPropertyAction(&s1, a, 6)));
+
+        // Verify contents of s1
+        ASSERT_EQ(s1.a, 6);
+        ASSERT_EQ(s1.b, 'a');
+        ASSERT_EQ(s1.c, 3.1415f);
+
+        // Verify that the action succeeds when we undo it
+        ASSERT_TRUE(Action::ActionManager::getInstance().undoAction());
+
+        // Verify contents of s1
+        ASSERT_EQ(s1.a, 5);
+        ASSERT_EQ(s1.b, 'a');
+        ASSERT_EQ(s1.c, 3.1415f);
+
+        // Verify that the action succeeds when we do multiple mods in a row
+        ASSERT_TRUE(Action::ActionManager::getInstance().doAction(
+                    NewSetPropertyAction(&s1, a, 6)));
+        ASSERT_TRUE(Action::ActionManager::getInstance().doAction(
+                    NewSetPropertyAction(&s1, a, 7)));
+        ASSERT_TRUE(Action::ActionManager::getInstance().doAction(
+                    NewSetPropertyAction(&s1, a, 1024)));
+        ASSERT_TRUE(Action::ActionManager::getInstance().doAction(
+                    NewSetPropertyAction(&s1, c, 2.718281f)));
+
+        // Verify contents of s1
+        ASSERT_EQ(s1.a, 1024);
+        ASSERT_EQ(s1.b, 'a');
+        ASSERT_EQ(s1.c, 2.718281f);
+
+        // Verify that the action succeeds when we undo only a few mods
+        ASSERT_TRUE(Action::ActionManager::getInstance().undoAction());
+        ASSERT_TRUE(Action::ActionManager::getInstance().undoAction());
+
+        // Verify contents of s1
+        ASSERT_EQ(s1.a, 7);
+        ASSERT_EQ(s1.b, 'a');
+        ASSERT_EQ(s1.c, 3.1415f);
     }
 }
 
