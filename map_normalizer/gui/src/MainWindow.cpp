@@ -105,7 +105,7 @@ void MapNormalizer::GUI::MainWindow::initializeEditActions() {
 
     add_action("redo", []() {
         if(!Action::ActionManager::getInstance().redoAction()) {
-            WRITE_WARN("Failed to undo action.");
+            WRITE_WARN("Failed to redo action.");
         }
     });
 }

@@ -49,7 +49,7 @@ void MapNormalizer::GUI::Toolbar::init() {
             m_redo_item->set_icon_name(StockIcons::REDO.data());
             m_redo_item->signal_clicked().connect([this]() {
                 if(!Action::ActionManager::getInstance().redoAction()) {
-                    WRITE_WARN("Failed to undo action.");
+                    WRITE_WARN("Failed to redo action.");
                 }
 
                 updateUndoRedoButtons();
