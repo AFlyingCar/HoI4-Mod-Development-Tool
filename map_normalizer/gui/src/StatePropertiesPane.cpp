@@ -129,7 +129,9 @@ void MapNormalizer::GUI::StatePropertiesPane::buildNameField() {
     m_name_field->set_placeholder_text("State name...");
 
     m_name_field->signal_activate().connect([this]() {
-        if(m_state != nullptr) {
+        if(m_is_updating_properties) return;
+
+        if(m_state != nullptr && m_state->name != m_name_field->get_text()) {
             Action::ActionManager::getInstance().doAction(
                 NewSetPropertyAction(m_state, name,
                                      m_name_field->get_text()));
@@ -149,7 +151,11 @@ void MapNormalizer::GUI::StatePropertiesPane::buildManpowerField() {
     m_manpower_field->set_placeholder_text("Manpower amount (default:0)");
 
     m_manpower_field->signal_activate().connect([this]() {
-        if(m_state != nullptr) {
+        if(m_is_updating_properties) return;
+
+        if(m_state != nullptr &&
+           m_state->manpower != std::atoi(m_manpower_field->get_text().c_str()))
+        {
             Action::ActionManager::getInstance().doAction(
                 NewSetPropertyAction(m_state, manpower,
                                      std::atoi(m_manpower_field->get_text().c_str())));
@@ -174,7 +180,11 @@ void MapNormalizer::GUI::StatePropertiesPane::buildBuildingsMaxLevelFactorField(
     m_buildings_max_level_factor_field->set_placeholder_text("Buildings Max Level Factor (default:1.0)");
 
     m_buildings_max_level_factor_field->signal_activate().connect([this]() {
-        if(m_state != nullptr) {
+        if(m_is_updating_properties) return;
+
+        if(m_state != nullptr &&
+           m_state->buildings_max_level_factor != std::atof(m_buildings_max_level_factor_field->get_text().c_str()))
+        {
             Action::ActionManager::getInstance().doAction(
                 NewSetPropertyAction(m_state, buildings_max_level_factor,
                                      std::atof(m_buildings_max_level_factor_field->get_text().c_str())));
@@ -191,6 +201,8 @@ void MapNormalizer::GUI::StatePropertiesPane::buildIsImpassableField() {
     m_is_impassable_button = addWidget<Gtk::CheckButton>("Is Impassable");
 
     m_is_impassable_button->signal_toggled().connect([this]() {
+        if(m_is_updating_properties) return;
+
         if(m_state != nullptr) {
             Action::ActionManager::getInstance().doAction(
                 NewSetPropertyAction(m_state, impassable,
@@ -302,6 +314,8 @@ void MapNormalizer::GUI::StatePropertiesPane::updateProperties(bool is_multisele
 void MapNormalizer::GUI::StatePropertiesPane::updateProperties(const State* state,
                                                                bool is_multiselect)
 {
+    m_is_updating_properties = true;
+
     if(state == nullptr || is_multiselect) {
         // Set every field to some sort of sane default
         m_name_field->set_text("");
@@ -319,6 +333,8 @@ void MapNormalizer::GUI::StatePropertiesPane::updateProperties(const State* stat
     }
 
     updateProvinceListElements(state);
+
+    m_is_updating_properties = false;
 }
 
 void MapNormalizer::GUI::StatePropertiesPane::updateProvinceListElements(const State* state)
