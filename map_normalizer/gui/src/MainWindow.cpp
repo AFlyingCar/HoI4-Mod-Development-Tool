@@ -14,6 +14,8 @@
 
 #include "ShapeFinder2.h" // ShapeFinder
 
+#include "ActionManager.h"
+
 #include "GraphicalDebugger.h"
 #include "InterruptableScrolledWindow.h"
 #include "MapNormalizerApplication.h"
@@ -95,6 +97,17 @@ void MapNormalizer::GUI::MainWindow::initializeFileActions() {
  * @brief Initializes every action in the Edit menu
  */
 void MapNormalizer::GUI::MainWindow::initializeEditActions() {
+    add_action("undo", []() {
+        if(!Action::ActionManager::getInstance().undoAction()) {
+            WRITE_WARN("Failed to undo action.");
+        }
+    });
+
+    add_action("redo", []() {
+        if(!Action::ActionManager::getInstance().redoAction()) {
+            WRITE_WARN("Failed to undo action.");
+        }
+    });
 }
 
 /**

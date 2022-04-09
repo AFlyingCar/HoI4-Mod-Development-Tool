@@ -55,6 +55,7 @@ namespace MapNormalizer::Project {
 
             void addNewContinent(const std::string&);
             void removeContinent(const std::string&);
+            bool doesContinentExist(const std::string&) const;
 
             StateID addNewState(const std::vector<uint32_t>&);
             void removeState(StateID);

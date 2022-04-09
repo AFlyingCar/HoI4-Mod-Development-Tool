@@ -9,6 +9,9 @@
 #include "Logger.h"
 #include "Util.h"
 
+#include "ActionManager.h"
+#include "SetPropertyAction.h"
+
 #include "Driver.h"
 #include "StyleClasses.h"
 #include "SelectionManager.h"
@@ -125,10 +128,16 @@ void MapNormalizer::GUI::StatePropertiesPane::buildNameField() {
     m_name_field = addWidget<Gtk::Entry>();
     m_name_field->set_placeholder_text("State name...");
 
-    m_name_field->signal_changed().connect([this]() {
+    m_name_field->signal_activate().connect([this]() {
         if(m_state != nullptr) {
-            m_state->name = m_name_field->get_text();
+            Action::ActionManager::getInstance().doAction(
+                NewSetPropertyAction(m_state, name,
+                                     m_name_field->get_text()));
         }
+    });
+    m_name_field->signal_focus_out_event().connect([this](GdkEventFocus*) {
+        m_name_field->activate();
+        return true;
     });
 }
 
@@ -139,10 +148,16 @@ void MapNormalizer::GUI::StatePropertiesPane::buildManpowerField() {
     m_manpower_field->setAllowedChars("0123456789");
     m_manpower_field->set_placeholder_text("Manpower amount (default:0)");
 
-    m_manpower_field->signal_changed().connect([this]() {
+    m_manpower_field->signal_activate().connect([this]() {
         if(m_state != nullptr) {
-            m_state->manpower = std::atoi(m_manpower_field->get_text().c_str());
+            Action::ActionManager::getInstance().doAction(
+                NewSetPropertyAction(m_state, manpower,
+                                     std::atoi(m_manpower_field->get_text().c_str())));
         }
+    });
+    m_manpower_field->signal_focus_out_event().connect([this](GdkEventFocus*) {
+        m_manpower_field->activate();
+        return true;
     });
 }
 
@@ -158,10 +173,17 @@ void MapNormalizer::GUI::StatePropertiesPane::buildBuildingsMaxLevelFactorField(
     m_buildings_max_level_factor_field->setAllowedChars("0123456789.");
     m_buildings_max_level_factor_field->set_placeholder_text("Buildings Max Level Factor (default:1.0)");
 
-    m_buildings_max_level_factor_field->signal_changed().connect([this]() {
+    m_buildings_max_level_factor_field->signal_activate().connect([this]() {
         if(m_state != nullptr) {
-            m_state->buildings_max_level_factor = std::atof(m_buildings_max_level_factor_field->get_text().c_str());
+            Action::ActionManager::getInstance().doAction(
+                NewSetPropertyAction(m_state, buildings_max_level_factor,
+                                     std::atof(m_buildings_max_level_factor_field->get_text().c_str())));
         }
+    });
+    m_buildings_max_level_factor_field->signal_focus_out_event().connect([this](GdkEventFocus*)
+    {
+        m_buildings_max_level_factor_field->activate();
+        return true;
     });
 }
 
@@ -170,7 +192,9 @@ void MapNormalizer::GUI::StatePropertiesPane::buildIsImpassableField() {
 
     m_is_impassable_button->signal_toggled().connect([this]() {
         if(m_state != nullptr) {
-            m_state->impassable = m_is_impassable_button->get_active();
+            Action::ActionManager::getInstance().doAction(
+                NewSetPropertyAction(m_state, impassable,
+                                     m_is_impassable_button->get_active()));
         }
     });
 }

@@ -9,6 +9,10 @@
 #include "Logger.h"
 #include "Util.h"
 
+#include "ActionManager.h"
+#include "SetPropertyAction.h"
+#include "CreateRemoveContinentAction.h"
+
 #include "Driver.h"
 #include "SelectionManager.h"
 
@@ -61,7 +65,10 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildIsCoastalField() {
 
     m_is_coastal_button->signal_toggled().connect([this]() {
         if(m_province != nullptr) {
-            m_province->coastal = m_is_coastal_button->get_active();
+            Action::ActionManager::getInstance().doAction(
+                NewSetPropertyAction(m_province, coastal,
+                                     m_is_coastal_button->get_active())
+            );
         }
     });
 }
@@ -83,7 +90,9 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildProvinceTypeField() {
             if(auto current = m_provtype_menu->get_active_row_number();
                     current != -1)
             {
-                m_province->type = static_cast<ProvinceType>(current + 1);
+                Action::ActionManager::getInstance().doAction(
+                    NewSetPropertyAction(m_province, type,
+                                         static_cast<ProvinceType>(current + 1)));
             } else {
                 WRITE_ERROR("Province type somehow set to an invalid index: ",
                            m_provtype_menu->get_active_row_number());
@@ -110,7 +119,9 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildTerrainTypeField() {
     m_terrain_menu->signal_changed().connect([this]() {
         if(m_province != nullptr) {
             // TODO: Verify that the active text is a valid terrain type
-            m_province->terrain = m_terrain_menu->get_active_text();
+            Action::ActionManager::getInstance().doAction(
+                NewSetPropertyAction(m_province, terrain,
+                                     m_terrain_menu->get_active_text()));
         }
     });
 }
@@ -123,7 +134,9 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildContinentField() {
 
     m_continent_menu->signal_changed().connect([this]() {
         if(m_province != nullptr) {
-            m_province->continent = m_continent_menu->get_active_text();
+            Action::ActionManager::getInstance().doAction(
+                NewSetPropertyAction(m_province, continent,
+                                     m_continent_menu->get_active_text()));
         }
     });
 
@@ -190,11 +203,15 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildContinentField() {
             const int result = add_dialog.run();
             switch(result) {
                 case Gtk::RESPONSE_ACCEPT:
-                    map_project.addNewContinent(continent_name_entry.get_text());
-
-                    // Rebuild the continent menu here so that they remain
-                    //  in the same order as in the internal std::set
-                    rebuildContinentMenu(continents);
+                    if(Action::ActionManager::getInstance().doAction(
+                        new Action::CreateRemoveContinentAction(map_project,
+                                                                continent_name_entry.get_text(),
+                                                                Action::CreateRemoveContinentAction::Type::CREATE)))
+                    {
+                        // Rebuild the continent menu here so that they remain
+                        //  in the same order as in the internal std::set
+                        rebuildContinentMenu(continents);
+                    }
                     break;
                 case Gtk::RESPONSE_CANCEL:
                 default:
@@ -238,9 +255,15 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildContinentField() {
 
             switch(rem_dialog.run()) {
                 case Gtk::RESPONSE_ACCEPT:
-                    map_project.removeContinent(continent_name_entry.get_text());
-
-                    rebuildContinentMenu(continents);
+                    if(Action::ActionManager::getInstance().doAction(
+                        new Action::CreateRemoveContinentAction(map_project,
+                                                                continent_name_entry.get_text(),
+                                                                Action::CreateRemoveContinentAction::Type::REMOVE)))
+                    {
+                        // Rebuild the continent menu here so that they remain
+                        //  in the same order as in the internal std::set
+                        rebuildContinentMenu(continents);
+                    }
                     break;
                 case Gtk::RESPONSE_CANCEL:
                 default:
