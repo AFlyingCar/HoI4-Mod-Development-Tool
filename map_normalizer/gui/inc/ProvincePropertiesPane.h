@@ -69,6 +69,8 @@ namespace MapNormalizer::GUI {
             Gtk::ComboBoxText* m_continent_menu;
 
             Gtk::Button* m_create_state_button;
+
+            bool m_is_updating_properties;
     };
 }
 

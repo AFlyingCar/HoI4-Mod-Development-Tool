@@ -18,7 +18,8 @@
 
 MapNormalizer::GUI::ProvincePropertiesPane::ProvincePropertiesPane():
     m_province(nullptr),
-    m_box(Gtk::ORIENTATION_VERTICAL)
+    m_box(Gtk::ORIENTATION_VERTICAL),
+    m_is_updating_properties(false)
 { }
 
 Gtk::ScrolledWindow& MapNormalizer::GUI::ProvincePropertiesPane::getParent() {
@@ -64,6 +65,8 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildIsCoastalField() {
     m_is_coastal_button = addWidget<Gtk::CheckButton>("Is Coastal");
 
     m_is_coastal_button->signal_toggled().connect([this]() {
+        if(m_is_updating_properties) return;
+
         if(m_province != nullptr) {
             Action::ActionManager::getInstance().doAction(
                 NewSetPropertyAction(m_province, coastal,
@@ -85,6 +88,8 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildProvinceTypeField() {
 
     m_provtype_menu->set_active(0);
     m_provtype_menu->signal_changed().connect([this]() {
+        if(m_is_updating_properties) return;
+
         if(m_province != nullptr) {
             // Only set the province type if it is set to a valid one
             if(auto current = m_provtype_menu->get_active_row_number();
@@ -117,6 +122,8 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildTerrainTypeField() {
 
     m_terrain_menu->set_active(0);
     m_terrain_menu->signal_changed().connect([this]() {
+        if(m_is_updating_properties) return;
+
         if(m_province != nullptr) {
             // TODO: Verify that the active text is a valid terrain type
             Action::ActionManager::getInstance().doAction(
@@ -133,6 +140,8 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildContinentField() {
     m_continent_menu->append("None");
 
     m_continent_menu->signal_changed().connect([this]() {
+        if(m_is_updating_properties) return;
+
         if(m_province != nullptr) {
             Action::ActionManager::getInstance().doAction(
                 NewSetPropertyAction(m_province, continent,
@@ -366,6 +375,8 @@ void MapNormalizer::GUI::ProvincePropertiesPane::updateProperties(bool is_multis
 void MapNormalizer::GUI::ProvincePropertiesPane::updateProperties(const Province* prov,
                                                                   bool is_multiselect)
 {
+    m_is_updating_properties = true;
+
     if(prov == nullptr || is_multiselect) {
         // Set every field to some sort of sane default
         m_is_coastal_button->set_active(false);
@@ -379,6 +390,8 @@ void MapNormalizer::GUI::ProvincePropertiesPane::updateProperties(const Province
         m_terrain_menu->set_active_text(prov->terrain.empty() ? "unknown" : prov->terrain.c_str());
         m_continent_menu->set_active_text(prov->continent.empty() ? "None" : prov->continent.c_str());
     }
+
+    m_is_updating_properties = false;
 }
 
 /**
