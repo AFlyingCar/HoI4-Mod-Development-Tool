@@ -25,6 +25,8 @@ namespace MapNormalizer::GUI {
                 return titem;
             }
 
+            void createNewSeparator();
+
         private:
             std::vector<Gtk::ToolItem*> m_toolbar_items;
 

@@ -1,6 +1,8 @@
 
 #include "Toolbar.h"
 
+#include "gtkmm/separatortoolitem.h"
+
 #include "StockIcons.h"
 
 #include "ActionManager.h"
@@ -25,6 +27,7 @@ void MapNormalizer::GUI::Toolbar::init() {
     {
         auto* new_item = createNewToolbarItem<Gtk::ToolButton>("_Add");
         new_item->set_icon_name(StockIcons::NEW.data());
+        new_item->set_tooltip_text("Add Item");
         new_item->set_sensitive(false);
     }
 
@@ -40,6 +43,7 @@ void MapNormalizer::GUI::Toolbar::init() {
 
                 updateUndoRedoButtons();
             });
+            m_undo_item->set_tooltip_text("Undo");
             m_undo_item->set_sensitive(false);
         }
 
@@ -54,8 +58,29 @@ void MapNormalizer::GUI::Toolbar::init() {
 
                 updateUndoRedoButtons();
             });
+            m_redo_item->set_tooltip_text("Redo");
             m_redo_item->set_sensitive(false);
         }
+    }
+
+    // Build Property Painting Tool button
+    {
+        auto* property_paint_tool_item = createNewToolbarItem<Gtk::ToolButton>("_Paint");
+        property_paint_tool_item->set_icon_name("edit-paste-style"); // TODO: Placeholder icon
+        property_paint_tool_item->set_tooltip_text("Property Paint Tool");
+        property_paint_tool_item->set_sensitive(false);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Non-editing tools
+    createNewSeparator();
+
+    // Build Play button
+    {
+        auto* play_item = createNewToolbarItem<Gtk::ToolButton>("_PlayHoI");
+        play_item->set_icon_name(StockIcons::MEDIA_PLAY.data());
+        play_item->set_tooltip_text("Play");
+        play_item->set_sensitive(false);
     }
 
     for(auto* item : m_toolbar_items) {
@@ -75,5 +100,10 @@ void MapNormalizer::GUI::Toolbar::updateUndoRedoButtons() {
     } else {
         m_redo_item->set_sensitive(false);
     }
+}
+
+void MapNormalizer::GUI::Toolbar::createNewSeparator() {
+    auto* separator = createNewToolbarItem<Gtk::SeparatorToolItem>();
+    separator->set_draw(true);
 }
 
