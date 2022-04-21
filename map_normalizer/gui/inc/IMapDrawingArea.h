@@ -200,5 +200,9 @@ namespace MapNormalizer::GUI {
                              const IMapDrawingAreaBase::ViewingMode&);
 }
 
+namespace std {
+    string to_string(const MapNormalizer::GUI::IMapDrawingAreaBase::ViewingMode&);
+}
+
 #endif
 

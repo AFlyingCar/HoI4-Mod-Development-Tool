@@ -189,3 +189,10 @@ std::ostream& MapNormalizer::GUI::operator<<(std::ostream& stream,
     return stream;
 }
 
+std::string std::to_string(const MapNormalizer::GUI::IMapDrawingAreaBase::ViewingMode& mode)
+{
+    std::stringstream ss;
+    ss << mode;
+    return ss.str();
+}
+
