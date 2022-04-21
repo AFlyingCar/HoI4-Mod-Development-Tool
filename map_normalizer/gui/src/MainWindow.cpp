@@ -164,6 +164,8 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
             //  missed
             m_drawing_area->setMapData(m_cairo_drawing_area->getMapData());
             m_drawing_area->queueDraw();
+
+            m_toolbar->setDrawingArea(m_drawing_area);
         });
 
         auto usecairo_action = add_action_bool("switch_renderers.usecairo", [this]()
@@ -194,6 +196,8 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
             m_cairo_drawing_area->rebuildImageCache();
 
             m_drawing_area->queueDraw();
+
+            m_toolbar->setDrawingArea(m_drawing_area);
         });
 
 #if MN_DEFAULT_RENDERING_TO_GL
@@ -616,6 +620,8 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
 #else
         m_cairo_drawing_area;
 #endif
+
+    m_toolbar->setDrawingArea(m_drawing_area);
 
     // Set up a signal callback to zoom in and out when performing CTRL+ScrollWhell
     drawing_window->signalOnScroll().connect([drawing_area](GdkEventScroll* event)
