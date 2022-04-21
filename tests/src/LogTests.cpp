@@ -3,6 +3,8 @@
 
 #include <sstream>
 
+#include "Util.h"
+
 #include "Message.h"
 #include "Format.h"
 #include "ConsoleOutputFunctions.h"

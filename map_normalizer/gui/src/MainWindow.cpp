@@ -105,7 +105,7 @@ void MapNormalizer::GUI::MainWindow::initializeEditActions() {
 
     add_action("redo", []() {
         if(!Action::ActionManager::getInstance().redoAction()) {
-            WRITE_WARN("Failed to undo action.");
+            WRITE_WARN("Failed to redo action.");
         }
     });
 }
@@ -164,6 +164,8 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
             //  missed
             m_drawing_area->setMapData(m_cairo_drawing_area->getMapData());
             m_drawing_area->queueDraw();
+
+            m_toolbar->setDrawingArea(m_drawing_area);
         });
 
         auto usecairo_action = add_action_bool("switch_renderers.usecairo", [this]()
@@ -194,6 +196,8 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
             m_cairo_drawing_area->rebuildImageCache();
 
             m_drawing_area->queueDraw();
+
+            m_toolbar->setDrawingArea(m_drawing_area);
         });
 
 #if MN_DEFAULT_RENDERING_TO_GL
@@ -309,6 +313,8 @@ void MapNormalizer::GUI::MainWindow::initializeHelpActions() {
  * @return true
  */
 bool MapNormalizer::GUI::MainWindow::initializeWidgets() {
+    buildToolbar();
+
     m_paned = addWidget<Gtk::Paned>();
     
     // Set the minimum size of the pane to 512x512
@@ -343,109 +349,141 @@ bool MapNormalizer::GUI::MainWindow::initializeFinal() {
 }
 
 void MapNormalizer::GUI::MainWindow::initializeCallbacks() {
-    SelectionManager::getInstance().setOnSelectProvinceCallback(
-        [this](uint32_t prov_id, SelectionManager::Action action)
-        {
-            auto& map_project = Driver::getInstance().getProject()->get().getMapProject();
+    // SelectionManager callbacks
+    {
+        SelectionManager::getInstance().setOnSelectProvinceCallback(
+            [this](uint32_t prov_id, SelectionManager::Action action)
+            {
+                auto& map_project = Driver::getInstance().getProject()->get().getMapProject();
 
-            switch(action) {
-                case SelectionManager::Action::SET:
-                case SelectionManager::Action::ADD:
-                    // If the label is a valid province, then go ahead and mark it as
-                    //  selected everywhere that needs it to be marked as such
-                    if(map_project.isValidProvinceLabel(prov_id)) {
-                        // The selected province
-                        auto* province = &map_project.getProvinceForLabel(prov_id);
+                switch(action) {
+                    case SelectionManager::Action::SET:
+                    case SelectionManager::Action::ADD:
+                        // If the label is a valid province, then go ahead and mark it as
+                        //  selected everywhere that needs it to be marked as such
+                        if(map_project.isValidProvinceLabel(prov_id)) {
+                            // The selected province
+                            auto* province = &map_project.getProvinceForLabel(prov_id);
 
-                        // TODO: We should really move preview data out of MapProject
-                        //   too
-                        auto preview_data = map_project.getPreviewData(province);
+                            // TODO: We should really move preview data out of MapProject
+                            //   too
+                            auto preview_data = map_project.getPreviewData(province);
 
-                        if(action == SelectionManager::Action::SET) {
-                            if(m_province_properties_pane != nullptr) {
-                                m_province_properties_pane->setProvince(province, preview_data);
+                            if(action == SelectionManager::Action::SET) {
+                                if(m_province_properties_pane != nullptr) {
+                                    m_province_properties_pane->setProvince(province, preview_data);
+                                }
+
+                                m_drawing_area->setSelection({preview_data, province->bounding_box, province->id});
+                            } else {
+                                if(m_province_properties_pane != nullptr) {
+                                    // This will be true if there are already any selections in the
+                                    //  list. In other words, the first selection should always
+                                    //  populate the properties pane, but subsequent selections
+                                    //  should not.
+                                    const auto& selected_labels = SelectionManager::getInstance().getSelectedProvinceLabels();
+                                    bool has_selections_already = !selected_labels.empty();
+
+                                    m_province_properties_pane->setProvince(province, preview_data, has_selections_already);
+                                }
+
+                                m_drawing_area->addSelection({preview_data, province->bounding_box, province->id});
                             }
 
-                            m_drawing_area->setSelection({preview_data, province->bounding_box, province->id});
-                        } else {
-                            if(m_province_properties_pane != nullptr) {
-                                // This will be true if there are already any selections in the
-                                //  list. In other words, the first selection should always
-                                //  populate the properties pane, but subsequent selections
-                                //  should not.
-                                const auto& selected_labels = SelectionManager::getInstance().getSelectedProvinceLabels();
-                                bool has_selections_already = !selected_labels.empty();
-
-                                m_province_properties_pane->setProvince(province, preview_data, has_selections_already);
-                            }
-
-                            m_drawing_area->addSelection({preview_data, province->bounding_box, province->id});
+                            m_drawing_area->queueDraw();
+                        }
+                        break;
+                    case SelectionManager::Action::REMOVE:
+                        // Only remove the province from the properties pane if
+                        //  the province there is the same one we are removing
+                        if(m_province_properties_pane != nullptr &&
+                           m_province_properties_pane->getProvince() != nullptr &&
+                           m_province_properties_pane->getProvince()->id == prov_id)
+                        {
+                            // TODO: We should really be changing to the next one in
+                            //   the selection if we have one selected.
+                            ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
+                            m_province_properties_pane->setProvince(nullptr, null_data);
+                        }
+                        m_drawing_area->removeSelection({nullptr, {}, prov_id});
+                        m_drawing_area->queueDraw();
+                        break;
+                    case SelectionManager::Action::CLEAR:
+                        if(m_province_properties_pane != nullptr) {
+                            ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
+                            m_province_properties_pane->setProvince(nullptr, null_data);
                         }
 
+                        if(m_state_properties_pane != nullptr) {
+                            m_state_properties_pane->setState(nullptr);
+                        }
+
+                        m_drawing_area->setSelection();
                         m_drawing_area->queueDraw();
-                    }
-                    break;
-                case SelectionManager::Action::REMOVE:
-                    // Only remove the province from the properties pane if
-                    //  the province there is the same one we are removing
-                    if(m_province_properties_pane != nullptr &&
-                       m_province_properties_pane->getProvince() != nullptr &&
-                       m_province_properties_pane->getProvince()->id == prov_id)
-                    {
-                        // TODO: We should really be changing to the next one in
-                        //   the selection if we have one selected.
-                        ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
-                        m_province_properties_pane->setProvince(nullptr, null_data);
-                    }
-                    m_drawing_area->removeSelection({nullptr, {}, prov_id});
-                    m_drawing_area->queueDraw();
-                    break;
-                case SelectionManager::Action::CLEAR:
-                    if(m_province_properties_pane != nullptr) {
-                        ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
-                        m_province_properties_pane->setProvince(nullptr, null_data);
-                    }
 
-                    if(m_state_properties_pane != nullptr) {
-                        m_state_properties_pane->setState(nullptr);
-                    }
+                        break;
+                }
+            });
 
-                    m_drawing_area->setSelection();
-                    m_drawing_area->queueDraw();
+        SelectionManager::getInstance().setOnSelectStateCallback(
+            [this](StateID state_id, SelectionManager::Action action)
+            {
+                auto& map_project = Driver::getInstance().getProject()->get().getMapProject();
 
-                    break;
-            }
-        });
+                switch(action) {
+                    case SelectionManager::Action::SET:
+                    case SelectionManager::Action::ADD:
+                        // TODO: we can't use the above is_already_selected or
+                        //   has_selections_already variables since those are
+                        //   referring to provinces, so we need to do similar
+                        //   calculations again but for states
+                        if(m_state_properties_pane != nullptr) {
+                            auto* state = &map_project.getStateForID(state_id);
+                            m_state_properties_pane->setState(state);
+                        }
 
-    SelectionManager::getInstance().setOnSelectStateCallback(
-        [this](StateID state_id, SelectionManager::Action action)
+                        // TODO: Update state drawing area once we have that
+                        //   Use different behavior for add/select
+                        break;
+                    case SelectionManager::Action::REMOVE:
+                        // TODO: Update state drawing area once we have that for removal
+                    case SelectionManager::Action::CLEAR:
+                        if(m_state_properties_pane != nullptr) {
+                            m_state_properties_pane->setState(nullptr);
+                        }
+                        break;
+                }
+            });
+    }
+
+    // ActionManager callbacks
+    {
+        Action::ActionManager::getInstance().setOnDoActionCallback([this](const auto&...)
         {
-            auto& map_project = Driver::getInstance().getProject()->get().getMapProject();
+            m_toolbar->updateUndoRedoButtons();
 
-            switch(action) {
-                case SelectionManager::Action::SET:
-                case SelectionManager::Action::ADD:
-                    // TODO: we can't use the above is_already_selected or
-                    //   has_selections_already variables since those are
-                    //   referring to provinces, so we need to do similar
-                    //   calculations again but for states
-                    if(m_state_properties_pane != nullptr) {
-                        auto* state = &map_project.getStateForID(state_id);
-                        m_state_properties_pane->setState(state);
-                    }
-
-                    // TODO: Update state drawing area once we have that
-                    //   Use different behavior for add/select
-                    break;
-                case SelectionManager::Action::REMOVE:
-                    // TODO: Update state drawing area once we have that for removal
-                case SelectionManager::Action::CLEAR:
-                    if(m_state_properties_pane != nullptr) {
-                        m_state_properties_pane->setState(nullptr);
-                    }
-                    break;
-            }
+            // Update each properties pane that an action has been performed
+            m_province_properties_pane->updateProperties(SelectionManager::getInstance().getSelectedProvinceCount() > 1);
+            m_state_properties_pane->updateProperties(SelectionManager::getInstance().getSelectedStateCount() > 1);
         });
+        Action::ActionManager::getInstance().setOnUndoActionCallback([this](const auto&...)
+        {
+            m_toolbar->updateUndoRedoButtons();
+
+            // Update each properties pane that an action has been undone
+            m_province_properties_pane->updateProperties(SelectionManager::getInstance().getSelectedProvinceCount() > 1);
+            m_state_properties_pane->updateProperties(SelectionManager::getInstance().getSelectedStateCount() > 1);
+        });
+        Action::ActionManager::getInstance().setOnRedoActionCallback([this](const auto&...)
+        {
+            m_toolbar->updateUndoRedoButtons();
+
+            // Update each properties pane that an action has been redone
+            m_province_properties_pane->updateProperties(SelectionManager::getInstance().getSelectedProvinceCount() > 1);
+            m_state_properties_pane->updateProperties(SelectionManager::getInstance().getSelectedStateCount() > 1);
+        });
+
+    }
 }
 
 auto MapNormalizer::GUI::MainWindow::getLogViewerWindow()
@@ -456,6 +494,12 @@ auto MapNormalizer::GUI::MainWindow::getLogViewerWindow()
     } else {
         return *m_log_viewer_window;
     }
+}
+
+void MapNormalizer::GUI::MainWindow::buildToolbar() {
+    m_toolbar = addWidget<Toolbar>();
+
+    m_toolbar->init();
 }
 
 /**
@@ -576,6 +620,8 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
 #else
         m_cairo_drawing_area;
 #endif
+
+    m_toolbar->setDrawingArea(m_drawing_area);
 
     // Set up a signal callback to zoom in and out when performing CTRL+ScrollWhell
     drawing_window->signalOnScroll().connect([drawing_area](GdkEventScroll* event)

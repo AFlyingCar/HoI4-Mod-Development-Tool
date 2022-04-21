@@ -22,6 +22,7 @@ add_library(gui STATIC
     src/GuiUtils.cpp
     src/SelectionManager.cpp
     src/ConstrainedEntry.cpp
+    src/Toolbar.cpp
 )
 
 target_include_directories(gui PUBLIC inc)

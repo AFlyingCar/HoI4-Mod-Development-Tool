@@ -79,6 +79,14 @@ void MapNormalizer::GUI::SelectionManager::setOnSelectStateCallback(const std::f
     m_on_state_selected_callback = on_state_selected_callback;
 }
 
+size_t MapNormalizer::GUI::SelectionManager::getSelectedProvinceCount() const {
+    return m_selected_provinces.size();
+}
+
+size_t MapNormalizer::GUI::SelectionManager::getSelectedStateCount() const {
+    return m_selected_states.size();
+}
+
 /**
  * @brief Will return the currently selected provinces.
  *

@@ -32,6 +32,8 @@ namespace MapNormalizer::GUI {
 
             void onResize();
 
+            void updateProperties(bool);
+
         protected:
             /**
              * @brief A special ListBox row for representing a single row in the
@@ -94,6 +96,8 @@ namespace MapNormalizer::GUI {
 
             Gtk::Button* m_select_all_provinces;
             Gtk::Button* m_delete_state_button;
+
+            bool m_is_updating_properties;
     };
 }
 

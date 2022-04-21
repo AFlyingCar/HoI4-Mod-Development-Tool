@@ -1,6 +1,8 @@
 
 #include "ActionManager.h"
 
+#include "Util.h"
+
 auto MapNormalizer::Action::ActionManager::getInstance() -> ActionManager& {
     static ActionManager instance;
 
@@ -18,6 +20,9 @@ auto MapNormalizer::Action::ActionManager::getInstance() -> ActionManager& {
 bool MapNormalizer::Action::ActionManager::doAction(std::unique_ptr<IAction> action,
                                                     const IAction::Callback& callback)
 {
+    auto* action_ptr = action.get();
+    RUN_AT_SCOPE_END([this, action_ptr]() { m_on_do_action(*action_ptr); });
+
     if(action->doAction(callback)) {
         // If the action cannot be undone, make sure we don't add it to the
         //  action history or clear the undo history
@@ -46,7 +51,12 @@ bool MapNormalizer::Action::ActionManager::undoAction(const IAction::Callback& c
     // Stop early if there is nothing to undo
     if(!canUndo()) return false;
 
-    if(auto& action = m_actions.top(); action->undoAction(callback)) {
+    auto& action = m_actions.top();
+
+    auto* action_ptr = action.get();
+    RUN_AT_SCOPE_END([this, action_ptr]() { m_on_undo_action(*action_ptr); });
+
+    if(action->undoAction(callback)) {
         m_undone_actions.push(std::move(action));
         m_actions.pop();
         return true;
@@ -71,7 +81,12 @@ bool MapNormalizer::Action::ActionManager::redoAction(const IAction::Callback& c
     // Stop early if there is nothing to redo
     if(!canRedo()) return false;
 
-    if(auto& action = m_undone_actions.top(); action->doAction(callback)) {
+    auto& action = m_undone_actions.top();
+
+    auto* action_ptr = action.get();
+    RUN_AT_SCOPE_END([this, action_ptr]() { m_on_redo_action(*action_ptr); });
+
+    if(action->doAction(callback)) {
         m_actions.push(std::move(action));
         m_undone_actions.pop();
         return true;
@@ -101,5 +116,25 @@ uint32_t MapNormalizer::Action::ActionManager::getUndoneHistorySize() const {
     return m_undone_actions.size();
 }
 
-MapNormalizer::Action::ActionManager::ActionManager(): m_actions() { }
+void MapNormalizer::Action::ActionManager::setOnDoActionCallback(const ActionUpdateCallbackType& do_callback)
+{
+    m_on_do_action = do_callback;
+}
+
+void MapNormalizer::Action::ActionManager::setOnUndoActionCallback(const ActionUpdateCallbackType& undo_callback)
+{
+    m_on_undo_action = undo_callback;
+}
+
+void MapNormalizer::Action::ActionManager::setOnRedoActionCallback(const ActionUpdateCallbackType& redo_callback)
+{
+    m_on_redo_action = redo_callback;
+}
+
+MapNormalizer::Action::ActionManager::ActionManager(): m_actions(),
+                                                       m_undone_actions(),
+                                                       m_on_do_action([](const auto&...) { }),
+                                                       m_on_undo_action([](const auto&...) { }),
+                                                       m_on_redo_action([](const auto&...) { })
+{ }
 
