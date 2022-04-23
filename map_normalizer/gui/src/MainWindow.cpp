@@ -166,8 +166,6 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
             //  missed
             m_drawing_area->setMapData(m_cairo_drawing_area->getMapData());
             m_drawing_area->queueDraw();
-
-            m_toolbar->setDrawingArea(m_drawing_area);
         });
 
         auto usecairo_action = add_action_bool("switch_renderers.usecairo", [this]()
@@ -198,8 +196,6 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
             m_cairo_drawing_area->rebuildImageCache();
 
             m_drawing_area->queueDraw();
-
-            m_toolbar->setDrawingArea(m_drawing_area);
         });
 
 #if MN_DEFAULT_RENDERING_TO_GL
@@ -491,7 +487,7 @@ auto MapNormalizer::GUI::MainWindow::getLogViewerWindow()
 }
 
 void MapNormalizer::GUI::MainWindow::buildToolbar() {
-    m_toolbar = addWidget<Toolbar>();
+    m_toolbar = addWidget<Toolbar>(*this);
 
     m_toolbar->init();
 }
@@ -503,8 +499,6 @@ void MapNormalizer::GUI::MainWindow::buildViewPane() {
     m_paned->pack1(*std::get<Gtk::Frame*>(setActiveChild(new Gtk::Frame)), true, false);
 
     buildDrawingArea();
-
-    m_toolbar->setDrawingArea(m_drawing_area);
 }
 
 Gtk::Orientation MapNormalizer::GUI::MainWindow::getDisplayOrientation() const {

@@ -12,8 +12,9 @@ namespace MapNormalizer::GUI {
     constexpr std::string_view VIEW_SWITCH_ICON = "eye";
 }
 
-MapNormalizer::GUI::Toolbar::Toolbar():
-    m_toolbar_items()
+MapNormalizer::GUI::Toolbar::Toolbar(MainWindowDrawingAreaPart& window):
+    m_toolbar_items(),
+    m_window(window)
 {
 }
 
@@ -94,7 +95,7 @@ void MapNormalizer::GUI::Toolbar::init() {
         auto* view_switch_item = createNewToolbarItem<Gtk::ToolButton>("_SwitchView");
         view_switch_item->set_icon_name(VIEW_SWITCH_ICON.data());
         view_switch_item->signal_clicked().connect([this, view_switch_item]() {
-            auto current_mode = m_drawing_area->getViewingMode();
+            auto current_mode = m_window.getDrawingArea()->getViewingMode();
 
             // NOTE: This should be circular, i.e: Each view should advance to
             //   the next one in the enum, and the last enum should set it back
@@ -112,7 +113,7 @@ void MapNormalizer::GUI::Toolbar::init() {
             }
 
             // TODO: We also need to update the MenuBar's "View>Switch Views" menu
-            m_drawing_area->setViewingMode(newMode);
+            m_window.getDrawingArea()->setViewingMode(newMode);
             view_switch_item->set_tooltip_text("Switch View: "s + std::to_string(newMode));
         });
 
@@ -143,10 +144,5 @@ void MapNormalizer::GUI::Toolbar::updateUndoRedoButtons() {
 void MapNormalizer::GUI::Toolbar::createNewSeparator() {
     auto* separator = createNewToolbarItem<Gtk::SeparatorToolItem>();
     separator->set_draw(true);
-}
-
-void MapNormalizer::GUI::Toolbar::setDrawingArea(std::shared_ptr<IMapDrawingAreaBase> drawing_area)
-{
-    m_drawing_area = drawing_area;
 }
 
