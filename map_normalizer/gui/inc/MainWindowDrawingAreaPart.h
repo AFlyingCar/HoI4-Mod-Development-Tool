@@ -16,6 +16,8 @@ namespace MapNormalizer::GUI {
 
             void buildDrawingArea();
 
+            std::shared_ptr<IMapDrawingAreaBase> getDrawingArea();
+
         protected:
             //! The DrawingArea that the map gets rendered to.
             std::shared_ptr<IMapDrawingAreaBase> m_drawing_area;

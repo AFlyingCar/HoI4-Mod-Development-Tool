@@ -177,4 +177,9 @@ void MapNormalizer::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::b
     drawing_window->show_all();
 }
 
+auto MapNormalizer::GUI::MainWindowDrawingAreaPart::getDrawingArea()
+    -> std::shared_ptr<IMapDrawingAreaBase>
+{
+    return m_drawing_area;
+}
 
