@@ -149,142 +149,140 @@ void MapNormalizer::GUI::ProvincePropertiesPane::buildContinentField() {
         }
     });
 
-    // Add all removable options
-    if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
-        auto& map_project = opt_project->get().getMapProject();
-        const auto& continents = map_project.getContinentList();
-
-        for(auto&& continent : continents) {
-            m_continent_menu->append(continent);
-        }
-
+    {
         // Add+Remove buttons for continents
-
-        Gtk::Button* add_button;
-        Gtk::Button* rem_button;
-
         Gtk::Box* add_rem_box = addWidget<Gtk::Box>(Gtk::ORIENTATION_HORIZONTAL);
 
-        add_button = manage(new Gtk::Button("+"));
-        rem_button = manage(new Gtk::Button("-"));
+        m_add_button = manage(new Gtk::Button("+"));
+        m_rem_button = manage(new Gtk::Button("-"));
 
-        add_rem_box->add(*add_button);
-        add_rem_box->add(*rem_button);
+        add_rem_box->add(*m_add_button);
+        add_rem_box->add(*m_rem_button);
 
-        // The remove button only does stuff if there are continents _to_
-        //  remove
-        rem_button->set_sensitive(!continents.empty());
+        // Default both of these to be insensitive, we'll decide later if they
+        //   should be made sensitive
+        m_add_button->set_sensitive(false);
+        m_rem_button->set_sensitive(false);
 
-        add_button->signal_clicked().connect([this, rem_button, &map_project]()
-        {
-            const auto& continents = map_project.getContinentList();
-
-            Gtk::Dialog add_dialog("Add a continent");
-            Gtk::Entry continent_name_entry;
-            Gtk::Label entry_label("Name of the new continent:");
-
-            Gtk::Bin* bin = reinterpret_cast<Gtk::Bin*>(add_dialog.get_child());
-
-            bin->add(entry_label);
-            bin->add(continent_name_entry);
-
-            auto confirm_button = add_dialog.add_button("Confirm", Gtk::RESPONSE_ACCEPT);
-            confirm_button->set_sensitive(false);
-
-            add_dialog.add_button("Cancel", Gtk::RESPONSE_CANCEL);
-
-            // Set up a signal so that we can update if the confirm button
-            //  should be activated
-            continent_name_entry.signal_changed().connect([&confirm_button,
-                                                           &continent_name_entry,
-                                                           &continents]()
+        m_add_button->signal_clicked().connect([this]() {
+            if(auto opt_project = Driver::getInstance().getProject(); opt_project)
             {
-                // The button is sensitive IIF the entered text is a valid
-                //  continent
-                auto text = continent_name_entry.get_text();
-                confirm_button->set_sensitive(text != "None" &&
-                                              !text.empty() &&
-                                              continents.count(text) == 0);
-            });
+                auto& map_project = opt_project->get().getMapProject();
+                const auto& continents = map_project.getContinentList();
 
-            add_dialog.show_all_children();
+                Gtk::Dialog add_dialog("Add a continent");
+                Gtk::Entry continent_name_entry;
+                Gtk::Label entry_label("Name of the new continent:");
 
-            const int result = add_dialog.run();
-            switch(result) {
-                case Gtk::RESPONSE_ACCEPT:
-                    if(Action::ActionManager::getInstance().doAction(
-                        new Action::CreateRemoveContinentAction(map_project,
-                                                                continent_name_entry.get_text(),
-                                                                Action::CreateRemoveContinentAction::Type::CREATE)))
-                    {
-                        // Rebuild the continent menu here so that they remain
-                        //  in the same order as in the internal std::set
-                        rebuildContinentMenu(continents);
-                    }
-                    break;
-                case Gtk::RESPONSE_CANCEL:
-                default:
-                    return;
+                Gtk::Bin* bin = reinterpret_cast<Gtk::Bin*>(add_dialog.get_child());
+
+                bin->add(entry_label);
+                bin->add(continent_name_entry);
+
+                auto confirm_button = add_dialog.add_button("Confirm", Gtk::RESPONSE_ACCEPT);
+                confirm_button->set_sensitive(false);
+
+                add_dialog.add_button("Cancel", Gtk::RESPONSE_CANCEL);
+
+                // Set up a signal so that we can update if the confirm button
+                //  should be activated
+                continent_name_entry.signal_changed().connect([&confirm_button,
+                                                               &continent_name_entry,
+                                                               &continents]()
+                {
+                    // The button is sensitive IIF the entered text is a valid
+                    //  continent
+                    auto text = continent_name_entry.get_text();
+                    confirm_button->set_sensitive(text != "None" &&
+                                                  !text.empty() &&
+                                                  continents.count(text) == 0);
+                });
+
+                add_dialog.show_all_children();
+
+                const int result = add_dialog.run();
+                switch(result) {
+                    case Gtk::RESPONSE_ACCEPT:
+                        if(Action::ActionManager::getInstance().doAction(
+                            new Action::CreateRemoveContinentAction(map_project,
+                                                                    continent_name_entry.get_text(),
+                                                                    Action::CreateRemoveContinentAction::Type::CREATE)))
+                        {
+                            // Rebuild the continent menu here so that they remain
+                            //  in the same order as in the internal std::set
+                            rebuildContinentMenu(continents);
+                        }
+                        break;
+                    case Gtk::RESPONSE_CANCEL:
+                    default:
+                        return;
+                }
+
+                // Make the remove button active again
+                m_rem_button->set_sensitive(true);
             }
-
-            // Make the remove button active again
-            rem_button->set_sensitive(true);
         });
 
-        rem_button->signal_clicked().connect([this, rem_button, &map_project]()
-        {
-            const auto& continents = map_project.getContinentList();
-
-            Gtk::Dialog rem_dialog("Remove a Continent");
-            Gtk::Entry continent_name_entry;
-            Gtk::Bin* bin = reinterpret_cast<Gtk::Bin*>(rem_dialog.get_child());
-
-            // Add the Confirm and Cancel buttons to the dialog
-            bin->add(continent_name_entry);
-            auto confirm_button = rem_dialog.add_button("Confirm", Gtk::RESPONSE_ACCEPT);
-            confirm_button->set_sensitive(false);
-
-            rem_dialog.add_button("Cancel", Gtk::RESPONSE_CANCEL);
-
-            // Set up a signal so that we can update if the confirm button
-            //  should be activated
-            continent_name_entry.signal_changed().connect([&confirm_button,
-                                                           &continent_name_entry,
-                                                           &continents]()
+        m_rem_button->signal_clicked().connect([this]() {
+            if(auto opt_project = Driver::getInstance().getProject(); opt_project)
             {
-                // The button is sensitive IIF the entered text is a valid
-                //  continent
-                auto text = continent_name_entry.get_text();
-                confirm_button->set_sensitive(text != "None" &&
-                                              !text.empty() &&
-                                              continents.count(text) == 0);
-            });
+                auto& map_project = opt_project->get().getMapProject();
+                const auto& continents = map_project.getContinentList();
 
-            rem_dialog.show_all_children();
+                Gtk::Dialog rem_dialog("Remove a Continent");
+                Gtk::Entry continent_name_entry;
+                Gtk::Bin* bin = reinterpret_cast<Gtk::Bin*>(rem_dialog.get_child());
 
-            switch(rem_dialog.run()) {
-                case Gtk::RESPONSE_ACCEPT:
-                    if(Action::ActionManager::getInstance().doAction(
-                        new Action::CreateRemoveContinentAction(map_project,
-                                                                continent_name_entry.get_text(),
-                                                                Action::CreateRemoveContinentAction::Type::REMOVE)))
-                    {
-                        // Rebuild the continent menu here so that they remain
-                        //  in the same order as in the internal std::set
-                        rebuildContinentMenu(continents);
-                    }
-                    break;
-                case Gtk::RESPONSE_CANCEL:
-                default:
-                    return;
+                // Add the Confirm and Cancel buttons to the dialog
+                bin->add(continent_name_entry);
+                auto confirm_button = rem_dialog.add_button("Confirm", Gtk::RESPONSE_ACCEPT);
+                confirm_button->set_sensitive(false);
+
+                rem_dialog.add_button("Cancel", Gtk::RESPONSE_CANCEL);
+
+                // Set up a signal so that we can update if the confirm button
+                //  should be activated
+                continent_name_entry.signal_changed().connect([&confirm_button,
+                                                               &continent_name_entry,
+                                                               &continents]()
+                {
+                    // The button is sensitive IIF the entered text is a valid
+                    //  continent
+                    auto text = continent_name_entry.get_text();
+                    confirm_button->set_sensitive(text != "None" &&
+                                                  !text.empty() &&
+                                                  continents.count(text) == 0);
+                });
+
+                rem_dialog.show_all_children();
+
+                switch(rem_dialog.run()) {
+                    case Gtk::RESPONSE_ACCEPT:
+                        if(Action::ActionManager::getInstance().doAction(
+                            new Action::CreateRemoveContinentAction(map_project,
+                                                                    continent_name_entry.get_text(),
+                                                                    Action::CreateRemoveContinentAction::Type::REMOVE)))
+                        {
+                            // Rebuild the continent menu here so that they remain
+                            //  in the same order as in the internal std::set
+                            rebuildContinentMenu(continents);
+                        }
+                        break;
+                    case Gtk::RESPONSE_CANCEL:
+                    default:
+                        return;
+                }
+
+                // Make the remove button active again
+                m_rem_button->set_sensitive(!continents.empty());
             }
-
-            // Make the remove button active again
-            rem_button->set_sensitive(!continents.empty());
         });
-    } else {
-        WRITE_ERROR("No project is currently loaded!");
     }
+
+    // Simulate a project opening to initialize the contents of the continent
+    //  menu if a project somehow is already opened when we are building the
+    //  properties menu
+    onProjectOpened();
 }
 
 void MapNormalizer::GUI::ProvincePropertiesPane::buildStateCreationButton() {
@@ -405,6 +403,20 @@ void MapNormalizer::GUI::ProvincePropertiesPane::rebuildContinentMenu(const std:
     m_continent_menu->append("None");
     for(auto&& c : continents) {
         m_continent_menu->append(c);
+    }
+}
+
+void MapNormalizer::GUI::ProvincePropertiesPane::onProjectOpened() {
+    if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+        auto& map_project = opt_project->get().getMapProject();
+        const auto& continents = map_project.getContinentList();
+
+        rebuildContinentMenu(continents);
+
+        // The remove button only does stuff if there are continents _to_
+        //  remove
+        m_rem_button->set_sensitive(!continents.empty());
+        m_add_button->set_sensitive(true);
     }
 }
 
