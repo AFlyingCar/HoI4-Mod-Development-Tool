@@ -114,24 +114,6 @@ void MapNormalizer::GUI::MainWindow::initializeEditActions() {
  * @brief Initializes every action in the View menu
  */
 void MapNormalizer::GUI::MainWindow::initializeViewActions() {
-    auto properties_action = add_action_bool("properties", [/*this*/]() {
-#if 0
-        auto self = lookup_action("properties");
-        bool active = false;
-        self->get_state(active);
-        self->change_state(!active);
-
-        if(m_paned->get_child2() == nullptr) {
-            buildPropertiesPane(m_paned);
-
-            m_paned->show_all();
-        } else {
-            m_paned->remove(*m_paned->get_child2());
-        }
-#endif
-    }, false);
-    properties_action->set_enabled(false);
-
     add_action("log_window", [this]() {
         if(m_log_viewer_window == nullptr) {
             m_log_viewer_window.reset(new LogViewerWindow());
@@ -820,7 +802,6 @@ void MapNormalizer::GUI::MainWindow::onProjectOpened() {
     getAction("import_provincemap")->set_enabled(true);
     getAction("save")->set_enabled(true);
     getAction("close")->set_enabled(true);
-    // getAction("properties")->set_enabled(true);
 
     // Issue callback to the properties pane to inform it that a project has
     //   been opened
@@ -841,7 +822,6 @@ void MapNormalizer::GUI::MainWindow::onProjectClosed() {
     getAction("import_provincemap")->set_enabled(false);
     getAction("save")->set_enabled(false);
     getAction("close")->set_enabled(false);
-    // getAction("properties")->set_enabled(false);
 
     {
         ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
