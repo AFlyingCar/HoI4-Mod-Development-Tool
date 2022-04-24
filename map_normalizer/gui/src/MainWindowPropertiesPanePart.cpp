@@ -89,3 +89,7 @@ Gtk::Frame* MapNormalizer::GUI::MainWindowPropertiesPanePart::buildPropertiesPan
     return properties_frame;
 }
 
+void MapNormalizer::GUI::MainWindowPropertiesPanePart::onProjectOpened() {
+    m_province_properties_pane->onProjectOpened();
+}
+

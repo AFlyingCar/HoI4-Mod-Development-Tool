@@ -821,6 +821,10 @@ void MapNormalizer::GUI::MainWindow::onProjectOpened() {
     getAction("save")->set_enabled(true);
     getAction("close")->set_enabled(true);
     // getAction("properties")->set_enabled(true);
+
+    // Issue callback to the properties pane to inform it that a project has
+    //   been opened
+    MainWindowPropertiesPanePart::onProjectOpened();
 }
 
 /**

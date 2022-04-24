@@ -25,6 +25,8 @@ namespace MapNormalizer::GUI {
             const ProvincePropertiesPane& getProvincePropertiesPane() const;
             const StatePropertiesPane& getStatePropertiesPane() const;
 
+            void onProjectOpened();
+
         private:
             //! A container holding properties for provinces
             std::unique_ptr<ProvincePropertiesPane> m_province_properties_pane;
