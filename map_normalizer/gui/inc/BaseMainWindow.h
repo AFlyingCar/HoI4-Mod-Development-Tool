@@ -20,7 +20,10 @@ namespace MapNormalizer::GUI {
         public:
             using Window::Window;
 
-            BaseMainWindow() = delete;
+            // NOTE: This is left undefined on purpose. Constructing a
+            //   BaseMainWindow _must_ be done through the base Window
+            //   non-default constructor. Do not attempt to define this.
+            BaseMainWindow();
             virtual ~BaseMainWindow() = default;
     };
 }
