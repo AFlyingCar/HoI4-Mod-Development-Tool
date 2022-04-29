@@ -12,7 +12,7 @@
 # include "WidgetContainer.h"
 
 namespace MapNormalizer::GUI {
-    class Window: public Gtk::ApplicationWindow, public WidgetContainer {
+    class Window: public Gtk::ApplicationWindow, public virtual WidgetContainer {
         public:
             Window(const std::string&, Gtk::Application&);
             virtual ~Window();

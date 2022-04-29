@@ -10,30 +10,24 @@
 # include <functional>
 # include <variant>
 
-# include "gtkmm/box.h"
-# include "gtkmm/frame.h"
-# include "gtkmm/paned.h"
-# include "gtkmm/scrolledwindow.h"
-# include "gtkmm/notebook.h"
-
 # include "BitMap.h"
 # include "Types.h"
 
-# include "Window.h"
-# include "IMapDrawingArea.h"
-# include "ProvincePropertiesPane.h"
-# include "StatePropertiesPane.h"
+# include "BaseMainWindow.h"
+# include "MainWindowDrawingAreaPart.h"
+# include "MainWindowPropertiesPanePart.h"
+
 # include "LogViewerWindow.h"
 # include "Toolbar.h"
-
-# include "MapDrawingAreaGL.h"
-# include "MapDrawingArea.h"
 
 namespace MapNormalizer::GUI {
     /**
      * @brief The main window
      */
-    class MainWindow: public Window {
+    class MainWindow: public virtual BaseMainWindow,
+                      public MainWindowDrawingAreaPart,
+                      public MainWindowPropertiesPanePart
+    {
         public:
             MainWindow(Gtk::Application&);
             virtual ~MainWindow();
@@ -50,18 +44,8 @@ namespace MapNormalizer::GUI {
 
             bool importProvinceMap(const Glib::ustring&);
 
-            /**
-             * @brief Adds a widget to this window and marks that it is now the
-             *        active widget to be added to.
-             */
-            template<typename W, typename... Args>
-            W* addActiveWidget(Args&&... args) {
-                return std::get<W*>(m_active_child = addWidget<W>(std::forward<Args>(args)...));
-            }
-
             void buildToolbar();
             void buildViewPane();
-            Gtk::Frame* buildPropertiesPane();
 
             void initializeCallbacks();
 
@@ -81,32 +65,11 @@ namespace MapNormalizer::GUI {
             void saveProjectAs(const std::string& = "Save As...");
 
         private:
-            template<typename... Args>
-            using ActiveChildVariant = std::variant<std::monostate, Args*...>;
-
-            //! The currently active widget to be added to
-            ActiveChildVariant<Gtk::Box, Gtk::Frame, Gtk::ScrolledWindow, Gtk::Notebook> m_active_child;
-
             //! The toolbar of the application
             Toolbar* m_toolbar;
 
             //! The main pane where all child widgets will be inside
             Gtk::Paned* m_paned;
-
-            //! The DrawingArea that the map gets rendered to.
-            std::shared_ptr<IMapDrawingAreaBase> m_drawing_area;
-
-            //! The box that each DrawingArea is rendered into
-            std::shared_ptr<Gtk::Box> m_drawing_box;
-
-            std::shared_ptr<GL::MapDrawingArea> m_gl_drawing_area;
-            std::shared_ptr<MapDrawingArea> m_cairo_drawing_area;
-
-            //! A container holding properties for provinces
-            std::unique_ptr<ProvincePropertiesPane> m_province_properties_pane;
-
-            //! A container holding properties for states
-            std::unique_ptr<StatePropertiesPane> m_state_properties_pane;
 
             //! The window for viewing the logs
             std::unique_ptr<LogViewerWindow> m_log_viewer_window;

@@ -8,18 +8,17 @@
 # include "gtkmm/toolitem.h"
 
 # include "IMapDrawingArea.h"
+# include "MainWindowDrawingAreaPart.h"
 
 namespace MapNormalizer::GUI {
     class Toolbar: public Gtk::Toolbar {
         public:
-            Toolbar();
+            Toolbar(MainWindowDrawingAreaPart&);
             ~Toolbar();
 
             void init();
 
             void updateUndoRedoButtons();
-
-            void setDrawingArea(std::shared_ptr<IMapDrawingAreaBase>);
 
         protected:
             template<typename T, typename... Args>
@@ -38,7 +37,7 @@ namespace MapNormalizer::GUI {
             Gtk::ToolButton* m_undo_item;
             Gtk::ToolButton* m_redo_item;
 
-            std::shared_ptr<IMapDrawingAreaBase> m_drawing_area;
+            MainWindowDrawingAreaPart& m_window;
     };
 }
 

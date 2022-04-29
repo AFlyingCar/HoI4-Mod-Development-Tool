@@ -37,6 +37,8 @@ namespace MapNormalizer::GUI {
 
             void updateProperties(bool);
 
+            void onProjectOpened();
+
         protected:
             virtual void addWidgetToParent(Gtk::Widget&) override;
 
@@ -66,7 +68,11 @@ namespace MapNormalizer::GUI {
             Gtk::CheckButton* m_is_coastal_button;
             Gtk::ComboBoxText* m_provtype_menu;
             Gtk::ComboBoxText* m_terrain_menu;
+
             Gtk::ComboBoxText* m_continent_menu;
+            Gtk::Button* m_add_button;
+            Gtk::Button* m_rem_button;
+
 
             Gtk::Button* m_create_state_button;
 
