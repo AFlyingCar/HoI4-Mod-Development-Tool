@@ -174,6 +174,15 @@ auto MapNormalizer::GUI::IMapDrawingAreaBase::getSelections()
     return m_selections;
 }
 
+void MapNormalizer::GUI::IMapDrawingAreaBase::setShouldDrawAdjacencies(bool should_draw_adjacencies)
+{
+    m_should_draw_adjacencies = true;
+}
+
+bool MapNormalizer::GUI::IMapDrawingAreaBase::shouldDrawAdjacencies() const {
+    return m_should_draw_adjacencies;
+}
+
 std::ostream& MapNormalizer::GUI::operator<<(std::ostream& stream,
                                              const IMapDrawingAreaBase::ViewingMode& mode)
 {

@@ -30,9 +30,6 @@ namespace MapNormalizer::GUI {
 
             std::shared_ptr<GL::MapDrawingArea> m_gl_drawing_area;
             std::shared_ptr<MapDrawingArea> m_cairo_drawing_area;
-
-        private:
-            bool m_should_draw_adjacencies = false;
     };
 }
 

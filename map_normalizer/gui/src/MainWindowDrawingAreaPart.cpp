@@ -185,11 +185,11 @@ auto MapNormalizer::GUI::MainWindowDrawingAreaPart::getDrawingArea()
 
 void MapNormalizer::GUI::MainWindowDrawingAreaPart::setShouldDrawAdjacencies(bool should_draw_adjacencies)
 {
-    m_should_draw_adjacencies = true;
+    m_drawing_area->setShouldDrawAdjacencies(should_draw_adjacencies);
 }
 
 bool MapNormalizer::GUI::MainWindowDrawingAreaPart::shouldDrawAdjacencies() const
 {
-    return m_should_draw_adjacencies;
+    return m_drawing_area->shouldDrawAdjacencies();
 }
 
