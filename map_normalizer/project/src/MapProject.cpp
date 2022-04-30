@@ -939,6 +939,44 @@ auto MapNormalizer::Project::MapProject::getStates() const
     return m_states;
 }
 
+/**
+ * @brief Calculates whether each province is coastal or not
+ * @details Will completely overwrite all manual coastal configuration done by
+ *          the user.
+ *
+ * @param dry Whether or not this should actually modify the stored provinces
+ */
+void MapNormalizer::Project::MapProject::calculateCoastalProvinces(bool dry) {
+    WRITE_INFO("Calculating coastal provinces...");
+    for(auto& province : getProvinces()) {
+        // Only allow LAND provinces to be auto-marked as coastal
+        //   I'm not actually sure if the game will allow LAKE and SEA to be
+        //   coasts, but the cases where we would want that should be rare
+        //   enough that I think it's fine to just require the user to configure
+        //   that manually.
+        if(province.type != ProvinceType::LAND) {
+            WRITE_DEBUG("Skipping province ", province.id, " as it's not LAND.");
+            continue;
+        }
+
+        // A province is coastal if it is adjacent to any SEA province.
+        bool is_coastal = std::any_of(province.adjacent_provinces.begin(),
+                                      province.adjacent_provinces.end(),
+                                      [this](const auto& adj_prov_id) {
+                                          return getProvinceForLabel(adj_prov_id).type == ProvinceType::SEA;
+                                      });
+
+        WRITE_DEBUG("Calculated that province '", province.id, "' is ",
+                   (is_coastal ? "not " : ""), "coastal.");
+        if(!dry) {
+            province.coastal = is_coastal;
+        } else {
+            WRITE_DEBUG("Dry-Run enabled. Not modifying stored provinces.");
+        }
+    }
+    WRITE_INFO("Done.");
+}
+
 auto MapNormalizer::Project::MapProject::getStateForID(StateID state_id) const
     -> const State&
 {
