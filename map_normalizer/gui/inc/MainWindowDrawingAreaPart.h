@@ -18,6 +18,9 @@ namespace MapNormalizer::GUI {
 
             std::shared_ptr<IMapDrawingAreaBase> getDrawingArea();
 
+            void setShouldDrawAdjacencies(bool = true);
+            bool shouldDrawAdjacencies() const;
+
         protected:
             //! The DrawingArea that the map gets rendered to.
             std::shared_ptr<IMapDrawingAreaBase> m_drawing_area;
@@ -27,6 +30,9 @@ namespace MapNormalizer::GUI {
 
             std::shared_ptr<GL::MapDrawingArea> m_gl_drawing_area;
             std::shared_ptr<MapDrawingArea> m_cairo_drawing_area;
+
+        private:
+            bool m_should_draw_adjacencies = false;
     };
 }
 
