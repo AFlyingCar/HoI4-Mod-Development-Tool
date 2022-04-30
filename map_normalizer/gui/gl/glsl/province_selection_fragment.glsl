@@ -8,6 +8,9 @@ uniform usampler2D label_matrix;
 uniform uint province_labels[MAX_SELECTED_PROVINCES];
 uniform uint num_selected; // Will be no larger than MAX_SELECTED_PROVINCES
 
+// The color that the selection will appear rendered as
+uniform vec3 selection_color;
+
 in vec2 texture_coords; // Input from vertex shader
 
 /**
@@ -32,6 +35,6 @@ void main() {
     // float alpha = uint(pixel_label == province_label);
     float alpha = uint(isSelected(pixel_label));
 
-    FragColor = sel_color1 * vec4(1, 0, 0, alpha);
+    FragColor = sel_color1 * vec4(selection_color.rgb, alpha);
 }
 
