@@ -82,7 +82,8 @@ void MapNormalizer::GUI::MapNormalizerApplication::on_startup() {
     });
 
     createMenu("Root", "Project", {
-        { "_Import Province Map", "win.import_provincemap", {} }
+        { "_Import Province Map", "win.import_provincemap", {} },
+        { "Recalculate Coastal Provinces", "win.recalc_coasts", {} },
     });
 
     createMenu("Root", "Help", {
