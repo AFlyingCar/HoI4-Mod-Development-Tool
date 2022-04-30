@@ -76,6 +76,9 @@ void MapNormalizer::GUI::MapNormalizerApplication::on_startup() {
             { "_Province View", "win.switch_views.province" },
             { "_State View", "win.switch_views.state" },
         } },
+        { "Debug", "win.debug", {
+            { "Render Adjacencies", "win.debug.render_adjacencies" },
+        } },
     });
 
     createMenu("Root", "Project", {
@@ -83,6 +86,7 @@ void MapNormalizer::GUI::MapNormalizerApplication::on_startup() {
     });
 
     createMenu("Root", "Help", {
+        { "Toggle Debug Mode", "win.toggle_debug", {} },
         { "_About", "win.about", {} },
         { "_Wiki", "win.wiki", {} }
     });

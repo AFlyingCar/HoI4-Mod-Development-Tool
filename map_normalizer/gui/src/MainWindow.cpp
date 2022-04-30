@@ -11,6 +11,7 @@
 #include "Constants.h"
 #include "Logger.h"
 #include "Util.h" // overloaded
+#include "Options.h"
 
 #include "ShapeFinder2.h" // ShapeFinder
 
@@ -220,6 +221,30 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
 
         provinceview_action->change_state(true);
     }
+
+    // Debug actions
+    {
+        auto render_adjacencies_action = add_action_bool("debug.render_adjacencies", [this]()
+        {
+            // First lookup our current state
+            auto self = lookupAction<Gio::SimpleAction>("debug.render_adjacencies");
+            bool state;
+            self->get_state<bool>(state);
+
+            if(state) {
+                WRITE_INFO("Disabling adjacency rendering!");
+            } else {
+                WRITE_INFO("Enabling adjacency rendering!");
+            }
+
+            // Now change the relevant values + ourself depending on what the
+            //   current state is
+            setShouldDrawAdjacencies(!state);
+            self->change_state(!state);
+        });
+        render_adjacencies_action->change_state(false);
+        render_adjacencies_action->set_enabled(prog_opts.debug);
+    }
 }
 
 /**
@@ -256,6 +281,24 @@ void MapNormalizer::GUI::MainWindow::initializeProjectActions() {
  * @brief Initializes every action in the Help menu
  */
 void MapNormalizer::GUI::MainWindow::initializeHelpActions() {
+    auto toggle_debug_action = add_action_bool("toggle_debug", [this]() {
+        prog_opts.debug = !prog_opts.debug;
+
+        // Find ourselves and change our state
+        {
+            auto self = lookup_action("toggle_debug");
+            self->change_state(prog_opts.debug);
+        }
+
+        // Look for each menu item that needs to have its sensitivity toggled
+        {
+            auto action = lookupAction<Gio::SimpleAction>("debug.render_adjacencies");
+            action->set_enabled(prog_opts.debug);
+        }
+    });
+    toggle_debug_action->change_state(prog_opts.debug);
+    toggle_debug_action->set_enabled(true);
+
     add_action("about", []() {
         Gtk::AboutDialog dialog;
 
