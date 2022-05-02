@@ -97,12 +97,6 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
 
                 setupUniforms();
 
-                // TODO: What the hell is wrong with the transform?!?!?!
-                float scale_factor = static_cast<float>(getOwningGLDrawingArea()->getScaleFactor());
-                glm::mat4 transform = glm::mat4{1.0f};
-                transform = glm::scale(transform, glm::vec3{scale_factor, scale_factor, 1});
-                // m_selection_shader.uniform("transform", transform);
-
                 // Set up the textures
                 m_selection_shader.uniform("selection", getSelectionTexture());
                 m_selection_shader.uniform("label_matrix", getLabelTexture());
