@@ -9,7 +9,7 @@
 #include "TestOverrides.h"
 #include "TestUtils.h"
 
-namespace MapNormalizer::UnitTests {
+namespace HMDT::UnitTests {
     class GraphicsWorkerMock: public IGraphicsWorker {
         public:
             virtual ~GraphicsWorkerMock() = default;
@@ -45,15 +45,15 @@ namespace MapNormalizer::UnitTests {
 }
 
 TEST(ShapeFinderTests, TestPass1BorderCount) {
-    using namespace MapNormalizer::UnitTests;
+    using namespace HMDT::UnitTests;
 
     SET_PROGRAM_OPTION(quiet, true);
 
     const InputImageInfo& iii = images.at("simple");
 
-    std::shared_ptr<MapNormalizer::BitMap> image(new MapNormalizer::BitMap);
+    std::shared_ptr<HMDT::BitMap> image(new HMDT::BitMap);
 
-    ASSERT_NE(MapNormalizer::readBMP(iii.path, image.get()), nullptr);
+    ASSERT_NE(HMDT::readBMP(iii.path, image.get()), nullptr);
 
     ShapeFinderMock finder(image.get(), GraphicsWorkerMock::getInstance());
 
@@ -65,15 +65,15 @@ TEST(ShapeFinderTests, TestPass1BorderCount) {
 }
 
 TEST(ShapeFinderTests, TestDetectedShapeCount) {
-    using namespace MapNormalizer::UnitTests;
+    using namespace HMDT::UnitTests;
 
     SET_PROGRAM_OPTION(quiet, true);
 
     const InputImageInfo& iii = images.at("simple");
 
-    std::shared_ptr<MapNormalizer::BitMap> image(new MapNormalizer::BitMap);
+    std::shared_ptr<HMDT::BitMap> image(new HMDT::BitMap);
 
-    ASSERT_NE(MapNormalizer::readBMP(iii.path, image.get()), nullptr);
+    ASSERT_NE(HMDT::readBMP(iii.path, image.get()), nullptr);
 
     ShapeFinderMock finder(image.get(), GraphicsWorkerMock::getInstance());
 

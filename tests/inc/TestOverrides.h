@@ -30,7 +30,7 @@ class ProgramOptionSetter {
 };
 
 # define SET_PROGRAM_OPTION(OPTION_NAME, VALUE) \
-    ProgramOptionSetter<decltype(MapNormalizer::prog_opts. OPTION_NAME)> CONCAT(_PROGRAM_OPTION_SETTER_,__LINE__) (&MapNormalizer::prog_opts. OPTION_NAME, (VALUE))
+    ProgramOptionSetter<decltype(HMDT::prog_opts. OPTION_NAME)> CONCAT(_PROGRAM_OPTION_SETTER_,__LINE__) (&HMDT::prog_opts. OPTION_NAME, (VALUE))
 
 #endif
 

@@ -10,7 +10,7 @@
 #include "TestUtils.h"
 
 TEST(UtilTests, FromStringTests) {
-    using MapNormalizer::fromString;
+    using HMDT::fromString;
 
     SET_PROGRAM_OPTION(quiet, true);
 
@@ -74,23 +74,23 @@ TEST(UtilTests, FromStringTests) {
         std::string unknown("unknown");
         std::string fizzbuzz("fizzbuzz");
 
-        auto result = fromString<MapNormalizer::ProvinceType>(land);
-        ASSERT_OPTIONAL(result, MapNormalizer::ProvinceType::LAND);
-        result = fromString<MapNormalizer::ProvinceType>(lake);
-        ASSERT_OPTIONAL(result, MapNormalizer::ProvinceType::LAKE);
-        result = fromString<MapNormalizer::ProvinceType>(sea);
-        ASSERT_OPTIONAL(result, MapNormalizer::ProvinceType::SEA);
-        result = fromString<MapNormalizer::ProvinceType>(unknown);
-        ASSERT_OPTIONAL(result, MapNormalizer::ProvinceType::UNKNOWN);
-        result = fromString<MapNormalizer::ProvinceType>(fizzbuzz);
-        ASSERT_OPTIONAL(result, MapNormalizer::ProvinceType::UNKNOWN);
+        auto result = fromString<HMDT::ProvinceType>(land);
+        ASSERT_OPTIONAL(result, HMDT::ProvinceType::LAND);
+        result = fromString<HMDT::ProvinceType>(lake);
+        ASSERT_OPTIONAL(result, HMDT::ProvinceType::LAKE);
+        result = fromString<HMDT::ProvinceType>(sea);
+        ASSERT_OPTIONAL(result, HMDT::ProvinceType::SEA);
+        result = fromString<HMDT::ProvinceType>(unknown);
+        ASSERT_OPTIONAL(result, HMDT::ProvinceType::UNKNOWN);
+        result = fromString<HMDT::ProvinceType>(fizzbuzz);
+        ASSERT_OPTIONAL(result, HMDT::ProvinceType::UNKNOWN);
     }
 }
 
 TEST(UtilTests, CalcDimsTests) {
-    MapNormalizer::BoundingBox bb1{ { 0, 0 }, { 128, 128 } };
+    HMDT::BoundingBox bb1{ { 0, 0 }, { 128, 128 } };
 
-    ASSERT_EQ(MapNormalizer::calcDims(bb1), std::make_pair(128U, 128U));
+    ASSERT_EQ(HMDT::calcDims(bb1), std::make_pair(128U, 128U));
 }
 
 TEST(UtilTests, SimpleSafeReadTests) {
@@ -109,18 +109,18 @@ TEST(UtilTests, SimpleSafeReadTests) {
     std::shared_ptr<char[]> read_sdata(new char[sdata.size() + 1]);
 
     // Write data points into the stream
-    MapNormalizer::writeData(sstream, idata);
-    MapNormalizer::writeData(sstream, bdata);
-    MapNormalizer::writeData(sstream, fdata);
+    HMDT::writeData(sstream, idata);
+    HMDT::writeData(sstream, bdata);
+    HMDT::writeData(sstream, fdata);
     sstream.write(sdata.c_str(), sdata.size() + 1);
 
     // Read all of the data out of the stream
-    ASSERT_TRUE(MapNormalizer::safeRead(&read_idata, sstream));
-    ASSERT_TRUE(MapNormalizer::safeRead(&read_bdata, sstream));
-    ASSERT_TRUE(MapNormalizer::safeRead(&read_fdata, sstream));
+    ASSERT_TRUE(HMDT::safeRead(&read_idata, sstream));
+    ASSERT_TRUE(HMDT::safeRead(&read_bdata, sstream));
+    ASSERT_TRUE(HMDT::safeRead(&read_fdata, sstream));
 
     // Read one more character than size() for the \0
-    ASSERT_TRUE(MapNormalizer::safeRead(read_sdata.get(), sdata.size() + 1, sstream));
+    ASSERT_TRUE(HMDT::safeRead(read_sdata.get(), sdata.size() + 1, sstream));
 
     // Make sure that the data got read back out of the stream correctly
     ASSERT_EQ(read_idata, idata);
@@ -137,7 +137,7 @@ TEST(UtilTests, SimpleWriteDataTests) {
     float fdata = 3.14f;
 
     // Write the data into the stream
-    MapNormalizer::writeData(sstream, idata, bdata, fdata);
+    HMDT::writeData(sstream, idata, bdata, fdata);
 
     // Make sure that the datta which got written is correct
     ASSERT_EQ(idata, *reinterpret_cast<const uint32_t*>(sstream.str().c_str()));
@@ -153,16 +153,16 @@ TEST(UtilTests, ParseValuesTests) {
     uint32_t idata;
     std::string sdata;
     bool bdata;
-    MapNormalizer::ProvinceType pdata;
+    HMDT::ProvinceType pdata;
     float fdata;
 
-    ASSERT_TRUE(MapNormalizer::parseValues(ss, &idata, &sdata, &bdata, &pdata, &fdata));
+    ASSERT_TRUE(HMDT::parseValues(ss, &idata, &sdata, &bdata, &pdata, &fdata));
 
     // Make sure the data got parsed out correctly
     ASSERT_EQ(idata, 1234);
     ASSERT_EQ(sdata, "foobar");
     ASSERT_EQ(bdata, true);
-    ASSERT_EQ(pdata, MapNormalizer::ProvinceType::LAND);
+    ASSERT_EQ(pdata, HMDT::ProvinceType::LAND);
     ASSERT_FLOAT_EQ(fdata, 3.14f);
 }
 
@@ -175,18 +175,18 @@ TEST(UtilTests, ParseValuesSkipMissingTests) {
     std::string sdata;
     bool bdata;
     char cdata = 'a';
-    MapNormalizer::ProvinceType pdata;
+    HMDT::ProvinceType pdata;
     float fdata;
     uint32_t idata2 = 4321;
 
-    ASSERT_TRUE(MapNormalizer::parseValuesSkipMissing(ss, &idata, &sdata, &cdata, true, &bdata, &pdata, &fdata, &idata2, true));
+    ASSERT_TRUE(HMDT::parseValuesSkipMissing(ss, &idata, &sdata, &cdata, true, &bdata, &pdata, &fdata, &idata2, true));
 
     // Make sure the data got parsed out correctly
     ASSERT_EQ(idata, 1234);
     ASSERT_EQ(sdata, "foobar");
     ASSERT_EQ(bdata, true);
     ASSERT_EQ(cdata, 'a');
-    ASSERT_EQ(pdata, MapNormalizer::ProvinceType::LAND);
+    ASSERT_EQ(pdata, HMDT::ProvinceType::LAND);
     ASSERT_FLOAT_EQ(fdata, 3.14f);
     ASSERT_EQ(idata2, 4321);
 }
@@ -201,7 +201,7 @@ TEST(UtilTests, ParseValuePositionTest) {
 
     uint32_t idata = 1234;
 
-    ASSERT_FALSE(MapNormalizer::parseValue(ss, idata));
+    ASSERT_FALSE(HMDT::parseValue(ss, idata));
 
     // First make sure the data wasn't touched
     ASSERT_EQ(idata, 1234);
@@ -228,31 +228,31 @@ TEST(UtilTests, TrimTests) {
     };
 
     for(auto&& [test, expected] : ltrim_tests) {
-        MapNormalizer::ltrim(test);
+        HMDT::ltrim(test);
         ASSERT_EQ(test, expected);
     }
 
     for(auto&& [test, expected] : rtrim_tests) {
-        MapNormalizer::rtrim(test);
+        HMDT::rtrim(test);
         ASSERT_EQ(test, expected);
     }
 
     for(auto&& [test, expected] : trim_tests) {
-        MapNormalizer::trim(test);
+        HMDT::trim(test);
         ASSERT_EQ(test, expected);
     }
 }
 
 TEST(UtilTests, ClampTests) {
-    ASSERT_EQ(MapNormalizer::clamp(-104, 5, -34), -34);
-    ASSERT_EQ(MapNormalizer::clamp(0, 5, 20), 5);
-    ASSERT_EQ(MapNormalizer::clamp(5, 5, 20), 5);
-    ASSERT_EQ(MapNormalizer::clamp(11, 5, 20), 11);
-    ASSERT_EQ(MapNormalizer::clamp(533, 5, 20), 20);
+    ASSERT_EQ(HMDT::clamp(-104, 5, -34), -34);
+    ASSERT_EQ(HMDT::clamp(0, 5, 20), 5);
+    ASSERT_EQ(HMDT::clamp(5, 5, 20), 5);
+    ASSERT_EQ(HMDT::clamp(11, 5, 20), 11);
+    ASSERT_EQ(HMDT::clamp(533, 5, 20), 20);
 }
 
 TEST(UtilTests, MonadBasicTest) {
-    using MapNormalizer::MonadOptional;
+    using HMDT::MonadOptional;
 
     std::optional<int> v = 5;
 
@@ -268,7 +268,7 @@ TEST(UtilTests, MonadBasicTest) {
 }
 
 TEST(UtilTests, MonadTransformTest) {
-    using MapNormalizer::MonadOptional;
+    using HMDT::MonadOptional;
 
     struct A {
         int a;
@@ -293,7 +293,7 @@ TEST(UtilTests, MonadTransformTest) {
 }
 
 TEST(UtilTests, MonadAndThenTest) {
-    using MapNormalizer::MonadOptional;
+    using HMDT::MonadOptional;
 
     struct A {
         int a;
@@ -320,7 +320,7 @@ TEST(UtilTests, MonadAndThenTest) {
 }
 
 TEST(UtilTests, MonadOrElseTest) {
-    using MapNormalizer::MonadOptional;
+    using HMDT::MonadOptional;
 
     struct A {
         int a;
@@ -364,7 +364,7 @@ TEST(UtilTests, SimpleParallelTransformTest) {
     const uint32_t expected_output_data[] = { 0, 3, 6, 9, 12, 15, 18, 21, 24, 27 };
     uint32_t output_data[10];
 
-    MapNormalizer::parallelTransform(input_data, input_data + 10, output_data,
+    HMDT::parallelTransform(input_data, input_data + 10, output_data,
                                      [](uint32_t v) {
                                          return v * 3;
                                      });
@@ -400,7 +400,7 @@ TEST(UtilTests, LargeParallelTransformTest) {
 
     //
     std::unique_ptr<uint32_t[]> output_data(new uint32_t[num_test_values]);
-    MapNormalizer::parallelTransform(input_data.begin(), input_data.end(), output_data.get(),
+    HMDT::parallelTransform(input_data.begin(), input_data.end(), output_data.get(),
                                      transform_func);
 
     TEST_COUT << "Verifying results:" << std::endl;

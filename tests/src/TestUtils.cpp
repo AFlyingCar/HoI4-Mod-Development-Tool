@@ -23,11 +23,11 @@
 
 DEF_ENVVAR(VERBOSE);
 
-bool MapNormalizer::UnitTests::useVerboseOutput() {
+bool HMDT::UnitTests::useVerboseOutput() {
     return std::getenv(ENVVAR_VERBOSE) != nullptr;
 }
 
-std::filesystem::path MapNormalizer::UnitTests::getTestProgramPath() {
+std::filesystem::path HMDT::UnitTests::getTestProgramPath() {
     char path[PATH_MAX] = { 0 };
 #ifdef _WIN32
     GetModuleFileName(NULL, path, PATH_MAX);

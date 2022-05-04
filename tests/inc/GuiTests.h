@@ -8,7 +8,7 @@
 # include "giomm/resource.h"
 # include "gtkmm.h"
 
-namespace MapNormalizer::UnitTests {
+namespace HMDT::UnitTests {
     class GuiTests: public ::testing::Test {
         protected:
             void SetUp() override;

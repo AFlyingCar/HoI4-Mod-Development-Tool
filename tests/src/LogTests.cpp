@@ -14,14 +14,14 @@
 #include "TestUtils.h"
 
 TEST(LogTests, OutputFunctionRegistrationTest) {
-    using MapNormalizer::Log::Logger;
-    using MapNormalizer::Log::Message;
+    using HMDT::Log::Logger;
+    using HMDT::Log::Message;
 
     Logger::registerOutputFunction([](const Message&) { return true; });
 }
 
 TEST(LogTests, SimpleFormatTests) {
-    using MapNormalizer::Log::Format;
+    using HMDT::Log::Format;
 
     Format f1{ Format::CLEAR, { 0 } };
     Format f2{ Format::CLEAR, { 0 } };
@@ -30,7 +30,7 @@ TEST(LogTests, SimpleFormatTests) {
 }
 
 TEST(LogTests, SourceTests) {
-    using MapNormalizer::Log::Source;
+    using HMDT::Log::Source;
 
 
     // Do these on the same line so that we get the same line number
@@ -49,9 +49,9 @@ TEST(LogTests, SourceTests) {
 }
 
 TEST(LogTests, SimpleLogWriteTest) {
-    using MapNormalizer::Log::Logger;
-    using MapNormalizer::Log::Message;
-    using MapNormalizer::Log::Source;
+    using HMDT::Log::Logger;
+    using HMDT::Log::Message;
+    using HMDT::Log::Source;
 
     using namespace std::chrono_literals;
 
@@ -114,9 +114,9 @@ TEST(LogTests, SimpleLogWriteTest) {
 }
 
 TEST(LogTests, LogMacroTests) {
-    using MapNormalizer::Log::Logger;
-    using MapNormalizer::Log::Message;
-    using MapNormalizer::Log::Source;
+    using HMDT::Log::Logger;
+    using HMDT::Log::Message;
+    using HMDT::Log::Source;
 
     using namespace std::chrono_literals;
     using namespace std::string_literals;
@@ -183,9 +183,9 @@ TEST(LogTests, LogMacroTests) {
 }
 
 TEST(LogTests, ANSIOutputTests) {
-    using MapNormalizer::Log::Logger;
-    using MapNormalizer::Log::Message;
-    using MapNormalizer::Log::Source;
+    using HMDT::Log::Logger;
+    using HMDT::Log::Message;
+    using HMDT::Log::Source;
 
     using namespace std::chrono_literals;
     using namespace std::string_literals;
@@ -216,7 +216,7 @@ TEST(LogTests, ANSIOutputTests) {
 
     Logger::registerOutputFunction([&info_ss](const Message& m)
     {
-        return MapNormalizer::Log::outputToStream(m, true, true,
+        return HMDT::Log::outputToStream(m, true, true,
             [&info_ss](uint8_t debug_level) -> std::ostream& {
                 switch(static_cast<Message::Level>(debug_level)) {
                     case Message::Level::INFO:
@@ -256,8 +256,8 @@ TEST(LogTests, ANSIOutputTests) {
 }
 
 TEST(LogTests, UserDataTests) {
-    using MapNormalizer::Log::Logger;
-    using MapNormalizer::Log::Message;
+    using HMDT::Log::Logger;
+    using HMDT::Log::Message;
 
     // Test writing use count both in and out of scope
     // This tests what happens when the function the user data was created in is

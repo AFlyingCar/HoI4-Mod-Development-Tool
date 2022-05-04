@@ -17,6 +17,6 @@ tools_version_hdr.write( " */\n\n")
 
 tools_version_hdr.write( "#ifndef TOOLS_VERSION_H\n")
 tools_version_hdr.write( "# define TOOLS_VERSION_H\n\n")
-tools_version_hdr.write(f"# define MAP_NORMALIZER_VERSION \"{version}\"\n\n")
+tools_version_hdr.write(f"# define MOD_DEVELOPMENT_TOOL_VERSION \"{version}\"\n\n")
 tools_version_hdr.write( "#endif\n")
 

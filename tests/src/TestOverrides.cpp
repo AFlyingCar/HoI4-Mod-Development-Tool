@@ -7,7 +7,7 @@
 
 #include "TestOverrides.h"
 
-MapNormalizer::ProgramOptions MapNormalizer::prog_opts = {
+HMDT::ProgramOptions HMDT::prog_opts = {
     0, "", "", false, false, "", "", false, "", false, false, false, false, false
 };
 

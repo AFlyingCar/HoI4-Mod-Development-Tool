@@ -8,7 +8,7 @@
 
 #include "SetPropertyAction.h"
 
-namespace MapNormalizer::UnitTests {
+namespace HMDT::UnitTests {
     void ActionTests::SetUp() { }
 
     void ActionTests::TearDown() {
