@@ -183,3 +183,13 @@ auto MapNormalizer::GUI::MainWindowDrawingAreaPart::getDrawingArea()
     return m_drawing_area;
 }
 
+void MapNormalizer::GUI::MainWindowDrawingAreaPart::setShouldDrawAdjacencies(bool should_draw_adjacencies)
+{
+    m_drawing_area->setShouldDrawAdjacencies(should_draw_adjacencies);
+}
+
+bool MapNormalizer::GUI::MainWindowDrawingAreaPart::shouldDrawAdjacencies() const
+{
+    return m_drawing_area->shouldDrawAdjacencies();
+}
+

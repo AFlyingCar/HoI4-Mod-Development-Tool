@@ -17,6 +17,8 @@
 
 #include "Logger.h"
 
+#include "Driver.h"
+
 #include "MapDrawingAreaGL.h"
 
 /**
@@ -79,12 +81,59 @@ void MapNormalizer::GUI::GL::ProvinceRenderingView::render() {
         m_selection_shader.uniform("province_labels", selection_ids);
         m_selection_shader.uniform("num_selected", static_cast<uint32_t>(selection_ids.size()));
 
+        m_selection_shader.uniform("selection_color", Color{ 255, 0, 0 });
+
         getSelectionTexture().activate();
         getLabelTexture().activate();
 
         // The drawn selection is still a square, so just go ahead and use the
         //  same VAO
         drawMapVAO();
+
+        // Render adjacencies only if we are selecting a single province
+        if(getOwningGLDrawingArea()->shouldDrawAdjacencies() && selections.size() == 1) {
+            if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+                auto& map_project = opt_project->get().getMapProject();
+
+                setupUniforms();
+
+                // Set up the textures
+                m_selection_shader.uniform("selection", getSelectionTexture());
+                m_selection_shader.uniform("label_matrix", getLabelTexture());
+
+                // All other uniforms
+                std::set<uint32_t> adjacent_ids;
+                {
+                    // We only have one selection here, but do a loop anyway in case
+                    //   I change my mind on doing that later
+                    for(auto&& selection_info : selections) {
+                        if(!map_project.isValidProvinceLabel(selection_info.id)) {
+                            WRITE_WARN("Unable to render adjacency for invalid province ID ", selection_info.id);
+                            continue;
+                        }
+
+                        const auto& selection = map_project.getProvinceForLabel(selection_info.id);
+
+                        adjacent_ids.insert(selection.adjacent_provinces.begin(),
+                                            selection.adjacent_provinces.end());
+                    }
+                }
+
+                m_selection_shader.uniform("province_labels",
+                                           std::vector<uint32_t>(adjacent_ids.begin(),
+                                                                 adjacent_ids.end()));
+                m_selection_shader.uniform("num_selected", static_cast<uint32_t>(adjacent_ids.size()));
+
+                m_selection_shader.uniform("selection_color", Color{ 255, 0, 255 });
+
+                getSelectionTexture().activate();
+                getLabelTexture().activate();
+
+                // The drawn selection is still a square, so just go ahead and use the
+                //  same VAO
+                drawMapVAO();
+            }
+        }
 
         m_selection_shader.use(false);
     }

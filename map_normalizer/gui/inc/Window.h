@@ -19,6 +19,12 @@ namespace MapNormalizer::GUI {
 
             virtual bool initialize() final;
 
+            template<typename T>
+            Glib::RefPtr<T> lookupAction(const Glib::ustring& action_name)
+            {
+                return Glib::RefPtr<T>::cast_dynamic(lookup_action(action_name));
+            }
+
         protected:
             virtual bool initializeActions() = 0;
             virtual bool initializeWidgets() = 0;

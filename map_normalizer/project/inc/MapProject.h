@@ -74,6 +74,8 @@ namespace MapNormalizer::Project {
 
             const std::map<uint32_t, State>& getStates() const;
 
+            void calculateCoastalProvinces(bool = false);
+
         protected:
             bool saveShapeLabels(const std::filesystem::path&,
                                  std::error_code&);

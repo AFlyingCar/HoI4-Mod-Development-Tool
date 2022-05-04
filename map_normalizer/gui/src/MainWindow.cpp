@@ -11,6 +11,7 @@
 #include "Constants.h"
 #include "Logger.h"
 #include "Util.h" // overloaded
+#include "Options.h"
 
 #include "ShapeFinder2.h" // ShapeFinder
 
@@ -220,42 +221,105 @@ void MapNormalizer::GUI::MainWindow::initializeViewActions() {
 
         provinceview_action->change_state(true);
     }
+
+    // Debug actions
+    {
+        auto render_adjacencies_action = add_action_bool("debug.render_adjacencies", [this]()
+        {
+            // First lookup our current state
+            auto self = lookupAction<Gio::SimpleAction>("debug.render_adjacencies");
+            bool state;
+            self->get_state<bool>(state);
+
+            if(state) {
+                WRITE_INFO("Disabling adjacency rendering!");
+            } else {
+                WRITE_INFO("Enabling adjacency rendering!");
+            }
+
+            // Now change the relevant values + ourself depending on what the
+            //   current state is
+            setShouldDrawAdjacencies(!state);
+            self->change_state(!state);
+        });
+        render_adjacencies_action->change_state(false);
+        render_adjacencies_action->set_enabled(prog_opts.debug);
+    }
 }
 
 /**
  * @brief Initializes every action in the Project menu
  */
 void MapNormalizer::GUI::MainWindow::initializeProjectActions() {
-    auto ipm_action = add_action("import_provincemap", [this]() {
-        // Allocate this on the stack so that it gets automatically cleaned up
-        //  when we finish
-        NativeDialog::FileDialog dialog("Choose an input image file",
-                                        NativeDialog::FileDialog::SELECT_FILE);
-        // dialog.setDefaultPath() // TODO: Start in the installation directory/Documents
-        std::string path;
-        dialog.addFilter("Province Image Files", "bmp")
-              .addFilter("All files", "*")
-              .setAllowsMultipleSelection(false)
-              .setDecideHandler([&path](const NativeDialog::Dialog& dialog) {
-                    auto& fdlg = dynamic_cast<const NativeDialog::FileDialog&>(dialog);
-                    path = fdlg.selectedPathes().front();
-              }).show();
+    {
+        auto ipm_action = add_action("import_provincemap", [this]() {
+            // Allocate this on the stack so that it gets automatically cleaned up
+            //  when we finish
+            NativeDialog::FileDialog dialog("Choose an input image file",
+                                            NativeDialog::FileDialog::SELECT_FILE);
+            // dialog.setDefaultPath() // TODO: Start in the installation directory/Documents
+            std::string path;
+            dialog.addFilter("Province Image Files", "bmp")
+                  .addFilter("All files", "*")
+                  .setAllowsMultipleSelection(false)
+                  .setDecideHandler([&path](const NativeDialog::Dialog& dialog) {
+                        auto& fdlg = dynamic_cast<const NativeDialog::FileDialog&>(dialog);
+                        path = fdlg.selectedPathes().front();
+                  }).show();
 
-          if(!path.empty() && !importProvinceMap(path)) {
-              Gtk::MessageDialog err_diag("Failed to open file.",
-                                          false, Gtk::MESSAGE_ERROR);
-              err_diag.run();
-          }
-    });
+              if(!path.empty() && !importProvinceMap(path)) {
+                  Gtk::MessageDialog err_diag("Failed to open file.",
+                                              false, Gtk::MESSAGE_ERROR);
+                  err_diag.run();
+              }
+        });
 
-    // This action should be disabled by default, until a project gets opened
-    ipm_action->set_enabled(false);
+        // This action should be disabled by default, until a project gets opened
+        ipm_action->set_enabled(false);
+    }
+
+    {
+        auto recalc_coasts_action = add_action("recalc_coasts", [this]() {
+            if(auto opt_project = Driver::getInstance().getProject(); opt_project)
+            {
+                auto& map_project = opt_project->get().getMapProject();
+
+                map_project.calculateCoastalProvinces();
+
+                // Now make sure that we update the properties pane info
+                getProvincePropertiesPane().updateProperties(SelectionManager::getInstance().getSelectedProvinceCount() > 1);
+            } else {
+                WRITE_ERROR("Cannot recalculate coasts without a valid project loaded.");
+            }
+        });
+
+        // This action should be disabled by default, until a project gets opened
+        recalc_coasts_action->set_enabled(false);
+    }
 }
 
 /**
  * @brief Initializes every action in the Help menu
  */
 void MapNormalizer::GUI::MainWindow::initializeHelpActions() {
+    auto toggle_debug_action = add_action_bool("toggle_debug", [this]() {
+        prog_opts.debug = !prog_opts.debug;
+
+        // Find ourselves and change our state
+        {
+            auto self = lookup_action("toggle_debug");
+            self->change_state(prog_opts.debug);
+        }
+
+        // Look for each menu item that needs to have its sensitivity toggled
+        {
+            auto action = lookupAction<Gio::SimpleAction>("debug.render_adjacencies");
+            action->set_enabled(prog_opts.debug);
+        }
+    });
+    toggle_debug_action->change_state(prog_opts.debug);
+    toggle_debug_action->set_enabled(true);
+
     add_action("about", []() {
         Gtk::AboutDialog dialog;
 
@@ -663,6 +727,9 @@ bool MapNormalizer::GUI::MainWindow::importProvinceMap(const Glib::ustring& file
         WRITE_DEBUG("Assigning the found data to the map project.");
         project.getMapProject().importMapData(std::move(shape_finder), map_data);
 
+        WRITE_INFO("Calculating coastal provinces...");
+        project.getMapProject().calculateCoastalProvinces();
+
         // We need to re-assign the data into the drawing area to update the
         //   texture on the drawing area
         // TODO: For OpenGL we should probably use a Pixel Buffer Object (PBO)
@@ -802,6 +869,7 @@ void MapNormalizer::GUI::MainWindow::onProjectOpened() {
     getAction("import_provincemap")->set_enabled(true);
     getAction("save")->set_enabled(true);
     getAction("close")->set_enabled(true);
+    getAction("recalc_coasts")->set_enabled(true);
 
     // Issue callback to the properties pane to inform it that a project has
     //   been opened
@@ -822,6 +890,7 @@ void MapNormalizer::GUI::MainWindow::onProjectClosed() {
     getAction("import_provincemap")->set_enabled(false);
     getAction("save")->set_enabled(false);
     getAction("close")->set_enabled(false);
+    getAction("recalc_coasts")->set_enabled(false);
 
     {
         ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct

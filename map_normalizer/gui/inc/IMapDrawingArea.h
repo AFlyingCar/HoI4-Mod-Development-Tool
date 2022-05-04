@@ -89,6 +89,10 @@ namespace MapNormalizer::GUI {
             const SelectionList& getSelections() const;
             SelectionList& getSelections();
 
+            void setShouldDrawAdjacencies(bool = true);
+            bool shouldDrawAdjacencies() const;
+
+
         protected:
             virtual void init() = 0;
             virtual void onZoom() = 0;
@@ -118,6 +122,12 @@ namespace MapNormalizer::GUI {
 
             //! The current viewing mode
             ViewingMode m_viewing_mode;
+
+            /**
+             * @brief Whether or not things adjacent to the selected element
+             *        should be rendered
+             */
+            bool m_should_draw_adjacencies = false;
     };
 
     template<typename BaseGtkWidget>
