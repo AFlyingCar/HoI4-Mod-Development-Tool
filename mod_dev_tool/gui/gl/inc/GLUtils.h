@@ -24,7 +24,7 @@ namespace HMDT::GUI::GL {
 /**
  * @brief Wrapper around logErrors which passes in a Log::Source object.
  */
-# define MN_LOG_GL_ERRORS() HMDT::GUI::GL::logErrors(MN_LOG_SOURCE())
+# define HMDT_LOG_GL_ERRORS() HMDT::GUI::GL::logErrors(HMDT_LOG_SOURCE())
 
 #endif
 

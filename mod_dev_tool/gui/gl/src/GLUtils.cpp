@@ -28,7 +28,7 @@ std::vector<std::string> HMDT::GUI::GL::glEnumToStrings(uint32_t value) {
  */
 #define X(GLENUM_NAME, GLENUM_VALUE, ...) \
         case GLENUM_NAME: return { #GLENUM_NAME, "" __VA_ARGS__ };
-    MN_GL_XMACRO
+    HMDT_GL_XMACRO
 #undef X
         default:
             return {"<INVALID>"};

@@ -64,7 +64,7 @@ HMDT::GUI::GL::Program::~Program() {
 
     if(*m_ref_count <= 0) {
         glDeleteProgram(m_program_id);
-        MN_LOG_GL_ERRORS();
+        HMDT_LOG_GL_ERRORS();
     }
 }
 
@@ -88,7 +88,7 @@ void HMDT::GUI::GL::Program::use(bool load) {
     } else {
         glUseProgram(0);
     }
-    MN_LOG_GL_ERRORS();
+    HMDT_LOG_GL_ERRORS();
 }
 
 /**
@@ -98,7 +98,7 @@ void HMDT::GUI::GL::Program::use(bool load) {
  */
 void HMDT::GUI::GL::Program::attachShader(const Shader& shader) {
     glAttachShader(m_program_id, shader.getID());
-    MN_LOG_GL_ERRORS();
+    HMDT_LOG_GL_ERRORS();
 }
 
 /**
@@ -108,7 +108,7 @@ void HMDT::GUI::GL::Program::attachShader(const Shader& shader) {
  */
 void HMDT::GUI::GL::Program::linkProgram() {
     glLinkProgram(m_program_id);
-    MN_LOG_GL_ERRORS();
+    HMDT_LOG_GL_ERRORS();
 
     int status;
     glGetProgramiv(m_program_id, GL_LINK_STATUS, &status);
@@ -197,7 +197,7 @@ bool HMDT::GUI::GL::Program::uniform(const std::string& uniform_name,
         return false;
     }
 
-    if(MN_LOG_GL_ERRORS() >= 1) {
+    if(HMDT_LOG_GL_ERRORS() >= 1) {
         WRITE_ERROR("Failed to set uniform ", uniform_name);
         return false;
     }

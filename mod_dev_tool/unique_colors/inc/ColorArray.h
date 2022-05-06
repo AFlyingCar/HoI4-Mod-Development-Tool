@@ -9,24 +9,24 @@
 
 extern "C" {
     //! All LAND province color values.
-    extern const unsigned char MN_ALL_LANDS[];
-    //! The size of MN_ALL_LANDS.
-    extern const unsigned int  MN_ALL_LANDS_SIZE;
+    extern const unsigned char HMDT_ALL_LANDS[];
+    //! The size of HMDT_ALL_LANDS.
+    extern const unsigned int  HMDT_ALL_LANDS_SIZE;
 
     //! All SEA province color values.
-    extern const unsigned char MN_ALL_SEAS[];
-    //! The size of MN_ALL_SEAS.
-    extern const unsigned int  MN_ALL_SEAS_SIZE;
+    extern const unsigned char HMDT_ALL_SEAS[];
+    //! The size of HMDT_ALL_SEAS.
+    extern const unsigned int  HMDT_ALL_SEAS_SIZE;
 
     //! All LAKE province color values.
-    extern const unsigned char MN_ALL_LAKES[];
-    //! The size of MN_ALL_LAKES.
-    extern const unsigned int  MN_ALL_LAKES_SIZE;
+    extern const unsigned char HMDT_ALL_LAKES[];
+    //! The size of HMDT_ALL_LAKES.
+    extern const unsigned int  HMDT_ALL_LAKES_SIZE;
 
     //! All UNKNOWN province color values.
-    extern const unsigned char MN_ALL_UNKNOWNS[];
-    //! The size of MN_ALL_UNKNOWNS.
-    extern const unsigned int  MN_ALL_UNKNOWNS_SIZE;
+    extern const unsigned char HMDT_ALL_UNKNOWNS[];
+    //! The size of HMDT_ALL_UNKNOWNS.
+    extern const unsigned int  HMDT_ALL_UNKNOWNS_SIZE;
 }
 
 #endif

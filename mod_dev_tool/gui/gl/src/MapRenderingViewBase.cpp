@@ -23,7 +23,7 @@ HMDT::GUI::GL::MapRenderingViewBase::MapRenderingViewBase() {
 HMDT::GUI::GL::MapRenderingViewBase::~MapRenderingViewBase() {
     if(m_vao != -1) {
         glDeleteVertexArrays(1, &m_vao);
-        MN_LOG_GL_ERRORS();
+        HMDT_LOG_GL_ERRORS();
     }
 }
 
@@ -41,7 +41,7 @@ void HMDT::GUI::GL::MapRenderingViewBase::init() {
                         Shader(Shader::Type::FRAGMENT,
                                getFragmentShaderSource())
                        };
-    MN_LOG_GL_ERRORS();
+    HMDT_LOG_GL_ERRORS();
 
     WRITE_DEBUG("Building map object...");
     {
@@ -50,36 +50,36 @@ void HMDT::GUI::GL::MapRenderingViewBase::init() {
 
         // gen vertex arrays
         glGenVertexArrays(1, &m_vao);
-        MN_LOG_GL_ERRORS();
+        HMDT_LOG_GL_ERRORS();
 
         // gen buffers
         glGenBuffers(1, &m_vbo);
-        MN_LOG_GL_ERRORS();
+        HMDT_LOG_GL_ERRORS();
 
         // bind buffer
         glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-        MN_LOG_GL_ERRORS();
+        HMDT_LOG_GL_ERRORS();
 
         // buffer data
         auto vertices = getMapVertices();
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(*vertices.data()),
                      vertices.data(), GL_STATIC_DRAW);
-        MN_LOG_GL_ERRORS();
+        HMDT_LOG_GL_ERRORS();
 
         // bind vertex arrays
         glBindVertexArray(m_vao);
-        MN_LOG_GL_ERRORS();
+        HMDT_LOG_GL_ERRORS();
 
         glEnableVertexAttribArray(0); // Location 0
-        MN_LOG_GL_ERRORS();
+        HMDT_LOG_GL_ERRORS();
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-        MN_LOG_GL_ERRORS();
+        HMDT_LOG_GL_ERRORS();
 
         // unbind buffer and vertex array
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-        MN_LOG_GL_ERRORS();
+        HMDT_LOG_GL_ERRORS();
         glBindVertexArray(0);
-        MN_LOG_GL_ERRORS();
+        HMDT_LOG_GL_ERRORS();
     }
 
     WRITE_DEBUG("Building Selection Texture...");
@@ -167,13 +167,13 @@ auto HMDT::GUI::GL::MapRenderingViewBase::getSelectionTexture() -> Texture& {
 void HMDT::GUI::GL::MapRenderingViewBase::drawMapVAO() {
     // Draw the map object
     glBindVertexArray(m_vao);
-    MN_LOG_GL_ERRORS();
+    HMDT_LOG_GL_ERRORS();
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    MN_LOG_GL_ERRORS();
+    HMDT_LOG_GL_ERRORS();
 
     glBindVertexArray(0);
-    MN_LOG_GL_ERRORS();
+    HMDT_LOG_GL_ERRORS();
 }
 
 auto HMDT::GUI::GL::MapRenderingViewBase::getMapProgram() -> Program& {

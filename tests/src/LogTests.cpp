@@ -34,7 +34,7 @@ TEST(LogTests, SourceTests) {
 
 
     // Do these on the same line so that we get the same line number
-    auto source = MN_LOG_SOURCE(); auto line = __LINE__;
+    auto source = HMDT_LOG_SOURCE(); auto line = __LINE__;
 
     // module name will be different depending on which system we are targetting
 #ifdef WIN32

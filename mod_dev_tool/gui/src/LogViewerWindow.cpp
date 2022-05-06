@@ -323,7 +323,7 @@ void HMDT::GUI::LogViewerWindow::updateTreeModelWith(const Log::Message& message
 
     auto&& source = message.getSource();
     row[m_columns.m_module] = source.getModulePath().filename().generic_string();
-    row[m_columns.m_filename_line] = source.getFileName().lexically_relative(MN_PROJECT_ROOT).generic_string() + ":" + std::to_string(source.getLineNumber());
+    row[m_columns.m_filename_line] = source.getFileName().lexically_relative(HMDT_PROJECT_ROOT).generic_string() + ":" + std::to_string(source.getLineNumber());
     row[m_columns.m_function] = source.getFunctionName();
 
     row[m_columns.m_message] = formatMessage(message.getPieces());

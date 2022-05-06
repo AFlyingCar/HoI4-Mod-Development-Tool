@@ -21,26 +21,26 @@ using UniqueColorPtr = const unsigned char*;
 UniqueColorPtr getUniqueColorPtrStart(HMDT::ProvinceType bias) {
     switch(bias) {
         case HMDT::ProvinceType::LAND:
-            return MN_ALL_LANDS;
+            return HMDT_ALL_LANDS;
         case HMDT::ProvinceType::SEA:
-            return MN_ALL_SEAS;
+            return HMDT_ALL_SEAS;
         case HMDT::ProvinceType::LAKE:
-            return MN_ALL_LAKES;
+            return HMDT_ALL_LAKES;
         default:
-            return MN_ALL_UNKNOWNS;
+            return HMDT_ALL_UNKNOWNS;
     }
 }
 
 unsigned int getUniqueColorPtrSize(HMDT::ProvinceType bias) {
     switch(bias) {
         case HMDT::ProvinceType::LAND:
-            return MN_ALL_LANDS_SIZE;
+            return HMDT_ALL_LANDS_SIZE;
         case HMDT::ProvinceType::SEA:
-            return MN_ALL_SEAS_SIZE;
+            return HMDT_ALL_SEAS_SIZE;
         case HMDT::ProvinceType::LAKE:
-            return MN_ALL_LAKES_SIZE;
+            return HMDT_ALL_LAKES_SIZE;
         default:
-            return MN_ALL_UNKNOWNS_SIZE;
+            return HMDT_ALL_UNKNOWNS_SIZE;
     }
 }
 
@@ -53,10 +53,10 @@ unsigned int getUniqueColorPtrSize(HMDT::ProvinceType bias) {
  * @return A reference to a pointer into one of the unique color arrays
  */
 UniqueColorPtr& getUniqueColorPtr(HMDT::ProvinceType bias) {
-    static const unsigned char* land_ptr = MN_ALL_LANDS;
-    static const unsigned char* sea_ptr = MN_ALL_SEAS;
-    static const unsigned char* lake_ptr = MN_ALL_LAKES;
-    static const unsigned char* unknown_ptr = MN_ALL_UNKNOWNS;
+    static const unsigned char* land_ptr = HMDT_ALL_LANDS;
+    static const unsigned char* sea_ptr = HMDT_ALL_SEAS;
+    static const unsigned char* lake_ptr = HMDT_ALL_LAKES;
+    static const unsigned char* unknown_ptr = HMDT_ALL_UNKNOWNS;
 
     switch(bias) {
         case HMDT::ProvinceType::LAND:

@@ -1,5 +1,5 @@
-#ifndef MN_SOURCE_H
-# define MN_SOURCE_H
+#ifndef HMDT_SOURCE_H
+# define HMDT_SOURCE_H
 
 # include <string>
 # include <filesystem>
@@ -48,7 +48,7 @@ namespace HMDT::Log {
  * @brief Generates a HMDT::Log::Source object for the point it was
  *        called from.
  */
-# define MN_LOG_SOURCE() [](auto&& func_name) {                               \
+# define HMDT_LOG_SOURCE() [](auto&& func_name) {                             \
     return HMDT::Log::Source(HMDT::Log::getModulePath(), __FILE__, func_name, \
                              __LINE__);                                       \
 }(FUNC_NAME)

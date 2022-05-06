@@ -118,7 +118,7 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
 
     // Setup initially enabled drawing area
     auto drawing_area = m_drawing_area =
-#if MN_DEFAULT_RENDERING_TO_GL
+#if HMDT_DEFAULT_RENDERING_TO_GL
         m_gl_drawing_area;
 #else
         m_cairo_drawing_area;

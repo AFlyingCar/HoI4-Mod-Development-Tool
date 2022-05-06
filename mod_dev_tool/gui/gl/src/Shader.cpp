@@ -89,7 +89,7 @@ HMDT::GUI::GL::Shader::~Shader() {
 
     if(*m_ref_count <= 0) {
         glDeleteShader(m_shader_id);
-        MN_LOG_GL_ERRORS();
+        HMDT_LOG_GL_ERRORS();
     }
 }
 

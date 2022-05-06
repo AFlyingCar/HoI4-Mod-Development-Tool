@@ -1,5 +1,5 @@
-#ifndef MN_LOGGER_H
-# define MN_LOGGER_H
+#ifndef HMDT_LOGGER_H
+# define HMDT_LOGGER_H
 
 # include <chrono>
 # include <deque>
@@ -171,13 +171,13 @@ namespace HMDT::Log {
 }
 
 # define WRITE_INFO(...) \
-    HMDT::Log::Logger::getInstance().writeInfo(MN_LOG_SOURCE(), __VA_ARGS__)
+    HMDT::Log::Logger::getInstance().writeInfo(HMDT_LOG_SOURCE(), __VA_ARGS__)
 # define WRITE_DEBUG(...) \
-    HMDT::Log::Logger::getInstance().writeDebug(MN_LOG_SOURCE(), __VA_ARGS__)
+    HMDT::Log::Logger::getInstance().writeDebug(HMDT_LOG_SOURCE(), __VA_ARGS__)
 # define WRITE_ERROR(...) \
-    HMDT::Log::Logger::getInstance().writeError(MN_LOG_SOURCE(), __VA_ARGS__)
+    HMDT::Log::Logger::getInstance().writeError(HMDT_LOG_SOURCE(), __VA_ARGS__)
 # define WRITE_WARN(...) \
-    HMDT::Log::Logger::getInstance().writeWarn(MN_LOG_SOURCE(), __VA_ARGS__)
+    HMDT::Log::Logger::getInstance().writeWarn(HMDT_LOG_SOURCE(), __VA_ARGS__)
 
 #endif
 

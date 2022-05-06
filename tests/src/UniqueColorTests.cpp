@@ -28,10 +28,10 @@ bool operator<(const UInt24& a, const UInt24& b) {
 
 TEST(UniqueColorTests, TestColorUniqueness) {
     // First make sure that there is an RGB for every color value
-    ASSERT_EQ(MN_ALL_LANDS_SIZE % 3, 0);
-    ASSERT_EQ(MN_ALL_LAKES_SIZE % 3, 0);
-    ASSERT_EQ(MN_ALL_SEAS_SIZE % 3, 0);
-    ASSERT_EQ(MN_ALL_UNKNOWNS_SIZE % 3, 0);
+    ASSERT_EQ(HMDT_ALL_LANDS_SIZE % 3, 0);
+    ASSERT_EQ(HMDT_ALL_LAKES_SIZE % 3, 0);
+    ASSERT_EQ(HMDT_ALL_SEAS_SIZE % 3, 0);
+    ASSERT_EQ(HMDT_ALL_UNKNOWNS_SIZE % 3, 0);
 
     // We need UInt24 to be exactly 3 bytes large, as otherwise the below
     //  duplicate detection code will fail
@@ -66,10 +66,10 @@ TEST(UniqueColorTests, TestColorUniqueness) {
     };
 
     std::array<std::pair<const unsigned char*, unsigned int>, 4> color_lists = {
-        std::make_pair(MN_ALL_LANDS, MN_ALL_LANDS_SIZE),
-        std::make_pair(MN_ALL_LAKES, MN_ALL_LAKES_SIZE),
-        std::make_pair(MN_ALL_SEAS, MN_ALL_SEAS_SIZE),
-        std::make_pair(MN_ALL_UNKNOWNS, MN_ALL_UNKNOWNS_SIZE)
+        std::make_pair(HMDT_ALL_LANDS, HMDT_ALL_LANDS_SIZE),
+        std::make_pair(HMDT_ALL_LAKES, HMDT_ALL_LAKES_SIZE),
+        std::make_pair(HMDT_ALL_SEAS, HMDT_ALL_SEAS_SIZE),
+        std::make_pair(HMDT_ALL_UNKNOWNS, HMDT_ALL_UNKNOWNS_SIZE)
     };
 
     std::vector<std::set<UInt24>> duplicate_lists;
@@ -126,7 +126,7 @@ TEST(UniqueColorTests, TestGetUnknownsWhenOutOfColors) {
     HMDT::resetUniqueColorGenerator(HMDT::ProvinceType::UNKNOWN);
 
     // Force the LAND to the end
-    ::getUniqueColorPtr(HMDT::ProvinceType::LAND) = MN_ALL_LANDS + MN_ALL_LANDS_SIZE;
+    ::getUniqueColorPtr(HMDT::ProvinceType::LAND) = HMDT_ALL_LANDS + HMDT_ALL_LANDS_SIZE;
 
     auto c = HMDT::generateUniqueColor(HMDT::ProvinceType::LAND);
 

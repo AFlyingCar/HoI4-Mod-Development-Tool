@@ -1,5 +1,5 @@
-#ifndef MN_MESSAGE_H
-# define MN_MESSAGE_H
+#ifndef HMDT_MESSAGE_H
+# define HMDT_MESSAGE_H
 
 # include <string>
 # include <chrono>

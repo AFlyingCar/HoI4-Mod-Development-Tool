@@ -23,7 +23,7 @@ bool HMDT::GUI::Driver::initialize() {
     m_app = Glib::RefPtr<Application>(new Application());
 
     try {
-        auto resource_path = getExecutablePath() / MN_GLIB_RESOURCES;
+        auto resource_path = getExecutablePath() / HMDT_GLIB_RESOURCES;
 
         WRITE_DEBUG("Loading resources from ", resource_path, "...");
         m_resources = Gio::Resource::create_from_file(resource_path.generic_string());

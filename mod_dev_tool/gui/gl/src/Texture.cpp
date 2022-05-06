@@ -17,12 +17,12 @@ HMDT::GUI::GL::Texture::Texture(): m_texture_id(-1), m_texture_unit(-1),
                                    m_target(Target::TEX_2D)
 {
     glGenTextures(1, &m_texture_id);
-    MN_LOG_GL_ERRORS();
+    HMDT_LOG_GL_ERRORS();
 }
 
 HMDT::GUI::GL::Texture::~Texture() {
     glDeleteTextures(1, &m_texture_id);
-    MN_LOG_GL_ERRORS();
+    HMDT_LOG_GL_ERRORS();
 }
 
 /**
@@ -37,7 +37,7 @@ void HMDT::GUI::GL::Texture::setWrapping(Axis axis, WrapMode wrap) {
     bind();
 
     glTexParameteri(gl_target, axisToGLAxis(axis), wrapToGLWrap(wrap));
-    MN_LOG_GL_ERRORS();
+    HMDT_LOG_GL_ERRORS();
 }
 
 /**
@@ -55,7 +55,7 @@ void HMDT::GUI::GL::Texture::setFiltering(FilterType ftype, Filter filter) {
 
     glTexParameteri(gl_target, filterTypeToGLFilterType(ftype),
                     filterToGLFilter(filter));
-    MN_LOG_GL_ERRORS();
+    HMDT_LOG_GL_ERRORS();
 }
 
 void HMDT::GUI::GL::Texture::setTextureUnitID(Unit unit) {
@@ -102,7 +102,7 @@ void HMDT::GUI::GL::Texture::setTextureData(Format internal_format,
 
     glTexImage2D(gl_target, 0 /* mipmapping */,
                  gl_int_format, width, height, 0, gl_format, data_type, data);
-    MN_LOG_GL_ERRORS();
+    HMDT_LOG_GL_ERRORS();
 
     m_width = width;
     m_height = height;
@@ -141,7 +141,7 @@ void HMDT::GUI::GL::Texture::bind(bool do_bind) {
     } else {
         glBindTexture(gl_target, 0);
     }
-    MN_LOG_GL_ERRORS();
+    HMDT_LOG_GL_ERRORS();
 }
 
 /**
@@ -153,7 +153,7 @@ void HMDT::GUI::GL::Texture::bind(bool do_bind) {
  */
 uint32_t HMDT::GUI::GL::Texture::activate() {
     glActiveTexture(m_texture_unit);
-    MN_LOG_GL_ERRORS();
+    HMDT_LOG_GL_ERRORS();
 
     bind();
 

@@ -162,7 +162,7 @@ void HMDT::Log::Logger::update() {
     // Push a new output message to log what we are doing
     // We aren't using logMessage or any of the macros because we don't want to
     //  worry about locking the mutex
-    m_messages.push_back(buildMessage(Message::Level::INFO, MN_LOG_SOURCE(),
+    m_messages.push_back(buildMessage(Message::Level::INFO, HMDT_LOG_SOURCE(),
                                       now(), "Outputting all remaining messages."
     ));
 

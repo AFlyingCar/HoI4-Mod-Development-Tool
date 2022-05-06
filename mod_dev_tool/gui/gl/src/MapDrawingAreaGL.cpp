@@ -48,7 +48,7 @@ bool HMDT::GUI::GL::MapDrawingArea::on_render(const Glib::RefPtr<Gdk::GLContext>
         // Clear the current screen
         glClearColor(0.5, 0.5, 0.5, 0.0);
         glClear(GL_COLOR_BUFFER_BIT);
-        MN_LOG_GL_ERRORS();
+        HMDT_LOG_GL_ERRORS();
 
         // Do nothing if we have no graphics data to actually render
         if(!hasData()) {
@@ -68,7 +68,7 @@ bool HMDT::GUI::GL::MapDrawingArea::on_render(const Glib::RefPtr<Gdk::GLContext>
         current_rendering_view->endRender();
 
         glFlush();
-        MN_LOG_GL_ERRORS();
+        HMDT_LOG_GL_ERRORS();
 
         // Make sure that we re-draw so that we don't get any weird flickering/
         //  artifacts

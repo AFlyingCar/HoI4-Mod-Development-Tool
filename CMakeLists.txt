@@ -24,30 +24,30 @@ else()
 endif()
 
 # Common variables containing information about the program
-set(MN_TOOL_NAME "HoI4ModDevelopmentTool")
-set(MN_TOOL_AUTHOR "AFlyingCar")
-set(MN_TOOL_DESCRIPTION "A tool which takes BMP files as input and normalizes them to a format which can be read by Hearts of Iron 4.")
-set(MN_TOOL_WEBSITE "https://github.com/AFlyingCar/HoI4-Mod-Development-Tool")
-set(MN_TOOL_CONTACT "https://github.com/AFlyingCar/HoI4-Mod-Development-Tool/issues")
+set(HMDT_TOOL_NAME "HoI4ModDevelopmentTool")
+set(HMDT_TOOL_AUTHOR "AFlyingCar")
+set(HMDT_TOOL_DESCRIPTION "A tool which takes BMP files as input and normalizes them to a format which can be read by Hearts of Iron 4.")
+set(HMDT_TOOL_WEBSITE "https://github.com/AFlyingCar/HoI4-Mod-Development-Tool")
+set(HMDT_TOOL_CONTACT "https://github.com/AFlyingCar/HoI4-Mod-Development-Tool/issues")
 
-file(STRINGS "${CMAKE_SOURCE_DIR}/.config/version.txt" MN_TOOL_VERSION)
+file(STRINGS "${CMAKE_SOURCE_DIR}/.config/version.txt" HMDT_TOOL_VERSION)
 
 message(STATUS "Current Tool Info:")
 list(APPEND CMAKE_MESSAGE_INDENT "  ")
-message(STATUS "MN_TOOL_NAME=${MN_TOOL_NAME}")
-message(STATUS "MN_TOOL_AUTHOR=${MN_TOOL_AUTHOR}")
-message(STATUS "MN_TOOL_DESCRIPTION=${MN_TOOL_DESCRIPTION}")
-message(STATUS "MN_TOOL_WEBSITE=${MN_TOOL_WEBSITE}")
-message(STATUS "MN_TOOL_CONTACT=${MN_TOOL_CONTACT}")
+message(STATUS "HMDT_TOOL_NAME=${HMDT_TOOL_NAME}")
+message(STATUS "HMDT_TOOL_AUTHOR=${HMDT_TOOL_AUTHOR}")
+message(STATUS "HMDT_TOOL_DESCRIPTION=${HMDT_TOOL_DESCRIPTION}")
+message(STATUS "HMDT_TOOL_WEBSITE=${HMDT_TOOL_WEBSITE}")
+message(STATUS "HMDT_TOOL_CONTACT=${HMDT_TOOL_CONTACT}")
 list(POP_BACK CMAKE_MESSAGE_INDENT)
 
 # TODO: What other MSVC options should we pass?
 if(MSVC)
     add_compile_options(/W4 /WX /WX-:C4996)
-    add_definitions(/DMN_PROJECT_ROOT="${CMAKE_SOURCE_DIR}/mod_dev_tool")
+    add_definitions(/DHMDT_PROJECT_ROOT="${CMAKE_SOURCE_DIR}/mod_dev_tool")
 else()
     add_compile_options(-Wall -Werror -Wextra -Wno-sign-compare -Wno-unused-label -Wno-unused-const-variable -Wno-unused-parameter -Wno-unused-function -Wno-error=deprecated -Wno-error=deprecated-declarations)
-    add_definitions(-DMN_PROJECT_ROOT="${CMAKE_SOURCE_DIR}/mod_dev_tool")
+    add_definitions(-DHMDT_PROJECT_ROOT="${CMAKE_SOURCE_DIR}/mod_dev_tool")
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -61,7 +61,7 @@ endif()
 
 # Set up the resources first, as they will get depended on by subsequent projects
 add_subdirectory(resources)
-add_definitions(-DMN_GLIB_RESOURCES="${RESOURCE_C_SRC_NAME}")
+add_definitions(-DHMDT_GLIB_RESOURCES="${RESOURCE_C_SRC_NAME}")
 
 add_subdirectory(mod_dev_tool)
 
@@ -78,14 +78,14 @@ add_dependencies(mod_dev_tool glib_resources)
 ######################
 
 # https://dominoc925.blogspot.com/2016/09/create-windows-installer-using-cmake.html
-set(CPACK_PACKAGE_NAME ${MN_TOOL_NAME})
-set(CPACK_PACKAGE_VENDOR ${MN_TOOL_AUTHOR})
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY ${MN_TOOL_DESCRIPTION})
+set(CPACK_PACKAGE_NAME ${HMDT_TOOL_NAME})
+set(CPACK_PACKAGE_VENDOR ${HMDT_TOOL_AUTHOR})
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY ${HMDT_TOOL_DESCRIPTION})
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "mod_dev_tool")
-set(CPACK_PACKAGE_CONTACT ${MN_TOOL_CONTACT})
+set(CPACK_PACKAGE_CONTACT ${HMDT_TOOL_CONTACT})
 
 # Calculate package version information
-set(CPACK_PACKAGE_VERSION ${MN_TOOL_VERSION})
+set(CPACK_PACKAGE_VERSION ${HMDT_TOOL_VERSION})
 set(CPACK_PACKAGE_VERSION_MAJOR "") # TODO: Grab from file
 set(CPACK_PACKAGE_VERSION_MINOR "") # TODO: Grab from file
 set(CPACK_PACKAGE_VERSION_PATCH "") # TODO: Grab from file

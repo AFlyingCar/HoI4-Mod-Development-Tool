@@ -51,7 +51,7 @@ if(WIN32)
 
     message("WIN32 detected, will attempt to compile ${WIN32_RESOURCES} from ${WIN32_RESOURCES_RC}, configured from ${WIN32_RESOURCES_RC_IN}")
 
-    string(REPLACE "." "," WIN32_RC_VERSION_NUMBER ${MN_TOOL_VERSION})
+    string(REPLACE "." "," WIN32_RC_VERSION_NUMBER ${HMDT_TOOL_VERSION})
 
     configure_file(${WIN32_RESOURCES_RC_IN} ${WIN32_RESOURCES_RC} @ONLY)
 

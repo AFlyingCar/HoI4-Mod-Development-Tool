@@ -36,5 +36,5 @@ add_subdirectory(gl)
 # Link against local libraries
 target_link_libraries(gui common province_utils project logging gui_gl actions)
 
-target_compile_definitions(gui PRIVATE MN_DEFAULT_RENDERING_TO_GL)
+target_compile_definitions(gui PRIVATE HMDT_DEFAULT_RENDERING_TO_GL)
 
