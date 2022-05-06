@@ -104,7 +104,7 @@ namespace HMDT::Action {
 # define NewSetPropertyAction(OBJECT, NAME, VALUE) \
     new HMDT::Action::SetPropertyAction< \
         HMDT::RemoveAllPointers_t<decltype(OBJECT)>, \
-                                           decltype(HMDT::RemoveAllPointers_t<decltype(OBJECT)>::NAME)> \
+                                  decltype(HMDT::RemoveAllPointers_t<decltype(OBJECT)>::NAME)> \
             (OBJECT, &HMDT::RemoveAllPointers_t<decltype(OBJECT)>::NAME, VALUE, STR(NAME))
 }
 
