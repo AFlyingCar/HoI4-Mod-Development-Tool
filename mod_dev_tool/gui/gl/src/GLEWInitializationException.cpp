@@ -7,8 +7,7 @@ HMDT::GUI::GL::GLEWInitializationException::GLEWInitializationException(uint32_t
     m_reason(reason)
 { }
 
-const char* HMDT::GUI::GL::GLEWInitializationException::what() const noexcept
-{
+const char* HMDT::GUI::GL::GLEWInitializationException::what() const noexcept {
     return reinterpret_cast<const char*>(glewGetErrorString(m_reason));
 }
 

@@ -15,7 +15,7 @@ void HMDT::GUI::ConstrainedEntry::setAllowedChars(const std::string& allowed_cha
 }
 
 void HMDT::GUI::ConstrainedEntry::on_insert_text(const Glib::ustring& text,
-                                                          int* position)
+                                                 int* position)
 {
     // If m_allowed_chars is empty, then we allow all text
     if(m_allowed_chars.empty() || text.find_first_not_of(m_allowed_chars) == Glib::ustring::npos)

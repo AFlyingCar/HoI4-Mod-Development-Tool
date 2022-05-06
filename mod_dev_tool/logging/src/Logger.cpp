@@ -6,8 +6,7 @@
 #include <iostream>
 
 //! The vector of all output functions
-std::vector<HMDT::Log::Logger::OutputFunction>
-    HMDT::Log::Logger::output_funcs{};
+std::vector<HMDT::Log::Logger::OutputFunction> HMDT::Log::Logger::output_funcs{};
 
 /**
  * Destroys the logger, and shuts down the logging worker thread
@@ -43,7 +42,7 @@ auto HMDT::Log::Logger::now() -> Timestamp {
  * @return A string representation of timestamp in timestamp_format format.
  */
 std::string HMDT::Log::Logger::getTimestampAsString(const Timestamp& timestamp,
-                                                             const std::string& timestamp_format)
+                                                    const std::string& timestamp_format)
 {
     auto timestamp_as_time_t = std::chrono::system_clock::to_time_t(timestamp);
     std::stringstream ss;
@@ -65,7 +64,7 @@ std::string HMDT::Log::Logger::getTimestampAsString(const Timestamp& timestamp,
  * @return A Timestamp object
  */
 auto HMDT::Log::Logger::getTimestampFromString(const std::string& time_str,
-                                                        const std::string& timestamp_format)
+                                               const std::string& timestamp_format)
     -> Timestamp
 {
     // https://en.cppreference.com/w/cpp/io/manip/get_time
@@ -186,10 +185,8 @@ void HMDT::Log::Logger::update() {
     }
 }
 
-HMDT::Log::Logger::Logger(): m_quit(false),
-                                      m_messages(),
-                                      m_messages_mutex(),
-                                      m_worker_thread(&Logger::update, this)
+HMDT::Log::Logger::Logger(): m_quit(false), m_messages(), m_messages_mutex(),
+                             m_worker_thread(&Logger::update, this)
 { }
 
 /**
@@ -209,7 +206,7 @@ void HMDT::Log::Logger::registerOutputFunction(const OutputFunction& output_func
  * @param user_data The user data to bind to this function
  */
 void HMDT::Log::Logger::registerOutputFunction(const OutputFunctionWithUD& output_func,
-                                                        UserData user_data)
+                                               UserData user_data)
 {
     if(user_data == nullptr) {
         WRITE_WARN("Given UserData function is null! This means that likely the"

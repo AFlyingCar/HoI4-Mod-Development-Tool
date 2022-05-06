@@ -62,8 +62,7 @@ namespace {
  * @param normal_data The output image data array. All normal map information
  *                    will be written here.
  */
-void HMDT::generateWorldNormalMap(BitMap* heightmap,
-                                           unsigned char* normal_data)
+void HMDT::generateWorldNormalMap(BitMap* heightmap, unsigned char* normal_data)
 {
     auto width = heightmap->info_header.width;
     auto height = heightmap->info_header.height;

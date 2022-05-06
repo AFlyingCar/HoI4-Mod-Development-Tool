@@ -5,8 +5,7 @@
 
 #include "NativeDialog.h"
 
-HMDT::GUI::NewProjectDialog::NewProjectDialog(Gtk::Window& window,
-                                                       bool modal):
+HMDT::GUI::NewProjectDialog::NewProjectDialog(Gtk::Window& window, bool modal):
     Gtk::Dialog("New Project", window, modal),
     m_row(1),
     m_name_field()

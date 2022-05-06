@@ -12,8 +12,7 @@
  *
  * @return A new Format object containing a combined type and the data of 'other'
  */
-auto HMDT::Log::Format::operator|(const Format& other) const -> Format
-{
+auto HMDT::Log::Format::operator|(const Format& other) const -> Format {
     Format f { static_cast<Type>(type | other.type) };
 
     std::memcpy(f.data, other.data, DATA_SIZE);

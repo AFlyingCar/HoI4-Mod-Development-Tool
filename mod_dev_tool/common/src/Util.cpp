@@ -120,8 +120,8 @@ uint64_t HMDT::xyToIndex(uint32_t w, uint32_t x, uint32_t y) {
  *
  * @return An RGB color from image at (x,y)
  */
-HMDT::Color HMDT::getColorAt(const BitMap* image, uint32_t x,
-                                               uint32_t y, uint32_t depth)
+HMDT::Color HMDT::getColorAt(const BitMap* image, uint32_t x, uint32_t y,
+                             uint32_t depth)
 {
     auto index = xyToIndex(image->info_header.width * depth, x * depth, y);
 
@@ -142,10 +142,8 @@ HMDT::Color HMDT::getColorAt(const BitMap* image, uint32_t x,
  *
  * @return An RGB color from image at (x,y)
  */
-HMDT::Color HMDT::getColorAt(const Dimensions& dimensions,
-                                               const uint8_t* data,
-                                               uint32_t x, uint32_t y,
-                                               uint32_t depth)
+HMDT::Color HMDT::getColorAt(const Dimensions& dimensions, const uint8_t* data,
+                             uint32_t x, uint32_t y, uint32_t depth)
 {
     auto index = xyToIndex(dimensions.w * depth, x * depth, y);
 
@@ -164,8 +162,8 @@ HMDT::Color HMDT::getColorAt(const Dimensions& dimensions,
  *
  * @return All data related to the given XY coordinate as a Pixel
  */
-HMDT::Pixel HMDT::getAsPixel(const BitMap* image, uint32_t x,
-                                               uint32_t y, uint32_t depth)
+HMDT::Pixel HMDT::getAsPixel(const BitMap* image, uint32_t x, uint32_t y,
+                             uint32_t depth)
 {
     return Pixel {
         { x, y },
@@ -200,7 +198,7 @@ bool HMDT::isInImage(const Dimensions& dimensions, uint32_t x, uint32_t y) {
 }
 
 bool HMDT::isShapeTooLarge(uint32_t s_width, uint32_t s_height,
-                                    const BitMap* image)
+                           const BitMap* image)
 {
     auto i_width = image->info_header.width;
     auto i_height = image->info_header.height;
@@ -230,13 +228,12 @@ std::pair<uint32_t, uint32_t> HMDT::calcDims(const BoundingBox& bb)
  *
  * @return A pair containing the width and height of the shape
  */
-std::pair<uint32_t, uint32_t> HMDT::calcShapeDims(const Polygon& shape)
-{
+std::pair<uint32_t, uint32_t> HMDT::calcShapeDims(const Polygon& shape) {
     return calcDims(shape.bounding_box);
 }
 
 void HMDT::writeColorTo(unsigned char* color_data, uint32_t w,
-                                 uint32_t x, uint32_t y, Color c)
+                        uint32_t x, uint32_t y, Color c)
 {
     uint32_t index = xyToIndex(w * 3, x * 3, y);
 

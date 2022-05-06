@@ -161,9 +161,7 @@ void HMDT::GUI::GL::StateRenderingView::onSelectionChanged(std::optional<IMapDra
     // TODO: We should show adjacency here if that option is turned on
 }
 
-auto HMDT::GUI::GL::StateRenderingView::getStateIDMatrixTexture()
-    -> Texture&
-{
+auto HMDT::GUI::GL::StateRenderingView::getStateIDMatrixTexture() -> Texture& {
     return m_state_id_texture;
 }
 

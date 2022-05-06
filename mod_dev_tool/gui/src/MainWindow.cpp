@@ -574,8 +574,7 @@ void HMDT::GUI::MainWindow::addWidgetToParent(Gtk::Widget& widget) {
  *
  * @return true if the input was successfully opened, false otherwise
  */
-bool HMDT::GUI::MainWindow::importProvinceMap(const Glib::ustring& filename)
-{
+bool HMDT::GUI::MainWindow::importProvinceMap(const Glib::ustring& filename) {
     // We are checking if the project exists, even though this action should
     //  never be able to be called if theere is no project loaded
     if(auto opt_project = Driver::getInstance().getProject(); opt_project) {

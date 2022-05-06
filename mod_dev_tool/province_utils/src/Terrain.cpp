@@ -37,8 +37,7 @@ namespace {
     };
 }
 
-HMDT::Terrain::Terrain(const std::string& identifier):
-    m_identifier(identifier)
+HMDT::Terrain::Terrain(const std::string& identifier): m_identifier(identifier)
 { }
 
 const std::string& HMDT::Terrain::getIdentifier() const {

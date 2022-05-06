@@ -18,7 +18,7 @@ auto HMDT::Action::ActionManager::getInstance() -> ActionManager& {
  * @return True if the action was successful done, false otherwise.
  */
 bool HMDT::Action::ActionManager::doAction(std::unique_ptr<IAction> action,
-                                                    const IAction::Callback& callback)
+                                           const IAction::Callback& callback)
 {
     auto* action_ptr = action.get();
     RUN_AT_SCOPE_END([this, action_ptr]() { m_on_do_action(*action_ptr); });
@@ -132,9 +132,9 @@ void HMDT::Action::ActionManager::setOnRedoActionCallback(const ActionUpdateCall
 }
 
 HMDT::Action::ActionManager::ActionManager(): m_actions(),
-                                                       m_undone_actions(),
-                                                       m_on_do_action([](const auto&...) { }),
-                                                       m_on_undo_action([](const auto&...) { }),
-                                                       m_on_redo_action([](const auto&...) { })
+                                              m_undone_actions(),
+                                              m_on_do_action([](const auto&...) { }),
+                                              m_on_undo_action([](const auto&...) { }),
+                                              m_on_redo_action([](const auto&...) { })
 { }
 

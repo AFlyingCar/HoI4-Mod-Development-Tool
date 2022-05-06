@@ -10,8 +10,8 @@ HMDT::GUI::ProvincePreviewDrawingArea::ProvincePreviewDrawingArea():
 { }
 
 void HMDT::GUI::ProvincePreviewDrawingArea::setData(DataPtr data,
-                                                             uint32_t width,
-                                                             uint32_t height)
+                                                    uint32_t width,
+                                                    uint32_t height)
 {
     m_data = data;
 

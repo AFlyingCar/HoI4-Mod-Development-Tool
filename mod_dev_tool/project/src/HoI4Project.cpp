@@ -110,7 +110,7 @@ auto HMDT::Project::HoI4Project::getMapProject() -> MapProject& {
  * @return True if the project file could be loaded correctly, false otherwise.
  */
 bool HMDT::Project::HoI4Project::load(const std::filesystem::path& path,
-                                               std::error_code& ec)
+                                      std::error_code& ec)
 {
     using json = nlohmann::json;
 
@@ -219,7 +219,7 @@ bool HMDT::Project::HoI4Project::load(const std::filesystem::path& path,
  * @return True if the project was successfully saved, false otherwise.
  */
 bool HMDT::Project::HoI4Project::save(const std::filesystem::path& path,
-                                               std::error_code& ec)
+                                      std::error_code& ec)
 {
     return save(path, true, ec);
 }
@@ -243,8 +243,8 @@ bool HMDT::Project::HoI4Project::save(const std::filesystem::path& path,
  * @return 
  */
 bool HMDT::Project::HoI4Project::save(const std::filesystem::path& path,
-                                               bool do_save_subprojects,
-                                               std::error_code& ec)
+                                      bool do_save_subprojects,
+                                      std::error_code& ec)
 {
     using json = nlohmann::json;
 
@@ -282,7 +282,7 @@ bool HMDT::Project::HoI4Project::load(std::error_code& ec) {
 }
 
 bool HMDT::Project::HoI4Project::save(bool do_save_subprojects,
-                                               std::error_code& ec)
+                                      std::error_code& ec)
 {
     return save(m_path, do_save_subprojects, ec);
 }
@@ -292,8 +292,7 @@ bool HMDT::Project::HoI4Project::save(bool do_save_subprojects,
  *
  * @param path
  */
-void HMDT::Project::HoI4Project::setPath(const std::filesystem::path& path)
-{
+void HMDT::Project::HoI4Project::setPath(const std::filesystem::path& path) {
     m_path = path;
     m_root = path.parent_path();
 }
@@ -307,7 +306,8 @@ void HMDT::Project::HoI4Project::setName(const std::string& name) {
  *
  * @param full_path
  */
-void HMDT::Project::HoI4Project::setPathAndName(const std::filesystem::path& full_path) {
+void HMDT::Project::HoI4Project::setPathAndName(const std::filesystem::path& full_path)
+{
     if(full_path.has_filename()) {
         setName(full_path.filename().replace_extension().generic_string());
     }
@@ -320,13 +320,11 @@ void HMDT::Project::HoI4Project::setPathAndName(const std::filesystem::path& ful
     setPath(path);
 }
 
-void HMDT::Project::HoI4Project::setToolVersion(const Version& version)
-{
+void HMDT::Project::HoI4Project::setToolVersion(const Version& version) {
     m_tool_version = version;
 }
 
-void HMDT::Project::HoI4Project::setHoI4Version(const Version& version)
-{
+void HMDT::Project::HoI4Project::setHoI4Version(const Version& version) {
     m_hoi4_version = version;
 }
 

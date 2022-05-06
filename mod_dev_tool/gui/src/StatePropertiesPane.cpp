@@ -17,7 +17,7 @@
 #include "SelectionManager.h"
 
 HMDT::GUI::StatePropertiesPane::ProvinceRow::ProvinceRow(Gtk::ListBox* owning_box,
-                                                                  ProvinceID id):
+                                                         ProvinceID id):
     m_province_id(id),
     m_owning_box(owning_box),
     m_hbox(),
@@ -267,8 +267,7 @@ void HMDT::GUI::StatePropertiesPane::buildDeleteStateButton() {
     });
 }
 
-void HMDT::GUI::StatePropertiesPane::addWidgetToParent(Gtk::Widget& widget)
-{
+void HMDT::GUI::StatePropertiesPane::addWidgetToParent(Gtk::Widget& widget) {
     m_box.add(widget);
 }
 
@@ -288,8 +287,7 @@ void HMDT::GUI::StatePropertiesPane::setEnabled(bool enabled) {
     m_delete_state_button->set_sensitive(enabled);
 }
 
-void HMDT::GUI::StatePropertiesPane::setState(State* state,
-                                                       bool is_multiselect)
+void HMDT::GUI::StatePropertiesPane::setState(State* state, bool is_multiselect)
 {
     m_state = state;
 
@@ -300,8 +298,7 @@ void HMDT::GUI::StatePropertiesPane::setState(State* state,
 
 void HMDT::GUI::StatePropertiesPane::onResize() { }
 
-void HMDT::GUI::StatePropertiesPane::updateProperties(bool is_multiselect)
-{
+void HMDT::GUI::StatePropertiesPane::updateProperties(bool is_multiselect) {
     updateProperties(m_state, is_multiselect);
 }
 
@@ -312,7 +309,7 @@ void HMDT::GUI::StatePropertiesPane::updateProperties(bool is_multiselect)
  * @param prov The province to update the properties to.
  */
 void HMDT::GUI::StatePropertiesPane::updateProperties(const State* state,
-                                                               bool is_multiselect)
+                                                      bool is_multiselect)
 {
     m_is_updating_properties = true;
 

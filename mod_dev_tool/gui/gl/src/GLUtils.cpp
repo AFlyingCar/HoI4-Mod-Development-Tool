@@ -20,8 +20,7 @@
  *
  * @return A list of strings of the potential names that the value may represent
  */
-std::vector<std::string> HMDT::GUI::GL::glEnumToStrings(uint32_t value)
-{
+std::vector<std::string> HMDT::GUI::GL::glEnumToStrings(uint32_t value) {
     switch(value) {
 /*
  * Empty string at the front is so we implicitly concatenate with whatever is in

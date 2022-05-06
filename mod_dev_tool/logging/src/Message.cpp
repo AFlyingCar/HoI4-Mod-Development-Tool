@@ -7,10 +7,8 @@
 
 #include "Logger.h"
 
-HMDT::Log::Message::Message(const Level& debug_level,
-                                     const PieceList& pieces,
-                                     const Timestamp& timestamp,
-                                     const Source& source):
+HMDT::Log::Message::Message(const Level& debug_level, const PieceList& pieces,
+                            const Timestamp& timestamp, const Source& source):
     m_level(debug_level),
     m_pieces(pieces),
     m_timestamp(timestamp),
@@ -50,7 +48,7 @@ std::string HMDT::Log::Message::getTimestampAsString(const std::string& timestam
 }
 
 std::ostream& HMDT::Log::operator<<(std::ostream& o,
-                                             const Message::Level& level)
+                                    const Message::Level& level)
 {
     return (o << std::to_string(level));
 }

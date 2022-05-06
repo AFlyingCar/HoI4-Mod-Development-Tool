@@ -50,8 +50,7 @@ auto HMDT::getState(const Color& color) -> StateID {
     return value;
 }
 
-HMDT::ProvinceList HMDT::createProvinceList(const PolygonList& shape_list)
-{
+HMDT::ProvinceList HMDT::createProvinceList(const PolygonList& shape_list) {
     ProvinceList provinces;
 
     for(ProvinceID i = 0; i < shape_list.size(); ++i) {
@@ -79,7 +78,7 @@ HMDT::ProvinceList HMDT::createProvinceList(const PolygonList& shape_list)
 }
 
 std::ostream& HMDT::operator<<(std::ostream& stream,
-                                        const HMDT::Province& province)
+                               const HMDT::Province& province)
 {
     stream << province.id << ';' << static_cast<int>(province.unique_color.r)
            << ';' << static_cast<int>(province.unique_color.g) << ';'

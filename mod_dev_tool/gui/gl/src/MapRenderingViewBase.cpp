@@ -160,9 +160,7 @@ auto HMDT::GUI::GL::MapRenderingViewBase::getMapVertices()
     };
 }
 
-auto HMDT::GUI::GL::MapRenderingViewBase::getSelectionTexture()
-    -> Texture&
-{
+auto HMDT::GUI::GL::MapRenderingViewBase::getSelectionTexture() -> Texture& {
     return m_selection_texture;
 }
 

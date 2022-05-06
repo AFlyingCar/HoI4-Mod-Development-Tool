@@ -38,9 +38,7 @@ auto HMDT::GUI::IMapDrawingAreaBase::setViewingMode(ViewingMode viewing_mode)
     return viewing_mode;
 }
 
-auto HMDT::GUI::IMapDrawingAreaBase::getViewingMode() const
-    -> ViewingMode
-{
+auto HMDT::GUI::IMapDrawingAreaBase::getViewingMode() const -> ViewingMode {
     return m_viewing_mode;
 }
 
@@ -168,9 +166,7 @@ auto HMDT::GUI::IMapDrawingAreaBase::getSelections() const
     return m_selections;
 }
 
-auto HMDT::GUI::IMapDrawingAreaBase::getSelections()
-    -> SelectionList& 
-{
+auto HMDT::GUI::IMapDrawingAreaBase::getSelections() -> SelectionList& {
     return m_selections;
 }
 
@@ -184,7 +180,7 @@ bool HMDT::GUI::IMapDrawingAreaBase::shouldDrawAdjacencies() const {
 }
 
 std::ostream& HMDT::GUI::operator<<(std::ostream& stream,
-                                             const IMapDrawingAreaBase::ViewingMode& mode)
+                                    const IMapDrawingAreaBase::ViewingMode& mode)
 {
     switch(mode) {
         case IMapDrawingAreaBase::ViewingMode::PROVINCE_VIEW:

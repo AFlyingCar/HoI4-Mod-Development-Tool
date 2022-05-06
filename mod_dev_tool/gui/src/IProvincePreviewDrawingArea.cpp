@@ -8,9 +8,7 @@ HMDT::GUI::IProvincePreviewDrawingAreaBase::IProvincePreviewDrawingAreaBase():
     m_height(0)
 { }
 
-void HMDT::GUI::IProvincePreviewDrawingAreaBase::setScale(double x,
-                                                                   double y)
-{
+void HMDT::GUI::IProvincePreviewDrawingAreaBase::setScale(double x, double y) {
     m_scalex = x;
     m_scaley = y;
 }
@@ -21,7 +19,7 @@ std::pair<double, double> HMDT::GUI::IProvincePreviewDrawingAreaBase::getScale()
 }
 
 void HMDT::GUI::IProvincePreviewDrawingAreaBase::setDimensions(uint32_t width,
-                                                                        uint32_t height)
+                                                               uint32_t height)
 {
     m_width = width;
     m_height = height;

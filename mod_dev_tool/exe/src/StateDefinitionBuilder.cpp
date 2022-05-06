@@ -7,7 +7,7 @@
 #include "Logger.h"
 
 auto HMDT::createStatesList(const ProvinceList& provinces,
-                                     const std::filesystem::path& state_info_path)
+                            const std::filesystem::path& state_info_path)
     -> StateList
 {
     std::ifstream state_info_file(state_info_path);

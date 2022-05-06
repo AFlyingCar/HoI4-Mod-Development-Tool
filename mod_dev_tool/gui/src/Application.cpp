@@ -107,18 +107,16 @@ void HMDT::GUI::Application::on_startup() {
     }
 }
 
-auto HMDT::GUI::Application::createMenu(
-        const std::string& menu_name,
-        std::initializer_list<MenuItemInfo> menu_items)
+auto HMDT::GUI::Application::createMenu(const std::string& menu_name,
+                                        std::initializer_list<MenuItemInfo> menu_items)
     -> MenuWrapper
 {
     return createMenu("", menu_name, menu_items);
 }
 
-auto HMDT::GUI::Application::createMenu(
-        const std::string& parent_menu_full_name,
-        const std::string& menu_name,
-        const std::vector<MenuItemInfo>& menu_items)
+auto HMDT::GUI::Application::createMenu(const std::string& parent_menu_full_name,
+                                        const std::string& menu_name,
+                                        const std::vector<MenuItemInfo>& menu_items)
     -> MenuWrapper
 {
     auto menu = Gio::Menu::create();
@@ -205,7 +203,7 @@ auto HMDT::GUI::Application::addMenuItem(const MenuItemInfo& menu_item_info)
 }
 
 auto HMDT::GUI::Application::addMenuItem(const std::string& parent_name,
-                                                               const MenuItemInfo& menu_item_info)
+                                         const MenuItemInfo& menu_item_info)
     -> MenuItemWrapper&
 {
     auto menu_item = Gio::MenuItem::create(menu_item_info.label,

@@ -2,9 +2,9 @@
 #include "ProgressBarDialog.h"
 
 HMDT::GUI::ProgressBarDialog::ProgressBarDialog(Gtk::Window& parent,
-                                                         const std::string& title,
-                                                         const std::string& message,
-                                                         bool modal):
+                                                const std::string& title,
+                                                const std::string& message,
+                                                bool modal):
     Gtk::Dialog(title, parent, modal),
     m_label(message),
     m_progress_bar()

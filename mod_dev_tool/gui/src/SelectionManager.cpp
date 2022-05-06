@@ -29,8 +29,7 @@ void HMDT::GUI::SelectionManager::addProvinceSelection(uint32_t label) {
     }
 }
 
-void HMDT::GUI::SelectionManager::removeProvinceSelection(uint32_t label)
-{
+void HMDT::GUI::SelectionManager::removeProvinceSelection(uint32_t label) {
     m_on_province_selected_callback(label, Action::REMOVE);
     m_selected_provinces.erase(label);
 }
@@ -58,8 +57,7 @@ void HMDT::GUI::SelectionManager::addStateSelection(StateID state_id) {
     }
 }
 
-void HMDT::GUI::SelectionManager::removeStateSelection(StateID state_id)
-{
+void HMDT::GUI::SelectionManager::removeStateSelection(StateID state_id) {
     m_on_state_selected_callback(state_id, Action::REMOVE);
     m_selected_states.erase(state_id);
 }
@@ -115,8 +113,7 @@ auto HMDT::GUI::SelectionManager::getSelectedProvinces() const
  *
  * @return The currently selected provinces.
  */
-auto HMDT::GUI::SelectionManager::getSelectedProvinces()
-    -> RefVector<Province>
+auto HMDT::GUI::SelectionManager::getSelectedProvinces() -> RefVector<Province>
 {
     RefVector<Province> provinces;
     if(auto opt_mproj = getCurrentMapProject(); opt_mproj)
@@ -163,9 +160,7 @@ auto HMDT::GUI::SelectionManager::getSelectedStates() const
  *
  * @return The currently selected states.
  */
-auto HMDT::GUI::SelectionManager::getSelectedStates()
-    -> RefVector<State>
-{
+auto HMDT::GUI::SelectionManager::getSelectedStates() -> RefVector<State> {
     RefVector<State> states;
     if(auto opt_mproj = getCurrentMapProject(); opt_mproj)
     {

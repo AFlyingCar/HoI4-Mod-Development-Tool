@@ -9,9 +9,9 @@
 #endif
 
 HMDT::Log::Source::Source(const std::filesystem::path& module_name,
-                                   const std::filesystem::path& filename,
-                                   const std::string& function_name,
-                                   uint32_t line_number):
+                          const std::filesystem::path& filename,
+                          const std::string& function_name,
+                          uint32_t line_number):
     m_module_name(module_name),
     m_filename(filename),
     m_function_name(function_name),

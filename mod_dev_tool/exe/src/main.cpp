@@ -89,16 +89,14 @@ int main(int argc, char** argv) {
             const auto& level = message.getDebugLevel();
 
             // Debug only outputs if verbose is true
-            if(!is_verbose && level == HMDT::Log::Message::Level::DEBUG)
-            {
+            if(!is_verbose && level == HMDT::Log::Message::Level::DEBUG) {
                 return true;
             }
 
             // Info and Debug only output if quiet is false
             // No need to check for debug because quiet and verbose cannot both
             //  be true at the same time
-            if(is_quiet && level == HMDT::Log::Message::Level::INFO)
-            {
+            if(is_quiet && level == HMDT::Log::Message::Level::INFO) {
                 return true;
             }
 
@@ -107,8 +105,7 @@ int main(int argc, char** argv) {
 
     // Set up a user-data pointer that will be registered with the output
     //   function
-    using UDType = std::tuple<std::ofstream,
-                               std::queue<HMDT::Log::Message>>;
+    using UDType = std::tuple<std::ofstream, std::queue<HMDT::Log::Message>>;
     std::shared_ptr<UDType> file_ud(new UDType);
 
     // Simple reference to the first part of the user-data pointer, as we will

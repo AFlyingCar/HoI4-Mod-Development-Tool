@@ -35,7 +35,7 @@ HMDT::Project::MapProject::~MapProject() {
  * @return True if all data was ablee to be successfully loaded, false otherwise
  */
 bool HMDT::Project::MapProject::save(const std::filesystem::path& path,
-                                              std::error_code& ec)
+                                     std::error_code& ec)
 {
     if(!std::filesystem::exists(path)) {
         WRITE_DEBUG("Creating directory ", path);
@@ -59,7 +59,7 @@ bool HMDT::Project::MapProject::save(const std::filesystem::path& path,
  * @return True if all data was able to be successfully loaded, false otherwise
  */
 bool HMDT::Project::MapProject::load(const std::filesystem::path& path,
-                                              std::error_code& ec)
+                                     std::error_code& ec)
 {
     // If there is no root path for this subproject, then don't bother trying
     //  to load
@@ -227,7 +227,7 @@ bool HMDT::Project::MapProject::validateData() {
  * @return True if the data was able to be successfully written, false otherwise.
  */
 bool HMDT::Project::MapProject::saveShapeLabels(const std::filesystem::path& root,
-                                                         std::error_code& ec)
+                                                std::error_code& ec)
 {
     auto path = root / SHAPEDATA_FILENAME;
 
@@ -261,7 +261,7 @@ bool HMDT::Project::MapProject::saveShapeLabels(const std::filesystem::path& roo
  * @return True if the file was able to be successfully written, false otherwise.
  */
 bool HMDT::Project::MapProject::saveProvinceData(const std::filesystem::path& root,
-                                                          std::error_code& ec)
+                                                 std::error_code& ec)
 {
     auto path = root / PROVINCEDATA_FILENAME;
 
@@ -301,7 +301,7 @@ bool HMDT::Project::MapProject::saveProvinceData(const std::filesystem::path& ro
  * @return True if continent data was successfully loaded, false otherwise
  */
 bool HMDT::Project::MapProject::saveContinentData(const std::filesystem::path& root,
-                                                           std::error_code& ec)
+                                                  std::error_code& ec)
 {
     auto path = root / CONTINENTDATA_FILENAME;
 
@@ -328,7 +328,7 @@ bool HMDT::Project::MapProject::saveContinentData(const std::filesystem::path& r
  * @return True if state data was successfully saved, false otherwise
  */
 bool HMDT::Project::MapProject::saveStateData(const std::filesystem::path& root,
-                                                       std::error_code& ec)
+                                              std::error_code& ec)
 {
     auto path = root / STATEDATA_FILENAME;
 
@@ -381,7 +381,7 @@ bool HMDT::Project::MapProject::saveStateData(const std::filesystem::path& root,
  * @return True if the data was able to be loaded successfully, false otherwise
  */
 bool HMDT::Project::MapProject::loadShapeLabels(const std::filesystem::path& root,
-                                                         std::error_code& ec)
+                                                std::error_code& ec)
 {
     auto path = root / SHAPEDATA_FILENAME;
 
@@ -431,7 +431,7 @@ bool HMDT::Project::MapProject::loadShapeLabels(const std::filesystem::path& roo
  * @return True if the file was able to be successfully loaded, false otherwise.
  */
 bool HMDT::Project::MapProject::loadProvinceData(const std::filesystem::path& root,
-                                                          std::error_code& ec)
+                                                 std::error_code& ec)
 {
     auto path = root / PROVINCEDATA_FILENAME;
 
@@ -496,7 +496,7 @@ bool HMDT::Project::MapProject::loadProvinceData(const std::filesystem::path& ro
  * @return True if data was loaded correctly, false otherwise
  */
 bool HMDT::Project::MapProject::loadContinentData(const std::filesystem::path& root,
-                                                           std::error_code& ec)
+                                                  std::error_code& ec)
 {
     auto path = root / CONTINENTDATA_FILENAME;
 
@@ -533,7 +533,7 @@ bool HMDT::Project::MapProject::loadContinentData(const std::filesystem::path& r
  * @return True if data was loaded correctly, false otherwise
  */
 bool HMDT::Project::MapProject::loadStateData(const std::filesystem::path& root,
-                                                       std::error_code& ec)
+                                              std::error_code& ec)
 {
     auto path = root / STATEDATA_FILENAME;
 
@@ -623,7 +623,7 @@ bool HMDT::Project::MapProject::loadStateData(const std::filesystem::path& root,
  * @param shape_finder The ShapeFinder to load data from
  */
 void HMDT::Project::MapProject::importMapData(ShapeFinder&& shape_finder,
-                                                       std::shared_ptr<MapData> map_data)
+                                              std::shared_ptr<MapData> map_data)
 {
     m_shape_detection_info.map_data = map_data;
 
@@ -643,9 +643,7 @@ void HMDT::Project::MapProject::importMapData(ShapeFinder&& shape_finder,
     buildProvinceOutlines();
 }
 
-auto HMDT::Project::MapProject::getMapData()
-    -> std::shared_ptr<MapData>
-{
+auto HMDT::Project::MapProject::getMapData() -> std::shared_ptr<MapData> {
     return m_shape_detection_info.map_data;
 }
 
@@ -659,13 +657,11 @@ const uint32_t* HMDT::Project::MapProject::getLabelMatrix() const {
     return m_shape_detection_info.map_data->getLabelMatrix().lock().get();
 }
 
-bool HMDT::Project::MapProject::isValidStateID(StateID state_id) const
-{
+bool HMDT::Project::MapProject::isValidStateID(StateID state_id) const {
     return m_states.count(state_id) != 0;
 }
 
-bool HMDT::Project::MapProject::isValidProvinceLabel(uint32_t label) const
-{
+bool HMDT::Project::MapProject::isValidProvinceLabel(uint32_t label) const {
     return (label - 1) < m_shape_detection_info.provinces.size();
 }
 
@@ -692,13 +688,11 @@ auto HMDT::Project::MapProject::getTerrains() const
     return m_terrains;
 }
 
-void HMDT::Project::MapProject::addNewContinent(const std::string& continent)
-{
+void HMDT::Project::MapProject::addNewContinent(const std::string& continent) {
     m_continents.insert(continent);
 }
 
-void HMDT::Project::MapProject::removeContinent(const std::string& continent)
-{
+void HMDT::Project::MapProject::removeContinent(const std::string& continent) {
     m_continents.erase(continent);
 }
 
@@ -779,7 +773,7 @@ void HMDT::Project::MapProject::removeState(StateID id) {
  * @param state_id The ID of the state to move the province to.
  */
 void HMDT::Project::MapProject::moveProvinceToState(uint32_t prov_id,
-                                                             StateID state_id)
+                                                    StateID state_id)
 {
     moveProvinceToState(getProvinceForLabel(prov_id), state_id);
 }
@@ -791,7 +785,7 @@ void HMDT::Project::MapProject::moveProvinceToState(uint32_t prov_id,
  * @param state_id The ID of the state to move the province to.
  */
 void HMDT::Project::MapProject::moveProvinceToState(Province& province,
-                                                             StateID state_id)
+                                                    StateID state_id)
 {
     removeProvinceFromState(province);
     province.state = state_id;
@@ -806,7 +800,7 @@ void HMDT::Project::MapProject::moveProvinceToState(Province& province,
  * @param province The province to remove.
  */
 void HMDT::Project::MapProject::removeProvinceFromState(Province& province,
-                                                                 bool update_state_id_matrix)
+                                                        bool update_state_id_matrix)
 {
     // Remove from its old state
     if(auto prov_state_id = province.state; m_states.count(prov_state_id) != 0)
@@ -883,8 +877,7 @@ void HMDT::Project::MapProject::updateStateIDMatrix() {
  *
  * @return The preview data, or nullptr if the ID does not exist
  */
-auto HMDT::Project::MapProject::getPreviewData(ProvinceID id)
-    -> ProvinceDataPtr
+auto HMDT::Project::MapProject::getPreviewData(ProvinceID id) -> ProvinceDataPtr
 {
     if(isValidProvinceLabel(id)) {
         return getPreviewData(&getProvinceForLabel(id));
@@ -923,9 +916,7 @@ auto HMDT::Project::MapProject::getPreviewData(const Province* province_ptr)
     return data;
 }
 
-auto HMDT::Project::MapProject::getProvinces() const
-    -> const ProvinceList&
-{
+auto HMDT::Project::MapProject::getProvinces() const -> const ProvinceList& {
     return m_shape_detection_info.provinces;
 }
 
@@ -983,9 +974,7 @@ auto HMDT::Project::MapProject::getStateForID(StateID state_id) const
     return m_states.at(state_id);
 }
 
-auto HMDT::Project::MapProject::getStateForID(StateID state_id)
-    -> State&
-{
+auto HMDT::Project::MapProject::getStateForID(StateID state_id) -> State& {
     return m_states.at(state_id);
 }
 

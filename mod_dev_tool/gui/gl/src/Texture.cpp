@@ -13,9 +13,8 @@
 
 #include "GLUtils.h"
 
-HMDT::GUI::GL::Texture::Texture(): m_texture_id(-1),
-                                            m_texture_unit(-1),
-                                            m_target(Target::TEX_2D)
+HMDT::GUI::GL::Texture::Texture(): m_texture_id(-1), m_texture_unit(-1),
+                                   m_target(Target::TEX_2D)
 {
     glGenTextures(1, &m_texture_id);
     MN_LOG_GL_ERRORS();
@@ -32,9 +31,7 @@ HMDT::GUI::GL::Texture::~Texture() {
  * @param axis The axis to set
  * @param wrap The wrap mode to set
  */
-void HMDT::GUI::GL::Texture::setWrapping(Axis axis,
-                                                  WrapMode wrap)
-{
+void HMDT::GUI::GL::Texture::setWrapping(Axis axis, WrapMode wrap) {
     auto gl_target = targetToGLTarget(m_target);
 
     bind();
@@ -51,9 +48,7 @@ void HMDT::GUI::GL::Texture::setWrapping(Axis axis,
  * @param ftype The filter type
  * @param filter The filter
  */
-void HMDT::GUI::GL::Texture::setFiltering(FilterType ftype,
-                                                   Filter filter)
-{
+void HMDT::GUI::GL::Texture::setFiltering(FilterType ftype, Filter filter) {
     auto gl_target = targetToGLTarget(m_target);
 
     bind();
@@ -84,11 +79,10 @@ void HMDT::GUI::GL::Texture::setTarget(Target target) {
  * @param data The data to send to the GPU
  */
 void HMDT::GUI::GL::Texture::setTextureData(Format internal_format,
-                                                     uint32_t width,
-                                                     uint32_t height,
-                                                     uint32_t data_type,
-                                                     const void* data,
-                                                     std::optional<uint32_t> format)
+                                            uint32_t width, uint32_t height,
+                                            uint32_t data_type,
+                                            const void* data,
+                                            std::optional<uint32_t> format)
 {
     auto gl_int_format = formatToGLFormat(internal_format);
     auto gl_target = targetToGLTarget(m_target);
@@ -130,8 +124,7 @@ uint32_t HMDT::GUI::GL::Texture::getHeight() const {
     return m_height;
 }
 
-std::pair<uint32_t, uint32_t> HMDT::GUI::GL::Texture::getDimensions() const
-{
+std::pair<uint32_t, uint32_t> HMDT::GUI::GL::Texture::getDimensions() const {
     return std::make_pair(m_width, m_height);
 }
 
@@ -174,8 +167,7 @@ uint32_t HMDT::GUI::GL::Texture::activate() {
  *
  * @return The GL type constant, or -1 on error.
  */
-uint32_t HMDT::GUI::GL::Texture::typeToDataType(const std::type_info& info)
-{
+uint32_t HMDT::GUI::GL::Texture::typeToDataType(const std::type_info& info) {
     if(info == typeid(uint8_t) || info == typeid(unsigned char)) {
         return GL_UNSIGNED_BYTE;
     } else if(info == typeid(uint16_t)) {
@@ -302,8 +294,7 @@ uint32_t HMDT::GUI::GL::Texture::filterToGLFilter(Filter filter) {
  *
  * @return The GL constant.
  */
-uint32_t HMDT::GUI::GL::Texture::filterTypeToGLFilterType(FilterType ftype)
-{
+uint32_t HMDT::GUI::GL::Texture::filterTypeToGLFilterType(FilterType ftype) {
     return ftype == FilterType::MAG ? GL_TEXTURE_MAG_FILTER : GL_TEXTURE_MIN_FILTER;
 }
 

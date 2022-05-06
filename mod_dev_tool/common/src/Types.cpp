@@ -13,8 +13,7 @@
  *
  * @return The given stream after output.
  */
-std::ostream& HMDT::operator<<(std::ostream& stream, const Point2D& p)
-{
+std::ostream& HMDT::operator<<(std::ostream& stream, const Point2D& p) {
     return (stream << '(' << p.x << ',' << p.y << ')');
 }
 
@@ -37,7 +36,7 @@ std::ostream& HMDT::operator<<(std::ostream& stream, const Color& c) {
  * @return The given stream after output.
  */
 std::ostream& HMDT::operator<<(std::ostream& stream,
-                                        const ProvinceType& prov_type)
+                               const ProvinceType& prov_type)
 {
     switch(prov_type) {
         case ProvinceType::LAND:
@@ -60,8 +59,7 @@ std::ostream& HMDT::operator<<(std::ostream& stream,
  *
  * @return The given stream after output.
  */
-std::ostream& HMDT::operator<<(std::ostream& stream, const State& state)
-{
+std::ostream& HMDT::operator<<(std::ostream& stream, const State& state) {
     stream << "state = {" << std::endl;
     stream << "    id = " << state.id << std::endl;
     stream << "    name = \"" << state.name << '"' << std::endl;
@@ -94,23 +92,22 @@ std::ostream& HMDT::operator<<(std::ostream& stream, const State& state)
     return stream;
 }
 
-std::string HMDT::operator+(const std::string& s, const Point2D& point)
-{
-    return s + "(" + std::to_string(point.x) + ", " + std::to_string(point.y) + ")";
+std::string HMDT::operator+(const std::string& s, const Point2D& point) {
+    return s + "(" + std::to_string(point.x) + ", " +
+                     std::to_string(point.y) + ")";
 }
 
-std::string HMDT::operator+(const std::string& s, const Color& color)
-{
-    return s + "[" + std::to_string(color.r) + ", " + std::to_string(color.g) + ", " + std::to_string(color.b) + "]";
+std::string HMDT::operator+(const std::string& s, const Color& color) {
+    return s + "[" + std::to_string(color.r) + ", " +
+                     std::to_string(color.g) + ", " +
+                     std::to_string(color.b) + "]";
 }
 
-bool HMDT::operator==(const Color& c1, const Color& c2)
-{
+bool HMDT::operator==(const Color& c1, const Color& c2) {
     return doColorsMatch(c1, c2);
 }
 
-bool HMDT::operator!=(const Color& c1, const Color& c2)
-{
+bool HMDT::operator!=(const Color& c1, const Color& c2) {
     return !(c1 == c2);
 }
 

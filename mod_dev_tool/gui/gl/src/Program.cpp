@@ -27,14 +27,11 @@ HMDT::GUI::GL::Program::LinkException::LinkException(const std::string& reason):
     m_reason(reason)
 { }
 
-const char* HMDT::GUI::GL::Program::LinkException::what() const noexcept
-{
+const char* HMDT::GUI::GL::Program::LinkException::what() const noexcept {
     return (std::string("Program Link Failure: ") + m_reason).c_str();
 }
 
-HMDT::GUI::GL::Program::Program(): m_ref_count(nullptr),
-                                            m_program_id(-1)
-{ }
+HMDT::GUI::GL::Program::Program(): m_ref_count(nullptr), m_program_id(-1) { }
 
 HMDT::GUI::GL::Program::Program(std::initializer_list<Shader> shaders):
     m_ref_count(new uint32_t{1}),
@@ -139,7 +136,7 @@ void HMDT::GUI::GL::Program::linkProgram() {
  * @return true on success, false otherwise
  */
 bool HMDT::GUI::GL::Program::uniform(const std::string& uniform_name,
-                                              const std::any& value)
+                                     const std::any& value)
 {
     use();
 
@@ -209,7 +206,7 @@ bool HMDT::GUI::GL::Program::uniform(const std::string& uniform_name,
 }
 
 bool HMDT::GUI::GL::Program::uniform(const std::string& uniform_name,
-                                              const Texture& value)
+                                     const Texture& value)
 {
     return uniform(uniform_name, static_cast<int>(value.getTextureUnitID()) - GL_TEXTURE0);
 }

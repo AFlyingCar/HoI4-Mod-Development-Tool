@@ -5,11 +5,9 @@
 
 #include "Logger.h"
 
-std::deque<HMDT::Log::Message>
-    HMDT::GUI::LogViewerWindow::viewable_messages;
+std::deque<HMDT::Log::Message> HMDT::GUI::LogViewerWindow::viewable_messages;
 std::mutex HMDT::GUI::LogViewerWindow::next_message_mutex;
-std::queue<HMDT::Log::Message>
-    HMDT::GUI::LogViewerWindow::next_messages;
+std::queue<HMDT::Log::Message> HMDT::GUI::LogViewerWindow::next_messages;
 
 HMDT::GUI::LogViewerWindow::LogRowColumns::LogRowColumns() {
     add(m_level);
@@ -56,7 +54,7 @@ HMDT::GUI::LogViewerWindow::LogViewerWindow():
 }
 
 void HMDT::GUI::LogViewerWindow::pushMessage(const Log::Message& msg,
-                                                      OptionalReference<LogViewerWindow> lvw)
+                                             OptionalReference<LogViewerWindow> lvw)
 {
     if(viewable_messages.size() == VIEWER_BUFFER_SIZE) {
         viewable_messages.pop_front();

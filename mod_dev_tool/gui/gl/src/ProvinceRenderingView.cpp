@@ -240,8 +240,7 @@ void HMDT::GUI::GL::ProvinceRenderingView::onSelectionChanged(std::optional<IMap
     // TODO: We should show adjacency here if that option is turned on
 }
 
-auto HMDT::GUI::GL::ProvinceRenderingView::getPrograms() -> ProgramList
-{
+auto HMDT::GUI::GL::ProvinceRenderingView::getPrograms() -> ProgramList {
     return { getMapProgram(), m_outline_shader, m_selection_shader };
 }
 
@@ -259,8 +258,7 @@ auto HMDT::GUI::GL::ProvinceRenderingView::getMapTexture() -> Texture& {
     return m_texture;
 }
 
-auto HMDT::GUI::GL::ProvinceRenderingView::getLabelTexture() -> Texture&
-{
+auto HMDT::GUI::GL::ProvinceRenderingView::getLabelTexture() -> Texture& {
     return m_label_texture;
 }
 

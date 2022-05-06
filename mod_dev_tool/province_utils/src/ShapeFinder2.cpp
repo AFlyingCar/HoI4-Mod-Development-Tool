@@ -57,8 +57,7 @@ HMDT::ShapeFinder::ShapeFinder(ShapeFinder&& other):
     m_shapes(std::move(other.m_shapes))
 { }
 
-auto HMDT::ShapeFinder::operator=(ShapeFinder&& other) -> ShapeFinder&
-{
+auto HMDT::ShapeFinder::operator=(ShapeFinder&& other) -> ShapeFinder& {
     m_image = std::move(other.m_image);
     m_label_matrix_size = std::move(other.m_label_matrix_size);
     m_label_matrix = std::move(other.m_label_matrix);
@@ -234,7 +233,7 @@ auto HMDT::ShapeFinder::pass2(LabelShapeIdxMap& label_to_shapeidx)
  *         otherwise.
  */
 bool HMDT::ShapeFinder::mergeBorders(PolygonList& shapes,
-                                              const LabelShapeIdxMap& label_to_shapeidx)
+                                     const LabelShapeIdxMap& label_to_shapeidx)
 {
     uint32_t width = m_image->info_header.width;
     uint32_t height = m_image->info_header.height;
@@ -415,8 +414,7 @@ const HMDT::PolygonList& HMDT::ShapeFinder::findAllShapes() {
  *
  * @return The number of problematic shapes detected.
  */
-std::optional<uint32_t> HMDT::ShapeFinder::finalize(PolygonList& shapes)
-{
+std::optional<uint32_t> HMDT::ShapeFinder::finalize(PolygonList& shapes) {
     uint32_t problematic_shapes = 0;
 
     // Perform error-checking on shapes
@@ -521,7 +519,7 @@ void HMDT::ShapeFinder::outputStage(const std::filesystem::path& filename) {
  * @return A pair containing both the label and the color
  */
 auto HMDT::ShapeFinder::getLabelAndColor(const Point2D& point,
-                                                  const Color& color)
+                                         const Color& color)
     -> std::pair<uint32_t, Color>
 {
     uint32_t label = m_label_matrix[xyToIndex(m_image, point.x, point.y)];
@@ -565,7 +563,7 @@ uint32_t HMDT::ShapeFinder::getRootLabel(uint32_t label) {
  *         adjacent to 'point' in the directions specified
  */
 auto HMDT::ShapeFinder::getAdjacentPoint(const Point2D& point,
-                                                  Direction dir1) const
+                                         Direction dir1) const
     -> MonadOptional<Point2D>
 {
     return getAdjacentPoint(m_image, point, dir1);
@@ -581,8 +579,8 @@ auto HMDT::ShapeFinder::getAdjacentPoint(const Point2D& point,
  *         adjacent to 'point' in the directions specified
  */
 auto HMDT::ShapeFinder::getAdjacentPoint(const BitMap* image,
-                                                  const Point2D& point,
-                                                  Direction dir1)
+                                         const Point2D& point,
+                                         Direction dir1)
     -> MonadOptional<Point2D>
 {
     return getAdjacentPixel({static_cast<uint32_t>(image->info_header.width),
@@ -601,8 +599,8 @@ auto HMDT::ShapeFinder::getAdjacentPoint(const BitMap* image,
  *         adjacent to 'point' in the directions specified
  */
 auto HMDT::ShapeFinder::getAdjacentPixel(const BitMap* image,
-                                                  const Point2D& point,
-                                                  Direction dir1)
+                                         const Point2D& point,
+                                         Direction dir1)
     -> MonadOptional<Pixel>
 {
     return getAdjacentPixel({static_cast<uint32_t>(image->info_header.width),
@@ -620,9 +618,9 @@ auto HMDT::ShapeFinder::getAdjacentPixel(const BitMap* image,
  *         adjacent to 'point' in the directions specified
  */
 auto HMDT::ShapeFinder::getAdjacentPixel(const Dimensions& dimensions,
-                                                  const uint8_t* data,
-                                                  const Point2D& point,
-                                                  Direction dir1)
+                                         const uint8_t* data,
+                                         const Point2D& point,
+                                         Direction dir1)
     -> MonadOptional<Pixel>
 {
     Point2D adjacent = point;
@@ -664,8 +662,8 @@ auto HMDT::ShapeFinder::getAdjacentPixel(const Dimensions& dimensions,
  * @param label_to_shapeidx The mapping of labels to their corresponding shapes
  */
 void HMDT::ShapeFinder::buildShape(uint32_t label, const Pixel& pixel,
-                                            PolygonList& shapes,
-                                            LabelShapeIdxMap& label_to_shapeidx)
+                                   PolygonList& shapes,
+                                   LabelShapeIdxMap& label_to_shapeidx)
 {
     uint32_t shapeidx = -1;
 
@@ -702,9 +700,9 @@ void HMDT::ShapeFinder::buildShape(uint32_t label, const Pixel& pixel,
  * @return True if the point is adjacent to any other point, false otherwise
  */
 bool HMDT::ShapeFinder::calculateAdjacency(const BitMap* image,
-                                                    const uint32_t* label_matrix,
-                                                    std::set<uint32_t>& adjacency_list,
-                                                    const Point2D& point)
+                                           const uint32_t* label_matrix,
+                                           std::set<uint32_t>& adjacency_list,
+                                           const Point2D& point)
 {
     return calculateAdjacency({static_cast<uint32_t>(image->info_header.width),
                                static_cast<uint32_t>(image->info_header.height)},
@@ -722,10 +720,10 @@ bool HMDT::ShapeFinder::calculateAdjacency(const BitMap* image,
  * @return True if the point is adjacent to any other point, false otherwise
  */
 bool HMDT::ShapeFinder::calculateAdjacency(const Dimensions& dimensions,
-                                                    const uint8_t* data,
-                                                    const uint32_t* label_matrix,
-                                                    std::set<uint32_t>& adjacency_list,
-                                                    const Point2D& point)
+                                           const uint8_t* data,
+                                           const uint32_t* label_matrix,
+                                           std::set<uint32_t>& adjacency_list,
+                                           const Point2D& point)
 {
     bool is_adjacent = false;
 
@@ -830,8 +828,7 @@ auto HMDT::ShapeFinder::getShapes() const -> const PolygonList& {
     return m_shapes;
 }
 
-void HMDT::ShapeFinder::calculateAdjacencies(PolygonList& shapes) const
-{
+void HMDT::ShapeFinder::calculateAdjacencies(PolygonList& shapes) const {
     for(Polygon& shape : shapes) {
         for(auto&& pixel : shape.pixels) {
             calculateAdjacency(m_image, m_label_matrix, shape.adjacent_labels,

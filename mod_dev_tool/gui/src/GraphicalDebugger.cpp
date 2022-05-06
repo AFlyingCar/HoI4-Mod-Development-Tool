@@ -31,8 +31,7 @@ HMDT::GraphicsWorker& HMDT::GraphicsWorker::getInstance() {
  * @param image The image being debugged
  * @param debug_data The pixel data to display
  */
-void HMDT::GraphicsWorker::init(std::shared_ptr<const MapData> map_data)
-{
+void HMDT::GraphicsWorker::init(std::shared_ptr<const MapData> map_data) {
     m_map_data = map_data;
 
     auto [iwidth, iheight] = map_data->getDimensions();
@@ -41,7 +40,7 @@ void HMDT::GraphicsWorker::init(std::shared_ptr<const MapData> map_data)
 }
 
 void HMDT::GraphicsWorker::writeDebugColor(uint32_t x, uint32_t y,
-                                                    const Color& c)
+                                           const Color& c)
 {
     if(m_debug_data != nullptr) {
         uint32_t w = m_map_data->getWidth();
@@ -72,8 +71,7 @@ void HMDT::GraphicsWorker::resetDebugDataAt(const Point2D& point) {
     }
 }
 
-auto HMDT::GraphicsWorker::getMapData() const
-    -> std::shared_ptr<const MapData>
+auto HMDT::GraphicsWorker::getMapData() const -> std::shared_ptr<const MapData>
 {
     return m_map_data;
 }
@@ -83,9 +81,7 @@ void HMDT::GraphicsWorker::updateCallback(const Rectangle& rectangle) {
 }
 
 
-auto HMDT::GraphicsWorker::getWriteCallback() const
-    -> const UpdateCallback&
-{
+auto HMDT::GraphicsWorker::getWriteCallback() const -> const UpdateCallback& {
     return m_write_callback;
 }
 

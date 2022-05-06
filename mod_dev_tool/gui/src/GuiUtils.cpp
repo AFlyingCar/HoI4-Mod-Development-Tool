@@ -10,8 +10,7 @@ namespace {
     constexpr size_t MAX_BUFFER_SIZE = 1024;
 }
 
-auto HMDT::GUI::readBMP(Glib::RefPtr<Gio::InputStream> file_stream,
-                                 BitMap* bm)
+auto HMDT::GUI::readBMP(Glib::RefPtr<Gio::InputStream> file_stream, BitMap* bm)
     -> BitMap*
 {
     std::stringstream stream;

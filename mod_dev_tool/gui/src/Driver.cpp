@@ -47,8 +47,7 @@ void HMDT::GUI::Driver::run() {
  *
  * @return The main project object, or std::nullopt if one has not been loaded.
  */
-auto HMDT::GUI::Driver::getProject() const
-    -> OptionalReference<const HProject>
+auto HMDT::GUI::Driver::getProject() const -> OptionalReference<const HProject>
 {
     if(m_project) {
         return *m_project;
@@ -62,9 +61,7 @@ auto HMDT::GUI::Driver::getProject() const
  *
  * @return The main project object, or std::nullopt if one has not been loaded.
  */
-auto HMDT::GUI::Driver::getProject() 
-    -> OptionalReference<HProject>
-{
+auto HMDT::GUI::Driver::getProject() -> OptionalReference<HProject> {
     if(m_project) {
         return *m_project;
     } else {
@@ -93,8 +90,7 @@ void HMDT::GUI::Driver::setProject() {
  *
  * @return The project's resources
  */
-const Glib::RefPtr<Gio::Resource> HMDT::GUI::Driver::getResources() const
-{
+const Glib::RefPtr<Gio::Resource> HMDT::GUI::Driver::getResources() const {
     return m_resources;
 }
 

@@ -43,8 +43,7 @@ HMDT::Version::Version(const std::string& version):
  *
  * @return This version
  */
-HMDT::Version& HMDT::Version::operator=(const Version& other)
-{
+HMDT::Version& HMDT::Version::operator=(const Version& other) {
     m_version = other.m_version;
 
     return *this;
@@ -180,9 +179,7 @@ int HMDT::Version::compare(const Version& other) const {
  *
  * @return stream
  */
-std::ostream& HMDT::operator<<(std::ostream& stream,
-                                        const Version& version)
-{
+std::ostream& HMDT::operator<<(std::ostream& stream, const Version& version) {
     return (stream << version.str());
 }
 

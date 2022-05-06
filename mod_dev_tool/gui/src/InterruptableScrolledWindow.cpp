@@ -8,8 +8,7 @@
  *
  * @return 
  */
-auto HMDT::GUI::InterruptableScrolledWindow::signalOnScroll()
-    -> SignalOnScroll
+auto HMDT::GUI::InterruptableScrolledWindow::signalOnScroll() -> SignalOnScroll
 {
     return m_signal_on_scroll;
 }

@@ -34,9 +34,8 @@
  *
  * @return The result from outputToStream
  */
-bool HMDT::Log::outputToConsole(const Message& message,
-                                         bool do_formatting,
-                                         bool do_prefix)
+bool HMDT::Log::outputToConsole(const Message& message, bool do_formatting,
+                                bool do_prefix)
 {
     return outputToStream(message, do_formatting, do_prefix,
             [](uint8_t debug_level) -> std::ostream& {
@@ -63,9 +62,8 @@ bool HMDT::Log::outputToConsole(const Message& message,
  *
  * @return true
  */
-bool HMDT::Log::outputToStream(const Message& message,
-                                        bool do_formatting,
-                                        bool do_prefix,
+bool HMDT::Log::outputToStream(const Message& message, bool do_formatting,
+                               bool do_prefix,
                                         const std::function<std::ostream&(uint8_t)>& get_ostream,
                                         bool include_timestamp,
                                         bool include_source_info)

@@ -188,8 +188,7 @@ void HMDT::GUI::MainWindowDrawingAreaPart::setShouldDrawAdjacencies(bool should_
     m_drawing_area->setShouldDrawAdjacencies(should_draw_adjacencies);
 }
 
-bool HMDT::GUI::MainWindowDrawingAreaPart::shouldDrawAdjacencies() const
-{
+bool HMDT::GUI::MainWindowDrawingAreaPart::shouldDrawAdjacencies() const {
     return m_drawing_area->shouldDrawAdjacencies();
 }
 

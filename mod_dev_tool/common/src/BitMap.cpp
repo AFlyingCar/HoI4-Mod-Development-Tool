@@ -24,8 +24,7 @@
  * @return A pointer to a bitmap struct if the bitmap was successfully read,
  *         nullptr otherwise.
  */
-HMDT::BitMap* HMDT::readBMP(const std::filesystem::path& path)
-{
+HMDT::BitMap* HMDT::readBMP(const std::filesystem::path& path) {
     BitMap* bm = new BitMap();
 
     if(readBMP(path, bm) == nullptr) {
@@ -44,9 +43,7 @@ HMDT::BitMap* HMDT::readBMP(const std::filesystem::path& path)
  * @return A pointer to a bitmap struct if the bitmap was successfully read,
  *         nullptr otherwise.
  */
-HMDT::BitMap* HMDT::readBMP(const std::filesystem::path& path,
-                                              BitMap* bm)
-{
+HMDT::BitMap* HMDT::readBMP(const std::filesystem::path& path, BitMap* bm) {
     std::ifstream file(path, std::ios::in | std::ios::binary);
 
     if(!file.is_open()) {
@@ -64,9 +61,7 @@ HMDT::BitMap* HMDT::readBMP(const std::filesystem::path& path,
  * @return A pointer to a bitmap struct if the bitmap was successfully read,
  *         nullptr otherwise.
  */
-HMDT::BitMap* HMDT::readBMP(std::istream& file,
-                                              BitMap* bm)
-{
+HMDT::BitMap* HMDT::readBMP(std::istream& file, BitMap* bm) {
     // Safely read the entire header into the struct.
     if(!safeRead(&(bm->file_header.filetype), file)        ||
        !safeRead(&(bm->file_header.fileSize), file)        ||
@@ -201,7 +196,7 @@ void HMDT::writeBMP(const std::filesystem::path& path, const BitMap* bmp) {
  * @param height The height of the bitmap
  */
 void HMDT::writeBMP(const std::filesystem::path& path, unsigned char* data,
-                             uint32_t width, uint32_t height, uint16_t depth)
+                    uint32_t width, uint32_t height, uint16_t depth)
 {
     BitMap bmp;
     std::memset(&bmp, 0, sizeof(BitMap));
@@ -244,9 +239,7 @@ void HMDT::writeBMP(const std::filesystem::path& path, unsigned char* data,
  *
  * @return The given stream after writing the BitMap to it.
  */
-std::ostream& HMDT::operator<<(std::ostream& stream,
-                                        const HMDT::BitMap& bm)
-{
+std::ostream& HMDT::operator<<(std::ostream& stream, const HMDT::BitMap& bm) {
     stream << "BitMap = {" << std::endl
            << "    Header = {" << std::endl
            << "        filetype = " << bm.file_header.filetype << std::endl

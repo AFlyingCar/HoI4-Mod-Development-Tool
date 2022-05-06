@@ -17,8 +17,8 @@
 std::map<std::string, std::string> HMDT::GUI::GL::Shader::m_defined_macros;
 
 HMDT::GUI::GL::Shader::CompileException::CompileException(Type type,
-                                                                   const std::string& source,
-                                                                   const std::string& reason):
+                                                          const std::string& source,
+                                                          const std::string& reason):
     m_type(type),
     m_source(source),
     m_reason(reason)
@@ -30,14 +30,11 @@ HMDT::GUI::GL::Shader::CompileException::CompileException(Type type,
     m_what = what.str();
 }
 
-const char* HMDT::GUI::GL::Shader::CompileException::what() const noexcept
-{
+const char* HMDT::GUI::GL::Shader::CompileException::what() const noexcept {
     return m_what.c_str();
 }
 
-auto HMDT::GUI::GL::Shader::CompileException::getType() const noexcept
-    -> Type
-{
+auto HMDT::GUI::GL::Shader::CompileException::getType() const noexcept -> Type {
     return m_type;
 }
 
@@ -134,8 +131,7 @@ uint32_t HMDT::GUI::GL::Shader::typeToGL(Type type) {
  *
  * @return A string representation of the given Shader::Type
  */
-std::string_view std::to_string(const HMDT::GUI::GL::Shader::Type& type)
-{
+std::string_view std::to_string(const HMDT::GUI::GL::Shader::Type& type) {
     switch(type) {
         case HMDT::GUI::GL::Shader::Type::VERTEX:
             return "Vertex";
@@ -146,8 +142,7 @@ std::string_view std::to_string(const HMDT::GUI::GL::Shader::Type& type)
     }
 }
 
-void HMDT::GUI::GL::Shader::undefineMacro(const std::string& macro_name)
-{
+void HMDT::GUI::GL::Shader::undefineMacro(const std::string& macro_name) {
     m_defined_macros.erase(macro_name);
 }
 
