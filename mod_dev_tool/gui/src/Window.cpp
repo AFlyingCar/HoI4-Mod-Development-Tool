@@ -4,7 +4,7 @@
 #include "Logger.h"
 
 HMDT::GUI::Window::Window(const std::string& window_name,
-                                   Gtk::Application& application):
+                          Gtk::Application& application):
     m_window_name(window_name),
     m_application(application)
 {

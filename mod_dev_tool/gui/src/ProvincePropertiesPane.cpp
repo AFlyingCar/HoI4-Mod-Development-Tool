@@ -304,8 +304,7 @@ void HMDT::GUI::ProvincePropertiesPane::buildStateCreationButton() {
     });
 }
 
-void HMDT::GUI::ProvincePropertiesPane::addWidgetToParent(Gtk::Widget& widget)
-{
+void HMDT::GUI::ProvincePropertiesPane::addWidgetToParent(Gtk::Widget& widget) {
     m_box.add(widget);
 }
 
@@ -324,8 +323,8 @@ void HMDT::GUI::ProvincePropertiesPane::setEnabled(bool enabled) {
 }
 
 void HMDT::GUI::ProvincePropertiesPane::setProvince(Province* prov,
-                                                             ProvincePreviewDrawingArea::DataPtr preview_data,
-                                                             bool is_multiselect)
+                                                    ProvincePreviewDrawingArea::DataPtr preview_data,
+                                                    bool is_multiselect)
 {
     m_province = prov;
 
@@ -371,7 +370,7 @@ void HMDT::GUI::ProvincePropertiesPane::updateProperties(bool is_multiselect)
  * @param prov The province to update the properties to.
  */
 void HMDT::GUI::ProvincePropertiesPane::updateProperties(const Province* prov,
-                                                                  bool is_multiselect)
+                                                         bool is_multiselect)
 {
     m_is_updating_properties = true;
 
