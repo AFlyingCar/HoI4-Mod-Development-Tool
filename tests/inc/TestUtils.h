@@ -19,7 +19,7 @@
 # define TEST_COUT std::cerr << "[          ] [ INFO ]"
 # define TEST_CERR std::cerr << "[          ] [ ERR  ]"
 
-namespace MapNormalizer::UnitTests {
+namespace HMDT::UnitTests {
     bool useVerboseOutput();
 
     std::filesystem::path getTestProgramPath();

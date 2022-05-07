@@ -20,8 +20,8 @@ license_hdr.write( "# define LICENSE_H\n\n")
 
 license_hdr.write( "# include <string_view>\n\n")
 
-license_hdr.write( "namespace MapNormalizer {\n")
-license_hdr.write(f"    std::string_view MAP_NORMALIZER_LICENSE = R\"(\n{license}\n)\";\n");
+license_hdr.write( "namespace HMDT {\n")
+license_hdr.write(f"    std::string_view MOD_DEVELOPMENT_TOOL_LICENSE = R\"(\n{license}\n)\";\n");
 license_hdr.write( "}\n\n")
 license_hdr.write( "#endif\n")
 

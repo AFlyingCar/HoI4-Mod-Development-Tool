@@ -28,10 +28,10 @@ bool operator<(const UInt24& a, const UInt24& b) {
 
 TEST(UniqueColorTests, TestColorUniqueness) {
     // First make sure that there is an RGB for every color value
-    ASSERT_EQ(MN_ALL_LANDS_SIZE % 3, 0);
-    ASSERT_EQ(MN_ALL_LAKES_SIZE % 3, 0);
-    ASSERT_EQ(MN_ALL_SEAS_SIZE % 3, 0);
-    ASSERT_EQ(MN_ALL_UNKNOWNS_SIZE % 3, 0);
+    ASSERT_EQ(HMDT_ALL_LANDS_SIZE % 3, 0);
+    ASSERT_EQ(HMDT_ALL_LAKES_SIZE % 3, 0);
+    ASSERT_EQ(HMDT_ALL_SEAS_SIZE % 3, 0);
+    ASSERT_EQ(HMDT_ALL_UNKNOWNS_SIZE % 3, 0);
 
     // We need UInt24 to be exactly 3 bytes large, as otherwise the below
     //  duplicate detection code will fail
@@ -45,11 +45,11 @@ TEST(UniqueColorTests, TestColorUniqueness) {
                   reinterpret_cast<const UInt24*>(array + size),
                   std::back_inserter(values));
 
-        if(MapNormalizer::UnitTests::useVerboseOutput())
+        if(HMDT::UnitTests::useVerboseOutput())
             std::cerr << "Sorting color array..." << std::endl;
         std::sort(values.begin(), values.end());
 
-        if(MapNormalizer::UnitTests::useVerboseOutput())
+        if(HMDT::UnitTests::useVerboseOutput())
             std::cerr << "Detecting duplicates..." << std::endl;
         std::set<UInt24> uniques(values.begin(), values.end());
         std::set_difference(values.begin(), values.end(),
@@ -66,10 +66,10 @@ TEST(UniqueColorTests, TestColorUniqueness) {
     };
 
     std::array<std::pair<const unsigned char*, unsigned int>, 4> color_lists = {
-        std::make_pair(MN_ALL_LANDS, MN_ALL_LANDS_SIZE),
-        std::make_pair(MN_ALL_LAKES, MN_ALL_LAKES_SIZE),
-        std::make_pair(MN_ALL_SEAS, MN_ALL_SEAS_SIZE),
-        std::make_pair(MN_ALL_UNKNOWNS, MN_ALL_UNKNOWNS_SIZE)
+        std::make_pair(HMDT_ALL_LANDS, HMDT_ALL_LANDS_SIZE),
+        std::make_pair(HMDT_ALL_LAKES, HMDT_ALL_LAKES_SIZE),
+        std::make_pair(HMDT_ALL_SEAS, HMDT_ALL_SEAS_SIZE),
+        std::make_pair(HMDT_ALL_UNKNOWNS, HMDT_ALL_UNKNOWNS_SIZE)
     };
 
     std::vector<std::set<UInt24>> duplicate_lists;
@@ -83,7 +83,7 @@ TEST(UniqueColorTests, TestColorUniqueness) {
     EXPECT_FALSE(duplicate_found);
 
     // Dump out which colors are in duplicate if $ENVVAR_VERBOSE is defined
-    if(MapNormalizer::UnitTests::useVerboseOutput()) {
+    if(HMDT::UnitTests::useVerboseOutput()) {
         for(auto i = 0; i < duplicate_lists.size(); ++i) {
             const auto& dup_list = duplicate_lists[i];
             auto&& [array, size] = color_lists[i];
@@ -119,21 +119,21 @@ TEST(UniqueColorTests, TestColorUniqueness) {
 //  NOTE: Do not ever actually use this in practice, this is simply to make the
 //   unit test easier to write and run
 using UniqueColorPtr = const unsigned char*;
-extern UniqueColorPtr& getUniqueColorPtr(MapNormalizer::ProvinceType);
+extern UniqueColorPtr& getUniqueColorPtr(HMDT::ProvinceType);
 
 TEST(UniqueColorTests, TestGetUnknownsWhenOutOfColors) {
     // Make sure that we start these at the beginning
-    MapNormalizer::resetUniqueColorGenerator(MapNormalizer::ProvinceType::UNKNOWN);
+    HMDT::resetUniqueColorGenerator(HMDT::ProvinceType::UNKNOWN);
 
     // Force the LAND to the end
-    ::getUniqueColorPtr(MapNormalizer::ProvinceType::LAND) = MN_ALL_LANDS + MN_ALL_LANDS_SIZE;
+    ::getUniqueColorPtr(HMDT::ProvinceType::LAND) = HMDT_ALL_LANDS + HMDT_ALL_LANDS_SIZE;
 
-    auto c = MapNormalizer::generateUniqueColor(MapNormalizer::ProvinceType::LAND);
+    auto c = HMDT::generateUniqueColor(HMDT::ProvinceType::LAND);
 
     // Reset this again since generateUniqueColor _should_ have grabbed a value
     //  from here
-    MapNormalizer::resetUniqueColorGenerator(MapNormalizer::ProvinceType::UNKNOWN);
+    HMDT::resetUniqueColorGenerator(HMDT::ProvinceType::UNKNOWN);
     
-    ASSERT_EQ(c, MapNormalizer::generateUniqueColor(MapNormalizer::ProvinceType::UNKNOWN));
+    ASSERT_EQ(c, HMDT::generateUniqueColor(HMDT::ProvinceType::UNKNOWN));
 }
 

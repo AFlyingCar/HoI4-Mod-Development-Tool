@@ -10,12 +10,12 @@ BEGIN
         BLOCK "040904E4"
         BEGIN
             VALUE "CompanyName", ""
-            VALUE "FileDescription", "@MN_TOOL_DESCRIPTION@"
-            VALUE "FileVersion", "@MN_TOOL_VERSION@"
-            VALUE "InternalName", "map_normalizer"
-            VALUE "OriginalFilename", "map_normalizer.exe"
-            VALUE "ProductName", "@MN_TOOL_NAME@"
-            VALUE "ProductVersion", "@MN_TOOL_VERSION@"
+            VALUE "FileDescription", "@HMDT_TOOL_DESCRIPTION@"
+            VALUE "FileVersion", "@HMDT_TOOL_VERSION@"
+            VALUE "InternalName", "hoi4_mod_dev_tool"
+            VALUE "OriginalFilename", "hoi4_mod_dev_tool.exe"
+            VALUE "ProductName", "@HMDT_TOOL_NAME@"
+            VALUE "ProductVersion", "@HMDT_TOOL_VERSION@"
         END
     END
     BLOCK "VarFileInfo"

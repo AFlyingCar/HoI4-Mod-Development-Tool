@@ -16,7 +16,7 @@
 
 #include "TestUtils.h"
 
-namespace MapNormalizer::UnitTests {
+namespace HMDT::UnitTests {
     void GuiTests::SetUp() {
         // Set up basic outputting
         Log::Logger::registerOutputFunction(Log::outputWithFormatting);
@@ -35,7 +35,7 @@ namespace MapNormalizer::UnitTests {
 
     TEST_F(GuiTests, ReadBMPFromResources) {
         // Stream #1 is the stream from the resources we want to check
-        auto stream1 = m_resources->open_stream("/com/aflyingcar/MapNormalizerTools/textures/selection.bmp");
+        auto stream1 = m_resources->open_stream("/com/aflyingcar/HoI4ModDevelopmentTool/textures/selection.bmp");
 
         // Stream #2 is a normal ifstream to the file on the disk
         auto real_path = getExecutablePath() / "../resources/textures/selection.bmp";

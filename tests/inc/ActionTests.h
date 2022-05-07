@@ -4,7 +4,7 @@
 
 # include "gtest/gtest.h"
 
-namespace MapNormalizer::UnitTests {
+namespace HMDT::UnitTests {
     class ActionTests: public ::testing::Test {
         protected:
             void SetUp() override;

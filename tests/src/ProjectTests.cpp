@@ -9,12 +9,12 @@
 #include "TestUtils.h"
 
 TEST(ProjectTests, SimpleHoI4ProjectTest) {
-    MapNormalizer::Project::Project hproject;
+    HMDT::Project::Project hproject;
 
-    MapNormalizer::Version hoi4_version;
+    HMDT::Version hoi4_version;
 
     std::filesystem::path root_path;
-    auto projmeta_path = root_path / MapNormalizer::PROJ_META_FOLDER;
+    auto projmeta_path = root_path / HMDT::PROJ_META_FOLDER;
 
     ASSERT_EQ(hproject.getPath(), root_path);
     ASSERT_EQ(hproject.getRoot(), root_path);
@@ -23,18 +23,18 @@ TEST(ProjectTests, SimpleHoI4ProjectTest) {
     ASSERT_EQ(hproject.getMapRoot(), projmeta_path / "map");
 
     ASSERT_EQ(hproject.getName(), "");
-    ASSERT_EQ(hproject.getToolVersion(), MapNormalizer::TOOL_VERSION);
+    ASSERT_EQ(hproject.getToolVersion(), HMDT::TOOL_VERSION);
     ASSERT_EQ(hproject.getHoI4Version(), hoi4_version);
     ASSERT_TRUE(hproject.getTags().empty());
     ASSERT_TRUE(hproject.getOverrides().empty());
 }
 
 TEST(ProjectTests, LoadHoI4ProjectTest) {
-    auto project_path = MapNormalizer::UnitTests::getTestProgramPath() / "bin" / "simple.hoi4proj";
+    auto project_path = HMDT::UnitTests::getTestProgramPath() / "bin" / "simple.hoi4proj";
     auto root_path = project_path.parent_path();
-    auto projmeta_path = root_path / MapNormalizer::PROJ_META_FOLDER;
+    auto projmeta_path = root_path / HMDT::PROJ_META_FOLDER;
 
-    MapNormalizer::Project::Project hproject(project_path);
+    HMDT::Project::Project hproject(project_path);
 
     ASSERT_TRUE(hproject.load());
 
@@ -45,8 +45,8 @@ TEST(ProjectTests, LoadHoI4ProjectTest) {
     ASSERT_EQ(hproject.getMapRoot(), projmeta_path / "map");
 
     ASSERT_EQ(hproject.getName(), "simple");
-    ASSERT_EQ(hproject.getToolVersion(), MapNormalizer::Version("1.0.4"));
-    ASSERT_EQ(hproject.getHoI4Version(), MapNormalizer::Version("1.10.5"));
+    ASSERT_EQ(hproject.getToolVersion(), HMDT::Version("1.0.4"));
+    ASSERT_EQ(hproject.getHoI4Version(), HMDT::Version("1.10.5"));
     ASSERT_TRUE(hproject.getTags().empty());
     ASSERT_TRUE(hproject.getOverrides().empty());
 }

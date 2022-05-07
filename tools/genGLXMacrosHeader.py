@@ -61,7 +61,7 @@ glxmacros_hdr.write( " */\n\n")
 glxmacros_hdr.write( "#ifndef GL_XMACROS_H\n")
 glxmacros_hdr.write( "# define GL_XMACROS_H\n\n")
 
-glxmacros_hdr.write( "# define MN_GL_XMACRO")
+glxmacros_hdr.write( "# define HMDT_GL_XMACRO")
 
 for value, names in glenum_defines.items():
     name = names[0]
