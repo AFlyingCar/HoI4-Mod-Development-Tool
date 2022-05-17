@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
+find_package(json REQUIRED)
+
 # Generate ToolsVersion.h
 add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/ToolsVersion.h"
     COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/genVersionHeader.py" "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}"
@@ -36,12 +38,15 @@ add_library(common STATIC
     src/Version.cpp
     src/Constants.cpp
     src/MapData.cpp
+    src/Preferences.cpp
 
     "${CMAKE_BINARY_DIR}/ToolsVersion.h"
 )
 
 target_include_directories(common PUBLIC inc)
 target_include_directories(common PRIVATE "${CMAKE_BINARY_DIR}")
+
+target_link_libraries(common PRIVATE nlohmann_json::nlohmann_json)
 
 target_link_libraries(common PUBLIC unique_colors logging)
 
