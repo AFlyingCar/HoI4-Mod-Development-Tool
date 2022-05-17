@@ -10,6 +10,11 @@
 # include "Logger.h"
 # include "Util.h"
 
+# include "SectionProperties.h"
+
+# define HMDT_SECTION_GET_PROP_IUF_NAME(PROP_NAME) \
+    CONCAT(_, CONCAT(PROP_NAME, _IsUserFacing))
+
 namespace HMDT {
     class Preferences {
         public:
@@ -51,8 +56,12 @@ namespace HMDT {
              * @brief A Section of config Groups
              */
             struct Section {
-                bool showTitles;
-                // other properties as appropriate
+# define X(TYPE, PROP_NAME, IS_USER_FACING)                          \
+    TYPE PROP_NAME;                                                  \
+    bool HMDT_SECTION_GET_PROP_IUF_NAME(PROP_NAME) = IS_USER_FACING;
+
+                HMDT_SECTION_PROPERTIES 
+# undef X
 
                 std::map<std::string, Group> groups;
             };
@@ -215,9 +224,12 @@ namespace HMDT {
 # define PREF_BEGIN_DEF() {
 
 # define PREF_BEGIN_DEFINE_SECTION(SEC_NAME) \
-    { SEC_NAME, HMDT::Preferences::Section {
+    { SEC_NAME, []() { HMDT::Preferences::Section _section;
 
-# define PREF_BEGIN_GROUPS_DEF() {
+# define PREF_SECTION_DEFINE_PROPERTY(PROP_NAME, PROP_VAL) \
+    _section. PROP_NAME = PROP_VAL ;
+
+# define PREF_BEGIN_GROUPS_DEF() _section.groups = {
 
 # define PREF_BEGIN_DEFINE_GROUP(GROUP_NAME) \
     { GROUP_NAME, HMDT::Preferences::Group { {
@@ -227,9 +239,9 @@ namespace HMDT {
 
 # define PREF_END_DEFINE_GROUP(GROUP_NAME) } } },
 
-# define PREF_END_GROUPS_DEF() }
+# define PREF_END_GROUPS_DEF() };
 
-# define PREF_END_DEFINE_SECTION() } }
+# define PREF_END_DEFINE_SECTION() return _section; }() }
 
 # define PREF_END_DEF() }
 ///@endcond

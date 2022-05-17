@@ -529,7 +529,14 @@ void HMDT::Preferences::writeToJson(std::ostream& out, bool pretty) const {
 
         //////////////////////
         // Write every section property
-        jsec["@showTitles"] = section.showTitles;
+#define X(_, PROP_NAME, IS_USER_FACING)  \
+        if constexpr( IS_USER_FACING ) { \
+            jsec["@" STR(PROP_NAME) ] = section. PROP_NAME ; \
+        }
+
+        HMDT_SECTION_PROPERTIES 
+
+#undef X
         //////////////////////
 
         // Write every group

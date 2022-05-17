@@ -14,7 +14,7 @@ namespace HMDT::UnitTests {
     Preferences::SectionMap simple_conf_defaults =
 PREF_BEGIN_DEF()
     PREF_BEGIN_DEFINE_SECTION("SimpleSection")
-        true /* showTitles */,
+        PREF_SECTION_DEFINE_PROPERTY(showTitles, true)
 
         PREF_BEGIN_GROUPS_DEF()
             PREF_BEGIN_DEFINE_GROUP("SimpleGroup")

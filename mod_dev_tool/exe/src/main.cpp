@@ -40,7 +40,7 @@ namespace HMDT {
 PREF_BEGIN_DEF()
     // General program related settings
     PREF_BEGIN_DEFINE_SECTION("General")
-        true /* showTitles */,
+        PREF_SECTION_DEFINE_PROPERTY(showTitles, true)
 
         PREF_BEGIN_GROUPS_DEF()
             PREF_BEGIN_DEFINE_GROUP("Interface")
@@ -52,7 +52,7 @@ PREF_BEGIN_DEF()
 
     // Gui related settings
     PREF_BEGIN_DEFINE_SECTION("Gui")
-        false /* showTitles */,
+        PREF_SECTION_DEFINE_PROPERTY(showTitles, false)
 
         PREF_BEGIN_GROUPS_DEF()
             PREF_BEGIN_DEFINE_GROUP("_")
@@ -63,7 +63,7 @@ PREF_BEGIN_DEF()
 
     // HoI4-info related settings
     PREF_BEGIN_DEFINE_SECTION("HoI4")
-        false /* showTitles */,
+        PREF_SECTION_DEFINE_PROPERTY(showTitles, false)
 
         PREF_BEGIN_GROUPS_DEF()
             PREF_BEGIN_DEFINE_GROUP("_")
