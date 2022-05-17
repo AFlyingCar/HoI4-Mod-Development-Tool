@@ -360,6 +360,9 @@ namespace HMDT {
     constexpr bool operator>=(const U& lhs, const MonadOptional<T>& rhs) {
         return lhs >= rhs.getWrapped();
     }
+
+    template<typename T>
+    using MonadOptionalRef = MonadOptional<std::reference_wrapper<T>>;
 }
 
 #endif

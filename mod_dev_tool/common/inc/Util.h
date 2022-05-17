@@ -516,6 +516,9 @@ namespace HMDT {
 
 # define RUN_AT_SCOPE_END(...) \
     HMDT::RunAtScopeEnd UNIQUE_NAME(___AT_SCOPE_END) ( __VA_ARGS__ )
+
+    template<typename T>
+    using Ref = std::reference_wrapper<T>;
 }
 
 #endif
