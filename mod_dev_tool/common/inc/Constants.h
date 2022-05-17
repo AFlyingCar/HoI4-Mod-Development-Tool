@@ -80,6 +80,9 @@ namespace HMDT {
     //! The file extension for the log files
     const std::string LOG_FILE_EXTENSION = ".log";
 
+    //! The file extension for config files
+    const std::string CONF_FILE_EXTENSION = ".conf";
+
     //! The 4 magic bytes 
     const std::string SHAPEDATA_MAGIC = "SDAT";
 
