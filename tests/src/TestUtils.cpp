@@ -13,6 +13,10 @@
 # include <linux/limits.h>
 #endif
 
+#include "Logger.h"
+#include "Message.h"
+#include "ConsoleOutputFunctions.h"
+
 #define ENVVAR_PREFIX ENVVAR_
 
 #define DEF_ENVVAR_IMPL(VARNAME) \
@@ -22,6 +26,8 @@
     DEF_ENVVAR_IMPL(CONCAT(ENVVAR_PREFIX, VARNAME))
 
 DEF_ENVVAR(VERBOSE);
+
+HMDT::UnitTests::NullStream cnul;
 
 bool HMDT::UnitTests::useVerboseOutput() {
     return std::getenv(ENVVAR_VERBOSE) != nullptr;
@@ -36,5 +42,34 @@ std::filesystem::path HMDT::UnitTests::getTestProgramPath() {
 #endif
 
     return std::filesystem::path(path).parent_path();
+}
+
+void HMDT::UnitTests::registerTestLogOutputFunction(bool include_formatting,
+                                                    bool include_prefix,
+                                                    bool include_timestamp,
+                                                    bool include_src_info)
+{
+    Log::Logger::registerOutputFunction([=](const Log::Message& m)
+    {
+        return Log::outputToStream(m, include_formatting, include_prefix,
+            [](uint8_t debug_level) -> std::ostream& {
+                switch(static_cast<Log::Message::Level>(debug_level)) {
+                    case Log::Message::Level::INFO:
+                        return TEST_COUT;
+                    case Log::Message::Level::ERROR:
+                    case Log::Message::Level::WARN:
+                        return TEST_CERR;
+                    case Log::Message::Level::DEBUG:
+                        // If verbose output is enabled, then output debug
+                        //  otherwise send it to cnul as well.
+                        if(useVerboseOutput()) {
+                            return TEST_COUT;
+                        }
+                    [[fallthrough]];
+                    default:
+                        return cnul;
+                }
+            }, include_timestamp, include_src_info);
+    });
 }
 
