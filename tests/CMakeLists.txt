@@ -14,6 +14,7 @@ set(TEST_SOURCES
     ${TEST_SRC_DIR}/LogTests.cpp
     ${TEST_SRC_DIR}/GuiTests.cpp
     ${TEST_SRC_DIR}/ActionTests.cpp
+    ${TEST_SRC_DIR}/PreferencesTests.cpp
 
     ${TEST_SRC_DIR}/TestOverrides.cpp
     ${TEST_SRC_DIR}/TestUtils.cpp
