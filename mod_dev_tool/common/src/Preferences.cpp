@@ -23,6 +23,10 @@ namespace HMDT {
     {
 #define HMDT_DEFINE_PROPERTY(PROPERTY, JTYPE, TYPE)                                 \
     if(name == STR(PROPERTY)) {                                                     \
+        if(!section. HMDT_SECTION_GET_PROP_IUF_NAME(PROPERTY) ) {                   \
+            WRITE_ERROR("Property '" STR(PROPERTY) "' is not user-facing.");        \
+            return false;                                                           \
+        }                                                                           \
         if(!jobject. CONCAT(is_, JTYPE) ()) {                                       \
             WRITE_ERROR("Property '" STR(PROPERTY) "' must be of type " STR(TYPE)); \
             return false;                                                           \
