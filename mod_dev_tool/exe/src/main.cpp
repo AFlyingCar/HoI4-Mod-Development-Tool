@@ -45,7 +45,6 @@ PREF_BEGIN_DEF()
         PREF_BEGIN_GROUPS_DEF()
             PREF_BEGIN_DEFINE_GROUP("Interface")
                 PREF_DEFINE_CONFIG("language", "en_US")
-                PREF_DEFINE_CONFIG("logPath", "")
             PREF_END_DEFINE_GROUP()
         PREF_END_GROUPS_DEF()
     PREF_END_DEFINE_SECTION(),
@@ -68,6 +67,22 @@ PREF_BEGIN_DEF()
         PREF_BEGIN_GROUPS_DEF()
             PREF_BEGIN_DEFINE_GROUP("_")
                 PREF_DEFINE_CONFIG("installPath", "")
+            PREF_END_DEFINE_GROUP()
+        PREF_END_GROUPS_DEF()
+    PREF_END_DEFINE_SECTION(),
+
+    // Debug related settings
+    PREF_BEGIN_DEFINE_SECTION("Debug")
+        PREF_SECTION_DEFINE_PROPERTY(showTitles, false)
+
+        PREF_BEGIN_GROUPS_DEF()
+            PREF_BEGIN_DEFINE_GROUP("Logging")
+                PREF_DEFINE_CONFIG("logPath", "")
+                PREF_DEFINE_CONFIG("openLogWindowOnLaunch", false)
+            PREF_END_DEFINE_GROUP()
+
+            PREF_BEGIN_DEFINE_GROUP("Graphics")
+                PREF_DEFINE_CONFIG("renderAdjacenciesByDefault", false)
             PREF_END_DEFINE_GROUP()
         PREF_END_GROUPS_DEF()
     PREF_END_DEFINE_SECTION()
