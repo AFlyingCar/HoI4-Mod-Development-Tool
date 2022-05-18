@@ -371,7 +371,10 @@ void HMDT::Preferences::initialize() noexcept {
     if(std::ifstream in(m_config_path); in) {
         json config;
 
-        in >> config;
+        config = json::parse(in,
+                             nullptr /* callback */,
+                             true /* allow_exceptions */,
+                             true /* ignore_comments */);
 
         if(!config.is_object()) {
             WRITE_ERROR("Config top-level type must be OBJECT.");
