@@ -39,52 +39,44 @@ namespace HMDT {
     Preferences::SectionMap config_defaults =
 PREF_BEGIN_DEF()
     // General program related settings
-    PREF_BEGIN_DEFINE_SECTION("General")
+    PREF_BEGIN_DEFINE_SECTION("General", "General program related settings.")
         PREF_SECTION_DEFINE_PROPERTY(showTitles, true)
 
-        PREF_BEGIN_GROUPS_DEF()
-            PREF_BEGIN_DEFINE_GROUP("Interface")
-                PREF_DEFINE_CONFIG("language", "en_US")
-            PREF_END_DEFINE_GROUP()
-        PREF_END_GROUPS_DEF()
+        PREF_BEGIN_DEFINE_GROUP("Interface", "Settings that control the interface of the program.")
+            PREF_DEFINE_CONFIG("language", "en_US", "The language to be used.")
+        PREF_END_DEFINE_GROUP()
     PREF_END_DEFINE_SECTION(),
 
     // Gui related settings
-    PREF_BEGIN_DEFINE_SECTION("Gui")
+    PREF_BEGIN_DEFINE_SECTION("Gui", "Gui related settings.")
         PREF_SECTION_DEFINE_PROPERTY(showTitles, false)
 
-        PREF_BEGIN_GROUPS_DEF()
-            PREF_BEGIN_DEFINE_GROUP("_")
-                PREF_DEFINE_CONFIG("darkMode", false)
-            PREF_END_DEFINE_GROUP()
-        PREF_END_GROUPS_DEF()
+        PREF_BEGIN_DEFINE_GROUP("_",)
+            PREF_DEFINE_CONFIG("darkMode", false, "Whether the program should use dark-mode.")
+        PREF_END_DEFINE_GROUP()
     PREF_END_DEFINE_SECTION(),
 
     // HoI4-info related settings
-    PREF_BEGIN_DEFINE_SECTION("HoI4")
+    PREF_BEGIN_DEFINE_SECTION("HoI4", "Settings related to interacting with Hearts of Iron 4.")
         PREF_SECTION_DEFINE_PROPERTY(showTitles, false)
 
-        PREF_BEGIN_GROUPS_DEF()
-            PREF_BEGIN_DEFINE_GROUP("_")
-                PREF_DEFINE_CONFIG("installPath", "")
-            PREF_END_DEFINE_GROUP()
-        PREF_END_GROUPS_DEF()
+        PREF_BEGIN_DEFINE_GROUP("_",)
+            PREF_DEFINE_CONFIG("installPath", "", "The path of where Hearts of Iron 4 is installed.")
+        PREF_END_DEFINE_GROUP()
     PREF_END_DEFINE_SECTION(),
 
     // Debug related settings
-    PREF_BEGIN_DEFINE_SECTION("Debug")
+    PREF_BEGIN_DEFINE_SECTION("Debug", "Debug related settings.")
         PREF_SECTION_DEFINE_PROPERTY(showTitles, false)
 
-        PREF_BEGIN_GROUPS_DEF()
-            PREF_BEGIN_DEFINE_GROUP("Logging")
-                PREF_DEFINE_CONFIG("logPath", "")
-                PREF_DEFINE_CONFIG("openLogWindowOnLaunch", false)
-            PREF_END_DEFINE_GROUP()
+        PREF_BEGIN_DEFINE_GROUP("Logging", "Logging settings.")
+            PREF_DEFINE_CONFIG("logPath", "", "Overrides where the log files are written to.")
+            PREF_DEFINE_CONFIG("openLogWindowOnLaunch", false, "Whether the log window should be opened on launch.")
+        PREF_END_DEFINE_GROUP()
 
-            PREF_BEGIN_DEFINE_GROUP("Graphics")
-                PREF_DEFINE_CONFIG("renderAdjacenciesByDefault", false)
-            PREF_END_DEFINE_GROUP()
-        PREF_END_GROUPS_DEF()
+        PREF_BEGIN_DEFINE_GROUP("Graphics", "Graphical debug settings.")
+            PREF_DEFINE_CONFIG("renderAdjacenciesByDefault", false, "Whether adjacent provinces should be rendered by default.")
+        PREF_END_DEFINE_GROUP()
     PREF_END_DEFINE_SECTION()
 PREF_END_DEF();
 

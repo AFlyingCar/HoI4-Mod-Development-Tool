@@ -13,21 +13,19 @@ namespace HMDT::UnitTests {
 
     Preferences::SectionMap simple_conf_defaults =
 PREF_BEGIN_DEF()
-    PREF_BEGIN_DEFINE_SECTION("SimpleSection")
+    PREF_BEGIN_DEFINE_SECTION("SimpleSection",)
         PREF_SECTION_DEFINE_PROPERTY(showTitles, true)
 
-        PREF_BEGIN_GROUPS_DEF()
-            PREF_BEGIN_DEFINE_GROUP("SimpleGroup")
-                PREF_DEFINE_CONFIG("val1", false)
-                PREF_DEFINE_CONFIG("val2", 5L)
-                PREF_DEFINE_CONFIG("val3", "a fun string")
-                PREF_DEFINE_CONFIG("val4", 3.1415)
-            PREF_END_DEFINE_GROUP()
+        PREF_BEGIN_DEFINE_GROUP("SimpleGroup",)
+            PREF_DEFINE_CONFIG("val1", false,)
+            PREF_DEFINE_CONFIG("val2", 5L,)
+            PREF_DEFINE_CONFIG("val3", "a fun string",)
+            PREF_DEFINE_CONFIG("val4", 3.1415,)
+        PREF_END_DEFINE_GROUP()
 
-            PREF_BEGIN_DEFINE_GROUP("SimpleGroup2")
-                PREF_DEFINE_CONFIG("val2", 23L)
-            PREF_END_DEFINE_GROUP()
-        PREF_END_GROUPS_DEF()
+        PREF_BEGIN_DEFINE_GROUP("SimpleGroup2",)
+            PREF_DEFINE_CONFIG("val2", 23L,)
+        PREF_END_DEFINE_GROUP()
     PREF_END_DEFINE_SECTION()
 PREF_END_DEF();
 
@@ -195,10 +193,6 @@ PREF_END_DEF();
             ASSERT_NE(loaded_sections.count(sec_name), 0);
 
             const auto& loaded_section = loaded_sections.at(sec_name);
-
-            // Next, validate each property
-            //  NOTE: Update every time new properties are added
-            ASSERT_EQ(section.showTitles, loaded_section.showTitles);
 
             for(auto&& [group_name, group] : section.groups) {
                 // Validate that this group exists

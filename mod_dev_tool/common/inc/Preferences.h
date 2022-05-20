@@ -49,13 +49,17 @@ namespace HMDT {
              * @brief A Group of config values
              */
             struct Group {
-                std::map<std::string, ValueVariant> configs;
+                std::string comment;
+
+                std::map<std::string, std::pair<std::string, ValueVariant>> configs;
             };
 
             /**
              * @brief A Section of config Groups
              */
             struct Section {
+                std::string comment;
+
 # define X(TYPE, PROP_NAME, IS_USER_FACING)                          \
     TYPE PROP_NAME;                                                  \
     bool HMDT_SECTION_GET_PROP_IUF_NAME(PROP_NAME) = IS_USER_FACING;
@@ -71,6 +75,10 @@ namespace HMDT {
             // Will initialize Preferences on the first call _AFTER_
             //   setConfigLocation has been set to a _VALID_ path.
             static Preferences& getInstance(bool = true);
+
+            static std::string buildValuePath(const std::string&,
+                                              const std::string&,
+                                              const std::string&);
 
             // Unused after initialization
             void setConfigLocation(const std::filesystem::path&);
@@ -125,6 +133,8 @@ namespace HMDT {
             void writeToLog() const;
 
             bool isInitialized() const;
+
+            bool isDirty() const;
 
             // WARN: INTERNAL FUNCTION ONLY FOR TESTING PURPOSES
             //  DO NOT USE FOR NON-TESTING PURPOSES
@@ -218,28 +228,31 @@ namespace HMDT {
 
             //! Used to specify if initialize() has been called and succeeded
             bool m_initialized;
+
+            /**
+             * @brief Used to specify if the config values have been modified
+             *        since they were last loaded or reset.
+             */
+            bool m_dirty;
     };
 
 /// @cond
 # define PREF_BEGIN_DEF() {
 
-# define PREF_BEGIN_DEFINE_SECTION(SEC_NAME) \
-    { SEC_NAME, []() { HMDT::Preferences::Section _section;
+# define PREF_BEGIN_DEFINE_SECTION(SEC_NAME, COMMENT) \
+    { SEC_NAME, []() { HMDT::Preferences::Section _section; _section.comment = "" COMMENT;
 
 # define PREF_SECTION_DEFINE_PROPERTY(PROP_NAME, PROP_VAL) \
     _section. PROP_NAME = PROP_VAL ;
 
-# define PREF_BEGIN_GROUPS_DEF() _section.groups = {
+# define PREF_BEGIN_DEFINE_GROUP(GROUP_NAME, COMMENT) \
+    _section.groups[ GROUP_NAME ] = HMDT::Preferences::Group { "" COMMENT, {
 
-# define PREF_BEGIN_DEFINE_GROUP(GROUP_NAME) \
-    { GROUP_NAME, HMDT::Preferences::Group { {
+# define PREF_DEFINE_CONFIG(CONF_NAME, VALUE, COMMENT)    \
+    { CONF_NAME, std::make_pair(std::string("" COMMENT ), \
+                                HMDT::Preferences::buildValueVariant( VALUE )) },
 
-# define PREF_DEFINE_CONFIG(CONF_NAME, VALUE) \
-    { CONF_NAME, HMDT::Preferences::buildValueVariant( VALUE ) },
-
-# define PREF_END_DEFINE_GROUP(GROUP_NAME) } } },
-
-# define PREF_END_GROUPS_DEF() };
+# define PREF_END_DEFINE_GROUP(GROUP_NAME) } };
 
 # define PREF_END_DEFINE_SECTION() return _section; }() }
 

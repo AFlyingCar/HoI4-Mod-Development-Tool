@@ -47,7 +47,6 @@ namespace HMDT {
 
         return true;
     }
-
 }
 
 // Will initialize Preferences on the first call _AFTER_
@@ -61,6 +60,13 @@ HMDT::Preferences& HMDT::Preferences::getInstance(bool try_init) {
     }
 
     return instance;
+}
+
+std::string HMDT::Preferences::buildValuePath(const std::string& section_name,
+                                              const std::string& group_name,
+                                              const std::string& config_name)
+{
+    return section_name + "." + group_name + "." + config_name;
 }
 
 /**
@@ -126,10 +132,12 @@ bool HMDT::Preferences::setPreferenceValue(const std::string& value_path,
     }
 
     return getValueVariantForPath(value_path)
-        .andThen<bool>([&value_var](Ref<ValueVariant> ref_val) {
+        .andThen<bool>([this, &value_var](Ref<ValueVariant> ref_val) {
             auto& val = ref_val.get();
 
             val = value_var;
+
+            m_dirty = true;
 
             // TODO: Monadidc operations should be able to take functions
             //   which return void (this should essentially return a 
@@ -310,7 +318,7 @@ auto HMDT::Preferences::getValueVariantForPathInSectionMap(const std::string& va
             -> MonadOptionalRef<const ValueVariant>
         {
             if(group.get().configs.count(config_name) != 0) {
-                return group.get().configs.at(config_name);
+                return group.get().configs.at(config_name).second;
             }
 
             return std::nullopt;
@@ -347,7 +355,7 @@ auto HMDT::Preferences::getValueVariantForPathInSectionMap(const std::string& va
             -> MonadOptionalRef<ValueVariant>
         {
             if(group.get().configs.count(config_name) != 0) {
-                return group.get().configs.at(config_name);
+                return group.get().configs.at(config_name).second;
             }
 
             return std::nullopt;
@@ -421,7 +429,7 @@ void HMDT::Preferences::initialize() noexcept {
                     for(auto&& [config_name, jconfig] : jobj.items()) {
                         WRITE_DEBUG("Parsing config value '", config_name, '\'');
 
-                        ValueVariant& value = group.configs[config_name];
+                        ValueVariant& value = group.configs[config_name].second;
 
                         if(jconfig.is_boolean()) {
                             value = jconfig.get<bool>();
@@ -446,6 +454,7 @@ void HMDT::Preferences::initialize() noexcept {
         }
 
         m_initialized = true;
+        m_dirty = false;
     } else {
         WRITE_ERROR("Failed to open file ", m_config_path);
     }
@@ -455,6 +464,7 @@ void HMDT::Preferences::resetToDefaults() {
     WRITE_INFO("Resetting preferences to the defaults.");
 
     m_sections = m_default_sections;
+    m_dirty = false;
 }
 
 bool HMDT::Preferences::validateLoadedPreferenceTypes() {
@@ -485,7 +495,9 @@ bool HMDT::Preferences::validateLoadedPreferenceTypes() {
 
             const auto& def_group = def_section.groups.at(group_name);
 
-            for(auto&& [config_name, config] : group.configs) {
+            for(auto&& [config_name, config_pair] : group.configs) {
+                auto&& [_, config] = config_pair;
+
                 // Warn and skip each additional section that is not tracked
                 if(def_group.configs.count(config_name) == 0) {
                     WRITE_WARN("Default configs of '", sec_name, '.', group_name,
@@ -505,7 +517,7 @@ bool HMDT::Preferences::validateLoadedPreferenceTypes() {
                     }
                 }
 
-                const auto& def_config = def_group.configs.at(config_name);
+                const auto& def_config = def_group.configs.at(config_name).second;
 
                 // Now we verify that the types are valid.
                 if(def_config.index() != config.index()) {
@@ -526,51 +538,125 @@ bool HMDT::Preferences::validateLoadedPreferenceTypes() {
 }
 
 void HMDT::Preferences::writeToJson(std::ostream& out, bool pretty) const {
-    using json = nlohmann::json;
+    // Only indent if 'pretty == true'
+    uint32_t indent_amt = pretty ? 4 : 0; // TODO: 4 should be a constant
 
-    json root;
+    constexpr char INDENT_CHAR = ' ';
 
-    // Build the root out of every section
+    // Note that this isn't an enum-class as we want to do math with it
+    enum IndentLevel {
+        NONE = 0,
+        SECTION,
+        GROUP,
+        CONFIG
+    };
+
+    auto gen_indent = [indent_amt](IndentLevel level) {
+        return std::string(level * indent_amt, INDENT_CHAR);
+    };
+
+    // NOTE: We do our own custom serializer here because we want to be able to
+    //   also output things like comments
+    // TODO: Can we somehow support non-defined comments that the user inserts?
+
+    uint32_t section_count = 0;
+    out << "{" << std::endl;
     for(auto&& [sec_name, section] : m_sections) {
-        json jsec;
+        ++section_count;
 
-        //////////////////////
-        // Write every section property
-#define X(_, PROP_NAME, IS_USER_FACING)  \
-        if constexpr( IS_USER_FACING ) { \
-            jsec["@" STR(PROP_NAME) ] = section. PROP_NAME ; \
+        // Output the comment for this section if there is one
+        if(!section.comment.empty()) {
+            out << gen_indent(IndentLevel::SECTION)
+                << "// " << section.comment
+                << std::endl;
         }
 
-        HMDT_SECTION_PROPERTIES 
+        // Start outputting the section
+        out << gen_indent(IndentLevel::SECTION)
+            << '"' << sec_name << "\": {"
+            << std::endl;
 
-#undef X
-        //////////////////////
+        // TODO: Output user-facing properties
 
-        // Write every group
-        for(auto&& [group_name, group] : section.groups) {
-            json jgroup;
+        uint32_t group_count = 0;
+        for(auto&& [grp_name, group] : section.groups) {
+            ++group_count;
 
-            // Write every config
-            for(auto&& [config_name, config] : group.configs) {
-                // Note that we need to get a special binding here so we can
-                //   access config_name in the lambda
-                const auto& cfg_name = config_name;
-                std::visit([&](auto&& config_val) {
-                    jgroup[cfg_name] = config_val;
-                }, config);
+            // Output the comment for this group if there is one
+            if(!group.comment.empty()) {
+                out << gen_indent(IndentLevel::GROUP)
+                    << "// " << group.comment
+                    << std::endl;
             }
 
-            jsec[group_name] = jgroup;
+            // Start outputting the group
+            out << gen_indent(IndentLevel::GROUP)
+                << '"' << grp_name << "\": {"
+                << std::endl;
+
+            uint32_t config_count = 0;
+            for(auto&& [config_name, comment_config] : group.configs) {
+                auto&& [comment, config] = comment_config;
+
+                ++config_count;
+
+                // Output the comment for this config if there is one
+                if(!comment.empty()) {
+                    out << gen_indent(IndentLevel::CONFIG)
+                        << "// " << comment
+                        << std::endl;
+                }
+
+                // Output a comment with the default value for this config if
+                //   there is a default value
+                getValueVariantForPathInSectionMap(
+                        Preferences::buildValuePath(sec_name, grp_name, config_name),
+                        m_default_sections)
+                    .andThen<bool>(
+                        [&out, &gen_indent](Ref<const ValueVariant> value_var_ref)
+                        {
+                            auto& value_var = value_var_ref.get();
+
+                            std::visit([&out, &gen_indent](auto& value) {
+                                out << gen_indent(IndentLevel::CONFIG)
+                                    << "// Default: " << nlohmann::json(value)
+                                    << std::endl;
+                            }, value_var);
+
+                            return true;
+                        });
+
+                // Start outputting the config. Use nlohmann::json here for
+                //   simplicity :)
+                out << gen_indent(IndentLevel::CONFIG)
+                    << '"' << config_name << "\": "
+                    << std::visit([](auto& config_val) {
+                            return nlohmann::json(config_val);
+                        }, config);
+
+                // Output trailing comma if necessary
+                if(config_count < group.configs.size()) {
+                    out << ',' << std::endl;
+                }
+                out << std::endl;
+            }
+
+            // Output closing brace with trailing comma
+            out << gen_indent(IndentLevel::GROUP) << "}";
+            if(group_count < section.groups.size()) {
+                out << ',' << std::endl;
+            }
+            out << std::endl;
         }
 
-        root[sec_name] = jsec;
+        // Output closing brace with trailing comma
+        out << gen_indent(IndentLevel::SECTION) << "}";
+        if(section_count < m_sections.size()) {
+            out << ',' << std::endl;
+        }
+        out << std::endl;
     }
-
-    if(pretty) {
-        out << root.dump(4);
-    } else {
-        out << root;
-    }
+    out << "}" << std::endl;
 }
 
 bool HMDT::Preferences::writeToFile(bool pretty) const {
@@ -607,11 +693,16 @@ HMDT::Preferences::Preferences():
     m_sections(),
     m_default_sections(),
     m_env_vars(),
-    m_initialized(false)
+    m_initialized(false),
+    m_dirty(false)
 { }
 
 bool HMDT::Preferences::isInitialized() const {
     return m_initialized;
+}
+
+bool HMDT::Preferences::isDirty() const {
+    return m_dirty;
 }
 
 void HMDT::Preferences::_reset() noexcept {
@@ -622,5 +713,6 @@ void HMDT::Preferences::_reset() noexcept {
     m_default_sections.clear();
     m_env_vars.clear();
     m_initialized = false;
+    m_dirty = false;
 }
 
