@@ -21,23 +21,33 @@ namespace HMDT {
     bool parseProperty(Preferences::Section& section, const std::string& name,
                        const nlohmann::json& jobject)
     {
-#define HMDT_DEFINE_PROPERTY(PROPERTY, JTYPE, TYPE)                                 \
+
+        // Note that we have to define this here, since it makes things easier
+        //   for the below macro, and nlohmann::json doesn't define is_bool
+        //   for some reason.
+#define is_bool is_boolean
+
+#define X(TYPE, PROPERTY, IS_USER_FACING)                          \
     if(name == STR(PROPERTY)) {                                                     \
-        if(!section. HMDT_SECTION_GET_PROP_IUF_NAME(PROPERTY) ) {                   \
+        if constexpr(! IS_USER_FACING ) {                   \
             WRITE_ERROR("Property '" STR(PROPERTY) "' is not user-facing.");        \
             return false;                                                           \
         }                                                                           \
-        if(!jobject. CONCAT(is_, JTYPE) ()) {                                       \
+        if(!jobject. CONCAT(is_, TYPE) ()) {                                       \
             WRITE_ERROR("Property '" STR(PROPERTY) "' must be of type " STR(TYPE)); \
             return false;                                                           \
         }                                                                           \
         section. PROPERTY = jobject.get< TYPE >();                                  \
     } else
 
-        // Add all new properties here for parsing
-        HMDT_DEFINE_PROPERTY(showTitles, boolean, bool)
+        HMDT_SECTION_PROPERTIES 
 
-        // Final block, will run if none of the other properties are defined.
+#undef X
+
+    // But that reason may be a good one, so undefine it again to be safe
+#undef is_bool
+
+        // Final block, will run if the given property is unrecognized
         {
             WRITE_ERROR("Unknown property '", name, '\'');
 

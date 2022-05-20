@@ -62,7 +62,7 @@ namespace HMDT {
 
 # define X(TYPE, PROP_NAME, IS_USER_FACING)                          \
     TYPE PROP_NAME;                                                  \
-    bool HMDT_SECTION_GET_PROP_IUF_NAME(PROP_NAME) = IS_USER_FACING;
+    static constexpr bool HMDT_SECTION_GET_PROP_IUF_NAME(PROP_NAME) = IS_USER_FACING;
 
                 HMDT_SECTION_PROPERTIES 
 # undef X
