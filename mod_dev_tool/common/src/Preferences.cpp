@@ -149,11 +149,8 @@ bool HMDT::Preferences::setPreferenceValue(const std::string& value_path,
 
             m_dirty = true;
 
-            // TODO: Monadidc operations should be able to take functions
-            //   which return void (this should essentially return a 
-            //   MonadOptional<std::monostate>
             return true;
-        }) != std::nullopt;
+        }).orElse(false);
 }
 
 /**
