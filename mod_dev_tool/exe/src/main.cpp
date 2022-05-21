@@ -251,6 +251,16 @@ int main(int argc, char** argv) {
 
     if(!HMDT::prog_opts.dont_write_logfiles) {
         auto log_output_path = getLogOutputFilePath();
+
+        // Overwrite the log path if it is specified in the log path
+        HMDT::Preferences::getInstance().getPreferenceValue<std::string>("Debug.Logging.logPath")
+            .andThen([&log_output_path](const std::string& log_path) {
+                if(!log_path.empty()) {
+                    WRITE_INFO("Overwriting log path to be '", log_path);
+                    log_output_path = log_path;
+                }
+            });
+
         log_output_file.open(log_output_path);
 
         if(!log_output_file) {
