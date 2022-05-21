@@ -177,6 +177,25 @@ namespace HMDT {
             }
 
             /**
+             * @brief Performs an additional operation if this function holds
+             *        a value, and returns a std::monostate.
+             *
+             * @param func A function which returns nothing.
+             *
+             * @return A std::monostate, or std::nullopt if this object does not
+             *         hold a value.
+             */
+            MonadOptional<std::monostate> andThen(std::function<void(const T&)> func)
+            {
+                if(m_opt) {
+                    func(*m_opt);
+                    return std::monostate{};
+                }
+
+                return std::nullopt;
+            }
+
+            /**
              * @brief Returns this optional if a value is held, otherwise it
              *        calls the given function.
              *
@@ -201,6 +220,28 @@ namespace HMDT {
                 } else {
                     return func();
                 }
+            }
+
+            /**
+             * @brief Returns this optional if a value is held, otherwise it
+             *        returns the provided default value
+             *
+             * @tparam R The type of the default value. Must be convertible to a
+             *           T.
+             * @param value The default value to return if this object does not
+             *              hold a value.
+             *
+             * @return If no value is held, then the given default value is
+             *         returned, otherwise this optional's value is returned.
+             */
+            template<typename R,
+                     typename = std::enable_if_t<std::is_convertible_v<R, T>>>
+            T orElse(const R& value) {
+                if(m_opt) {
+                    return *m_opt;
+                }
+
+                return T{value};
             }
 
             /**
