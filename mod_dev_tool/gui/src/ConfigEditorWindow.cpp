@@ -104,9 +104,14 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
             });
 
             // Add every defined section name to the listbox
-            for(auto&& [sec_name, _] : Preferences::getInstance().getDefaultSections())
+            for(auto&& [sec_name, section] : Preferences::getInstance().getDefaultSections())
             {
                 auto row = manage(new NamedRow(sec_name, 14000));
+
+                if(!section.comment.empty()) {
+                    row->set_tooltip_text(section.comment);
+                }
+
                 m_sections_list.append(*row);
                 row->show();
             }
@@ -192,6 +197,10 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
                     // TODO: Better way of marking that this is a header
                     header->set_markup(std::string("<b>") + grp_name + "</b>");
 
+                    if(!group.comment.empty()) {
+                        header->set_tooltip_text(group.comment);
+                    }
+
                     group_frame->set_label_widget(*header);
                 } else {
                     WRITE_DEBUG("Not creating header for group '", grp_name, "'. showTitles=", section.showTitles);
@@ -254,6 +263,10 @@ void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
         // Add an extra space before the name to add a bit of padding
         Gtk::Label* lbl_value = new Gtk::Label(" "s + name + " ");
         lbl_value->set_xalign(0.0);
+
+        if(!comment.empty()) {
+            lbl_value->set_tooltip_text(comment);
+        }
 
         config_box->add(*lbl_value);
 
