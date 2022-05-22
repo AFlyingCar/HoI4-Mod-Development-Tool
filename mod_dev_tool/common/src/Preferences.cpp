@@ -265,6 +265,10 @@ const HMDT::Preferences::SectionMap& HMDT::Preferences::getSections() const {
     return m_sections;
 }
 
+auto HMDT::Preferences::getDefaultSections() const -> const SectionMap& {
+    return m_default_sections;
+}
+
 /**
  * @brief Gets the Config value found at value_path
  *

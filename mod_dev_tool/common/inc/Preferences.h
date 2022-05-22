@@ -99,6 +99,7 @@ namespace HMDT {
                                              SectionMap&);
 
             const SectionMap& getSections() const;
+            const SectionMap& getDefaultSections() const;
 
             // Get a preference value. Pass in path to the value as a string:
             //  "{Section}.{Group}.{Title}"
