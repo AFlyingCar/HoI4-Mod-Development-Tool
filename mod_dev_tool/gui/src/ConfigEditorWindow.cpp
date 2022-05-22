@@ -47,6 +47,7 @@ HMDT::GUI::ConfigEditorWindow::ConfigEditorWindow():
     m_box(Gtk::ORIENTATION_HORIZONTAL),
     m_left(Gtk::ORIENTATION_VERTICAL),
     m_search_label("Search:"),
+    m_result_box(Gtk::ORIENTATION_VERTICAL),
     m_save_reset_box(Gtk::ORIENTATION_HORIZONTAL),
     m_save_button("Save Preferences"),
     m_reset_button("Reset to Defaults")
@@ -70,17 +71,72 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
     {
         // Build a config search field
         {
-#if 0
             m_search_frame.add(m_search_box);
 
             m_config_search.signal_activate().connect([this]() {
                 auto&& text = m_config_search.get_text();
 
+                WRITE_DEBUG("Searching for ", text);
+
+                // First clear out the old results window
+                m_result_links.clear();
+
+                // Re-use the config_updaters map since it has all possible
+                //   config paths
+                for(auto&& [path, _] : m_config_updaters) {
+                    // Skip this path if 'text' is not somewhere in 'path'
+                    if(path.find(text) == std::string::npos) {
+                        continue;
+                    }
+
+                    WRITE_DEBUG("Found matching path '", path, '\'');
+
+                    m_result_links.push_back(Gtk::LinkButton(path, path));
+
+                    auto& link_button = m_result_links.back();
+
+                    const auto& _path = path;
+
+                    // When a link is clicked, go to that section
+                    link_button.signal_clicked().connect([this, _path]() {
+                        WRITE_DEBUG("Navigating to config option at ", _path);
+
+                        std::string sec_name;
+                        std::string grp_name;
+                        std::string cfg_name;
+
+                        auto result = Preferences::parseValuePath(_path)
+                            .andThen<bool>([&](auto&& triple) {
+                                std::tie(sec_name, grp_name, cfg_name) = triple;
+
+                                return true;
+                            })
+                            .orElse(false);
+
+                        if(!result) {
+                            WRITE_ERROR("Failed to parse path '", _path, "' into triple.");
+                        }
+
+                        WRITE_DEBUG("Parsed value path into (", sec_name, ',', grp_name, ',', cfg_name, ')');
+
+                        m_right.remove();
+                        m_right.add(m_groups_windows.at(sec_name));
+                    });
+
+                    m_result_box.add(link_button);
+                }
+
+                m_result_box.show_all();
+
+                m_right.remove();
+                m_right.add(m_result_window);
             });
+
+            m_result_window.add(m_result_box);
+            m_result_window.show_all();
 
             m_search_box.add(m_search_label);
             m_search_box.add(m_config_search);
-#endif
         }
 
         // Build a label to mark the Sections section

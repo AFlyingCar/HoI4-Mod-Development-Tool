@@ -10,6 +10,7 @@
 # include "gtkmm/window.h"
 # include "gtkmm/listbox.h"
 # include "gtkmm/separator.h"
+# include "gtkmm/linkbutton.h"
 # include "gtkmm/scrolledwindow.h"
 
 # include "Preferences.h"
@@ -74,6 +75,15 @@ namespace HMDT::GUI {
 
             //! The search entry field
             Gtk::Entry m_config_search;
+
+            //! A vector containing all of the search results
+            std::vector<Gtk::LinkButton> m_result_links;
+
+            //! The box containing all results
+            Gtk::Box m_result_box;
+
+            //! The window where the results are shown
+            Gtk::ScrolledWindow m_result_window;
 
             ////////////////////////////////////////////////////////////////////
 
