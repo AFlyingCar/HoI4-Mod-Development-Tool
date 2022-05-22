@@ -519,6 +519,9 @@ namespace HMDT {
 
     template<typename T>
     using Ref = std::reference_wrapper<T>;
+
+    template<typename...>
+    constexpr std::false_type alwaysFalse{};
 }
 
 #endif
