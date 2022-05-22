@@ -349,6 +349,15 @@ void HMDT::GUI::MainWindow::initializeHelpActions() {
         dialog.run();
     });
 
+    add_action("config_editor", [this]() {
+        if(m_config_editor_window == nullptr) {
+            m_config_editor_window.reset(new ConfigEditorWindow());
+            m_config_editor_window->show_all();
+        } else {
+            m_config_editor_window->present();
+        }
+    });
+
     // TODO: Link to the wiki once it is written
 }
 
