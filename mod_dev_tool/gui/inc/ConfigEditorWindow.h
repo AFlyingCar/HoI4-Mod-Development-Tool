@@ -77,7 +77,8 @@ namespace HMDT::GUI {
 
             ////////////////////////////////////////////////////////////////////
 
-            ////////////////////////////////////////////////////////////////////
+            //! The sections label
+            Gtk::Label m_sections_label;
 
             //! The sections frame, contains the list of Sections
             Gtk::Frame m_sections_frame;

@@ -12,24 +12,11 @@
 
 HMDT::GUI::ConfigEditorWindow::NamedRow::NamedRow(const std::string& name,
                                                   uint32_t font_size):
-    m_name(name),
-    m_box(Gtk::ORIENTATION_VERTICAL),
-    m_label(),
-    m_separator(Gtk::ORIENTATION_HORIZONTAL)
+    NamedRow(name)
 {
     WRITE_DEBUG("NamedRow(", m_name, ", ", font_size, ")");
 
     m_label.set_markup(std::string("<span size=\"") + std::to_string(font_size) + "\">" + name + "</span>");
-
-    m_label.set_xalign(0.0);
-
-    // Add a label for this row
-    m_box.add(m_label);
-    m_box.add(m_separator);
-
-    m_box.show_all();
-
-    add(m_box);
 }
 
 HMDT::GUI::ConfigEditorWindow::NamedRow::NamedRow(const std::string& name):
@@ -67,9 +54,11 @@ HMDT::GUI::ConfigEditorWindow::ConfigEditorWindow():
     set_default_size(662, 440);
 
     initWidgets();
-
 }
 
+/**
+ * @brief Initializes all widgets
+ */
 void HMDT::GUI::ConfigEditorWindow::initWidgets() {
     add(m_box);
 
@@ -80,13 +69,23 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
     {
         // Build a config search field
         {
+#if 0
             m_search_frame.add(m_search_box);
 
-            m_config_search.signal_changed().connect([]() {
+            m_config_search.signal_activate().connect([this]() {
+                auto&& text = m_config_search.get_text();
+
             });
 
             m_search_box.add(m_search_label);
             m_search_box.add(m_config_search);
+#endif
+        }
+
+        // Build a label to mark the Sections section
+        {
+            // 16-point font. size is in terms of 1024-th of a point
+            m_sections_label.set_markup("<span size=\"16384\"><b>Sections</b></span>");
         }
 
         // Now list all of the sections
@@ -151,6 +150,7 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
 
         // Now add the search bar and sections to the left-side
         m_left.add(m_search_frame);
+        m_left.add(m_sections_label);
         m_left.add(m_sections_frame);
 
         m_left.add(m_save_reset_box);
@@ -166,7 +166,7 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
         {
             WRITE_DEBUG("Building Groups window for Section \"", sec_name, '"');
 
-            Gtk::Box* section_box = new Gtk::Box(Gtk::ORIENTATION_VERTICAL);
+            Gtk::Box* section_box = new Gtk::Box(Gtk::ORIENTATION_VERTICAL, 15);
 
             // Get the ScrolledWindow and Box for this section's groups
             auto& swindow = m_groups_windows[sec_name];
@@ -180,6 +180,7 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
                 WRITE_DEBUG("Building frame for Group \"", grp_name, '"');
 
                 Gtk::Frame* group_frame = new Gtk::Frame;
+
                 Gtk::Box* group_frame_box = new Gtk::Box(Gtk::ORIENTATION_VERTICAL);
 
                 // Only show the title if showTitles is true and the title isn't
@@ -196,9 +197,6 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
                     WRITE_DEBUG("Not creating header for group '", grp_name, "'. showTitles=", section.showTitles);
                 }
 
-                // Add an empty label for spacing
-                group_frame_box->add(*new Gtk::Label);
-
                 for(auto&& [config_name, comment_config] : group.configs) {
                     WRITE_DEBUG("Building config \"", config_name, '"');
 
@@ -208,9 +206,6 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
 
                     buildEditorWidget(*group_frame_box, path, config_name, comment, config);
                 }
-
-                // Add an empty label for spacing
-                group_frame_box->add(*new Gtk::Label);
 
                 group_frame->add(*group_frame_box);
                 section_box->add(*group_frame);
@@ -232,25 +227,42 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
     }
 }
 
+/**
+ * @brief Builds an editor widget for the given value type
+ *
+ * @param box The box to put the editor widget into
+ * @param path The path to the config option
+ * @param name The name of the config option
+ * @param comment The comment for this config option
+ * @param default_value The default value for this config option
+ */
 void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
                                                       const std::string& path,
                                                       const std::string& name,
                                                       const std::string& comment,
                                                       Preferences::ValueVariant default_value)
 {
+    using namespace std::string_literals;
+
+    // Create a different editor widget depending on the config type expected
+    //   here
     std::visit([&](auto& value) {
         using T = std::decay_t<decltype(value)>;
 
         Gtk::Box* config_box = new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL);
 
-        Gtk::Label* lbl_value = new Gtk::Label(name + " ");
+        // Add an extra space before the name to add a bit of padding
+        Gtk::Label* lbl_value = new Gtk::Label(" "s + name + " ");
         lbl_value->set_xalign(0.0);
 
         config_box->add(*lbl_value);
 
+        // Try to find what the preference value is at path.
+        //   If one is somehow not set, then just use the default value instead
         T default_value = Preferences::getInstance().getPreferenceValue<T>(path).orElse(value);
 
         if constexpr(std::is_same_v<T, bool>) {
+            // Booleans are controlled with a simple check-button
             Gtk::CheckButton* bool_entry = new Gtk::CheckButton;
 
             bool_entry->signal_toggled().connect([bool_entry, path]() {
@@ -266,10 +278,13 @@ void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
 
             config_box->add(*bool_entry);
         } else if constexpr(std::is_integral_v<T>) {
+            // Non-Floating integrals are controlled with a constrained text-entry
             ConstrainedEntry* int_entry = new ConstrainedEntry;
             int_entry->setAllowedChars("0123456789");
             int_entry->set_placeholder_text("default: " + std::to_string(value));
 
+            // When activated, we need to determine what type of strto* function
+            //   to call.
             int_entry->signal_activate().connect([int_entry, path]() {
                 T set_value;
                 if constexpr(std::is_same_v<T, int64_t>) {
@@ -287,6 +302,7 @@ void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
                 }
             });
 
+            // Leaving the text field will _also_ set the value
             int_entry->signal_focus_out_event().connect([int_entry](GdkEventFocus*)
             {
                 int_entry->activate();
@@ -298,15 +314,20 @@ void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
 
             config_box->add(*int_entry);
         } else if constexpr(std::is_floating_point_v<T>) {
+            // Floating numbers are controlled with a constrained text-entry
             ConstrainedEntry* float_entry = new ConstrainedEntry;
             float_entry->setAllowedChars("0123456789.");
             float_entry->set_placeholder_text("default: " + std::to_string(value));
 
+            // When activated, we need to determine what type of strto* function
+            //   to call.
             float_entry->signal_activate().connect([float_entry, path]() {
                 T set_value;
                 if constexpr(std::is_same_v<T, double>) {
                     set_value = std::strtod(float_entry->get_text().c_str(), nullptr);
                 } else if constexpr(std::is_same_v<T, float>) {
+                    // We don't currently support floats in Preferences, but we
+                    //   may as well support it here type-wise just in case
                     set_value = std::strtof(float_entry->get_text().c_str(), nullptr);
                 } else {
                     // Make sure that we fail for all other integral types
@@ -319,6 +340,7 @@ void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
                 }
             });
 
+            // Leaving the text field will _also_ set the value
             float_entry->signal_focus_out_event().connect([float_entry](GdkEventFocus*)
             {
                 float_entry->activate();
@@ -331,6 +353,7 @@ void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
             config_box->add(*float_entry);
 
         } else if constexpr(std::is_same_v<T, std::string>) {
+            // Normal text is just controlled with a regular text-entry.
             Gtk::Entry* text_entry = new Gtk::Entry();
             text_entry->set_placeholder_text("default: " + value);
 
@@ -342,6 +365,7 @@ void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
                 }
             });
 
+            // Leaving the text field will _also_ set the value
             text_entry->signal_focus_out_event().connect([text_entry](GdkEventFocus*)
             {
                 text_entry->activate();
@@ -353,11 +377,15 @@ void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
 
             config_box->add(*text_entry);
         } else {
+            // Make sure we fail to compile if new types were added without also
+            //   creating a corresponding config editor here
             static_assert(alwaysFalse<T>,
                           "Unrecognized type for Preferences Value.");
         }
 
-        box.add(*config_box);
+        // Get some minimum spacing between elements to prevent things
+        //   from looking too cramped
+        box.pack_start(*config_box, false, false, 8);
     }, default_value);
 }
 
