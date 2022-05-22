@@ -79,10 +79,10 @@ namespace HMDT {
                 return m_opt.operator*();
             }
             constexpr const T&& operator*() const&& {
-                return m_opt.operator*();
+                return std::forward<T>(m_opt.operator*());
             }
             constexpr T&& operator*() && {
-                return m_opt.operator*();
+                return std::forward<T>(m_opt.operator*());
             }
 
             constexpr explicit operator bool() const noexcept {
