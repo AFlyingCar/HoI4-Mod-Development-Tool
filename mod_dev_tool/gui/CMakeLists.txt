@@ -19,6 +19,7 @@ add_library(gui STATIC
     src/IProvincePreviewDrawingArea.cpp
     src/InterruptableScrolledWindow.cpp
     src/LogViewerWindow.cpp
+    src/ConfigEditorWindow.cpp
     src/GuiUtils.cpp
     src/SelectionManager.cpp
     src/ConstrainedEntry.cpp
