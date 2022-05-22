@@ -135,10 +135,15 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
         {
             // m_reset_button.set_relief(Gtk::RELIEF_NONE);
             m_reset_button.get_style_context()->add_class(StyleClasses::DESTRUCTIVE_ACTION.data());
-            m_reset_button.signal_clicked().connect([]() {
+            m_reset_button.signal_clicked().connect([this]() {
+                // TODO: Dialog box to warn
+
                 Preferences::getInstance().resetToDefaults();
 
-                // TODO: Update all fields
+                for(auto&& [path, updater] : m_config_updaters) {
+                    WRITE_DEBUG("Updating config element ", path);
+                    updater();
+                }
             });
 
             // m_save_button.set_relief(Gtk::RELIEF_NONE);
@@ -255,7 +260,7 @@ void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
 
     // Create a different editor widget depending on the config type expected
     //   here
-    std::visit([&](auto& value) {
+    std::visit([&, this](auto& value) {
         using T = std::decay_t<decltype(value)>;
 
         Gtk::Box* config_box = new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL);
@@ -287,6 +292,13 @@ void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
                 }
             });
 
+            // Set up an updater for this entry
+            m_config_updaters[path] = [bool_entry, path]() {
+                T new_value = Preferences::getInstance().getPreferenceValue<T>(path).orElse(bool_entry->get_active());
+
+                bool_entry->set_active(new_value);
+            };
+
             bool_entry->set_active(default_value);
 
             config_box->add(*bool_entry);
@@ -296,18 +308,22 @@ void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
             int_entry->setAllowedChars("0123456789");
             int_entry->set_placeholder_text("default: " + std::to_string(value));
 
-            // When activated, we need to determine what type of strto* function
-            //   to call.
-            int_entry->signal_activate().connect([int_entry, path]() {
-                T set_value;
+            auto converter = [](const std::string& text) -> T {
                 if constexpr(std::is_same_v<T, int64_t>) {
-                    set_value = std::strtoll(int_entry->get_text().c_str(), nullptr, 10);
+                    return std::strtoll(text.c_str(), nullptr, 10);
                 } else if constexpr(std::is_same_v<T, uint64_t>) {
-                    set_value = std::strtoull(int_entry->get_text().c_str(), nullptr, 10);
+                    return std::strtoull(text.c_str(), nullptr, 10);
                 } else {
                     // Make sure that we fail for all other integral types
                     static_assert(alwaysFalse<T>, "Unrecognized integral type");
                 }
+            };
+
+            // When activated, we need to determine what type of strto* function
+            //   to call.
+            int_entry->signal_activate().connect([int_entry, path, converter]()
+            {
+                T set_value = converter(int_entry->get_text());
 
                 if(!Preferences::getInstance().setPreferenceValue(path, set_value))
                 {
@@ -322,6 +338,13 @@ void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
                 return true;
             });
 
+            // Set up an updater for this entry
+            m_config_updaters[path] = [int_entry, path, converter]() {
+                T new_value = Preferences::getInstance().getPreferenceValue<T>(path).orElse(converter(int_entry->get_text()));
+
+                int_entry->set_text(std::to_string(new_value));
+            };
+
             // Set default value
             int_entry->set_text(std::to_string(default_value));
 
@@ -332,20 +355,24 @@ void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
             float_entry->setAllowedChars("0123456789.");
             float_entry->set_placeholder_text("default: " + std::to_string(value));
 
-            // When activated, we need to determine what type of strto* function
-            //   to call.
-            float_entry->signal_activate().connect([float_entry, path]() {
-                T set_value;
+            auto converter  = [](const std::string& text) {
                 if constexpr(std::is_same_v<T, double>) {
-                    set_value = std::strtod(float_entry->get_text().c_str(), nullptr);
+                    return std::strtod(text.c_str(), nullptr);
                 } else if constexpr(std::is_same_v<T, float>) {
                     // We don't currently support floats in Preferences, but we
                     //   may as well support it here type-wise just in case
-                    set_value = std::strtof(float_entry->get_text().c_str(), nullptr);
+                    return std::strtof(text.c_str(), nullptr);
                 } else {
                     // Make sure that we fail for all other integral types
                     static_assert(alwaysFalse<T>, "Unrecognized floating type");
                 }
+            };
+
+            // When activated, we need to determine what type of strto* function
+            //   to call.
+            float_entry->signal_activate().connect([float_entry, path, converter]()
+            {
+                T set_value = converter(float_entry->get_text());
 
                 if(!Preferences::getInstance().setPreferenceValue(path, set_value))
                 {
@@ -359,6 +386,13 @@ void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
                 float_entry->activate();
                 return true;
             });
+
+            // Set up an updater for this entry
+            m_config_updaters[path] = [float_entry, path, converter]() {
+                T new_value = Preferences::getInstance().getPreferenceValue<T>(path).orElse(converter(float_entry->get_text()));
+
+                float_entry->set_text(std::to_string(new_value));
+            };
 
             // Set default value
             float_entry->set_text(std::to_string(default_value));
@@ -384,6 +418,13 @@ void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
                 text_entry->activate();
                 return true;
             });
+
+            // Set up an updater for this entry
+            m_config_updaters[path] = [text_entry, path]() {
+                T new_value = Preferences::getInstance().getPreferenceValue<T>(path).orElse(text_entry->get_text());
+
+                text_entry->set_text(new_value);
+            };
 
             // Set default value
             text_entry->set_text(default_value);

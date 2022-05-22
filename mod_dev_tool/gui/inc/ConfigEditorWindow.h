@@ -104,6 +104,11 @@ namespace HMDT::GUI {
 
             //! Resets the config values to defaults
             Gtk::Button m_reset_button;
+
+            ////////////////////////////////////////////////////////////////////
+
+            //! Map of paths to functions which update the config editor
+            std::map<std::string, std::function<void()>> m_config_updaters;
     };
 }
 
