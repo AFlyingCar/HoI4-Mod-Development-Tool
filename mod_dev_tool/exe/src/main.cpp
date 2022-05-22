@@ -67,7 +67,7 @@ PREF_BEGIN_DEF()
 
     // Debug related settings
     PREF_BEGIN_DEFINE_SECTION("Debug", "Debug related settings.")
-        PREF_SECTION_DEFINE_PROPERTY(showTitles, false)
+        PREF_SECTION_DEFINE_PROPERTY(showTitles, true)
 
         PREF_BEGIN_DEFINE_GROUP("Logging", "Logging settings.")
             PREF_DEFINE_CONFIG("logPath", "", "Overrides where the log files are written to.")
