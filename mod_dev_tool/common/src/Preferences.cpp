@@ -80,6 +80,34 @@ std::string HMDT::Preferences::buildValuePath(const std::string& section_name,
 }
 
 /**
+ * @brief Parses a value path into a triple
+ *
+ * @param path The path to parse
+ *
+ * @return A triple containing the components of the path, or std::nullopt if
+ *         'path' is not a valid path.
+ */
+auto HMDT::Preferences::parseValuePath(const std::string& path)
+    -> MonadOptional<std::tuple<std::string, std::string, std::string>>
+{
+    // There should be no more than 2 separator for SECTION.GROUP.CONFIG
+    if(std::count(path.begin(), path.end(), '.') != 2) {
+        WRITE_ERROR("Invalid path '", path, "'. Format should be 'Section.Group.Config'");
+        return std::nullopt;
+    }
+
+    // Parse out the section+group name and the config name
+    auto first_sep = path.find('.');
+    auto last_sep = path.find('.', first_sep + 1);
+
+    std::string section_name = path.substr(0, first_sep);
+    std::string group_name = path.substr(first_sep + 1, last_sep - first_sep - 1);
+    std::string config_name = path.substr(last_sep + 1);
+
+    return std::make_tuple(section_name, group_name, config_name);
+}
+
+/**
  * @brief Sets the config file location to search for. Will not be used after
  *        initialization.
  *

@@ -80,6 +80,22 @@ PREF_END_DEF();
         ASSERT_TRUE(Preferences::getInstance().isInitialized());
     }
 
+    TEST_F(PreferencesTests, ParseValueTest) {
+        std::string path1 = "Hello.World._";
+        std::string path2 = "_._._";
+        std::string path3 = "Invalid path";
+        std::string path4 = "long.invalid.path.here";
+
+        auto path_triple1 = std::make_tuple("Hello", "World", "_");
+        auto path_triple2 = std::make_tuple("_", "_", "_");
+
+        ASSERT_OPTIONAL(Preferences::parseValuePath(path1), path_triple1);
+        ASSERT_OPTIONAL(Preferences::parseValuePath(path2), path_triple2);
+
+        ASSERT_NULLOPT(Preferences::parseValuePath(path3));
+        ASSERT_NULLOPT(Preferences::parseValuePath(path4));
+    }
+
     /**
      * @brief Validates that a simple config file can be loaded by JSON
      */

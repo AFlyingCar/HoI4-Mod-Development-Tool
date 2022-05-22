@@ -80,6 +80,10 @@ namespace HMDT {
                                               const std::string&,
                                               const std::string&);
 
+            static MonadOptional<std::tuple<std::string,
+                                            std::string,
+                                            std::string>> parseValuePath(const std::string&);
+
             // Unused after initialization
             void setConfigLocation(const std::filesystem::path&);
             const std::filesystem::path& getConfigLocation() const;
