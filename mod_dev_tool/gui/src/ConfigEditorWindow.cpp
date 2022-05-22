@@ -4,6 +4,7 @@
 #include <cstdlib>
 
 #include "gtkmm/checkbutton.h"
+#include "gtkmm/messagedialog.h"
 
 #include "Preferences.h"
 
@@ -136,7 +137,23 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
             // m_reset_button.set_relief(Gtk::RELIEF_NONE);
             m_reset_button.get_style_context()->add_class(StyleClasses::DESTRUCTIVE_ACTION.data());
             m_reset_button.signal_clicked().connect([this]() {
-                // TODO: Dialog box to warn
+                Gtk::MessageDialog dialog(*this,
+                                          "This will override all settings.",
+                                          false, Gtk::MESSAGE_WARNING);
+
+                // auto confirm_button = dialog.add_button("Ok", Gtk::RESPONSE_ACCEPT);
+                // confirm_button->set_sensitive(false);
+
+                dialog.add_button("Cancel", Gtk::RESPONSE_CANCEL);
+
+                const int result = dialog.run();
+                switch(result) {
+                    case Gtk::RESPONSE_OK:
+                        break;
+                    case Gtk::RESPONSE_CANCEL:
+                    default:
+                        return;
+                }
 
                 Preferences::getInstance().resetToDefaults();
 
