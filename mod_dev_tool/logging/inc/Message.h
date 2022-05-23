@@ -9,6 +9,15 @@
 # include "Source.h"
 # include "Format.h"
 
+// Make sure we deal with this, since Win32 defines some names as macros that
+//   we want to use
+# ifdef _WIN32
+#  ifdef ERROR
+#   pragma push_macro("ERROR")
+#   undef ERROR
+#  endif
+# endif
+
 namespace HMDT::Log {
     using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
 
@@ -87,6 +96,12 @@ namespace HMDT::Log {
 namespace std {
     string to_string(const HMDT::Log::Message::Level&);
 }
+
+# ifdef _WIN32
+#  ifdef ERROR
+#   pragma pop_macro("ERROR")
+#  endif
+# endif
 
 #endif
 
