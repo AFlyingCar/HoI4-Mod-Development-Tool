@@ -12,10 +12,18 @@
 
 # include "SectionProperties.h"
 
+/**
+ * @brief Creates the IsUserFacing name for the given property
+ *
+ * @param PROP_NAME The property.
+ */
 # define HMDT_SECTION_GET_PROP_IUF_NAME(PROP_NAME) \
     CONCAT(_, CONCAT(PROP_NAME, _IsUserFacing))
 
 namespace HMDT {
+    /**
+     * @brief A class which represents the program Preferences
+     */
     class Preferences {
         public:
             /**
@@ -49,8 +57,10 @@ namespace HMDT {
              * @brief A Group of config values
              */
             struct Group {
+                //! The comment for this group
                 std::string comment;
 
+                //! The configs for this group name -> (comment, config)
                 std::map<std::string, std::pair<std::string, ValueVariant>> configs;
             };
 
@@ -58,6 +68,7 @@ namespace HMDT {
              * @brief A Section of config Groups
              */
             struct Section {
+                //! The comment for this section
                 std::string comment;
 
 # define X(TYPE, PROP_NAME, IS_USER_FACING)                          \
@@ -67,6 +78,7 @@ namespace HMDT {
                 HMDT_SECTION_PROPERTIES 
 # undef X
 
+                //! The groups for this section
                 std::map<std::string, Group> groups;
             };
 
@@ -146,6 +158,20 @@ namespace HMDT {
             void _reset() noexcept;
 
         protected:
+            /**
+             * @brief Gets a preference value.
+             *
+             * @tparam T The type that is expected from the given value path.
+             *
+             * @param value_path The path to the config value. Given in the
+             *                   format of "{Section}.{Group}.{Config}"
+             * @param section_map The SectionMap to get the value from.
+             * @param expand_envvars Whether or not to expand $ENVVARs
+             *
+             * @return An optional containing the preference value if the path
+             *         exists and if it contains the expected type, otherwise
+             *         std::nullopt is returned.
+             */
             template<typename T>
             MonadOptional<T> getPreferenceValue(const std::string& value_path,
                                                 const SectionMap& section_map,
@@ -181,6 +207,18 @@ namespace HMDT {
                     });
             }
 
+            /**
+             * @brief Parses a $ENVVAR
+             * @details If the env_var is "DEFAULT", then the default value for
+             *          value_path will be returned.
+             *
+             * @tparam T The type that is expected for the given $ENVVAR
+             * @param env_var The $ENVVAR to get
+             * @param value_path The current config value path.
+             *
+             * @return The value of the $ENVVAR, or std::nullopt if the
+             *         $ENVVAR's type doesn't match the requested type T.
+             */
             template<typename T>
             MonadOptional<T> parseEnvVar(const std::string& env_var,
                                          const std::string& value_path) const

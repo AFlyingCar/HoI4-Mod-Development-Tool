@@ -72,6 +72,15 @@ HMDT::Preferences& HMDT::Preferences::getInstance(bool try_init) {
     return instance;
 }
 
+/**
+ * @brief Builds a config value path
+ *
+ * @param section_name The section name
+ * @param group_name The group name
+ * @param config_name The config name
+ *
+ * @return A string in the format of "Section.Group.Config"
+ */
 std::string HMDT::Preferences::buildValuePath(const std::string& section_name,
                                               const std::string& group_name,
                                               const std::string& config_name)
@@ -401,9 +410,11 @@ auto HMDT::Preferences::getValueVariantForPathInSectionMap(const std::string& va
         });
 }
 
-// Load + Parse the config file, as well as all property values
-//  Note that we are not going to expand any "$" values here, that is
-//   done on 'get'
+/**
+ * @brief Loads and parses the config file, as well as all property values.
+ *
+ * @details Does not expand any "$" values here, that is done on 'get'
+ */
 void HMDT::Preferences::initialize() noexcept {
     using json = nlohmann::json;
 
@@ -499,6 +510,9 @@ void HMDT::Preferences::initialize() noexcept {
     }
 }
 
+/**
+ * @brief Resets all configs to the default settings
+ */
 void HMDT::Preferences::resetToDefaults() {
     WRITE_INFO("Resetting preferences to the defaults.");
 
@@ -506,10 +520,13 @@ void HMDT::Preferences::resetToDefaults() {
     m_dirty = false;
 }
 
+/**
+ * @brief Validates that every loaded type matches the default config types.
+ *
+ * @return True if the loaded preference types correctly match the default
+ *         preference types, false otherwise.
+ */
 bool HMDT::Preferences::validateLoadedPreferenceTypes() {
-    // Use the default preferences to validate if each type matches the type
-    //   found in the default list
-
     uint32_t errors_found = 0;
 
     for(auto&& [sec_name, section] : m_sections) {
@@ -576,6 +593,12 @@ bool HMDT::Preferences::validateLoadedPreferenceTypes() {
     return errors_found == 0;
 }
 
+/**
+ * @brief Serializes the loaded configs to JSON
+ *
+ * @param out The stream to write the JSON to.
+ * @param pretty Whether to pretty-ify the serialized JSON
+ */
 void HMDT::Preferences::writeToJson(std::ostream& out, bool pretty) const {
     // Only indent if 'pretty == true'
     uint32_t indent_amt = pretty ? 4 : 0; // TODO: 4 should be a constant
@@ -698,6 +721,13 @@ void HMDT::Preferences::writeToJson(std::ostream& out, bool pretty) const {
     out << "}" << std::endl;
 }
 
+/**
+ * @brief Serializes the loaded configs to a JSON file.
+ *
+ * @param pretty Whether to pretty-ify the serialized JSON
+ *
+ * @return True if the serialization to a file succeeded, false otherwise.
+ */
 bool HMDT::Preferences::writeToFile(bool pretty) const {
     if(m_config_path.empty()) {
         WRITE_ERROR("Cannot write preferences to config file as the path has "
@@ -720,6 +750,9 @@ bool HMDT::Preferences::writeToFile(bool pretty) const {
     }
 }
 
+/**
+ * @brief Serializes the loaded configs to the info log
+ */
 void HMDT::Preferences::writeToLog() const {
     std::stringstream ss;
     writeToJson(ss);
