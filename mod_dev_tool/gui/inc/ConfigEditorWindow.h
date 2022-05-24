@@ -24,11 +24,11 @@ namespace HMDT::GUI {
             /**
              * @brief A named ListBox row
              */
-            class NamedRow: public Gtk::ListBoxRow {
+            class SectionListRow: public Gtk::ListBoxRow {
                 public:
-                    NamedRow(const std::string&, uint32_t);
-                    NamedRow(const std::string&);
-                    ~NamedRow() = default;
+                    SectionListRow(const std::string&, uint32_t);
+                    SectionListRow(const std::string&);
+                    ~SectionListRow() = default;
 
                     const std::string& getName() const;
 

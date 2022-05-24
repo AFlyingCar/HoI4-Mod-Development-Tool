@@ -11,23 +11,19 @@
 #include "StyleClasses.h"
 #include "ConstrainedEntry.h"
 
-HMDT::GUI::ConfigEditorWindow::NamedRow::NamedRow(const std::string& name,
+HMDT::GUI::ConfigEditorWindow::SectionListRow::SectionListRow(const std::string& name,
                                                   uint32_t font_size):
-    NamedRow(name)
+    SectionListRow(name)
 {
-    WRITE_DEBUG("NamedRow(", m_name, ", ", font_size, ")");
-
     m_label.set_markup(std::string("<span size=\"") + std::to_string(font_size) + "\">" + name + "</span>");
 }
 
-HMDT::GUI::ConfigEditorWindow::NamedRow::NamedRow(const std::string& name):
+HMDT::GUI::ConfigEditorWindow::SectionListRow::SectionListRow(const std::string& name):
     m_name(name),
     m_box(Gtk::ORIENTATION_VERTICAL),
     m_label(name),
     m_separator(Gtk::ORIENTATION_HORIZONTAL)
 {
-    WRITE_DEBUG("NamedRow(", m_name, ")");
-
     m_label.set_xalign(0.0);
 
     // Add a label for this row
@@ -39,7 +35,7 @@ HMDT::GUI::ConfigEditorWindow::NamedRow::NamedRow(const std::string& name):
     add(m_box);
 }
 
-const std::string& HMDT::GUI::ConfigEditorWindow::NamedRow::getName() const {
+const std::string& HMDT::GUI::ConfigEditorWindow::SectionListRow::getName() const {
     return m_name;
 }
 
@@ -117,8 +113,6 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
                             WRITE_ERROR("Failed to parse path '", _path, "' into triple.");
                         }
 
-                        WRITE_DEBUG("Parsed value path into (", sec_name, ',', grp_name, ',', cfg_name, ')');
-
                         m_right.remove();
                         m_right.add(m_groups_windows.at(sec_name));
                     });
@@ -152,7 +146,7 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
             m_sections_list.set_selection_mode(Gtk::SELECTION_SINGLE);
             m_sections_list.signal_row_selected().connect([this](Gtk::ListBoxRow* row)
             {
-                if(auto* named_row = dynamic_cast<NamedRow*>(row);
+                if(auto* named_row = dynamic_cast<SectionListRow*>(row);
                          named_row != nullptr)
                 {
                     m_right.remove();
@@ -163,7 +157,7 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
             // Add every defined section name to the listbox
             for(auto&& [sec_name, section] : Preferences::getInstance().getDefaultSections())
             {
-                auto row = manage(new NamedRow(sec_name, 14000));
+                auto row = manage(new SectionListRow(sec_name, 14000));
 
                 if(!section.comment.empty()) {
                     row->set_tooltip_text(section.comment);
@@ -196,9 +190,6 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
                 Gtk::MessageDialog dialog(*this,
                                           "This will override all settings.",
                                           false, Gtk::MESSAGE_WARNING);
-
-                // auto confirm_button = dialog.add_button("Ok", Gtk::RESPONSE_ACCEPT);
-                // confirm_button->set_sensitive(false);
 
                 dialog.add_button("Cancel", Gtk::RESPONSE_CANCEL);
 
