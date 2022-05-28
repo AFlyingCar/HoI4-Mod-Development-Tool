@@ -1,3 +1,9 @@
+/**
+ * @file Preferences.h
+ *
+ * @brief Declares the interface for Preferences.
+ */
+
 #ifndef PREFERENCES_H
 # define PREFERENCES_H
 

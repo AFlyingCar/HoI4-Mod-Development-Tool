@@ -44,6 +44,14 @@ std::filesystem::path HMDT::UnitTests::getTestProgramPath() {
     return std::filesystem::path(path).parent_path();
 }
 
+/**
+ * @brief Registers a log output function to stdout.
+ *
+ * @param include_formatting Whether formatting should be included.
+ * @param include_prefix Whether the prefix should be included.
+ * @param include_timestamp Whether the timestamp should be included.
+ * @param include_src_info Whether source information should be included.
+ */
 void HMDT::UnitTests::registerTestLogOutputFunction(bool include_formatting,
                                                     bool include_prefix,
                                                     bool include_timestamp,

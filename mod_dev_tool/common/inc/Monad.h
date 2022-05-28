@@ -402,6 +402,11 @@ namespace HMDT {
         return lhs >= rhs.getWrapped();
     }
 
+    /**
+     * @brief Helper type wrapping a MonadOptional<std::reference_wrapper<T>>
+     *
+     * @tparam T The type to be stored in the optional
+     */
     template<typename T>
     using MonadOptionalRef = MonadOptional<std::reference_wrapper<T>>;
 }
