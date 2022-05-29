@@ -5,9 +5,9 @@
 HMDT::MapData::MapData(uint32_t width, uint32_t height):
     m_width(width),
     m_height(height),
-    m_input(new uint8_t[width * height * 3]{ 0 }),
-    m_provinces(new uint8_t[width * height * 3]{ 0 }),
-    m_province_outlines(new uint8_t[width * height * 4]{ 0 }),
+    m_input(new uint8_t[getInputSize()]{ 0 }),
+    m_provinces(new uint8_t[getProvincesSize()]{ 0 }),
+    m_province_outlines(new uint8_t[getProvinceOutlinesSize()]{ 0 }),
     m_label_matrix(nullptr),
     m_state_id_matrix(nullptr),
     m_closed(false),
@@ -29,6 +29,22 @@ uint32_t HMDT::MapData::getHeight() const {
 
 std::pair<uint32_t, uint32_t> HMDT::MapData::getDimensions() const {
     return std::make_pair(m_width, m_height);
+}
+
+uint32_t HMDT::MapData::getInputSize() const {
+    return m_width * m_height * 3;
+}
+
+uint32_t HMDT::MapData::getProvincesSize() const {
+    return m_width * m_height * 3;
+}
+
+uint32_t HMDT::MapData::getProvinceOutlinesSize() const {
+    return m_width * m_height * 4;
+}
+
+uint32_t HMDT::MapData::getMatrixSize() const {
+    return m_width * m_height;
 }
 
 bool HMDT::MapData::isClosed() const {

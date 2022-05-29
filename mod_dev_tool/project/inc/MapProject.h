@@ -103,14 +103,10 @@ namespace HMDT::Project {
             void buildProvinceCache(const Province*);
             void buildProvinceOutlines();
 
-            /**
-             * @brief A struct which holds information about shape detection
-             */
-            struct ShapeDetectionInfo {
-                ProvinceList provinces;
-                uint32_t label_matrix_size = 0;
-            } m_shape_detection_info;
+            //! The province list
+            ProvinceList m_provinces;
 
+            //! The shared map data
             std::shared_ptr<MapData> m_map_data;
 
             /**

@@ -29,6 +29,11 @@ namespace HMDT {
             uint32_t getHeight() const;
             std::pair<uint32_t, uint32_t> getDimensions() const;
 
+            uint32_t getInputSize() const;
+            uint32_t getProvincesSize() const;
+            uint32_t getProvinceOutlinesSize() const;
+            uint32_t getMatrixSize() const;
+
             bool isClosed() const;
 
             void setLabelMatrix(uint32_t[]);

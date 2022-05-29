@@ -16,7 +16,8 @@
 #include "HoI4Project.h"
 
 HMDT::Project::MapProject::MapProject(IProject& parent_project):
-    m_shape_detection_info(),
+    m_provinces(),
+    m_map_data(nullptr),
     m_continents(),
     m_terrains(getDefaultTerrains()),
     m_states(),
@@ -42,7 +43,7 @@ bool HMDT::Project::MapProject::save(const std::filesystem::path& path,
         std::filesystem::create_directory(path);
     }
 
-    if(m_shape_detection_info.provinces.empty()) {
+    if(m_provinces.empty()) {
         WRITE_DEBUG("Nothing to write!");
         return true;
     }
@@ -121,7 +122,7 @@ bool HMDT::Project::MapProject::load(const std::filesystem::path& path,
     auto graphics_data = m_map_data->getProvinces().lock();
 
     // Copy the input image's data into the input_data
-    std::copy(input_data.get(), input_data.get() + (width * height * 3), input_image->data);
+    std::copy(input_data.get(), input_data.get() + m_map_data->getInputSize(), input_image->data);
 
     // Rebuild the map_data array and the adjacency lists
     for(uint32_t x = 0; x < width; ++x) {
@@ -136,11 +137,11 @@ bool HMDT::Project::MapProject::load(const std::filesystem::path& path,
             auto label = label_matrix[lindex];
 
             // Error check
-            if(label <= 0 || label > m_shape_detection_info.provinces.size()) {
+            if(label <= 0 || label > m_provinces.size()) {
                 WRITE_WARN("Label matrix has label ", label,
                              " at position (", x, ',', y, "), which is out of "
                              "the range of valid labels [1,",
-                             m_shape_detection_info.provinces.size(), "]");
+                             m_provinces.size(), "]");
                 continue;
             }
 
@@ -164,7 +165,7 @@ bool HMDT::Project::MapProject::validateData() {
 
     bool success = true;
 
-    for(auto&& province : m_shape_detection_info.provinces) {
+    for(auto&& province : m_provinces) {
         if(province.state != -1) {
             if(!isValidStateID(province.state)) {
                 WRITE_WARN("Province has state ID of ", province.state, " which is invalid!");
@@ -233,7 +234,7 @@ bool HMDT::Project::MapProject::saveShapeLabels(const std::filesystem::path& roo
 
         // Write the entire label matrix to the file
         out.write(reinterpret_cast<const char*>(m_map_data->getLabelMatrix().lock().get()),
-                  m_shape_detection_info.label_matrix_size * sizeof(uint32_t));
+                  m_map_data->getMatrixSize() * sizeof(uint32_t));
         out << '\0';
     } else {
         ec = std::error_code(static_cast<int>(errno), std::generic_category());
@@ -259,7 +260,7 @@ bool HMDT::Project::MapProject::saveProvinceData(const std::filesystem::path& ro
 
     if(std::ofstream out(path); out) {
         // Write one line to the CSV for each province
-        for(auto&& province : m_shape_detection_info.provinces) {
+        for(auto&& province : m_provinces) {
             out << province.id << ';'
                 << static_cast<int>(province.unique_color.r) << ';'
                 << static_cast<int>(province.unique_color.g) << ';'
@@ -393,14 +394,20 @@ bool HMDT::Project::MapProject::loadShapeLabels(const std::filesystem::path& roo
             return false;
         }
 
-        auto& label_matrix_size = m_shape_detection_info.label_matrix_size;
+        // Validate that the width + height for the shape data matches what we
+        //   expect.
+        if((width * height) != m_map_data->getMatrixSize()) {
+            ec = std::make_error_code(std::errc::invalid_argument);
+            WRITE_ERROR("Loaded shape data size (", (width * height), ") does not match expected matrix size of (", m_map_data->getMatrixSize(), ")");
+            return false;
+        }
 
-        label_matrix_size = width * height;
-        m_map_data->setLabelMatrix(new uint32_t[label_matrix_size]);
+        m_map_data->setLabelMatrix(new uint32_t[m_map_data->getMatrixSize()]);
 
         auto label_matrix = m_map_data->getLabelMatrix().lock();
 
-        if(!safeRead(label_matrix.get(), label_matrix_size * sizeof(uint32_t), in)) {
+        if(!safeRead(label_matrix.get(), m_map_data->getMatrixSize() * sizeof(uint32_t), in))
+        {
             ec = std::error_code(static_cast<int>(errno), std::generic_category());
             WRITE_ERROR("Failed to read full label matrix. Reason: ", std::strerror(errno));
             return false;
@@ -434,7 +441,7 @@ bool HMDT::Project::MapProject::loadProvinceData(const std::filesystem::path& ro
         std::string line;
 
         // Make sure we don't have any provinces in the list first
-        m_shape_detection_info.provinces.clear();
+        m_provinces.clear();
 
         // Get every line from the CSV file for parsing
         for(uint32_t line_num = 1; std::getline(in, line); ++line_num) {
@@ -465,11 +472,11 @@ bool HMDT::Project::MapProject::loadProvinceData(const std::filesystem::path& ro
                 return false;
             }
 
-            m_shape_detection_info.provinces.push_back(prov);
+            m_provinces.push_back(prov);
         }
 
         WRITE_DEBUG("Loaded information for ",
-                   m_shape_detection_info.provinces.size(), " provinces");
+                   m_provinces.size(), " provinces");
     } else {
         ec = std::error_code(static_cast<int>(errno), std::generic_category());
         WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
@@ -624,9 +631,8 @@ void HMDT::Project::MapProject::importMapData(ShapeFinder&& shape_finder,
         //  TODO: Do we actually _need_ to do this?
         ShapeFinder sf(std::move(shape_finder));
 
-        m_shape_detection_info.provinces = createProvincesFromShapeList(sf.getShapes());
+        m_provinces = createProvincesFromShapeList(sf.getShapes());
         m_map_data->setLabelMatrix(sf.getLabelMatrix());
-        m_shape_detection_info.label_matrix_size = sf.getLabelMatrixSize();
 
         // Clear out the province preview data
         m_data_cache.clear();
@@ -654,19 +660,19 @@ bool HMDT::Project::MapProject::isValidStateID(StateID state_id) const {
 }
 
 bool HMDT::Project::MapProject::isValidProvinceLabel(uint32_t label) const {
-    return (label - 1) < m_shape_detection_info.provinces.size();
+    return (label - 1) < m_provinces.size();
 }
 
 auto HMDT::Project::MapProject::getProvinceForLabel(uint32_t label) const
     -> const Province&
 {
-    return m_shape_detection_info.provinces.at(label - 1);
+    return m_provinces.at(label - 1);
 }
 
 auto HMDT::Project::MapProject::getProvinceForLabel(uint32_t label)
     -> Province&
 {
-    return m_shape_detection_info.provinces.at(label - 1);
+    return m_provinces.at(label - 1);
 }
 
 const std::set<std::string>& HMDT::Project::MapProject::getContinentList() const
@@ -814,15 +820,13 @@ void HMDT::Project::MapProject::removeProvinceFromState(Province& province,
 void HMDT::Project::MapProject::updateStateIDMatrix() {
     WRITE_DEBUG("Updating State ID matrix.");
 
-    auto matrix_size = m_shape_detection_info.label_matrix_size;
-
-    uint32_t* state_id_matrix = new uint32_t[matrix_size];
+    uint32_t* state_id_matrix = new uint32_t[m_map_data->getMatrixSize()];
 
     auto label_matrix = m_map_data->getLabelMatrix().lock();
 
     auto* label_matrix_start = label_matrix.get();
 
-    parallelTransform(label_matrix_start, label_matrix_start + matrix_size,
+    parallelTransform(label_matrix_start, label_matrix_start + m_map_data->getMatrixSize(),
                       state_id_matrix,
                       [this](uint32_t prov_id) -> uint32_t {
                           if(isValidProvinceLabel(prov_id)) {
@@ -909,11 +913,11 @@ auto HMDT::Project::MapProject::getPreviewData(const Province* province_ptr)
 }
 
 auto HMDT::Project::MapProject::getProvinces() const -> const ProvinceList& {
-    return m_shape_detection_info.provinces;
+    return m_provinces;
 }
 
 auto HMDT::Project::MapProject::getProvinces() -> ProvinceList& {
-    return m_shape_detection_info.provinces;
+    return m_provinces;
 }
 
 auto HMDT::Project::MapProject::getStates() const
@@ -1078,11 +1082,11 @@ void HMDT::Project::MapProject::buildProvinceOutlines() {
             auto& province = getProvinceForLabel(label);
 
             // Error check
-            if(label <= 0 || label > m_shape_detection_info.provinces.size()) {
+            if(label <= 0 || label > m_provinces.size()) {
                 WRITE_WARN("Label matrix has label ", label,
                              " at position (", x, ',', y, "), which is out of "
                              "the range of valid labels [1,",
-                             m_shape_detection_info.provinces.size(), "]");
+                             m_provinces.size(), "]");
                 continue;
             }
 
