@@ -115,13 +115,7 @@ bool HMDT::Project::MapProject::load(const std::filesystem::path& path,
     // Rebuild the graphics data
     auto [width, height] = m_map_data->getDimensions();
 
-    // TODO: Why do we actually have to do this? For some reason everything stops
-    //  rendering correctly if we remove this line. Why? What? How?
     auto label_matrix = m_map_data->getLabelMatrix().lock();
-    auto state_id_matrix = m_map_data->getStateIDMatrix().lock();
-    m_map_data.reset(new MapData(width, height));
-    m_map_data->setLabelMatrix(label_matrix); // WHY?!!!!
-    m_map_data->setStateIDMatrix(state_id_matrix); // I'll re-iterate: WHY?!!!!
 
     auto input_data = m_map_data->getInput().lock();
     auto graphics_data = m_map_data->getProvinces().lock();
