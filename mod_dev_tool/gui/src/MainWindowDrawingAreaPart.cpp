@@ -42,7 +42,7 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
                 // If this is a valid province, then select the state that it is
                 //  a part of (if it is a part of one at all, that is)
                 if(map_project.isValidProvinceLabel(label)) {
-                    auto& prov = map_project.getProvinceForLabel(label -1);
+                    auto& prov = map_project.getProvinceForLabel(label);
 
                     // Make sure we check for if the state ID is valid first so
                     //  that we deselect the state for provinces that aren't in
