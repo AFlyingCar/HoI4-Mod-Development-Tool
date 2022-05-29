@@ -2,16 +2,42 @@
 
 #include "Util.h"
 
+HMDT::MapData::MapData():
+    m_width(0),
+    m_height(0),
+    m_input(nullptr),
+    m_provinces(nullptr),
+    m_province_outlines(nullptr),
+    m_label_matrix(nullptr),
+    m_state_id_matrix(nullptr),
+    m_closed(false),
+    m_state_id_matrix_updated_tag(0)
+{
+}
+
 HMDT::MapData::MapData(uint32_t width, uint32_t height):
     m_width(width),
     m_height(height),
     m_input(new uint8_t[getInputSize()]{ 0 }),
     m_provinces(new uint8_t[getProvincesSize()]{ 0 }),
     m_province_outlines(new uint8_t[getProvinceOutlinesSize()]{ 0 }),
-    m_label_matrix(nullptr),
-    m_state_id_matrix(nullptr),
+    m_label_matrix(new uint32_t[getMatrixSize()]{ 0 }),
+    m_state_id_matrix(new uint32_t[getMatrixSize()]{ 0 }),
     m_closed(false),
     m_state_id_matrix_updated_tag(0)
+{
+}
+
+HMDT::MapData::MapData(const MapData* other):
+    m_width(other->m_width),
+    m_height(other->m_height),
+    m_input(other->m_input),
+    m_provinces(other->m_provinces),
+    m_province_outlines(other->m_province_outlines),
+    m_label_matrix(other->m_label_matrix),
+    m_state_id_matrix(other->m_state_id_matrix),
+    m_closed(other->m_closed),
+    m_state_id_matrix_updated_tag(other->m_state_id_matrix_updated_tag)
 {
 }
 
