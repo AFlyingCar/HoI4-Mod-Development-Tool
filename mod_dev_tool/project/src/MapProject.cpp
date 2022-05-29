@@ -17,7 +17,7 @@
 
 HMDT::Project::MapProject::MapProject(IProject& parent_project):
     m_provinces(),
-    m_map_data(nullptr),
+    m_map_data(new MapData),
     m_continents(),
     m_terrains(getDefaultTerrains()),
     m_states(),
@@ -94,7 +94,11 @@ bool HMDT::Project::MapProject::load(const std::filesystem::path& path,
         auto iwidth = input_image->info_header.width;
         auto iheight = input_image->info_header.height;
 
-        m_map_data.reset(new MapData(iwidth, iheight));
+        // Do a placement new so we keep the same memory location but update all
+        //  of the data inside the shared MapData instead, so that all
+        //  references are also updated too
+        m_map_data->~MapData();
+        new (m_map_data.get()) MapData(iwidth, iheight);
     }
 
     // Now load the other related data
@@ -402,8 +406,6 @@ bool HMDT::Project::MapProject::loadShapeLabels(const std::filesystem::path& roo
             return false;
         }
 
-        m_map_data->setLabelMatrix(new uint32_t[m_map_data->getMatrixSize()]);
-
         auto label_matrix = m_map_data->getLabelMatrix().lock();
 
         if(!safeRead(label_matrix.get(), m_map_data->getMatrixSize() * sizeof(uint32_t), in))
@@ -624,7 +626,9 @@ bool HMDT::Project::MapProject::loadStateData(const std::filesystem::path& root,
 void HMDT::Project::MapProject::importMapData(ShapeFinder&& shape_finder,
                                               std::shared_ptr<MapData> map_data)
 {
-    m_map_data = map_data;
+    // Do a placement new to make sure that we use the same memory location
+    m_map_data->~MapData();
+    new (m_map_data.get()) MapData(map_data.get());
 
     {
         // We want to take ownership of all the internal data here
@@ -632,7 +636,6 @@ void HMDT::Project::MapProject::importMapData(ShapeFinder&& shape_finder,
         ShapeFinder sf(std::move(shape_finder));
 
         m_provinces = createProvincesFromShapeList(sf.getShapes());
-        m_map_data->setLabelMatrix(sf.getLabelMatrix());
 
         // Clear out the province preview data
         m_data_cache.clear();
@@ -820,14 +823,14 @@ void HMDT::Project::MapProject::removeProvinceFromState(Province& province,
 void HMDT::Project::MapProject::updateStateIDMatrix() {
     WRITE_DEBUG("Updating State ID matrix.");
 
-    uint32_t* state_id_matrix = new uint32_t[m_map_data->getMatrixSize()];
+    auto state_id_matrix = m_map_data->getStateIDMatrix().lock();
 
     auto label_matrix = m_map_data->getLabelMatrix().lock();
 
     auto* label_matrix_start = label_matrix.get();
 
     parallelTransform(label_matrix_start, label_matrix_start + m_map_data->getMatrixSize(),
-                      state_id_matrix,
+                      state_id_matrix.get(),
                       [this](uint32_t prov_id) -> uint32_t {
                           if(isValidProvinceLabel(prov_id)) {
                               return getProvinceForLabel(prov_id).state;
@@ -860,8 +863,6 @@ void HMDT::Project::MapProject::updateStateIDMatrix() {
             }
         }
     }
-
-    m_map_data->setStateIDMatrix(state_id_matrix);
 
     WRITE_DEBUG("Done updating State ID matrix.");
 }
