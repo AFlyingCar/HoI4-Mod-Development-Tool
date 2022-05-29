@@ -89,7 +89,8 @@ void HMDT::GUI::Application::on_startup() {
     createMenu("Root", "Help", {
         { "Toggle Debug Mode", "win.toggle_debug", {} },
         { "_About", "win.about", {} },
-        { "_Wiki", "win.wiki", {} }
+        { "_Wiki", "win.wiki", {} },
+        { "_Preferences", "win.config_editor", {} }
     });
 
     // Debug dump the menus

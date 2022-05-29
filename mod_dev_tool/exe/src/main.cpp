@@ -25,6 +25,7 @@
 #include "ArgParser.h"
 #include "Options.h"
 #include "Constants.h"
+#include "Preferences.h"
 
 #include "Logger.h"
 #include "ConsoleOutputFunctions.h"
@@ -32,7 +33,79 @@
 #include "Interfaces.h"
 #include "Logger.h"
 
-HMDT::ProgramOptions HMDT::prog_opts;
+namespace HMDT {
+    ProgramOptions prog_opts;
+
+    Preferences::SectionMap config_defaults =
+PREF_BEGIN_DEF()
+    // General program related settings
+    PREF_BEGIN_DEFINE_SECTION("General", "General program related settings.")
+        PREF_SECTION_DEFINE_PROPERTY(showTitles, true)
+
+        PREF_BEGIN_DEFINE_GROUP("Interface", "Settings that control the interface of the program.")
+            PREF_DEFINE_CONFIG("language", "en_US", "The language to be used.")
+        PREF_END_DEFINE_GROUP()
+    PREF_END_DEFINE_SECTION(),
+
+    // Gui related settings
+    PREF_BEGIN_DEFINE_SECTION("Gui", "Gui related settings.")
+        PREF_SECTION_DEFINE_PROPERTY(showTitles, false)
+
+        PREF_BEGIN_DEFINE_GROUP("_",)
+            PREF_DEFINE_CONFIG("darkMode", false, "Whether the program should use dark-mode.")
+        PREF_END_DEFINE_GROUP()
+    PREF_END_DEFINE_SECTION(),
+
+    // HoI4-info related settings
+    PREF_BEGIN_DEFINE_SECTION("HoI4", "Settings related to interacting with Hearts of Iron 4.")
+        PREF_SECTION_DEFINE_PROPERTY(showTitles, false)
+
+        PREF_BEGIN_DEFINE_GROUP("_",)
+            PREF_DEFINE_CONFIG("installPath", "", "The path of where Hearts of Iron 4 is installed.")
+        PREF_END_DEFINE_GROUP()
+    PREF_END_DEFINE_SECTION(),
+
+    // Debug related settings
+    PREF_BEGIN_DEFINE_SECTION("Debug", "Debug related settings.")
+        PREF_SECTION_DEFINE_PROPERTY(showTitles, true)
+
+        PREF_BEGIN_DEFINE_GROUP("Logging", "Logging settings.")
+            PREF_DEFINE_CONFIG("logPath", "", "Overrides where the log files are written to.")
+            PREF_DEFINE_CONFIG("openLogWindowOnLaunch", false, "Whether the log window should be opened on launch.")
+        PREF_END_DEFINE_GROUP()
+
+        PREF_BEGIN_DEFINE_GROUP("Graphics", "Graphical debug settings.")
+            PREF_DEFINE_CONFIG("renderAdjacenciesByDefault", false, "Whether adjacent provinces should be rendered by default.")
+        PREF_END_DEFINE_GROUP()
+    PREF_END_DEFINE_SECTION()
+PREF_END_DEF();
+
+}
+
+std::filesystem::path getAppLocalPath() {
+    std::filesystem::path applocal_path;
+#ifdef WIN32
+    TCHAR path[MAX_PATH];
+    if(SUCCEEDED(SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, path)))
+    {
+        applocal_path = path;
+    }
+
+    applocal_path = applocal_path / HMDT::APPLICATION_SIMPLE_NAME;
+#else
+    static struct passwd* user_pw = getpwuid(getuid());
+    char* home_dir = user_pw->pw_dir;
+
+    applocal_path = home_dir;
+    applocal_path = applocal_path / ".local" / HMDT::APPLICATION_SIMPLE_NAME;
+#endif
+
+    if(!std::filesystem::exists(applocal_path)) {
+        std::filesystem::create_directory(applocal_path);
+    }
+
+    return applocal_path;
+}
 
 /**
  * @brief Gets the path to the file where logs should get written to
@@ -40,30 +113,52 @@ HMDT::ProgramOptions HMDT::prog_opts;
  * @return 
  */
 std::filesystem::path getLogOutputFilePath() {
-    std::filesystem::path log_path;
-#ifdef WIN32
-    TCHAR path[MAX_PATH];
-    if(SUCCEEDED(SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, path)))
-    {
-        log_path = path;
+    return getAppLocalPath() / (HMDT::APPLICATION_SIMPLE_NAME + HMDT::LOG_FILE_EXTENSION);
+}
+
+std::filesystem::path getPreferencesPath() {
+    return getAppLocalPath() / (HMDT::APPLICATION_SIMPLE_NAME + HMDT::CONF_FILE_EXTENSION);
+}
+
+/**
+ * @brief Initializes and loads the preferences file
+ *
+ * @return True on success, false otherwise
+ */
+bool initializePreferences() {
+    // First, lets initialize the Preferences with the default values
+    HMDT::Preferences::getInstance(false).setDefaultValues(HMDT::config_defaults);
+    HMDT::Preferences::getInstance(false).resetToDefaults();
+
+    // TODO: Allow overwriting by cmd argument
+    auto pref_path = getPreferencesPath();
+
+    // Now set the Preferences path
+    HMDT::Preferences::getInstance(false).setConfigLocation(pref_path);
+
+    // Next, does the preferences file actually exist on the disk?
+    //   If not, then lets create it
+    if(!std::filesystem::exists(pref_path)) {
+        WRITE_INFO("Config file at ", pref_path,
+                   " does not exist, going to use the default values, and write"
+                   " a default file to the disk at that path.");
+
+        // But don't bother creating it if the directory it should go into does
+        //   not exist
+        if(!std::filesystem::exists(pref_path.parent_path())) {
+            WRITE_ERROR("Cannot write preferences to ", pref_path,
+                        ": Directory '", pref_path.parent_path(),
+                        "' does not exist.");
+            return false;
+        }
+
+        // Write the preferences to a file, and from here we will use the
+        //   default values
+        return HMDT::Preferences::getInstance().writeToFile(true /* pretty */);
+    } else {
+        // If it does exist on the disk, load and validate it
+        return HMDT::Preferences::getInstance().validateLoadedPreferenceTypes();
     }
-
-    log_path = log_path / HMDT::APPLICATION_SIMPLE_NAME;
-#else
-    static struct passwd* user_pw = getpwuid(getuid());
-    char* home_dir = user_pw->pw_dir;
-
-    log_path = home_dir;
-    log_path = log_path / ".local" / HMDT::APPLICATION_SIMPLE_NAME;
-#endif
-
-    if(!std::filesystem::exists(log_path)) {
-        std::filesystem::create_directory(log_path);
-    }
-
-    log_path = log_path / (HMDT::APPLICATION_SIMPLE_NAME + HMDT::LOG_FILE_EXTENSION);
-
-    return log_path;
 }
 
 /**
@@ -149,8 +244,23 @@ int main(int argc, char** argv) {
     // Parse the command-line arguments
     HMDT::prog_opts = HMDT::parseArgs(argc, argv);
 
+    if(!initializePreferences()) {
+        WRITE_ERROR("Failed to initialize preferences! Exiting...");
+        return 1;
+    }
+
     if(!HMDT::prog_opts.dont_write_logfiles) {
         auto log_output_path = getLogOutputFilePath();
+
+        // Overwrite the log path if it is specified in the log path
+        HMDT::Preferences::getInstance().getPreferenceValue<std::string>("Debug.Logging.logPath")
+            .andThen([&log_output_path](const std::string& log_path) {
+                if(!log_path.empty()) {
+                    WRITE_INFO("Overwriting log path to be '", log_path);
+                    log_output_path = log_path;
+                }
+            });
+
         log_output_file.open(log_output_path);
 
         if(!log_output_file) {

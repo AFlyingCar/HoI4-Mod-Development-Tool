@@ -12,6 +12,7 @@
 #include "Logger.h"
 #include "Util.h" // overloaded
 #include "Options.h"
+#include "Preferences.h"
 
 #include "ShapeFinder2.h" // ShapeFinder
 
@@ -348,6 +349,15 @@ void HMDT::GUI::MainWindow::initializeHelpActions() {
         dialog.run();
     });
 
+    add_action("config_editor", [this]() {
+        if(m_config_editor_window == nullptr) {
+            m_config_editor_window.reset(new ConfigEditorWindow());
+            m_config_editor_window->show_all();
+        } else {
+            m_config_editor_window->present();
+        }
+    });
+
     // TODO: Link to the wiki once it is written
 }
 
@@ -391,6 +401,26 @@ bool HMDT::GUI::MainWindow::initializeFinal() {
     set_icon(Gdk::Pixbuf::create_from_resource("/com/aflyingcar/HoI4ModDevelopmentTool/textures/logo.png"));
 
     initializeCallbacks();
+
+    Preferences::getInstance().getPreferenceValue<bool>("Debug.Logging.openLogWindowOnLaunch")
+        .andThen([this](bool open_log_window_on_launch) {
+            if(open_log_window_on_launch) {
+                auto open_log_window_action = lookup_action("log_window");
+
+                open_log_window_action->activate();
+            }
+        });
+
+
+    Preferences::getInstance().getPreferenceValue<bool>("Debug.Graphics.renderAdjacenciesByDefault")
+        .andThen([this](bool render_adjacencies_by_default) {
+            // Make sure we actually activate it if the default value is 'true'
+            if(render_adjacencies_by_default) {
+                auto render_adjacencies_action = lookup_action("debug.render_adjacencies");
+
+                render_adjacencies_action->activate();
+            }
+        });
 
     return true;
 }

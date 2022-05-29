@@ -17,6 +17,7 @@
 # include "MainWindowDrawingAreaPart.h"
 # include "MainWindowPropertiesPanePart.h"
 
+# include "ConfigEditorWindow.h"
 # include "LogViewerWindow.h"
 # include "Toolbar.h"
 
@@ -73,6 +74,9 @@ namespace HMDT::GUI {
 
             //! The window for viewing the logs
             std::unique_ptr<LogViewerWindow> m_log_viewer_window;
+
+            //! The window for editing the config
+            std::unique_ptr<ConfigEditorWindow> m_config_editor_window;
     };
 }
 
