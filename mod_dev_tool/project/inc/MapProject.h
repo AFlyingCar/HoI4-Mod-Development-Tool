@@ -109,9 +109,9 @@ namespace HMDT::Project {
             struct ShapeDetectionInfo {
                 ProvinceList provinces;
                 uint32_t label_matrix_size = 0;
-
-                std::shared_ptr<MapData> map_data;
             } m_shape_detection_info;
+
+            std::shared_ptr<MapData> m_map_data;
 
             /**
              * @brief A cache of province previews

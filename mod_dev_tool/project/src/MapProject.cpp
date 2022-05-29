@@ -73,8 +73,6 @@ bool HMDT::Project::MapProject::load(const std::filesystem::path& path,
     //  about the map itself (such as dimensions, the original color value, etc...)
     std::unique_ptr<BitMap> input_image(new BitMap);
 
-    auto& map_data = m_shape_detection_info.map_data;
-
     auto inputs_root = dynamic_cast<HoI4Project&>(m_parent_project).getInputsRoot();
     auto input_provincemap_path = inputs_root / INPUT_PROVINCEMAP_FILENAME;
     if(!std::filesystem::exists(input_provincemap_path)) {
@@ -95,7 +93,7 @@ bool HMDT::Project::MapProject::load(const std::filesystem::path& path,
         auto iwidth = input_image->info_header.width;
         auto iheight = input_image->info_header.height;
 
-        map_data.reset(new MapData(iwidth, iheight));
+        m_map_data.reset(new MapData(iwidth, iheight));
     }
 
     // Now load the other related data
@@ -115,18 +113,18 @@ bool HMDT::Project::MapProject::load(const std::filesystem::path& path,
     }
 
     // Rebuild the graphics data
-    auto [width, height] = map_data->getDimensions();
+    auto [width, height] = m_map_data->getDimensions();
 
     // TODO: Why do we actually have to do this? For some reason everything stops
     //  rendering correctly if we remove this line. Why? What? How?
-    auto label_matrix = map_data->getLabelMatrix().lock();
-    auto state_id_matrix = map_data->getStateIDMatrix().lock();
-    map_data.reset(new MapData(width, height));
-    map_data->setLabelMatrix(label_matrix); // WHY?!!!!
-    map_data->setStateIDMatrix(state_id_matrix); // I'll re-iterate: WHY?!!!!
+    auto label_matrix = m_map_data->getLabelMatrix().lock();
+    auto state_id_matrix = m_map_data->getStateIDMatrix().lock();
+    m_map_data.reset(new MapData(width, height));
+    m_map_data->setLabelMatrix(label_matrix); // WHY?!!!!
+    m_map_data->setStateIDMatrix(state_id_matrix); // I'll re-iterate: WHY?!!!!
 
-    auto input_data = map_data->getInput().lock();
-    auto graphics_data = map_data->getProvinces().lock();
+    auto input_data = m_map_data->getInput().lock();
+    auto graphics_data = m_map_data->getProvinces().lock();
 
     // Copy the input image's data into the input_data
     std::copy(input_data.get(), input_data.get() + (width * height * 3), input_image->data);
@@ -236,11 +234,11 @@ bool HMDT::Project::MapProject::saveShapeLabels(const std::filesystem::path& roo
     {
         out << SHAPEDATA_MAGIC;
 
-        writeData(out, m_shape_detection_info.map_data->getWidth(), 
-                       m_shape_detection_info.map_data->getHeight());
+        writeData(out, m_map_data->getWidth(), 
+                       m_map_data->getHeight());
 
         // Write the entire label matrix to the file
-        out.write(reinterpret_cast<const char*>(m_shape_detection_info.map_data->getLabelMatrix().lock().get()),
+        out.write(reinterpret_cast<const char*>(m_map_data->getLabelMatrix().lock().get()),
                   m_shape_detection_info.label_matrix_size * sizeof(uint32_t));
         out << '\0';
     } else {
@@ -404,9 +402,9 @@ bool HMDT::Project::MapProject::loadShapeLabels(const std::filesystem::path& roo
         auto& label_matrix_size = m_shape_detection_info.label_matrix_size;
 
         label_matrix_size = width * height;
-        m_shape_detection_info.map_data->setLabelMatrix(new uint32_t[label_matrix_size]);
+        m_map_data->setLabelMatrix(new uint32_t[label_matrix_size]);
 
-        auto label_matrix = m_shape_detection_info.map_data->getLabelMatrix().lock();
+        auto label_matrix = m_map_data->getLabelMatrix().lock();
 
         if(!safeRead(label_matrix.get(), label_matrix_size * sizeof(uint32_t), in)) {
             ec = std::error_code(static_cast<int>(errno), std::generic_category());
@@ -625,7 +623,7 @@ bool HMDT::Project::MapProject::loadStateData(const std::filesystem::path& root,
 void HMDT::Project::MapProject::importMapData(ShapeFinder&& shape_finder,
                                               std::shared_ptr<MapData> map_data)
 {
-    m_shape_detection_info.map_data = map_data;
+    m_map_data = map_data;
 
     {
         // We want to take ownership of all the internal data here
@@ -633,7 +631,7 @@ void HMDT::Project::MapProject::importMapData(ShapeFinder&& shape_finder,
         ShapeFinder sf(std::move(shape_finder));
 
         m_shape_detection_info.provinces = createProvincesFromShapeList(sf.getShapes());
-        m_shape_detection_info.map_data->setLabelMatrix(sf.getLabelMatrix());
+        m_map_data->setLabelMatrix(sf.getLabelMatrix());
         m_shape_detection_info.label_matrix_size = sf.getLabelMatrixSize();
 
         // Clear out the province preview data
@@ -644,17 +642,17 @@ void HMDT::Project::MapProject::importMapData(ShapeFinder&& shape_finder,
 }
 
 auto HMDT::Project::MapProject::getMapData() -> std::shared_ptr<MapData> {
-    return m_shape_detection_info.map_data;
+    return m_map_data;
 }
 
 auto HMDT::Project::MapProject::getMapData() const
     -> const std::shared_ptr<MapData>
 {
-    return m_shape_detection_info.map_data;
+    return m_map_data;
 }
 
 const uint32_t* HMDT::Project::MapProject::getLabelMatrix() const {
-    return m_shape_detection_info.map_data->getLabelMatrix().lock().get();
+    return m_map_data->getLabelMatrix().lock().get();
 }
 
 bool HMDT::Project::MapProject::isValidStateID(StateID state_id) const {
@@ -826,7 +824,7 @@ void HMDT::Project::MapProject::updateStateIDMatrix() {
 
     uint32_t* state_id_matrix = new uint32_t[matrix_size];
 
-    auto label_matrix = m_shape_detection_info.map_data->getLabelMatrix().lock();
+    auto label_matrix = m_map_data->getLabelMatrix().lock();
 
     auto* label_matrix_start = label_matrix.get();
 
@@ -853,7 +851,7 @@ void HMDT::Project::MapProject::updateStateIDMatrix() {
         WRITE_DEBUG("Writing state id matrix to ", fname);
 
         if(std::ofstream out(fname); out) {
-            auto [width, height] = m_shape_detection_info.map_data->getDimensions();
+            auto [width, height] = m_map_data->getDimensions();
             uint32_t i = 0;
             for(auto y = 0; y < height; ++y) {
                 for(auto x = 0; x < width; ++x) {
@@ -865,7 +863,7 @@ void HMDT::Project::MapProject::updateStateIDMatrix() {
         }
     }
 
-    m_shape_detection_info.map_data->setStateIDMatrix(state_id_matrix);
+    m_map_data->setStateIDMatrix(state_id_matrix);
 
     WRITE_DEBUG("Done updating State ID matrix.");
 }
@@ -1009,8 +1007,8 @@ void HMDT::Project::MapProject::buildProvinceCache(const Province* province_ptr)
 
     // Some references first, to make the following code easier to read
     //  id also starts at 1, so make sure we offset it down
-    auto label_matrix = m_shape_detection_info.map_data->getLabelMatrix().lock();
-    auto iwidth = m_shape_detection_info.map_data->getWidth();
+    auto label_matrix = m_map_data->getLabelMatrix().lock();
+    auto iwidth = m_map_data->getWidth();
 
     auto&& bb = province.bounding_box;
     auto&& [width, height] = calcDims(bb);
@@ -1069,11 +1067,10 @@ void HMDT::Project::MapProject::buildProvinceCache(const Province* province_ptr)
 }
 
 void HMDT::Project::MapProject::buildProvinceOutlines() {
-    auto map_data = m_shape_detection_info.map_data;
-    auto prov_outline_data = map_data->getProvinceOutlines().lock();
-    auto graphics_data = map_data->getProvinces().lock();
+    auto prov_outline_data = m_map_data->getProvinceOutlines().lock();
+    auto graphics_data = m_map_data->getProvinces().lock();
 
-    auto [width, height] = map_data->getDimensions();
+    auto [width, height] = m_map_data->getDimensions();
     Dimensions dimensions{width, height};
 
     // Go over the map again and build extra data that depends on the previously
@@ -1081,7 +1078,7 @@ void HMDT::Project::MapProject::buildProvinceOutlines() {
     for(uint32_t x = 0; x < width; ++x) {
         for(uint32_t y = 0; y < height; ++y) {
             auto lindex = xyToIndex(width, x, y);
-            auto label = m_shape_detection_info.map_data->getLabelMatrix().lock()[lindex];
+            auto label = m_map_data->getLabelMatrix().lock()[lindex];
             auto gindex = xyToIndex(width * 4, x * 4, y);
 
             auto& province = getProvinceForLabel(label);
@@ -1098,7 +1095,7 @@ void HMDT::Project::MapProject::buildProvinceOutlines() {
             // Recalculate adjacencies for this pixel
             auto is_adjacent = ShapeFinder::calculateAdjacency(dimensions,
                                                                graphics_data.get(),
-                                                               m_shape_detection_info.map_data->getLabelMatrix().lock().get(),
+                                                               m_map_data->getLabelMatrix().lock().get(),
                                                                province.adjacent_provinces,
                                                                {x, y});
             // If this pixel is adjacent to any others, then make it visible as
