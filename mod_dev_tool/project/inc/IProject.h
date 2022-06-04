@@ -8,6 +8,7 @@
 // Forward declarations
 namespace HMDT {
     class MapData;
+    class ShapeFinder;
 }
 
 namespace HMDT::Project {
@@ -26,8 +27,12 @@ namespace HMDT::Project {
     };
 
     struct IMapProject: public IProject {
+        virtual ~IMapProject() = default;
+
         virtual std::shared_ptr<MapData> getMapData() = 0;
         virtual const std::shared_ptr<MapData> getMapData() const = 0;
+
+        virtual void import(const ShapeFinder&, std::shared_ptr<MapData>) = 0;
     };
 }
 

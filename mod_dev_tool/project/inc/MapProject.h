@@ -18,6 +18,7 @@
 # include "Terrain.h"
 
 # include "IProject.h"
+# include "ProvinceProject.h"
 
 namespace HMDT::Project {
     /**
@@ -37,6 +38,7 @@ namespace HMDT::Project {
 
             virtual std::shared_ptr<MapData> getMapData() override;
             virtual const std::shared_ptr<MapData> getMapData() const override;
+            virtual void import(const ShapeFinder&, std::shared_ptr<MapData>) override {};
 
             void importMapData(ShapeFinder&&, std::shared_ptr<MapData>);
 
@@ -77,10 +79,6 @@ namespace HMDT::Project {
             void calculateCoastalProvinces(bool = false);
 
         protected:
-            bool saveShapeLabels(const std::filesystem::path&,
-                                 std::error_code&);
-            bool saveProvinceData(const std::filesystem::path&,
-                                 std::error_code&);
             bool saveContinentData(const std::filesystem::path&,
                                    std::error_code&);
             bool saveStateData(const std::filesystem::path&,
@@ -103,8 +101,8 @@ namespace HMDT::Project {
             void buildProvinceCache(const Province*);
             void buildProvinceOutlines();
 
-            //! The province list
-            ProvinceList m_provinces;
+            //! The Provinces project
+            ProvinceProject m_provinces_project;
 
             //! The shared map data
             std::shared_ptr<MapData> m_map_data;
