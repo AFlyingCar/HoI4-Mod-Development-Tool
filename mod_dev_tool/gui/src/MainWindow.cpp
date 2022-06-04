@@ -643,7 +643,7 @@ bool HMDT::GUI::MainWindow::importProvinceMap(const Glib::ustring& filename) {
 
         m_drawing_area->setMapData(map_data);
 
-        ShapeFinder shape_finder(image, GraphicsWorker::getInstance());
+        ShapeFinder shape_finder(image, GraphicsWorker::getInstance(), map_data);
 
         // Open a progress bar dialog to show the user that we are actually doing
         //  something

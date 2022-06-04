@@ -10,6 +10,7 @@
 # include <map>
 # include <unordered_map>
 # include <optional>
+# include <memory>
 
 # include "IGraphicsWorker.h"
 # include "Types.h"
@@ -17,6 +18,8 @@
 # include "Monad.h"
 
 namespace HMDT {
+    class MapData;
+
     /**
      * @brief Holds all state information about connected component labeling.
      */
@@ -35,7 +38,7 @@ namespace HMDT {
                 DONE
             };
 
-            ShapeFinder(const BitMap*, IGraphicsWorker&);
+            ShapeFinder(const BitMap*, IGraphicsWorker&, std::shared_ptr<MapData>);
             ShapeFinder(IGraphicsWorker&);
             ShapeFinder(ShapeFinder&&);
 
@@ -47,15 +50,11 @@ namespace HMDT {
 
             Stage getStage() const;
 
-            uint32_t getLabelMatrixSize();
-            uint32_t* getLabelMatrix();
             std::vector<Pixel>& getBorderPixels();
             std::map<uint32_t, Color>& getLabelToColorMap();
             PolygonList& getShapes();
 
             const BitMap* getImage() const;
-            uint32_t getLabelMatrixSize() const;
-            const uint32_t* getLabelMatrix() const;
             const std::vector<Pixel>& getBorderPixels() const;
             const std::map<uint32_t, Color>& getLabelToColorMap() const;
             const PolygonList& getShapes() const;
@@ -114,11 +113,8 @@ namespace HMDT {
             //! The image to find shapes on
             const BitMap* m_image;
 
-            //! The size of the label matrix
-            uint32_t m_label_matrix_size;
-
-            //! A flat array containing the label for each pixel
-            uint32_t* m_label_matrix;
+            //! The shared map data
+            std::shared_ptr<MapData> m_map_data;
 
             //! A mapping of each label -> that label's root (key == value => key is already the root)
             std::unordered_map<uint32_t, uint32_t> m_label_parents;
