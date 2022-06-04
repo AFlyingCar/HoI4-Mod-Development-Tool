@@ -754,7 +754,7 @@ bool HMDT::GUI::MainWindow::importProvinceMap(const Glib::ustring& filename) {
         }
 
         WRITE_DEBUG("Assigning the found data to the map project.");
-        project.getMapProject().importMapData(std::move(shape_finder), map_data);
+        project.getMapProject().import(shape_finder, map_data);
 
         WRITE_INFO("Calculating coastal provinces...");
         project.getMapProject().calculateCoastalProvinces();

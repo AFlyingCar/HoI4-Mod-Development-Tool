@@ -38,9 +38,7 @@ namespace HMDT::Project {
 
             virtual std::shared_ptr<MapData> getMapData() override;
             virtual const std::shared_ptr<MapData> getMapData() const override;
-            virtual void import(const ShapeFinder&, std::shared_ptr<MapData>) override {};
-
-            void importMapData(ShapeFinder&&, std::shared_ptr<MapData>);
+            virtual void import(const ShapeFinder&, std::shared_ptr<MapData>) override;
 
             const uint32_t* getLabelMatrix() const;
 

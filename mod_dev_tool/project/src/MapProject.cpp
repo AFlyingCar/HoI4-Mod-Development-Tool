@@ -427,18 +427,14 @@ bool HMDT::Project::MapProject::loadStateData(const std::filesystem::path& root,
  *
  * @param shape_finder The ShapeFinder to load data from
  */
-void HMDT::Project::MapProject::importMapData(ShapeFinder&& shape_finder,
-                                              std::shared_ptr<MapData> map_data)
+void HMDT::Project::MapProject::import(const ShapeFinder& sf,
+                                       std::shared_ptr<MapData> map_data)
 {
     // Do a placement new to make sure that we use the same memory location
     m_map_data->~MapData();
     new (m_map_data.get()) MapData(map_data.get());
 
     {
-        // We want to take ownership of all the internal data here
-        //  TODO: Do we actually _need_ to do this?
-        ShapeFinder sf(std::move(shape_finder));
-
         m_provinces_project.import(sf, map_data);
 
         // Clear out the province preview data
