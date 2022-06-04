@@ -23,7 +23,7 @@ namespace HMDT::Project {
     /**
      * @brief Defines a map project for HoI4
      */
-    class MapProject: public IProject {
+    class MapProject: public IMapProject {
         public:
             using ProvinceDataPtr = std::shared_ptr<unsigned char[]>;
 
@@ -35,10 +35,10 @@ namespace HMDT::Project {
             virtual bool load(const std::filesystem::path&,
                               std::error_code& = last_error) override;
 
-            void importMapData(ShapeFinder&&, std::shared_ptr<MapData>);
+            virtual std::shared_ptr<MapData> getMapData() override;
+            virtual const std::shared_ptr<MapData> getMapData() const override;
 
-            std::shared_ptr<MapData> getMapData();
-            const std::shared_ptr<MapData> getMapData() const;
+            void importMapData(ShapeFinder&&, std::shared_ptr<MapData>);
 
             const uint32_t* getLabelMatrix() const;
 

@@ -1,8 +1,14 @@
 #ifndef IPROJECT_H
 # define IPROJECT_H
 
-#include <filesystem>
-#include <system_error>
+# include <filesystem>
+# include <system_error>
+# include <memory>
+
+// Forward declarations
+namespace HMDT {
+    class MapData;
+}
 
 namespace HMDT::Project {
     /**
@@ -17,6 +23,11 @@ namespace HMDT::Project {
                           std::error_code& = last_error) = 0;
         virtual bool load(const std::filesystem::path&,
                           std::error_code& = last_error) = 0;
+    };
+
+    struct IMapProject: public IProject {
+        virtual std::shared_ptr<MapData> getMapData() = 0;
+        virtual const std::shared_ptr<MapData> getMapData() const = 0;
     };
 }
 
