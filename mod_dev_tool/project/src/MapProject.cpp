@@ -164,6 +164,8 @@ bool HMDT::Project::MapProject::validateData() {
 
     bool success = true;
 
+    success = success && m_provinces_project.validateData();
+
     for(auto&& province : m_provinces_project.getProvinces()) {
         if(province.state != -1) {
             if(!isValidStateID(province.state)) {
@@ -442,6 +444,16 @@ void HMDT::Project::MapProject::import(const ShapeFinder& sf,
     }
 
     buildProvinceOutlines();
+}
+
+auto HMDT::Project::MapProject::getProvinceProject() -> ProvinceProject& {
+    return m_provinces_project;
+}
+
+auto HMDT::Project::MapProject::getProvinceProject() const
+    -> const ProvinceProject&
+{
+    return m_provinces_project;
 }
 
 auto HMDT::Project::MapProject::getMapData() -> std::shared_ptr<MapData> {

@@ -22,6 +22,8 @@ namespace HMDT::Project {
             virtual std::shared_ptr<MapData> getMapData() override;
             virtual const std::shared_ptr<MapData> getMapData() const override;
 
+            virtual bool validateData() override;
+
             ProvinceList& getProvinces();
             const ProvinceList& getProvinces() const;
 

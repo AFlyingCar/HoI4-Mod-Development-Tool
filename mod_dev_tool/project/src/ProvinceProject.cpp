@@ -44,6 +44,11 @@ void HMDT::Project::ProvinceProject::import(const ShapeFinder& sf, std::shared_p
     m_provinces = createProvincesFromShapeList(sf.getShapes());
 }
 
+bool HMDT::Project::ProvinceProject::validateData() {
+    // We have nothing to really validate here
+    return true;
+}
+
 auto HMDT::Project::ProvinceProject::getMapData() -> std::shared_ptr<MapData> {
     return m_parent_project.getMapData();
 }

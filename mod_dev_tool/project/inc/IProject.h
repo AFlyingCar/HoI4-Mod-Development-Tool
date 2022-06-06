@@ -33,6 +33,8 @@ namespace HMDT::Project {
         virtual const std::shared_ptr<MapData> getMapData() const = 0;
 
         virtual void import(const ShapeFinder&, std::shared_ptr<MapData>) = 0;
+
+        virtual bool validateData() = 0;
     };
 }
 

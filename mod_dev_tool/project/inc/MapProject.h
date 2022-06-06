@@ -39,6 +39,10 @@ namespace HMDT::Project {
             virtual std::shared_ptr<MapData> getMapData() override;
             virtual const std::shared_ptr<MapData> getMapData() const override;
             virtual void import(const ShapeFinder&, std::shared_ptr<MapData>) override;
+            virtual bool validateData() override;
+
+            ProvinceProject& getProvinceProject();
+            const ProvinceProject& getProvinceProject() const;
 
             const uint32_t* getLabelMatrix() const;
 
@@ -90,8 +94,6 @@ namespace HMDT::Project {
                                    std::error_code&);
             bool loadStateData(const std::filesystem::path&,
                                std::error_code&);
-
-            bool validateData();
 
             void updateStateIDMatrix();
 
