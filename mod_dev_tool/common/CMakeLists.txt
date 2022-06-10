@@ -39,6 +39,8 @@ add_library(common STATIC
     src/Constants.cpp
     src/MapData.cpp
     src/Preferences.cpp
+    src/StatusCategory.cpp
+    src/StatusCodes.cpp
 
     "${CMAKE_BINARY_DIR}/ToolsVersion.h"
 )
