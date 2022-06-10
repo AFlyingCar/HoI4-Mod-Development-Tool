@@ -21,5 +21,13 @@
 
 # define ON_STATIC_INIT_END_BLOCK } HMDT_UNIQUE_NAME(___ON_STATIC_INIT_INSTANCE___)
 
+# ifndef UNREACHABLE
+#  ifdef __GNUC__
+#   define UNREACHABLE() __builtin_unreachable()
+#  else
+#   define UNREACHABLE()
+#  endif
+# endif
+
 #endif
 
