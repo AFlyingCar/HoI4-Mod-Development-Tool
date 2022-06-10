@@ -6,6 +6,7 @@
 #include "Util.h"
 #include "Monad.h"
 #include "Maybe.h"
+#include "StatusCodes.h"
 
 #include "TestOverrides.h"
 #include "TestUtils.h"
@@ -400,6 +401,13 @@ TEST(UtilTests, BasicMaybeTest) {
     ASSERT_EQ(v3.error(), std::make_error_code(std::errc::io_error));
 
     HMDT::Log::Logger::getInstance().reset();
+}
+
+TEST(UtilTests, StatusCodeTests) {
+    HMDT::MaybeVoid result = HMDT::STATUS_SUCCESS;
+
+    ASSERT_FALSE(result.has_value());
+    ASSERT_EQ(result.error().value(), static_cast<int>(HMDT::StatusCode::SUCCESS));
 }
 
 TEST(UtilTests, SimpleParallelTransformTest) {
