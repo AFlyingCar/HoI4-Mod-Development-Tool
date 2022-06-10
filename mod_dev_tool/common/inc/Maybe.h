@@ -260,6 +260,19 @@ namespace HMDT {
 }
 
 /**
+ * @brief Evaluates to true if the MAYBE has a value or if the stored error_code
+ *        is 0
+ */
+# define IS_SUCCESS(MAYBE) \
+    ( MAYBE .has_value() || MAYBE .error().value() == 0 )
+
+/**
+ * @brief Negation of IS_SUCCESS()
+ */
+# define IS_FAILURE(MAYBE) \
+    ( ! IS_SUCCESS(MAYBE) )
+
+/**
  * @brief Logs an error code to ERROR
  *
  * @param ERROR_CODE The error code to log
@@ -292,7 +305,7 @@ namespace HMDT {
  */
 # define RETURN_IF_ERROR(MAYBE)                                               \
     do {                                                                      \
-        if(! MAYBE .has_value()) {                                            \
+        if(IS_FAILURE(MAYBE)) {                                               \
             WRITE_ERROR_CODE( MAYBE .error() );                               \
             return HMDT::Maybe<std::monostate>( MAYBE .error());              \
         }                                                                     \
@@ -312,6 +325,7 @@ namespace HMDT {
             RETURN_ERROR( ERROR_CODE );                                    \
         }                                                                  \
     } while(0)
+
 
 #endif
 
