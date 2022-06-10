@@ -85,24 +85,12 @@ namespace HMDT {
 
             template<typename U = T>
             Maybe(const Maybe<U>& maybe):
-                MonadOptional<T>(maybe.getWrapped()),
-                m_ec(maybe.error())
-            { }
-
-            template<>
-            Maybe(const Maybe<std::monostate>& maybe):
-                MonadOptional<T>(std::nullopt), m_ec(maybe.error())
+                Maybe<T>(maybe, Identity_t<U>{})
             { }
 
             template<typename U = T>
             Maybe(Maybe<U>&& maybe):
-                MonadOptional<T>(std::move(maybe)),
-                m_ec(std::move(maybe.error()))
-            { }
-
-            template<>
-            Maybe(Maybe<std::monostate>&& maybe):
-                MonadOptional<T>(std::nullopt), m_ec(std::move(maybe.error()))
+                Maybe<T>(std::move(maybe), Identity_t<U>{})
             { }
 
             Maybe(std::error_code ec):
@@ -124,11 +112,41 @@ namespace HMDT {
 
             ////////////////////////////////////////////////////////////////////
 
+            /**
+             * @brief Gets the error code held by this Maybe
+             *
+             * @return The error code held by this Maybe.
+             */
             const std::error_code& error() const {
                 return m_ec;
             }
 
         private:
+            // Note that we have to do this private constructor thing rather
+            //   than just specialization due to a GCC bug that prevents
+            //   specialization in non-namespace scopes
+
+            template<typename U = T>
+            Maybe(const Maybe<U>& maybe, Identity_t<U>):
+                MonadOptional<T>(maybe.getWrapped()),
+                m_ec(maybe.error())
+            { }
+
+            Maybe(const Maybe<std::monostate>& maybe, Identity_t<std::monostate>):
+                MonadOptional<T>(std::nullopt), m_ec(maybe.error())
+            { }
+
+            template<typename U = T>
+            Maybe(Maybe<U>&& maybe, Identity_t<U>):
+                MonadOptional<T>(std::move(maybe)),
+                m_ec(std::move(maybe.error()))
+            { }
+
+            Maybe(Maybe<std::monostate>&& maybe, Identity_t<std::monostate>):
+                MonadOptional<T>(std::nullopt), m_ec(std::move(maybe.error()))
+            { }
+
+            //! The std::error_code held by this Maybe
             std::error_code m_ec;
     };
 
