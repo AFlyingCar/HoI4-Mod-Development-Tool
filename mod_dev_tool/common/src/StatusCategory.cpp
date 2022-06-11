@@ -39,7 +39,7 @@ bool HMDT::StatusCategory::equivalent(int code,
 
 std::string HMDT::StatusCategory::message(int code) const {
 #define X(SYMBOL, VALUE, DESCRIPTION) \
-    case StatusCode:: SYMBOL : return STR(SYMBOL) " (" STR(VALUE) "): " DESCRIPTION ;
+    case StatusCode:: SYMBOL : return DESCRIPTION ;
 
     switch(static_cast<StatusCode>(code)) {
         HMDT_STATUS_CODES()
