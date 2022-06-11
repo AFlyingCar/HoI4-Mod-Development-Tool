@@ -274,11 +274,12 @@ namespace HMDT {
 
 /**
  * @brief Logs an error code to ERROR
+ * @details Writes "Returning error - [{CATEGORY_NAME}] 0x{CODE} '{MESSAGE}'
  *
  * @param ERROR_CODE The error code to log
  */
 # define WRITE_ERROR_CODE(ERROR_CODE) \
-    WRITE_ERROR("Returning error ", ( ERROR_CODE ))
+    WRITE_ERROR("Returning error - [", ( ERROR_CODE ).category().name(), "] 0x", FHEX(( ERROR_CODE ).value()), " '", ( ERROR_CODE ).message(), "'")
 
 /**
  * @brief Returns an ERROR_CODE from the current function.
