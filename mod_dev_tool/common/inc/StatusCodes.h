@@ -12,6 +12,9 @@ namespace HMDT {
 # define X(SYMBOL, VALUE, DESCRIPTION) \
     SYMBOL = VALUE,
 
+    /**
+     * @brief An enum representation of each available status code
+     */
     enum class StatusCode {
         HMDT_STATUS_CODES()
     };
