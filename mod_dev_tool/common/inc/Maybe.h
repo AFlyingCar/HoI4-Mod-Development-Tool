@@ -307,8 +307,7 @@ namespace HMDT {
 # define RETURN_IF_ERROR(MAYBE)                                               \
     do {                                                                      \
         if(IS_FAILURE(MAYBE)) {                                               \
-            WRITE_ERROR_CODE( MAYBE .error() );                               \
-            return HMDT::Maybe<std::monostate>( MAYBE .error());              \
+            RETURN_ERROR( MAYBE .error() );                                   \
         }                                                                     \
     } while(0)
 
