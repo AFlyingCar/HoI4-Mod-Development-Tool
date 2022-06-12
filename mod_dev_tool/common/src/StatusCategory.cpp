@@ -5,6 +5,8 @@
 #include "Constants.h"
 #include "PreprocessorUtils.h"
 
+#include "Logger.h"
+
 HMDT::StatusCategory::StatusCategory() noexcept { }
 
 const char* HMDT::StatusCategory::name() const noexcept {
@@ -18,11 +20,16 @@ std::error_condition HMDT::StatusCategory::default_error_condition(int code) con
 
     switch(static_cast<StatusCode>(code)) {
         HMDT_STATUS_CODES()
+
+        // Note that we need this default _JUST IN CASE_ 'code' somehow is an
+        //   invalid enum value.
+        default:
+            WRITE_ERROR("Invalid error code '", code,
+                        "'. Representing with generic_category instead.");
+            return std::error_condition(code, std::generic_category());
     }
 
 #undef X
-
-    UNREACHABLE();
 }
 
 bool HMDT::StatusCategory::equivalent(const std::error_code& code,
@@ -43,11 +50,14 @@ std::string HMDT::StatusCategory::message(int code) const {
 
     switch(static_cast<StatusCode>(code)) {
         HMDT_STATUS_CODES()
+
+        // Note that we need this default _JUST IN CASE_ 'code' somehow is an
+        //   invalid enum value.
+        default:
+            return std::generic_category().message(code);
     }
 
 #undef X
-
-    UNREACHABLE();
 }
 
 const HMDT::StatusCategory& HMDT::getStatusCategory() {

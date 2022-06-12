@@ -5,6 +5,9 @@
 # include <string>
 
 namespace HMDT {
+    /**
+     * @brief The HMDT Status category
+     */
     class StatusCategory: public std::error_category {
         public:
             StatusCategory() noexcept;
