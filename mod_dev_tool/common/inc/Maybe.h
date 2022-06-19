@@ -47,6 +47,7 @@
 # define MAYBE_H
 
 # include "Monad.h"
+# include "TypeTraits.h"
 
 namespace HMDT {
     /**
