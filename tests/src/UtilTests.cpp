@@ -369,22 +369,24 @@ TEST(UtilTests, MaybeConvertTest) {
     //   ASSERT_*
     HMDT::Maybe<int> maybe = mono_maybe;
     HMDT::Maybe<int> maybe2(mono_maybe);
-    // TODO: Test std::move
-    // HMDT::Maybe<int> maybe3(std::move(HMDT::Maybe<std::monostate>{}));
 
+    // Prevent warnings because we aren't actually using either value
     (void)(maybe);
     (void)(maybe2);
 }
 
 TEST(UtilTests, BasicMaybeTest) {
+    // We also want to see log outputs in the test output
     HMDT::UnitTests::registerTestLogOutputFunction(true, true, true, true);
 
+    // Test RETURN_ERROR
     auto v1 = []() {
         RETURN_ERROR(std::make_error_code(std::errc::io_error));
     }();
     ASSERT_FALSE(v1.has_value());
     ASSERT_EQ(v1.error(), std::make_error_code(std::errc::io_error));
 
+    // Test RETURN_ERROR_IF
     auto v2 = []() -> HMDT::Maybe<int> {
         RETURN_ERROR_IF(false, std::make_error_code(std::errc::io_error));
 
@@ -392,6 +394,7 @@ TEST(UtilTests, BasicMaybeTest) {
     }();
     ASSERT_TRUE(v2.has_value());
 
+    // Test RETURN_IF_ERROR
     auto v3 = [&v1]() -> HMDT::Maybe<int> {
         RETURN_IF_ERROR(v1);
 

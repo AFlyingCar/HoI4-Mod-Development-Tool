@@ -15,7 +15,7 @@
  *     HMDT::Maybe<int> loadData(const std::filesystem::path& file_path) {
  *         // Return an error code if the file does not exist, otherwise we'll
  *         //   continue on
- *         RETURN_ERROR_IF(std::filesystem::exists(file_path), HMDT::ErrorCodes::FILE_NOT_FOUND);
+ *         RETURN_ERROR_IF(!std::filesystem::exists(file_path), HMDT::ErrorCodes::FILE_NOT_FOUND);
  *
  *         // Load some data...
  *         //       ...
