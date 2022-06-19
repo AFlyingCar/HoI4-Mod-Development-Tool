@@ -5,6 +5,8 @@
 
 #include "Util.h"
 #include "Monad.h"
+#include "Maybe.h"
+#include "StatusCodes.h"
 
 #include "TestOverrides.h"
 #include "TestUtils.h"
@@ -357,6 +359,58 @@ TEST(UtilTests, MonadOrElseTest) {
         .orElse<float>([]() { return 3.1415f; });
     ASSERT_TRUE(opt_value4);
     ASSERT_EQ(opt_value4.value(), 3.1415f);
+}
+
+TEST(UtilTests, MaybeConvertTest) {
+    HMDT::Maybe<std::monostate> mono_maybe{};
+
+    // Test each conversion
+    //  This will fail to compile if code is incorrect, so no need to do any
+    //   ASSERT_*
+    HMDT::Maybe<int> maybe = mono_maybe;
+    HMDT::Maybe<int> maybe2(mono_maybe);
+
+    // Prevent warnings because we aren't actually using either value
+    (void)(maybe);
+    (void)(maybe2);
+}
+
+TEST(UtilTests, BasicMaybeTest) {
+    // We also want to see log outputs in the test output
+    HMDT::UnitTests::registerTestLogOutputFunction(true, true, true, true);
+
+    // Test RETURN_ERROR
+    auto v1 = []() {
+        RETURN_ERROR(std::make_error_code(std::errc::io_error));
+    }();
+    ASSERT_FALSE(v1.has_value());
+    ASSERT_EQ(v1.error(), std::make_error_code(std::errc::io_error));
+
+    // Test RETURN_ERROR_IF
+    auto v2 = []() -> HMDT::Maybe<int> {
+        RETURN_ERROR_IF(false, std::make_error_code(std::errc::io_error));
+
+        return 5;
+    }();
+    ASSERT_TRUE(v2.has_value());
+
+    // Test RETURN_IF_ERROR
+    auto v3 = [&v1]() -> HMDT::Maybe<int> {
+        RETURN_IF_ERROR(v1);
+
+        return 5;
+    }();
+    ASSERT_FALSE(v3.has_value());
+    ASSERT_EQ(v3.error(), std::make_error_code(std::errc::io_error));
+
+    HMDT::Log::Logger::getInstance().reset();
+}
+
+TEST(UtilTests, StatusCodeTests) {
+    HMDT::MaybeVoid result = HMDT::STATUS_SUCCESS;
+
+    ASSERT_FALSE(result.has_value());
+    ASSERT_EQ(result.error().value(), static_cast<int>(HMDT::StatusCode::SUCCESS));
 }
 
 TEST(UtilTests, SimpleParallelTransformTest) {

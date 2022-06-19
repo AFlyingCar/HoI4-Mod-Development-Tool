@@ -44,6 +44,9 @@ namespace HMDT {
     //! A simplified application name
     const std::string APPLICATION_SIMPLE_NAME = "hoi4_mod_dev_tool";
 
+    //! The name of the status category
+    const std::string_view STATUS_CATEGORY_NAME = "HMDT Status";
+
     //! The Gtk ID of the application
     const std::string APPLICATION_ID = "com.aflyingcar.tool.hoi4_mod_dev_tool";
 
