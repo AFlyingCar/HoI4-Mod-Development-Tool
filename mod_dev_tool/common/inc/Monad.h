@@ -14,6 +14,7 @@
 
 # include <optional>
 # include <functional>
+# include <variant> // std::monostate
 
 namespace HMDT {
     /**
