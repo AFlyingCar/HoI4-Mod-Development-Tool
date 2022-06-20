@@ -11,9 +11,14 @@
 #ifndef STATUS_CODES_DEF_H
 # define STATUS_CODES_DEF_H
 
+# include <system_error>
+
 // Calls X(SYMBOL, VALUE, "Description")
 # define HMDT_STATUS_CODES()                                                   \
     X(SUCCESS, 0, "Success")                                                   \
+                                                                               \
+    /* Project Error Codes */                                                  \
+    X(PROJECT_VALIDATION_FAILED, 1, "Project Validation Failed.")              \
 
 #endif
 
