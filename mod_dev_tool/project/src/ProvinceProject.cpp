@@ -8,6 +8,7 @@
 #include "Constants.h"
 #include "MapData.h"
 #include "Util.h"
+#include "StatusCodes.h"
 
 #include "ShapeFinder2.h"
 
@@ -22,21 +23,36 @@ HMDT::Project::ProvinceProject::ProvinceProject(IMapProject& parent_project):
 HMDT::Project::ProvinceProject::~ProvinceProject() {
 }
 
-bool HMDT::Project::ProvinceProject::save(const std::filesystem::path& path,
-                                          std::error_code& ec)
+auto HMDT::Project::ProvinceProject::save(const std::filesystem::path& path)
+    -> MaybeVoid
 {
     if(m_provinces.empty()) {
         WRITE_DEBUG("Nothing to write!");
-        return true;
+        return STATUS_SUCCESS;
     }
 
-    return saveShapeLabels(path, ec) && saveProvinceData(path, ec);
+    auto shapelabels_result = saveShapeLabels(path);
+    RETURN_IF_ERROR(shapelabels_result);
+
+    auto provdata_result = saveProvinceData(path);
+    RETURN_IF_ERROR(provdata_result);
+
+    return STATUS_SUCCESS;
 }
 
-bool HMDT::Project::ProvinceProject::load(const std::filesystem::path& path,
-                                          std::error_code& ec)
+auto HMDT::Project::ProvinceProject::load(const std::filesystem::path& path)
+    -> MaybeVoid
 {
-    return loadProvinceData(path, ec) && loadShapeLabels(path, ec);
+    auto provdata_result = loadProvinceData(path);
+    if(provdata_result.error() == std::errc::no_such_file_or_directory) {
+        provdata_result = STATUS_SUCCESS;
+    }
+    RETURN_IF_ERROR(provdata_result);
+
+    auto shapelabels_result = loadShapeLabels(path);
+    RETURN_IF_ERROR(shapelabels_result);
+
+    return STATUS_SUCCESS;
 }
 
 void HMDT::Project::ProvinceProject::import(const ShapeFinder& sf, std::shared_ptr<MapData>)
@@ -66,8 +82,8 @@ auto HMDT::Project::ProvinceProject::getMapData() const
  *
  * @return True if the data was able to be successfully written, false otherwise.
  */
-bool HMDT::Project::ProvinceProject::saveShapeLabels(const std::filesystem::path& root,
-                                                std::error_code& ec)
+auto HMDT::Project::ProvinceProject::saveShapeLabels(const std::filesystem::path& root)
+    -> MaybeVoid
 {
     auto path = root / SHAPEDATA_FILENAME;
 
@@ -84,12 +100,11 @@ bool HMDT::Project::ProvinceProject::saveShapeLabels(const std::filesystem::path
                   getMapData()->getMatrixSize() * sizeof(uint32_t));
         out << '\0';
     } else {
-        ec = std::error_code(static_cast<int>(errno), std::generic_category());
-        WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
-        return false;
+        WRITE_ERROR("Failed to open file ", path);
+        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
     }
 
-    return true;
+    return STATUS_SUCCESS;
 }
 
 /**
@@ -100,8 +115,8 @@ bool HMDT::Project::ProvinceProject::saveShapeLabels(const std::filesystem::path
  *
  * @return True if the file was able to be successfully written, false otherwise.
  */
-bool HMDT::Project::ProvinceProject::saveProvinceData(const std::filesystem::path& root,
-                                                 std::error_code& ec)
+auto HMDT::Project::ProvinceProject::saveProvinceData(const std::filesystem::path& root)
+    -> MaybeVoid
 {
     auto path = root / PROVINCEDATA_FILENAME;
 
@@ -124,12 +139,11 @@ bool HMDT::Project::ProvinceProject::saveProvinceData(const std::filesystem::pat
                 << std::endl;
         }
     } else {
-        ec = std::error_code(static_cast<int>(errno), std::generic_category());
-        WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
-        return false;
+        WRITE_ERROR("Failed to open file ", path);
+        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
     }
 
-    return true;
+    return STATUS_SUCCESS;
 }
 
 /**
@@ -139,14 +153,16 @@ bool HMDT::Project::ProvinceProject::saveProvinceData(const std::filesystem::pat
  *
  * @return True if the data was able to be loaded successfully, false otherwise
  */
-bool HMDT::Project::ProvinceProject::loadShapeLabels(const std::filesystem::path& root,
-                                                std::error_code& ec)
+auto HMDT::Project::ProvinceProject::loadShapeLabels(const std::filesystem::path& root)
+    -> MaybeVoid
 {
     auto path = root / SHAPEDATA_FILENAME;
 
-    if(!std::filesystem::exists(path)) {
+    if(std::error_code ec; !std::filesystem::exists(path, ec)) {
+        RETURN_ERROR_IF(ec.value() != 0, ec);
+
         WRITE_WARN("File ", path, " does not exist.");
-        return false;
+        return std::make_error_code(std::errc::no_such_file_or_directory);
     } else if(std::ifstream in(path, std::ios::binary | std::ios::in); in) {
         unsigned char magic[4];
         uint32_t width = 0;
@@ -155,34 +171,30 @@ bool HMDT::Project::ProvinceProject::loadShapeLabels(const std::filesystem::path
         // Read in all header information first, and make sure that we were 
         //  successful
         if(!safeRead(in, &magic, &width, &height)) {
-            ec = std::error_code(static_cast<int>(errno), std::generic_category());
-            WRITE_ERROR("Failed to read in header information. Reason: ", std::strerror(errno));
-            return false;
+            WRITE_ERROR("Failed to read in header information.");
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
         }
 
         // Validate that the width + height for the shape data matches what we
         //   expect.
         if((width * height) != getMapData()->getMatrixSize()) {
-            ec = std::make_error_code(std::errc::invalid_argument);
             WRITE_ERROR("Loaded shape data size (", (width * height), ") does not match expected matrix size of (", getMapData()->getMatrixSize(), ")");
-            return false;
+            RETURN_ERROR(std::make_error_code(std::errc::invalid_argument));
         }
 
         auto label_matrix = getMapData()->getLabelMatrix().lock();
 
         if(!safeRead(label_matrix.get(), getMapData()->getMatrixSize() * sizeof(uint32_t), in))
         {
-            ec = std::error_code(static_cast<int>(errno), std::generic_category());
-            WRITE_ERROR("Failed to read full label matrix. Reason: ", std::strerror(errno));
-            return false;
+            WRITE_ERROR("Failed to read full label matrix.");
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
         }
     } else {
-        ec = std::error_code(static_cast<int>(errno), std::generic_category());
-        WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
-        return false;
+        WRITE_ERROR("Failed to open file ", path);
+        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
     }
 
-    return true;
+    return STATUS_SUCCESS;
 }
 
 /**
@@ -193,14 +205,16 @@ bool HMDT::Project::ProvinceProject::loadShapeLabels(const std::filesystem::path
  *
  * @return True if the file was able to be successfully loaded, false otherwise.
  */
-bool HMDT::Project::ProvinceProject::loadProvinceData(const std::filesystem::path& root,
-                                                 std::error_code& ec)
+auto HMDT::Project::ProvinceProject::loadProvinceData(const std::filesystem::path& root)
+    -> MaybeVoid
 {
     auto path = root / PROVINCEDATA_FILENAME;
 
-    if(!std::filesystem::exists(path, ec)) {
+    if(std::error_code ec; !std::filesystem::exists(path, ec)) {
+        RETURN_ERROR_IF(ec.value() != 0, ec);
+
         WRITE_WARN("File ", path, " does not exist.");
-        return false;
+        return std::make_error_code(std::errc::no_such_file_or_directory);
     } else if(std::ifstream in(path); in) {
         std::string line;
 
@@ -231,9 +245,8 @@ bool HMDT::Project::ProvinceProject::loadProvinceData(const std::filesystem::pat
                                                 &prov.bounding_box.top_right.y,
                                                 &prov.state, true))
             {
-                ec = std::make_error_code(std::errc::bad_message);
                 WRITE_ERROR("Failed to parse line #", line_num, ": '", line, "'");
-                return false;
+                RETURN_ERROR(std::make_error_code(std::errc::bad_message));
             }
 
             m_provinces.push_back(prov);
@@ -242,12 +255,11 @@ bool HMDT::Project::ProvinceProject::loadProvinceData(const std::filesystem::pat
         WRITE_DEBUG("Loaded information for ",
                    m_provinces.size(), " provinces");
     } else {
-        ec = std::error_code(static_cast<int>(errno), std::generic_category());
-        WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
-        return false;
+        WRITE_ERROR("Failed to open file ", path);
+        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
     }
 
-    return true;
+    return STATUS_SUCCESS;
 }
 
 HMDT::ProvinceList& HMDT::Project::ProvinceProject::getProvinces() {

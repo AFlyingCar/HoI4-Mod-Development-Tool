@@ -39,8 +39,8 @@ namespace HMDT::Project {
 
             MapProject& getMapProject();
 
-            bool load(std::error_code& = last_error);
-            bool save(bool = true, std::error_code& = last_error);
+            MaybeVoid load();
+            MaybeVoid save(bool = true);
 
             void setPath(const std::filesystem::path&);
             void setName(const std::string&);
@@ -53,13 +53,10 @@ namespace HMDT::Project {
             void setHoI4Version(const Version&);
 
         protected:
-            bool save(const std::filesystem::path&, bool,
-                      std::error_code& = last_error);
+            MaybeVoid save(const std::filesystem::path&, bool);
 
-            virtual bool save(const std::filesystem::path&,
-                              std::error_code& = last_error) override;
-            virtual bool load(const std::filesystem::path&,
-                              std::error_code& = last_error) override;
+            virtual MaybeVoid save(const std::filesystem::path&) override;
+            virtual MaybeVoid load(const std::filesystem::path&) override;
 
         private:
             //! The path to the project file (The .hoi4proj file)

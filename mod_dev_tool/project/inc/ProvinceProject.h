@@ -13,10 +13,8 @@ namespace HMDT::Project {
             ProvinceProject(IMapProject&);
             virtual ~ProvinceProject();
 
-            virtual bool save(const std::filesystem::path&,
-                              std::error_code& = last_error) override;
-            virtual bool load(const std::filesystem::path&,
-                              std::error_code& = last_error) override;
+            virtual MaybeVoid save(const std::filesystem::path&) override;
+            virtual MaybeVoid load(const std::filesystem::path&) override;
             virtual void import(const ShapeFinder&, std::shared_ptr<MapData>) override;
 
             virtual std::shared_ptr<MapData> getMapData() override;
@@ -28,15 +26,11 @@ namespace HMDT::Project {
             const ProvinceList& getProvinces() const;
 
         protected:
-            bool saveShapeLabels(const std::filesystem::path&,
-                                 std::error_code&);
-            bool saveProvinceData(const std::filesystem::path&,
-                                 std::error_code&);
+            MaybeVoid saveShapeLabels(const std::filesystem::path&);
+            MaybeVoid saveProvinceData(const std::filesystem::path&);
 
-            bool loadShapeLabels(const std::filesystem::path&,
-                                 std::error_code&);
-            bool loadProvinceData(const std::filesystem::path&,
-                                 std::error_code&);
+            MaybeVoid loadShapeLabels(const std::filesystem::path&);
+            MaybeVoid loadProvinceData(const std::filesystem::path&);
 
         private:
             //! The parent project that this MapProject belongs to

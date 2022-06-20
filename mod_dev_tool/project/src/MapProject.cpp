@@ -10,6 +10,7 @@
 #include "Constants.h"
 #include "Util.h"
 #include "UniqueColorGenerator.h"
+#include "StatusCodes.h"
 
 #include "ProvinceMapBuilder.h"
 
@@ -35,16 +36,24 @@ HMDT::Project::MapProject::~MapProject() {
  *
  * @return True if all data was ablee to be successfully loaded, false otherwise
  */
-bool HMDT::Project::MapProject::save(const std::filesystem::path& path,
-                                     std::error_code& ec)
+auto HMDT::Project::MapProject::save(const std::filesystem::path& path)
+    -> MaybeVoid
 {
     if(!std::filesystem::exists(path)) {
         WRITE_DEBUG("Creating directory ", path);
         std::filesystem::create_directory(path);
     }
 
-    return m_provinces_project.save(path, ec) &&
-           saveContinentData(path, ec) && saveStateData(path, ec);
+    auto provinces_result = m_provinces_project.save(path);
+    RETURN_IF_ERROR(provinces_result);
+
+    auto continents_result = saveContinentData(path);
+    RETURN_IF_ERROR(continents_result);
+
+    auto states_result = saveStateData(path);
+    RETURN_IF_ERROR(states_result);
+
+    return STATUS_SUCCESS;
 }
 
 /**
@@ -54,15 +63,16 @@ bool HMDT::Project::MapProject::save(const std::filesystem::path& path,
  *
  * @return True if all data was able to be successfully loaded, false otherwise
  */
-bool HMDT::Project::MapProject::load(const std::filesystem::path& path,
-                                     std::error_code& ec)
+auto HMDT::Project::MapProject::load(const std::filesystem::path& path)
+    -> MaybeVoid
 {
     // If there is no root path for this subproject, then don't bother trying
     //  to load
-    if(!std::filesystem::exists(path)) {
-        // Do not set an error_code as there was no error, but return false
-        //  because we are not actually loading any data
-        return false;
+    if(std::error_code ec; !std::filesystem::exists(path, ec)) {
+        RETURN_ERROR_IF(ec.value() != 0, ec);
+
+        WRITE_WARN("File ", path, " does not exist.");
+        return std::make_error_code(std::errc::no_such_file_or_directory);
     }
 
     // First we try to load the input map back up, as it holds important info
@@ -72,18 +82,16 @@ bool HMDT::Project::MapProject::load(const std::filesystem::path& path,
     auto inputs_root = dynamic_cast<HoI4Project&>(m_parent_project).getInputsRoot();
     auto input_provincemap_path = inputs_root / INPUT_PROVINCEMAP_FILENAME;
     if(!std::filesystem::exists(input_provincemap_path)) {
-        ec = std::make_error_code(std::errc::no_such_file_or_directory);
         WRITE_WARN("Source import image does not exist, unable to finish loading data.");
-        return false;
+        RETURN_ERROR(std::make_error_code(std::errc::no_such_file_or_directory));
     } else {
         readBMP(input_provincemap_path, input_image.get());
 
         if(input_image == nullptr) {
             // TODO: We should instead pass ec into readBMP() and let it set ec
             //  to whatever might be appropriate
-            ec = std::make_error_code(std::errc::io_error);
             WRITE_WARN("Failed to read imported image.");
-            return false;
+            RETURN_ERROR(std::make_error_code(std::errc::io_error));
         }
 
         auto iwidth = input_image->info_header.width;
@@ -98,18 +106,20 @@ bool HMDT::Project::MapProject::load(const std::filesystem::path& path,
 
     // Now load the other related data
     // This data is required
-    if(!m_provinces_project.load(path, ec)) {
-        return false;
-    }
+    RETURN_IF_ERROR(m_provinces_project.load(path));
 
     // This data is not required (only fail if loading it failed), not if it 
     //  doesn't exist
-    if(!loadContinentData(path, ec) && ec.value() != 0) {
-        return false;
+    if(auto result = loadContinentData(path);
+            result.error() != std::errc::no_such_file_or_directory)
+    {
+        RETURN_IF_ERROR(result);
     }
 
-    if(!loadStateData(path, ec) && ec.value() != 0) {
-        return false;
+    if(auto result = loadStateData(path);
+            result.error() != std::errc::no_such_file_or_directory)
+    {
+        RETURN_IF_ERROR(result);
     }
 
     // Rebuild the graphics data
@@ -156,7 +166,9 @@ bool HMDT::Project::MapProject::load(const std::filesystem::path& path,
 
     buildProvinceOutlines();
 
-    return validateData();
+    RETURN_ERROR_IF(!validateData(), STATUS_PROJECT_VALIDATION_FAILED);
+
+    return STATUS_SUCCESS;
 }
 
 bool HMDT::Project::MapProject::validateData() {
@@ -221,8 +233,8 @@ bool HMDT::Project::MapProject::validateData() {
  *
  * @return True if continent data was successfully loaded, false otherwise
  */
-bool HMDT::Project::MapProject::saveContinentData(const std::filesystem::path& root,
-                                                  std::error_code& ec)
+auto HMDT::Project::MapProject::saveContinentData(const std::filesystem::path& root)
+    -> MaybeVoid
 {
     auto path = root / CONTINENTDATA_FILENAME;
 
@@ -232,12 +244,11 @@ bool HMDT::Project::MapProject::saveContinentData(const std::filesystem::path& r
             out << continent << '\n';
         }
     } else {
-        ec = std::error_code(static_cast<int>(errno), std::generic_category());
         WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
-        return false;
+        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
     }
 
-    return true;
+    return STATUS_SUCCESS;
 }
 
 /**
@@ -248,8 +259,8 @@ bool HMDT::Project::MapProject::saveContinentData(const std::filesystem::path& r
  *
  * @return True if state data was successfully saved, false otherwise
  */
-bool HMDT::Project::MapProject::saveStateData(const std::filesystem::path& root,
-                                              std::error_code& ec)
+auto HMDT::Project::MapProject::saveStateData(const std::filesystem::path& root)
+    -> MaybeVoid
 {
     auto path = root / STATEDATA_FILENAME;
 
@@ -284,12 +295,11 @@ bool HMDT::Project::MapProject::saveStateData(const std::filesystem::path& root,
             out << std::endl;
         }
     } else {
-        ec = std::error_code(static_cast<int>(errno), std::generic_category());
-        WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
-        return false;
+        WRITE_ERROR("Failed to open file ", path);
+        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
     }
 
-    return true;
+    return STATUS_SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -302,17 +312,19 @@ bool HMDT::Project::MapProject::saveStateData(const std::filesystem::path& root,
  *
  * @return True if data was loaded correctly, false otherwise
  */
-bool HMDT::Project::MapProject::loadContinentData(const std::filesystem::path& root,
-                                                  std::error_code& ec)
+auto HMDT::Project::MapProject::loadContinentData(const std::filesystem::path& root)
+    -> MaybeVoid
 {
     auto path = root / CONTINENTDATA_FILENAME;
 
     // If the file doesn't exist, then return false (we didn't actually load it
     //  after all), but don't set the error code as it is expected that the
     //  file may not exist
-    if(!std::filesystem::exists(path)) {
+    if(std::error_code ec; !std::filesystem::exists(path, ec)) {
+        RETURN_ERROR_IF(ec.value() != 0, ec);
+
         WRITE_WARN("No data to load! No continents currently exist!");
-        return false;
+        return std::make_error_code(std::errc::no_such_file_or_directory);
     }
 
     if(std::ifstream in(path); in) {
@@ -323,12 +335,11 @@ bool HMDT::Project::MapProject::loadContinentData(const std::filesystem::path& r
             m_continents.insert(line);
         }
     } else {
-        ec = std::error_code(static_cast<int>(errno), std::generic_category());
-        WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
-        return false;
+        WRITE_ERROR("Failed to open file ", path);
+        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
     }
 
-    return true;
+    return STATUS_SUCCESS;
 }
 
 /**
@@ -339,17 +350,19 @@ bool HMDT::Project::MapProject::loadContinentData(const std::filesystem::path& r
  *
  * @return True if data was loaded correctly, false otherwise
  */
-bool HMDT::Project::MapProject::loadStateData(const std::filesystem::path& root,
-                                              std::error_code& ec)
+auto HMDT::Project::MapProject::loadStateData(const std::filesystem::path& root)
+        -> MaybeVoid
 {
     auto path = root / STATEDATA_FILENAME;
 
     // If the file doesn't exist, then return false (we didn't actually load it
     //  after all), but don't set the error code as it is expected that the
     //  file may not exist
-    if(!std::filesystem::exists(path)) {
+    if(std::error_code ec; !std::filesystem::exists(path, ec)) {
+        RETURN_ERROR_IF(ec.value() != 0, ec);
+
         WRITE_WARN("No data to load! No states currently exist!");
-        return false;
+        return std::make_error_code(std::errc::no_such_file_or_directory);
     }
 
     if(std::ifstream in(path); in) {
@@ -376,9 +389,8 @@ bool HMDT::Project::MapProject::loadStateData(const std::filesystem::path& root,
                                                  &state.color.g, true,
                                                  &state.color.b, true))
             {
-                ec = std::make_error_code(std::errc::bad_message);
                 WRITE_ERROR("Failed to parse line #", line_num, ": '", line, "'");
-                return false;
+                RETURN_ERROR(std::make_error_code(std::errc::bad_message));
             }
 
             // If we did not load a state color, then the color should be 0,0,0
@@ -415,12 +427,11 @@ bool HMDT::Project::MapProject::loadStateData(const std::filesystem::path& root,
 
         updateStateIDMatrix();
     } else {
-        ec = std::error_code(static_cast<int>(errno), std::generic_category());
         WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
-        return false;
+        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
     }
 
-    return true;
+    return STATUS_SUCCESS;
 }
 
 /**

@@ -10,6 +10,7 @@
 
 #include "Logger.h"
 #include "Constants.h"
+#include "StatusCodes.h"
 
 HMDT::Project::HoI4Project::HoI4Project():
     m_path(),
@@ -109,8 +110,8 @@ auto HMDT::Project::HoI4Project::getMapProject() -> MapProject& {
  *
  * @return True if the project file could be loaded correctly, false otherwise.
  */
-bool HMDT::Project::HoI4Project::load(const std::filesystem::path& path,
-                                      std::error_code& ec)
+auto HMDT::Project::HoI4Project::load(const std::filesystem::path& path)
+    -> MaybeVoid
 {
     using json = nlohmann::json;
 
@@ -182,8 +183,7 @@ bool HMDT::Project::HoI4Project::load(const std::filesystem::path& path,
             WRITE_WARN("\t", ss.str());
         }
     } else {
-        ec = std::error_code(static_cast<int>(errno), std::generic_category());
-        return false;
+        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
     }
 
     // If the data isn't there, we can still finish successfully loading, but we
@@ -194,21 +194,14 @@ bool HMDT::Project::HoI4Project::load(const std::filesystem::path& path,
                    " is missing. This folder contains the actual project "
                    "data, so it missing could imply a loss of data. Please "
                    "verify this path.");
-        return true;
+        return STATUS_SUCCESS;
     }
 
     // Load in sub-projects
-    m_map_project.load(getMapRoot(), ec);
+    auto map_result = m_map_project.load(getMapRoot());
+    RETURN_IF_ERROR(map_result);
 
-    // Force a return true if there is no error code, as subprojects can load
-    //  nothing without that necessarily being a failure
-    if(ec.value() == 0) {
-        return true;
-    }
-
-    // If any of them have a non-0 error code though, then that means something
-    //  _must_ have gone wrong
-    return false;
+    return STATUS_SUCCESS;
 }
 
 /**
@@ -218,10 +211,10 @@ bool HMDT::Project::HoI4Project::load(const std::filesystem::path& path,
  *
  * @return True if the project was successfully saved, false otherwise.
  */
-bool HMDT::Project::HoI4Project::save(const std::filesystem::path& path,
-                                      std::error_code& ec)
+auto HMDT::Project::HoI4Project::save(const std::filesystem::path& path)
+    -> MaybeVoid
 {
-    return save(path, true, ec);
+    return save(path, true);
 }
 
 /**
@@ -242,9 +235,9 @@ bool HMDT::Project::HoI4Project::save(const std::filesystem::path& path,
  *
  * @return 
  */
-bool HMDT::Project::HoI4Project::save(const std::filesystem::path& path,
-                                      bool do_save_subprojects,
-                                      std::error_code& ec)
+auto HMDT::Project::HoI4Project::save(const std::filesystem::path& path,
+                                      bool do_save_subprojects)
+    -> MaybeVoid
 {
     using json = nlohmann::json;
 
@@ -259,9 +252,8 @@ bool HMDT::Project::HoI4Project::save(const std::filesystem::path& path,
 
         out << std::setw(4) << proj << std::endl;
     } else {
-        ec = std::error_code(static_cast<int>(errno), std::generic_category());
         WRITE_ERROR("Failed to write file to ", path, ". Reason: ", std::strerror(errno));
-        return false;
+        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
     }
 
     // Make the directory that the sub-projects will get saved to
@@ -270,21 +262,22 @@ bool HMDT::Project::HoI4Project::save(const std::filesystem::path& path,
     }
 
     if(!do_save_subprojects) {
-        return true;
+        return STATUS_SUCCESS;
     }
 
     // Save sub-projects
-    return m_map_project.save(getMapRoot(), ec);
+    auto map_result = m_map_project.save(getMapRoot());
+    RETURN_IF_ERROR(map_result);
+
+    return STATUS_SUCCESS;
 }
 
-bool HMDT::Project::HoI4Project::load(std::error_code& ec) {
-    return load(m_path, ec);
+HMDT::MaybeVoid HMDT::Project::HoI4Project::load() {
+    return load(m_path);
 }
 
-bool HMDT::Project::HoI4Project::save(bool do_save_subprojects,
-                                      std::error_code& ec)
-{
-    return save(m_path, do_save_subprojects, ec);
+HMDT::MaybeVoid HMDT::Project::HoI4Project::save(bool do_save_subprojects) {
+    return save(m_path, do_save_subprojects);
 }
 
 /**

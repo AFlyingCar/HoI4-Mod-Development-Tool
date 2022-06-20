@@ -31,10 +31,8 @@ namespace HMDT::Project {
             MapProject(IProject&);
             virtual ~MapProject();
 
-            virtual bool save(const std::filesystem::path&,
-                              std::error_code& = last_error) override;
-            virtual bool load(const std::filesystem::path&,
-                              std::error_code& = last_error) override;
+            virtual MaybeVoid save(const std::filesystem::path&) override;
+            virtual MaybeVoid load(const std::filesystem::path&) override;
 
             virtual std::shared_ptr<MapData> getMapData() override;
             virtual const std::shared_ptr<MapData> getMapData() const override;
@@ -81,19 +79,13 @@ namespace HMDT::Project {
             void calculateCoastalProvinces(bool = false);
 
         protected:
-            bool saveContinentData(const std::filesystem::path&,
-                                   std::error_code&);
-            bool saveStateData(const std::filesystem::path&,
-                               std::error_code&);
+            MaybeVoid saveContinentData(const std::filesystem::path&);
+            MaybeVoid saveStateData(const std::filesystem::path&);
 
-            bool loadShapeLabels(const std::filesystem::path&,
-                                 std::error_code&);
-            bool loadProvinceData(const std::filesystem::path&,
-                                 std::error_code&);
-            bool loadContinentData(const std::filesystem::path&,
-                                   std::error_code&);
-            bool loadStateData(const std::filesystem::path&,
-                               std::error_code&);
+            MaybeVoid loadShapeLabels(const std::filesystem::path&);
+            MaybeVoid loadProvinceData(const std::filesystem::path&);
+            MaybeVoid loadContinentData(const std::filesystem::path&);
+            MaybeVoid loadStateData(const std::filesystem::path&);
 
             void updateStateIDMatrix();
 

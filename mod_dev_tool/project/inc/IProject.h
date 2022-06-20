@@ -5,6 +5,8 @@
 # include <system_error>
 # include <memory>
 
+# include "Maybe.h"
+
 // Forward declarations
 namespace HMDT {
     class MapData;
@@ -16,14 +18,10 @@ namespace HMDT::Project {
      * @brief The interface for a project
      */
     struct IProject {
-        inline static std::error_code last_error;
-
         virtual ~IProject() = default;
 
-        virtual bool save(const std::filesystem::path&,
-                          std::error_code& = last_error) = 0;
-        virtual bool load(const std::filesystem::path&,
-                          std::error_code& = last_error) = 0;
+        virtual MaybeVoid save(const std::filesystem::path&) = 0;
+        virtual MaybeVoid load(const std::filesystem::path&) = 0;
     };
 
     struct IMapProject: public IProject {

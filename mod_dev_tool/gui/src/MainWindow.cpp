@@ -856,7 +856,7 @@ void HMDT::GUI::MainWindow::openProject() {
 
     if(!path.empty()) {
         project->setPath(path);
-        if(!project->load()) {
+        if(IS_FAILURE(project->load())) {
             Gtk::MessageDialog err_diag("Failed to open file.", false,
                                         Gtk::MESSAGE_ERROR);
             err_diag.run();
