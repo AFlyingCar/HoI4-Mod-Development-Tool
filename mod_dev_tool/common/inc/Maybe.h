@@ -106,7 +106,7 @@ namespace HMDT {
             Maybe& operator=(const Maybe& maybe) {
                 MonadOptional<T>::operator=(maybe);
 
-                m_ec = maybe.ec;
+                m_ec = maybe.m_ec;
 
                 return *this;
             }
