@@ -816,7 +816,7 @@ void HMDT::GUI::MainWindow::newProject() {
 
             // Attempt to save just the root project (this will set up the
             //  initial metadata we will need for later)
-            if(!project->save(false)) {
+            if(IS_FAILURE(project->save(false))) {
                 Gtk::MessageDialog dialog(*this, "Failed to save project.", false,
                                           Gtk::MESSAGE_ERROR);
                 dialog.run();
@@ -938,7 +938,7 @@ void HMDT::GUI::MainWindow::saveProject() {
         auto& project = opt_project->get();
 
         // Make sure the user is notified if we failed to save the project
-        if(!project.save()) {
+        if(IS_FAILURE(project.save())) {
             Gtk::MessageDialog dialog(*this, "Failed to save file.", false,
                                       Gtk::MESSAGE_ERROR);
             dialog.run();
