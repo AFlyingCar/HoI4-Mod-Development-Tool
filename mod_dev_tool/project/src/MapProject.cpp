@@ -9,7 +9,6 @@
 #include "Logger.h"
 #include "Constants.h"
 #include "Util.h"
-#include "UniqueColorGenerator.h"
 #include "StatusCodes.h"
 
 #include "ProvinceMapBuilder.h"
@@ -18,10 +17,10 @@
 
 HMDT::Project::MapProject::MapProject(IProject& parent_project):
     m_provinces_project(*this),
+    m_state_project(*this),
     m_map_data(new MapData),
     m_continents(),
     m_terrains(getDefaultTerrains()),
-    m_states(),
     m_parent_project(parent_project)
 {
 }
@@ -50,7 +49,7 @@ auto HMDT::Project::MapProject::save(const std::filesystem::path& path)
     auto continents_result = saveContinentData(path);
     RETURN_IF_ERROR(continents_result);
 
-    auto states_result = saveStateData(path);
+    auto states_result = m_state_project.save(path);
     RETURN_IF_ERROR(states_result);
 
     return STATUS_SUCCESS;
@@ -116,7 +115,7 @@ auto HMDT::Project::MapProject::load(const std::filesystem::path& path)
         RETURN_IF_ERROR(result);
     }
 
-    if(auto result = loadStateData(path);
+    if(auto result = m_state_project.load(path);
             result.error() != std::errc::no_such_file_or_directory)
     {
         RETURN_IF_ERROR(result);
@@ -200,8 +199,8 @@ bool HMDT::Project::MapProject::validateData() {
 
                     WRITE_INFO("Searching for any state that currently has this province...");
                     std::vector<ProvinceID>::iterator province_it;
-                    auto it = std::find_if(m_states.begin(),
-                                           m_states.end(),
+                    auto it = std::find_if(m_state_project.getStates().begin(),
+                                           m_state_project.getStates().end(),
                                            [&province, &province_it](auto& id_state_pair)
                                            {
                                                return (province_it = std::find(id_state_pair.second.provinces.begin(),
@@ -209,7 +208,7 @@ bool HMDT::Project::MapProject::validateData() {
                                                                                province.id)) != id_state_pair.second.provinces.end();
                                            });
 
-                    if(it == m_states.end()) {
+                    if(it == m_state_project.getStates().end()) {
                         WRITE_INFO("No states found containing this province.");
                     } else {
                         WRITE_INFO("Found state ", it->second.id, " that contains province ", province.id, ". Removing the province from the state.");
@@ -259,57 +258,6 @@ auto HMDT::Project::MapProject::saveContinentData(const std::filesystem::path& r
     return STATUS_SUCCESS;
 }
 
-/**
- * @brief Writes all state data to root/$STATEDATA_FILENAME
- *
- * @param root The root where all state data should go
- * @param ec The error code
- *
- * @return True if state data was successfully saved, false otherwise
- */
-auto HMDT::Project::MapProject::saveStateData(const std::filesystem::path& root)
-    -> MaybeVoid
-{
-    auto path = root / STATEDATA_FILENAME;
-
-    if(std::ofstream out(path); out) {
-        // FORMAT:
-        //   ID;<State Name>;MANPOWER;<CATEGORY>;BUILDINGS_MAX_LEVEL_FACTOR;IMPASSABLE;PROVID1,PROVID2,...
-
-        // TODO: We may end up supporting State history as well. If we do, then
-        //   the best way to do so while still supporting this format is to
-        //   have another file holding this info that's tied to the state
-        //   (perhaps a 'hist/<STATEID>.hist' file)
-
-        for(auto&& [_, state] : m_states) {
-            WRITE_DEBUG("Writing state ID ", state.id);
-
-            out << state.id << ';'
-                << state.name << ';'
-                << state.manpower << ';'
-                << state.category << ';'
-                << state.buildings_max_level_factor << ';'
-                << (size_t)state.impassable << ';';
-
-            for(ProvinceID p : state.provinces) {
-                out << p << ',';
-            }
-            out << ';';
-
-            out << static_cast<uint32_t>(state.color.r) << ';'
-                << static_cast<uint32_t>(state.color.g) << ';'
-                << static_cast<uint32_t>(state.color.b);
-
-            out << std::endl;
-        }
-    } else {
-        WRITE_ERROR("Failed to open file ", path);
-        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
-    }
-
-    return STATUS_SUCCESS;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -351,98 +299,6 @@ auto HMDT::Project::MapProject::loadContinentData(const std::filesystem::path& r
 }
 
 /**
- * @brief Loads all state data from a file
- *
- * @param root The root where the state data file should be found
- * @param ec The error code
- *
- * @return True if data was loaded correctly, false otherwise
- */
-auto HMDT::Project::MapProject::loadStateData(const std::filesystem::path& root)
-        -> MaybeVoid
-{
-    auto path = root / STATEDATA_FILENAME;
-
-    // If the file doesn't exist, then return false (we didn't actually load it
-    //  after all), but don't set the error code as it is expected that the
-    //  file may not exist
-    if(std::error_code ec; !std::filesystem::exists(path, ec)) {
-        RETURN_ERROR_IF(ec.value() != 0, ec);
-
-        WRITE_WARN("No data to load! No states currently exist!");
-        return std::make_error_code(std::errc::no_such_file_or_directory);
-    }
-
-    if(std::ifstream in(path); in) {
-        // FORMAT:
-        //   ID;<State Name>;MANPOWER;<CATEGORY>;BUILDINGS_MAX_LEVEL_FACTOR;IMPASSABLE;PROVID1,PROVID2,...
-        std::string line;
-        for(size_t line_num = 0; std::getline(in, line); ++line_num) {
-            if(line.empty()) continue;
-
-            std::istringstream iss(line);
-
-            State state;
-            state.color = Color{0,0,0}; // Initialize this to nothing
-
-            std::string prov_id_data;
-            if(!parseValuesSkipMissing<';'>(iss, &state.id,
-                                                 &state.name,
-                                                 &state.manpower,
-                                                 &state.category,
-                                                 &state.buildings_max_level_factor,
-                                                 &state.impassable,
-                                                 &prov_id_data, true,
-                                                 &state.color.r, true,
-                                                 &state.color.g, true,
-                                                 &state.color.b, true))
-            {
-                WRITE_ERROR("Failed to parse line #", line_num, ": '", line, "'");
-                RETURN_ERROR(std::make_error_code(std::errc::bad_message));
-            }
-
-            // If we did not load a state color, then the color should be 0,0,0
-            // In that case, we want to generate a new unique color value
-            if(state.color == Color{0,0,0}) {
-                WRITE_WARN("Saved state data did not have a color value, generating a new one...");
-                state.color = generateUniqueColor(ProvinceType::UNKNOWN);
-            } else {
-                generateUniqueColor(ProvinceType::UNKNOWN); // "generate" a color to advance the number of colors by 1
-            }
-
-            // We need to parse the provinces seperately
-            state.provinces = splitAndTransform<ProvinceID>(prov_id_data, ',',
-                    [](const std::string& v) {
-                        return std::atoi(v.c_str());
-                    });
-
-            if(m_states.count(state.id) != 0) {
-                WRITE_ERROR("Found multiple states with the same ID of ", state.id, "! We will skip the second one '", state.name, "' and keep '", m_states.at(state.id).name, '\'');
-            } else {
-                WRITE_DEBUG("Successfully loaded state ID ", state.id,
-                            " named ", state.name);
-                m_states[state.id] = state;
-            }
-        }
-
-        // Now that we've loaded every single state, we need to track which IDs
-        //  have not been used yet
-        for(StateID id = 1; id < m_states.size(); ++id) {
-            if(m_states.count(id) == 0) {
-                m_available_state_ids.push(id);
-            }
-        }
-
-        updateStateIDMatrix();
-    } else {
-        WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
-        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
-    }
-
-    return STATUS_SUCCESS;
-}
-
-/**
  * @brief Loads data out of a ShapeFinder. We invalidate the original ShapeFinder
  *        as we want to take ownership of all pointers it holds
  *
@@ -475,6 +331,14 @@ auto HMDT::Project::MapProject::getProvinceProject() const
     return m_provinces_project;
 }
 
+auto HMDT::Project::MapProject::getStateProject() -> StateProject& {
+    return m_state_project;
+}
+
+auto HMDT::Project::MapProject::getStateProject() const -> const StateProject& {
+    return m_state_project;
+}
+
 auto HMDT::Project::MapProject::getMapData() -> std::shared_ptr<MapData> {
     return m_map_data;
 }
@@ -490,7 +354,7 @@ const uint32_t* HMDT::Project::MapProject::getLabelMatrix() const {
 }
 
 bool HMDT::Project::MapProject::isValidStateID(StateID state_id) const {
-    return m_states.count(state_id) != 0;
+    return m_state_project.getStates().count(state_id) != 0;
 }
 
 bool HMDT::Project::MapProject::isValidProvinceLabel(uint32_t label) const {
@@ -534,71 +398,6 @@ bool HMDT::Project::MapProject::doesContinentExist(const std::string& continent)
 }
 
 /**
- * @brief Creates a new state composed of all provinces in province_ids.
- * @details The provinces detailed in province_ids will get removed from their
- *          original states. Note however that the original states will still
- *          exist.
- *
- * @param province_ids The list of provinces to add to the new state.
- *
- * @return The ID of the new state
- */
-auto HMDT::Project::MapProject::addNewState(const std::vector<uint32_t>& province_ids)
-    -> StateID
-{
-    RefVector<Province> provinces;
-    std::transform(province_ids.begin(), province_ids.end(),
-                   std::back_inserter(provinces),
-                   [this](uint32_t prov_id) -> std::reference_wrapper<Province> {
-                       return std::ref(getProvinceForLabel(prov_id));
-                   });
-
-    // Increment by 1 because we do not want 0 to be a state ID
-    StateID id = m_states.size() + 1;
-    if(m_available_state_ids.size() > 0) {
-        id = m_available_state_ids.front();
-        m_available_state_ids.pop();
-    }
-
-    WRITE_DEBUG("Creating new state with ID ", id);
-
-    // Make sure that the provinces are decoupled from their original state
-    for(auto&& prov : provinces) {
-        removeProvinceFromState(prov, false);
-        prov.get().state = id;
-    }
-
-    // Note that we default the name to 'STATE#'
-    using namespace std::string_literals;
-    m_states[id] = State {
-        id,
-        "STATE"s + std::to_string(id), /* name */
-        0, /* manpower */
-        "", /* category */
-        DEFAULT_BUILDINGS_MAX_LEVEL_FACTOR, /* buildings_max_level_factor */
-        false, /* impassable */
-        province_ids,
-        generateUniqueColor(ProvinceType::UNKNOWN)
-    };
-
-    updateStateIDMatrix();
-
-    return id;
-}
-
-/**
- * @brief Deletes the state at id
- *
- * @param id The ID of the state to delete
- */
-void HMDT::Project::MapProject::removeState(StateID id) {
-    m_available_state_ids.push(id);
-    m_states.erase(id);
-
-    updateStateIDMatrix();
-}
-
-/**
  * @brief Moves a province to another state.
  *
  * @param prov_id The ID of the province to move.
@@ -621,9 +420,9 @@ void HMDT::Project::MapProject::moveProvinceToState(Province& province,
 {
     removeProvinceFromState(province);
     province.state = state_id;
-    m_states[state_id].provinces.push_back(province.id);
+    m_state_project.getStates()[state_id].provinces.push_back(province.id);
 
-    updateStateIDMatrix();
+    m_state_project.updateStateIDMatrix();
 }
 
 /**
@@ -635,9 +434,9 @@ void HMDT::Project::MapProject::removeProvinceFromState(Province& province,
                                                         bool update_state_id_matrix)
 {
     // Remove from its old state
-    if(auto prov_state_id = province.state; m_states.count(prov_state_id) != 0)
+    if(auto prov_state_id = province.state; m_state_project.getStates().count(prov_state_id) != 0)
     {
-        auto& state_provinces = m_states[prov_state_id].provinces;
+        auto& state_provinces = m_state_project.getStates()[prov_state_id].provinces;
         for(auto it = state_provinces.begin(); it != state_provinces.end(); ++it)
         {
             if(*it == province.id) {
@@ -648,54 +447,7 @@ void HMDT::Project::MapProject::removeProvinceFromState(Province& province,
     }
     province.state = -1;
 
-    if(update_state_id_matrix) updateStateIDMatrix();
-}
-
-void HMDT::Project::MapProject::updateStateIDMatrix() {
-    WRITE_DEBUG("Updating State ID matrix.");
-
-    auto state_id_matrix = m_map_data->getStateIDMatrix().lock();
-
-    auto label_matrix = m_map_data->getLabelMatrix().lock();
-
-    auto* label_matrix_start = label_matrix.get();
-
-    parallelTransform(label_matrix_start, label_matrix_start + m_map_data->getMatrixSize(),
-                      state_id_matrix.get(),
-                      [this](uint32_t prov_id) -> uint32_t {
-                          if(isValidProvinceLabel(prov_id)) {
-                              return getProvinceForLabel(prov_id).state;
-                          } else {
-                              WRITE_WARN("Invalid province ID ", prov_id,
-                                         " detected when building state id matrix. Treating as though there's no state here.");
-                              return 0;
-                          }
-                      });
-
-    if(prog_opts.debug) {
-        auto path = dynamic_cast<HoI4Project&>(m_parent_project).getMetaRoot() / "debug";
-        auto fname = path / "stateidmtx.txt";
-
-        if(!std::filesystem::exists(path)) {
-            std::filesystem::create_directory(path);
-        }
-
-        WRITE_DEBUG("Writing state id matrix to ", fname);
-
-        if(std::ofstream out(fname); out) {
-            auto [width, height] = m_map_data->getDimensions();
-            uint32_t i = 0;
-            for(auto y = 0; y < height; ++y) {
-                for(auto x = 0; x < width; ++x) {
-                    out << state_id_matrix[i] << ' ';
-                    ++i;
-                }
-                out << '\n';
-            }
-        }
-    }
-
-    WRITE_DEBUG("Done updating State ID matrix.");
+    if(update_state_id_matrix) m_state_project.updateStateIDMatrix();
 }
 
 /**
@@ -755,7 +507,7 @@ auto HMDT::Project::MapProject::getProvinces() -> ProvinceList& {
 auto HMDT::Project::MapProject::getStates() const
     -> const std::map<uint32_t, State>&
 {
-    return m_states;
+    return m_state_project.getStates();
 }
 
 /**
@@ -799,11 +551,11 @@ void HMDT::Project::MapProject::calculateCoastalProvinces(bool dry) {
 auto HMDT::Project::MapProject::getStateForID(StateID state_id) const
     -> const State&
 {
-    return m_states.at(state_id);
+    return m_state_project.getStates().at(state_id);
 }
 
 auto HMDT::Project::MapProject::getStateForID(StateID state_id) -> State& {
-    return m_states.at(state_id);
+    return m_state_project.getStates().at(state_id);
 }
 
 /**

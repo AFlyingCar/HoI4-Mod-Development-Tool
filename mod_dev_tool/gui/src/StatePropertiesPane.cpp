@@ -260,7 +260,7 @@ void HMDT::GUI::StatePropertiesPane::buildDeleteStateButton() {
                 m_state != nullptr && opt_project)
         {
             auto& map_project = opt_project->get().getMapProject();
-            map_project.removeState(m_state->id);
+            map_project.getStateProject().removeState(m_state->id);
 
             SelectionManager::getInstance().removeStateSelection(m_state->id);
         }

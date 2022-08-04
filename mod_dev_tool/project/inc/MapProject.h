@@ -2,7 +2,6 @@
 # define MAPPROJECT_H
 
 # include <set>
-# include <queue>
 # include <vector>
 # include <string>
 # include <filesystem>
@@ -19,6 +18,7 @@
 
 # include "IProject.h"
 # include "ProvinceProject.h"
+# include "StateProject.h"
 
 namespace HMDT::Project {
     /**
@@ -45,6 +45,9 @@ namespace HMDT::Project {
             ProvinceProject& getProvinceProject();
             const ProvinceProject& getProvinceProject() const;
 
+            StateProject& getStateProject();
+            const StateProject& getStateProject() const;
+
             const uint32_t* getLabelMatrix() const;
 
             bool isValidProvinceLabel(uint32_t) const;
@@ -61,9 +64,6 @@ namespace HMDT::Project {
             void addNewContinent(const std::string&);
             void removeContinent(const std::string&);
             bool doesContinentExist(const std::string&) const;
-
-            StateID addNewState(const std::vector<uint32_t>&);
-            void removeState(StateID);
 
             void moveProvinceToState(uint32_t, StateID);
             void moveProvinceToState(Province&, StateID);
@@ -83,14 +83,10 @@ namespace HMDT::Project {
 
         protected:
             MaybeVoid saveContinentData(const std::filesystem::path&);
-            MaybeVoid saveStateData(const std::filesystem::path&);
 
             MaybeVoid loadShapeLabels(const std::filesystem::path&);
             MaybeVoid loadProvinceData(const std::filesystem::path&);
             MaybeVoid loadContinentData(const std::filesystem::path&);
-            MaybeVoid loadStateData(const std::filesystem::path&);
-
-            void updateStateIDMatrix();
 
         private:
             void buildProvinceCache(const Province*);
@@ -98,6 +94,9 @@ namespace HMDT::Project {
 
             //! The Provinces project
             ProvinceProject m_provinces_project;
+
+            //! The State project
+            StateProject m_state_project;
 
             //! The shared map data
             std::shared_ptr<MapData> m_map_data;
@@ -116,12 +115,6 @@ namespace HMDT::Project {
 
             //! All terrains defined for this project
             std::vector<Terrain> m_terrains;
-
-            //! All states defined for this project
-            std::map<uint32_t, State> m_states;
-
-            //! All available state ids, which should be used before new ones
-            std::queue<StateID> m_available_state_ids;
 
             //! The parent project that this MapProject belongs to
             IProject& m_parent_project;
