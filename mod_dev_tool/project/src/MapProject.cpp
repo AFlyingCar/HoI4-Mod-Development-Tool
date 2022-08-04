@@ -223,6 +223,14 @@ bool HMDT::Project::MapProject::validateData() {
     return success;
 }
 
+HMDT::Project::IProject& HMDT::Project::MapProject::getRootParent() {
+    return m_parent_project.getRootParent();
+}
+
+HMDT::Project::IMapProject& HMDT::Project::MapProject::getRootMapParent() {
+    return *this;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 /**

@@ -52,6 +52,8 @@ namespace HMDT::Project {
             void setToolVersion(const Version&);
             void setHoI4Version(const Version&);
 
+            virtual IProject& getRootParent() override;
+
         protected:
             MaybeVoid save(const std::filesystem::path&, bool);
 

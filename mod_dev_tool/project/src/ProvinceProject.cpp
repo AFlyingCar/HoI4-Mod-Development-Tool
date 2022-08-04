@@ -65,6 +65,14 @@ bool HMDT::Project::ProvinceProject::validateData() {
     return true;
 }
 
+HMDT::Project::IProject& HMDT::Project::ProvinceProject::getRootParent() {
+    return m_parent_project.getRootParent();
+}
+
+HMDT::Project::IMapProject& HMDT::Project::ProvinceProject::getRootMapParent() {
+    return m_parent_project.getRootMapParent();
+}
+
 auto HMDT::Project::ProvinceProject::getMapData() -> std::shared_ptr<MapData> {
     return m_parent_project.getMapData();
 }

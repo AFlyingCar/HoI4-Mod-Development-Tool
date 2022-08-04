@@ -22,6 +22,8 @@ namespace HMDT::Project {
 
         virtual MaybeVoid save(const std::filesystem::path&) = 0;
         virtual MaybeVoid load(const std::filesystem::path&) = 0;
+
+        virtual IProject& getRootParent() = 0;
     };
 
     struct IMapProject: public IProject {
@@ -33,6 +35,8 @@ namespace HMDT::Project {
         virtual void import(const ShapeFinder&, std::shared_ptr<MapData>) = 0;
 
         virtual bool validateData() = 0;
+
+        virtual IMapProject& getRootMapParent() = 0;
     };
 }
 
