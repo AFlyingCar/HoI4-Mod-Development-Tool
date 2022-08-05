@@ -505,10 +505,11 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                         //   has_selections_already variables since those are
                         //   referring to provinces, so we need to do similar
                         //   calculations again but for states
+                        map_project.getStateForID(state_id).andThen([this](auto state_ref)
                         {
-                            auto* state = &map_project.getStateForID(state_id);
+                            auto* state = &state_ref.get();
                             getStatePropertiesPane().setState(state);
-                        }
+                        });
 
                         // TODO: Update state drawing area once we have that
                         //   Use different behavior for add/select

@@ -187,7 +187,7 @@ bool HMDT::Project::MapProject::validateData() {
                     WRITE_INFO("Setting province state ID to -1.");
                     province.state = -1;
                 } else if(result.error() == STATUS_PROVINCE_NOT_IN_STATE) {
-                    m_state_project.getStateForID(province.state).andThen([&](auto prov_state_ref)
+                    getStateForID(province.state).andThen([&](auto prov_state_ref)
                     {
                         auto& prov_state = prov_state_ref.get();
 
@@ -292,10 +292,6 @@ auto HMDT::Project::MapProject::getMapData() const
 
 const uint32_t* HMDT::Project::MapProject::getLabelMatrix() const {
     return m_map_data->getLabelMatrix().lock().get();
-}
-
-bool HMDT::Project::MapProject::isValidStateID(StateID state_id) const {
-    return m_state_project.isValidStateID(state_id);
 }
 
 bool HMDT::Project::MapProject::isValidProvinceLabel(uint32_t label) const {
@@ -429,9 +425,15 @@ auto HMDT::Project::MapProject::getProvinces() -> ProvinceList& {
 }
 
 auto HMDT::Project::MapProject::getStates() const
-    -> const std::map<uint32_t, State>&
+    -> const StateMap&
 {
     return m_state_project.getStates();
+}
+
+auto HMDT::Project::MapProject::getStateMap()
+    -> StateMap&
+{
+    return m_state_project.getStateMap(StateProject::Token{});
 }
 
 /**
@@ -470,18 +472,6 @@ void HMDT::Project::MapProject::calculateCoastalProvinces(bool dry) {
         }
     }
     WRITE_INFO("Done.");
-}
-
-auto HMDT::Project::MapProject::getStateForID(StateID state_id) const
-    -> const State&
-{
-    // TODO
-    return m_state_project.getStateForID(state_id)->get();
-}
-
-auto HMDT::Project::MapProject::getStateForID(StateID state_id) -> State& {
-    // TODO
-    return m_state_project.getStateForID(state_id)->get();
 }
 
 /**

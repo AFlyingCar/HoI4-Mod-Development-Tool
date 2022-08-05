@@ -148,8 +148,8 @@ auto HMDT::GUI::SelectionManager::getSelectedStates() const
         auto& mproj = opt_mproj->get();
         std::transform(m_selected_states.begin(), m_selected_states.end(),
                        std::back_inserter(states),
-                       [mproj](StateID state_id) {
-                           return std::ref(mproj.getStateForID(state_id));
+                       [mproj](StateID state_id) -> const State& {
+                           return mproj.getStateForID(state_id)->get();
                        });
     }
     return states;
@@ -167,8 +167,8 @@ auto HMDT::GUI::SelectionManager::getSelectedStates() -> RefVector<State> {
         auto& mproj = opt_mproj->get();
         std::transform(m_selected_states.begin(), m_selected_states.end(),
                        std::back_inserter(states),
-                       [&mproj](StateID state_id) {
-                           return std::ref(mproj.getStateForID(state_id));
+                       [&mproj](StateID state_id) -> State& {
+                           return mproj.getStateForID(state_id)->get();
                        });
     }
     return states;

@@ -16,9 +16,14 @@ namespace HMDT::Project {
     /**
      * @brief Defines a province project for HoI4
      */
-    class StateProject: public IMapProject {
+    class StateProject: public IMapProject, public virtual IStateProject {
         public:
-            using StateMap = std::map<uint32_t, State>;
+            struct Token {
+                private:
+                    Token() = default;
+
+                    friend MapProject;
+            };
 
             StateProject(MapProject&);
             virtual ~StateProject();
@@ -37,15 +42,10 @@ namespace HMDT::Project {
 
             MaybeVoid validateProvinceStateID(StateID, ProvinceID);
 
-            const StateMap& getStates() const;
+            virtual const StateMap& getStates() const override;
 
             StateID addNewState(const std::vector<uint32_t>&);
             void removeState(StateID);
-
-            bool isValidStateID(StateID) const;
-
-            MaybeRef<const State> getStateForID(StateID) const;
-            MaybeRef<State> getStateForID(StateID);
 
             State& getStateForIterator(StateMap::const_iterator);
             const State& getStateForIterator(StateMap::const_iterator) const;
@@ -55,8 +55,9 @@ namespace HMDT::Project {
             MaybeVoid addProvinceToState(StateID, ProvinceID);
             MaybeVoid removeProvinceFromState(StateID, ProvinceID);
 
+            StateMap& getStateMap(Token) { return getStateMap(); };
         protected:
-            StateMap& getMutableStates();
+            virtual StateMap& getStateMap() override;
 
         private:
             //! The parent project that this MapProject belongs to

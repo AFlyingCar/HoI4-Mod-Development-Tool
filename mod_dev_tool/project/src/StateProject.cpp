@@ -242,7 +242,7 @@ HMDT::Project::IMapProject& HMDT::Project::StateProject::getRootMapParent() {
     return m_parent_project.getRootMapParent();
 }
 
-auto HMDT::Project::StateProject::getMutableStates() -> StateMap& {
+auto HMDT::Project::StateProject::getStateMap() -> StateMap& {
     return m_states;
 }
 
@@ -360,33 +360,11 @@ void HMDT::Project::StateProject::removeState(StateID id) {
     updateStateIDMatrix();
 }
 
-bool HMDT::Project::StateProject::isValidStateID(StateID state_id) const {
-    return getStates().count(state_id) != 0;
-}
-
-auto HMDT::Project::StateProject::getStateForID(StateID state_id) const
-    -> MaybeRef<const State>
-{
-    if(isValidStateID(state_id)) {
-        return std::ref(getStates().at(state_id));
-    }
-    return STATUS_STATE_DOES_NOT_EXIST;
-}
-
-auto HMDT::Project::StateProject::getStateForID(StateID state_id)
-    -> MaybeRef<State>
-{
-    if(isValidStateID(state_id)) {
-        return std::ref(getMutableStates().at(state_id));
-    }
-    return STATUS_STATE_DOES_NOT_EXIST;
-}
-
 auto HMDT::Project::StateProject::getStateForIterator(StateMap::const_iterator cit)
     -> State&
 {
     // Lookup the state again using the key
-    return getMutableStates().at(cit->first);
+    return getStateMap().at(cit->first);
 }
 
 auto HMDT::Project::StateProject::getStateForIterator(StateMap::const_iterator cit) const

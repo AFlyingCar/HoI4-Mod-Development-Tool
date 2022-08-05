@@ -25,7 +25,10 @@ namespace HMDT::Project {
     /**
      * @brief Defines a map project for HoI4
      */
-    class MapProject: public IMapProject, public virtual IContinentProject {
+    class MapProject: public IMapProject,
+                      public virtual IContinentProject,
+                      public virtual IStateProject
+    {
         public:
             using ProvinceDataPtr = std::shared_ptr<unsigned char[]>;
 
@@ -52,15 +55,12 @@ namespace HMDT::Project {
             const uint32_t* getLabelMatrix() const;
 
             bool isValidProvinceLabel(uint32_t) const;
-            bool isValidStateID(StateID) const;
 
             const Province& getProvinceForLabel(uint32_t) const;
             Province& getProvinceForLabel(uint32_t);
 
-            const State& getStateForID(StateID) const;
-            State& getStateForID(StateID);
-
             virtual const ContinentSet& getContinentList() const override;
+            virtual const StateMap& getStates() const override;
 
             void moveProvinceToState(uint32_t, StateID);
             void moveProvinceToState(Province&, StateID);
@@ -74,8 +74,6 @@ namespace HMDT::Project {
             ProvinceList& getProvinces();
             const ProvinceList& getProvinces() const;
 
-            const std::map<uint32_t, State>& getStates() const;
-
             void calculateCoastalProvinces(bool = false);
 
         protected:
@@ -84,6 +82,7 @@ namespace HMDT::Project {
 
         private:
             virtual ContinentSet& getContinents() override;
+            virtual StateMap& getStateMap() override;
 
             void buildProvinceCache(const Province*);
             void buildProvinceOutlines();

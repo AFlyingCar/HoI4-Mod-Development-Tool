@@ -5,9 +5,12 @@
 # include <system_error>
 # include <memory>
 # include <set>
+# include <map>
 # include <string>
 
 # include "Maybe.h"
+
+# include "Types.h"
 
 // Forward declarations
 namespace HMDT {
@@ -41,8 +44,26 @@ namespace HMDT::Project {
         virtual IMapProject& getRootMapParent() = 0;
     };
 
+    struct IStateProject: public IProject {
+        using StateMap = std::map<uint32_t, State>;
+
+        virtual ~IStateProject() = default;
+
+        bool isValidStateID(StateID) const;
+
+        MaybeRef<const State> getStateForID(StateID) const;
+        MaybeRef<State> getStateForID(StateID);
+
+        virtual const StateMap& getStates() const = 0;
+
+        protected:
+            virtual StateMap& getStateMap() = 0;
+    };
+
     struct IContinentProject: public IProject {
         using ContinentSet = std::set<std::string>;
+
+        virtual ~IContinentProject() = default;
 
         virtual const ContinentSet& getContinentList() const = 0;
 
