@@ -21,6 +21,9 @@
     X(PROJECT_VALIDATION_FAILED, 1, "Project Validation Failed.")              \
     X(PROVINCE_INVALID_STATE_ID, 2, "The Province's StateID is invalid.")      \
     X(PROVINCE_NOT_IN_STATE, 3, "The Province is not in the state it says it's in.") \
+                                                                               \
+    /* State Error Codes */                                                    \
+    X(STATE_DOES_NOT_EXIST, 1024, "The state does not exist.")                 \
 
 #endif
 
