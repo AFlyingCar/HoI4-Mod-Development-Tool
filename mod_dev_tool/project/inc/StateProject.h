@@ -52,6 +52,9 @@ namespace HMDT::Project {
 
             void updateStateIDMatrix();
 
+            void addProvinceToState(StateID, ProvinceID);
+            void removeProvinceFromState(StateID, ProvinceID);
+
         protected:
             StateMap& getMutableStates();
 

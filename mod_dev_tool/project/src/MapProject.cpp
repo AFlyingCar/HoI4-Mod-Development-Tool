@@ -418,7 +418,7 @@ void HMDT::Project::MapProject::moveProvinceToState(Province& province,
 {
     removeProvinceFromState(province);
     province.state = state_id;
-    m_state_project.getStateForID(state_id).provinces.push_back(province.id);
+    m_state_project.addProvinceToState(state_id, province.id);
 
     m_state_project.updateStateIDMatrix();
 }
@@ -433,14 +433,7 @@ void HMDT::Project::MapProject::removeProvinceFromState(Province& province,
 {
     // Remove from its old state
     if(auto prov_state_id = province.state; isValidStateID(prov_state_id)) {
-        auto& state_provinces = m_state_project.getStateForID(prov_state_id).provinces;
-        for(auto it = state_provinces.begin(); it != state_provinces.end(); ++it)
-        {
-            if(*it == province.id) {
-                state_provinces.erase(it);
-                break;
-            }
-        }
+        m_state_project.removeProvinceFromState(prov_state_id, province.id);
     }
     province.state = -1;
 

@@ -382,3 +382,24 @@ auto HMDT::Project::StateProject::getStateForIterator(StateMap::const_iterator c
     return cit->second;
 }
 
+void HMDT::Project::StateProject::addProvinceToState(StateID state_id,
+                                                     ProvinceID province_id)
+{
+    // TODO: We need error checking here
+    getStateForID(state_id).provinces.push_back(province_id);
+}
+
+void HMDT::Project::StateProject::removeProvinceFromState(StateID state_id,
+                                                          ProvinceID province_id)
+{
+    // TODO: We need error checking here
+    auto& state_provinces = getStateForID(state_id).provinces;
+    for(auto it = state_provinces.begin(); it != state_provinces.end(); ++it)
+    {
+        if(*it == province_id) {
+            state_provinces.erase(it);
+            break;
+        }
+    }
+}
+
