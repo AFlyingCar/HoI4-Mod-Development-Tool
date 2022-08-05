@@ -19,6 +19,8 @@
                                                                                \
     /* Project Error Codes */                                                  \
     X(PROJECT_VALIDATION_FAILED, 1, "Project Validation Failed.")              \
+    X(PROVINCE_INVALID_STATE_ID, 2, "The Province's StateID is invalid.")      \
+    X(PROVINCE_NOT_IN_STATE, 3, "The Province is not in the state it says it's in.") \
 
 #endif
 
