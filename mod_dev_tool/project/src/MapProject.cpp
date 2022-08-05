@@ -18,8 +18,8 @@
 HMDT::Project::MapProject::MapProject(IProject& parent_project):
     m_provinces_project(*this),
     m_state_project(*this),
+    m_continent_project(*this),
     m_map_data(new MapData),
-    m_continents(),
     m_terrains(getDefaultTerrains()),
     m_parent_project(parent_project)
 {
@@ -46,7 +46,7 @@ auto HMDT::Project::MapProject::save(const std::filesystem::path& path)
     auto provinces_result = m_provinces_project.save(path);
     RETURN_IF_ERROR(provinces_result);
 
-    auto continents_result = saveContinentData(path);
+    auto continents_result = m_continent_project.save(path);
     RETURN_IF_ERROR(continents_result);
 
     auto states_result = m_state_project.save(path);
@@ -109,7 +109,7 @@ auto HMDT::Project::MapProject::load(const std::filesystem::path& path)
 
     // This data is not required (only fail if loading it failed), not if it 
     //  doesn't exist
-    if(auto result = loadContinentData(path);
+    if(auto result = m_continent_project.load(path);
             result.error() != std::errc::no_such_file_or_directory)
     {
         RETURN_IF_ERROR(result);
@@ -240,72 +240,6 @@ HMDT::Project::IMapProject& HMDT::Project::MapProject::getRootMapParent() {
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
- * @brief Writes all continent data to root/$CONTINENTDATA_FILENAME
- *
- * @param root The root where all continent data should go
- * @param ec The error code
- *
- * @return True if continent data was successfully loaded, false otherwise
- */
-auto HMDT::Project::MapProject::saveContinentData(const std::filesystem::path& root)
-    -> MaybeVoid
-{
-    auto path = root / CONTINENTDATA_FILENAME;
-
-    // Try to open the continent file for reading.
-    if(std::ofstream out(path); out) {
-        for(auto&& continent : m_continents) {
-            out << continent << '\n';
-        }
-    } else {
-        WRITE_ERROR("Failed to open file ", path, ". Reason: ", std::strerror(errno));
-        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
-    }
-
-    return STATUS_SUCCESS;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-/**
- * @brief Loads all continent data from a file
- *
- * @param root The root where the continent data file should be found
- * @param ec The error code
- *
- * @return True if data was loaded correctly, false otherwise
- */
-auto HMDT::Project::MapProject::loadContinentData(const std::filesystem::path& root)
-    -> MaybeVoid
-{
-    auto path = root / CONTINENTDATA_FILENAME;
-
-    // If the file doesn't exist, then return false (we didn't actually load it
-    //  after all), but don't set the error code as it is expected that the
-    //  file may not exist
-    if(std::error_code ec; !std::filesystem::exists(path, ec)) {
-        RETURN_ERROR_IF(ec.value() != 0, ec);
-
-        WRITE_WARN("No data to load! No continents currently exist!");
-        return std::make_error_code(std::errc::no_such_file_or_directory);
-    }
-
-    if(std::ifstream in(path); in) {
-        std::string line;
-        while(std::getline(in, line)) {
-            if(line.empty()) continue;
-
-            m_continents.insert(line);
-        }
-    } else {
-        WRITE_ERROR("Failed to open file ", path);
-        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
-    }
-
-    return STATUS_SUCCESS;
-}
-
-/**
  * @brief Loads data out of a ShapeFinder. We invalidate the original ShapeFinder
  *        as we want to take ownership of all pointers it holds
  *
@@ -380,28 +314,19 @@ auto HMDT::Project::MapProject::getProvinceForLabel(uint32_t label)
     return m_provinces_project.getProvinces().at(label - 1);
 }
 
-const std::set<std::string>& HMDT::Project::MapProject::getContinentList() const
+auto HMDT::Project::MapProject::getContinentList() const -> const ContinentSet&
 {
-    return m_continents;
+    return m_continent_project.getContinentList();
+}
+
+auto HMDT::Project::MapProject::getContinents() -> ContinentSet& {
+    return m_continent_project.getContinents();
 }
 
 auto HMDT::Project::MapProject::getTerrains() const
     -> const std::vector<Terrain>&
 {
     return m_terrains;
-}
-
-void HMDT::Project::MapProject::addNewContinent(const std::string& continent) {
-    m_continents.insert(continent);
-}
-
-void HMDT::Project::MapProject::removeContinent(const std::string& continent) {
-    m_continents.erase(continent);
-}
-
-bool HMDT::Project::MapProject::doesContinentExist(const std::string& continent) const
-{
-    return m_continents.count(continent) != 0;
 }
 
 /**

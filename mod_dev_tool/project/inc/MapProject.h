@@ -19,12 +19,13 @@
 # include "IProject.h"
 # include "ProvinceProject.h"
 # include "StateProject.h"
+# include "ContinentProject.h"
 
 namespace HMDT::Project {
     /**
      * @brief Defines a map project for HoI4
      */
-    class MapProject: public IMapProject {
+    class MapProject: public IMapProject, public virtual IContinentProject {
         public:
             using ProvinceDataPtr = std::shared_ptr<unsigned char[]>;
 
@@ -59,11 +60,7 @@ namespace HMDT::Project {
             const State& getStateForID(StateID) const;
             State& getStateForID(StateID);
 
-            const std::set<std::string>& getContinentList() const;
-
-            void addNewContinent(const std::string&);
-            void removeContinent(const std::string&);
-            bool doesContinentExist(const std::string&) const;
+            virtual const ContinentSet& getContinentList() const override;
 
             void moveProvinceToState(uint32_t, StateID);
             void moveProvinceToState(Province&, StateID);
@@ -83,12 +80,11 @@ namespace HMDT::Project {
 
         protected:
             MaybeVoid saveContinentData(const std::filesystem::path&);
-
-            MaybeVoid loadShapeLabels(const std::filesystem::path&);
-            MaybeVoid loadProvinceData(const std::filesystem::path&);
             MaybeVoid loadContinentData(const std::filesystem::path&);
 
         private:
+            virtual ContinentSet& getContinents() override;
+
             void buildProvinceCache(const Province*);
             void buildProvinceOutlines();
 
@@ -97,6 +93,9 @@ namespace HMDT::Project {
 
             //! The State project
             StateProject m_state_project;
+
+            //! The Continent project
+            ContinentProject m_continent_project;
 
             //! The shared map data
             std::shared_ptr<MapData> m_map_data;
@@ -109,9 +108,6 @@ namespace HMDT::Project {
              *          garbage collected and cleaned out
              */
             nlohmann::fifo_map<ProvinceID, ProvinceDataPtr> m_data_cache;
-
-            //! All continents defined for this project
-            std::set<std::string> m_continents;
 
             //! All terrains defined for this project
             std::vector<Terrain> m_terrains;

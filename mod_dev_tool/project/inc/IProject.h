@@ -4,6 +4,8 @@
 # include <filesystem>
 # include <system_error>
 # include <memory>
+# include <set>
+# include <string>
 
 # include "Maybe.h"
 
@@ -37,6 +39,19 @@ namespace HMDT::Project {
         virtual bool validateData() = 0;
 
         virtual IMapProject& getRootMapParent() = 0;
+    };
+
+    struct IContinentProject: public IProject {
+        using ContinentSet = std::set<std::string>;
+
+        virtual const ContinentSet& getContinentList() const = 0;
+
+        void addNewContinent(const std::string&);
+        void removeContinent(const std::string&);
+        bool doesContinentExist(const std::string&) const;
+
+        protected:
+            virtual ContinentSet& getContinents() = 0;
     };
 }
 
