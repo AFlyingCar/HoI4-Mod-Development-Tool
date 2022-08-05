@@ -216,13 +216,18 @@ auto HMDT::Project::StateProject::validateProvinceStateID(StateID province_state
             return STATUS_PROVINCE_INVALID_STATE_ID;
         }
 
-        if(auto& state = getStateForID(province_state_id);
-                std::find(state.provinces.begin(), state.provinces.end(), province_id) == state.provinces.end())
-        {
-            WRITE_WARN("State ", state.id, " does not contain province #", province_id, "!");
+        MaybeRef<State> state = getStateForID(province_state_id);
+        return state.andThen([&](auto state_ref) {
+            auto& state = state_ref.get();
+            if(std::find(state.provinces.begin(), state.provinces.end(), province_id) == state.provinces.end())
+            {
+                WRITE_WARN("State ", state.id, " does not contain province #", province_id, "!");
 
-            return STATUS_PROVINCE_NOT_IN_STATE;
-        }
+                return STATUS_PROVINCE_NOT_IN_STATE;
+            }
+
+            return STATUS_SUCCESS;
+        });
     }
 
     return STATUS_SUCCESS;
@@ -360,13 +365,21 @@ bool HMDT::Project::StateProject::isValidStateID(StateID state_id) const {
 }
 
 auto HMDT::Project::StateProject::getStateForID(StateID state_id) const
-    -> const State&
+    -> MaybeRef<const State>
 {
-    return getStates().at(state_id);
+    if(isValidStateID(state_id)) {
+        return std::ref(getStates().at(state_id));
+    }
+    return STATUS_STATE_DOES_NOT_EXIST;
 }
 
-auto HMDT::Project::StateProject::getStateForID(StateID state_id) -> State& {
-    return getMutableStates().at(state_id);
+auto HMDT::Project::StateProject::getStateForID(StateID state_id)
+    -> MaybeRef<State>
+{
+    if(isValidStateID(state_id)) {
+        return std::ref(getMutableStates().at(state_id));
+    }
+    return STATUS_STATE_DOES_NOT_EXIST;
 }
 
 auto HMDT::Project::StateProject::getStateForIterator(StateMap::const_iterator cit)
@@ -382,24 +395,30 @@ auto HMDT::Project::StateProject::getStateForIterator(StateMap::const_iterator c
     return cit->second;
 }
 
-void HMDT::Project::StateProject::addProvinceToState(StateID state_id,
+auto HMDT::Project::StateProject::addProvinceToState(StateID state_id,
                                                      ProvinceID province_id)
+    -> MaybeVoid
 {
-    // TODO: We need error checking here
-    getStateForID(state_id).provinces.push_back(province_id);
+    return getStateForID(state_id).andThen([&province_id](auto state_ref)
+    {
+        state_ref.get().provinces.push_back(province_id);
+    });
 }
 
-void HMDT::Project::StateProject::removeProvinceFromState(StateID state_id,
+auto HMDT::Project::StateProject::removeProvinceFromState(StateID state_id,
                                                           ProvinceID province_id)
+    -> MaybeVoid
 {
-    // TODO: We need error checking here
-    auto& state_provinces = getStateForID(state_id).provinces;
-    for(auto it = state_provinces.begin(); it != state_provinces.end(); ++it)
+    return getStateForID(state_id).andThen([&province_id](auto state_ref)
     {
-        if(*it == province_id) {
-            state_provinces.erase(it);
-            break;
+        auto& state = state_ref.get();
+        for(auto it = state.provinces.begin(); it != state.provinces.end(); ++it)
+        {
+            if(*it == province_id) {
+                state.provinces.erase(it);
+                break;
+            }
         }
-    }
+    });
 }
 

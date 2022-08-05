@@ -44,16 +44,16 @@ namespace HMDT::Project {
 
             bool isValidStateID(StateID) const;
 
-            const State& getStateForID(StateID) const;
-            State& getStateForID(StateID);
+            MaybeRef<const State> getStateForID(StateID) const;
+            MaybeRef<State> getStateForID(StateID);
 
             State& getStateForIterator(StateMap::const_iterator);
             const State& getStateForIterator(StateMap::const_iterator) const;
 
             void updateStateIDMatrix();
 
-            void addProvinceToState(StateID, ProvinceID);
-            void removeProvinceFromState(StateID, ProvinceID);
+            MaybeVoid addProvinceToState(StateID, ProvinceID);
+            MaybeVoid removeProvinceFromState(StateID, ProvinceID);
 
         protected:
             StateMap& getMutableStates();

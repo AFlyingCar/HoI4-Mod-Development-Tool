@@ -187,10 +187,19 @@ bool HMDT::Project::MapProject::validateData() {
                     WRITE_INFO("Setting province state ID to -1.");
                     province.state = -1;
                 } else if(result.error() == STATUS_PROVINCE_NOT_IN_STATE) {
-                    auto& prov_state = m_state_project.getStateForID(province.state);
+                    m_state_project.getStateForID(province.state).andThen([&](auto prov_state_ref)
+                    {
+                        auto& prov_state = prov_state_ref.get();
 
-                    WRITE_INFO("Adding province ", province.id, " to state ", prov_state.id);
-                    prov_state.provinces.push_back(province.id);
+                        WRITE_INFO("Adding province ", province.id, " to state ", prov_state.id);
+                        prov_state.provinces.push_back(province.id);
+                    }).orElse<void>([&province]() {
+                        WRITE_ERROR("Unable to remove province ", province.id,
+                                    " from its old state ", province.state,
+                                    " as that state does not exist. Will"
+                                    " attempt to add it to the correct state"
+                                    " anyway.");
+                    });
 
                     WRITE_INFO("Searching for any state that currently has this province...");
                     std::vector<ProvinceID>::const_iterator province_it;
@@ -541,11 +550,13 @@ void HMDT::Project::MapProject::calculateCoastalProvinces(bool dry) {
 auto HMDT::Project::MapProject::getStateForID(StateID state_id) const
     -> const State&
 {
-    return m_state_project.getStateForID(state_id);
+    // TODO
+    return m_state_project.getStateForID(state_id)->get();
 }
 
 auto HMDT::Project::MapProject::getStateForID(StateID state_id) -> State& {
-    return m_state_project.getStateForID(state_id);
+    // TODO
+    return m_state_project.getStateForID(state_id)->get();
 }
 
 /**
