@@ -178,29 +178,24 @@ bool HMDT::Project::MapProject::validateData() {
     success = success && m_provinces_project.validateData();
 
     for(auto&& province : m_provinces_project.getProvinces()) {
-        if(province.state != -1) {
-            if(!isValidStateID(province.state)) {
-                WRITE_WARN("Province has state ID of ", province.state, " which is invalid!");
-                if(prog_opts.fix_warnings_on_load) {
+        auto result = m_state_project.validateProvinceStateID(province.state, province.id);
+
+        if(IS_FAILURE(result)) {
+            if(prog_opts.fix_warnings_on_load) {
+                WRITE_INFO("Attempting to fix warnings...");
+                if(result.error() == STATUS_PROVINCE_INVALID_STATE_ID) {
                     WRITE_INFO("Setting province state ID to -1.");
                     province.state = -1;
-                }
-                continue;
-            }
+                } else if(result.error() == STATUS_PROVINCE_NOT_IN_STATE) {
+                    auto& prov_state = m_state_project.getStateForID(province.state);
 
-            if(auto& state = getStateForID(province.state);
-                    std::find(state.provinces.begin(), state.provinces.end(), province.id) == state.provinces.end())
-            {
-                WRITE_WARN("State ", state.id, " does not contain province #", province.id, "!");
-
-                if(prog_opts.fix_warnings_on_load) {
-                    WRITE_INFO("Adding province ", province.id, " to state ", state.id);
-                    state.provinces.push_back(province.id);
+                    WRITE_INFO("Adding province ", province.id, " to state ", prov_state.id);
+                    prov_state.provinces.push_back(province.id);
 
                     WRITE_INFO("Searching for any state that currently has this province...");
-                    std::vector<ProvinceID>::iterator province_it;
-                    auto it = std::find_if(m_state_project.getStates().begin(),
-                                           m_state_project.getStates().end(),
+                    std::vector<ProvinceID>::const_iterator province_it;
+                    auto it = std::find_if(getStates().begin(),
+                                           getStates().end(),
                                            [&province, &province_it](auto& id_state_pair)
                                            {
                                                return (province_it = std::find(id_state_pair.second.provinces.begin(),
@@ -208,14 +203,17 @@ bool HMDT::Project::MapProject::validateData() {
                                                                                province.id)) != id_state_pair.second.provinces.end();
                                            });
 
-                    if(it == m_state_project.getStates().end()) {
+                    if(it == getStates().end()) {
                         WRITE_INFO("No states found containing this province.");
                     } else {
                         WRITE_INFO("Found state ", it->second.id, " that contains province ", province.id, ". Removing the province from the state.");
-                        it->second.provinces.erase(province_it);
+                        State& state = m_state_project.getStateForIterator(it);
+                        state.provinces.erase(province_it);
                     }
                 }
             }
+
+            continue;
         }
     }
 
@@ -354,7 +352,7 @@ const uint32_t* HMDT::Project::MapProject::getLabelMatrix() const {
 }
 
 bool HMDT::Project::MapProject::isValidStateID(StateID state_id) const {
-    return m_state_project.getStates().count(state_id) != 0;
+    return m_state_project.isValidStateID(state_id);
 }
 
 bool HMDT::Project::MapProject::isValidProvinceLabel(uint32_t label) const {
@@ -420,7 +418,7 @@ void HMDT::Project::MapProject::moveProvinceToState(Province& province,
 {
     removeProvinceFromState(province);
     province.state = state_id;
-    m_state_project.getStates()[state_id].provinces.push_back(province.id);
+    m_state_project.getStateForID(state_id).provinces.push_back(province.id);
 
     m_state_project.updateStateIDMatrix();
 }
@@ -434,9 +432,8 @@ void HMDT::Project::MapProject::removeProvinceFromState(Province& province,
                                                         bool update_state_id_matrix)
 {
     // Remove from its old state
-    if(auto prov_state_id = province.state; m_state_project.getStates().count(prov_state_id) != 0)
-    {
-        auto& state_provinces = m_state_project.getStates()[prov_state_id].provinces;
+    if(auto prov_state_id = province.state; isValidStateID(prov_state_id)) {
+        auto& state_provinces = m_state_project.getStateForID(prov_state_id).provinces;
         for(auto it = state_provinces.begin(); it != state_provinces.end(); ++it)
         {
             if(*it == province.id) {
@@ -551,11 +548,11 @@ void HMDT::Project::MapProject::calculateCoastalProvinces(bool dry) {
 auto HMDT::Project::MapProject::getStateForID(StateID state_id) const
     -> const State&
 {
-    return m_state_project.getStates().at(state_id);
+    return m_state_project.getStateForID(state_id);
 }
 
 auto HMDT::Project::MapProject::getStateForID(StateID state_id) -> State& {
-    return m_state_project.getStates().at(state_id);
+    return m_state_project.getStateForID(state_id);
 }
 
 /**

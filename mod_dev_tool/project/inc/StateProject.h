@@ -18,6 +18,8 @@ namespace HMDT::Project {
      */
     class StateProject: public IMapProject {
         public:
+            using StateMap = std::map<uint32_t, State>;
+
             StateProject(MapProject&);
             virtual ~StateProject();
 
@@ -33,13 +35,25 @@ namespace HMDT::Project {
             virtual IProject& getRootParent() override;
             virtual IMapProject& getRootMapParent() override;
 
-            std::map<uint32_t, State>& getStates();
-            const std::map<uint32_t, State>& getStates() const;
+            MaybeVoid validateProvinceStateID(StateID, ProvinceID);
+
+            const StateMap& getStates() const;
 
             StateID addNewState(const std::vector<uint32_t>&);
             void removeState(StateID);
 
+            bool isValidStateID(StateID) const;
+
+            const State& getStateForID(StateID) const;
+            State& getStateForID(StateID);
+
+            State& getStateForIterator(StateMap::const_iterator);
+            const State& getStateForIterator(StateMap::const_iterator) const;
+
             void updateStateIDMatrix();
+
+        protected:
+            StateMap& getMutableStates();
 
         private:
             //! The parent project that this MapProject belongs to
@@ -49,7 +63,7 @@ namespace HMDT::Project {
             std::queue<StateID> m_available_state_ids;
 
             //! All states defined for this project
-            std::map<uint32_t, State> m_states;
+            StateMap m_states;
     };
 }
 

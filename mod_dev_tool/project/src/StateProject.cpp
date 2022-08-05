@@ -207,6 +207,28 @@ bool HMDT::Project::StateProject::validateData() {
     return true;
 }
 
+auto HMDT::Project::StateProject::validateProvinceStateID(StateID province_state_id, ProvinceID province_id)
+    -> MaybeVoid
+{
+    if(province_state_id != -1) {
+        if(!isValidStateID(province_state_id)) {
+            WRITE_WARN("Province has state ID of ", province_state_id, " which is invalid!");
+            return STATUS_PROVINCE_INVALID_STATE_ID;
+        }
+
+        if(auto& state = getStateForID(province_state_id);
+                std::find(state.provinces.begin(), state.provinces.end(), province_id) == state.provinces.end())
+        {
+            WRITE_WARN("State ", state.id, " does not contain province #", province_id, "!");
+
+            return STATUS_PROVINCE_NOT_IN_STATE;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
 HMDT::Project::IProject& HMDT::Project::StateProject::getRootParent() {
     return m_parent_project.getRootParent();
 }
@@ -215,13 +237,11 @@ HMDT::Project::IMapProject& HMDT::Project::StateProject::getRootMapParent() {
     return m_parent_project.getRootMapParent();
 }
 
-auto HMDT::Project::StateProject::getStates() -> std::map<uint32_t, State>& {
+auto HMDT::Project::StateProject::getMutableStates() -> StateMap& {
     return m_states;
 }
 
-auto HMDT::Project::StateProject::getStates() const
-    -> const std::map<uint32_t, State>&
-{
+auto HMDT::Project::StateProject::getStates() const -> const StateMap& {
     return m_states;
 }
 
@@ -333,5 +353,32 @@ void HMDT::Project::StateProject::removeState(StateID id) {
     m_states.erase(id);
 
     updateStateIDMatrix();
+}
+
+bool HMDT::Project::StateProject::isValidStateID(StateID state_id) const {
+    return getStates().count(state_id) != 0;
+}
+
+auto HMDT::Project::StateProject::getStateForID(StateID state_id) const
+    -> const State&
+{
+    return getStates().at(state_id);
+}
+
+auto HMDT::Project::StateProject::getStateForID(StateID state_id) -> State& {
+    return getMutableStates().at(state_id);
+}
+
+auto HMDT::Project::StateProject::getStateForIterator(StateMap::const_iterator cit)
+    -> State&
+{
+    // Lookup the state again using the key
+    return getMutableStates().at(cit->first);
+}
+
+auto HMDT::Project::StateProject::getStateForIterator(StateMap::const_iterator cit) const
+    -> const State&
+{
+    return cit->second;
 }
 
