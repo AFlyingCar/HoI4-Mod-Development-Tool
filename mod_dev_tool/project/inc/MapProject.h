@@ -49,8 +49,6 @@ namespace HMDT::Project {
             StateProject& getStateProject();
             const StateProject& getStateProject() const;
 
-            const uint32_t* getLabelMatrix() const;
-
             virtual const ContinentSet& getContinentList() const override;
             virtual const StateMap& getStates() const override;
 
@@ -67,10 +65,6 @@ namespace HMDT::Project {
             virtual const ProvinceList& getProvinces() const override;
 
             void calculateCoastalProvinces(bool = false);
-
-        protected:
-            MaybeVoid saveContinentData(const std::filesystem::path&);
-            MaybeVoid loadContinentData(const std::filesystem::path&);
 
         private:
             virtual ContinentSet& getContinents() override;

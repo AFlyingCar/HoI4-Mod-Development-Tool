@@ -87,8 +87,8 @@ auto HMDT::Project::MapProject::load(const std::filesystem::path& path)
         readBMP(input_provincemap_path, input_image.get());
 
         if(input_image == nullptr) {
-            // TODO: We should instead pass ec into readBMP() and let it set ec
-            //  to whatever might be appropriate
+            // TODO: We should instead have readBMP() return an appropriate
+            //       error code rather than assuming one.
             WRITE_WARN("Failed to read imported image.");
             RETURN_ERROR(std::make_error_code(std::errc::io_error));
         }
@@ -285,10 +285,6 @@ auto HMDT::Project::MapProject::getMapData() const
     return m_map_data;
 }
 
-const uint32_t* HMDT::Project::MapProject::getLabelMatrix() const {
-    return m_map_data->getLabelMatrix().lock().get();
-}
-
 auto HMDT::Project::MapProject::getContinentList() const -> const ContinentSet&
 {
     return m_continent_project.getContinentList();
@@ -383,15 +379,11 @@ auto HMDT::Project::MapProject::getProvinces() -> ProvinceList& {
     return m_provinces_project.getProvinces();
 }
 
-auto HMDT::Project::MapProject::getStates() const
-    -> const StateMap&
-{
+auto HMDT::Project::MapProject::getStates() const -> const StateMap& {
     return m_state_project.getStates();
 }
 
-auto HMDT::Project::MapProject::getStateMap()
-    -> StateMap&
-{
+auto HMDT::Project::MapProject::getStateMap() -> StateMap& {
     return m_state_project.getStateMap(StateProject::Token{});
 }
 
