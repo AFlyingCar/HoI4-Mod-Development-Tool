@@ -3,6 +3,25 @@
 
 #include "StatusCodes.h"
 
+bool HMDT::Project::IProvinceProject::isValidProvinceLabel(uint32_t label) const
+{
+    return (label - 1) < getProvinces().size();
+}
+
+auto HMDT::Project::IProvinceProject::getProvinceForLabel(uint32_t label) const
+    -> const Province&
+{
+    return getProvinces().at(label - 1);
+}
+
+auto HMDT::Project::IProvinceProject::getProvinceForLabel(uint32_t label)
+    -> Province&
+{
+    return getProvinces().at(label - 1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool HMDT::Project::IStateProject::isValidStateID(StateID state_id) const {
     return getStates().count(state_id) != 0;
 }
@@ -25,6 +44,7 @@ auto HMDT::Project::IStateProject::getStateForID(StateID state_id)
     return STATUS_STATE_DOES_NOT_EXIST;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
 void HMDT::Project::IContinentProject::addNewContinent(const std::string& continent)
 {

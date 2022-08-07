@@ -8,8 +8,9 @@
 # include <map>
 # include <string>
 
-# include "Maybe.h"
+# include "fifo_map.hpp"
 
+# include "Maybe.h"
 # include "Types.h"
 
 // Forward declarations
@@ -42,6 +43,21 @@ namespace HMDT::Project {
         virtual bool validateData() = 0;
 
         virtual IMapProject& getRootMapParent() = 0;
+    };
+
+    struct IProvinceProject: public IProject {
+        using ProvinceDataPtr = std::shared_ptr<unsigned char[]>;
+
+        bool isValidProvinceLabel(uint32_t) const;
+
+        const Province& getProvinceForLabel(uint32_t) const;
+        Province& getProvinceForLabel(uint32_t);
+
+        virtual ProvinceDataPtr getPreviewData(ProvinceID) = 0;
+        virtual ProvinceDataPtr getPreviewData(const Province*) = 0;
+
+        virtual ProvinceList& getProvinces() = 0;
+        virtual const ProvinceList& getProvinces() const = 0;
     };
 
     struct IStateProject: public IProject {

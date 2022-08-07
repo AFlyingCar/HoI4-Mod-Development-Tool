@@ -8,7 +8,7 @@ namespace HMDT::Project {
     /**
      * @brief Defines a province project for HoI4
      */
-    class ProvinceProject: public IMapProject {
+    class ProvinceProject: public IMapProject, public virtual IProvinceProject {
         public:
             ProvinceProject(IMapProject&);
             virtual ~ProvinceProject();
@@ -25,9 +25,13 @@ namespace HMDT::Project {
             virtual IProject& getRootParent() override;
             virtual IMapProject& getRootMapParent() override;
 
-            ProvinceList& getProvinces();
-            const ProvinceList& getProvinces() const;
+            virtual ProvinceList& getProvinces() override;
+            virtual const ProvinceList& getProvinces() const override;
 
+            virtual ProvinceDataPtr getPreviewData(ProvinceID) override;
+            virtual ProvinceDataPtr getPreviewData(const Province*) override;
+
+            void buildProvinceOutlines();
         protected:
             MaybeVoid saveShapeLabels(const std::filesystem::path&);
             MaybeVoid saveProvinceData(const std::filesystem::path&);
@@ -36,11 +40,22 @@ namespace HMDT::Project {
             MaybeVoid loadProvinceData(const std::filesystem::path&);
 
         private:
+            void buildProvinceCache(const Province*);
+
             //! The parent project that this MapProject belongs to
             IMapProject& m_parent_project;
 
             //! List of all provinces
             ProvinceList m_provinces;
+
+            /**
+             * @brief A cache of province previews
+             * @details Note: We use nlohmann::fifo_map for this so that we can
+             *          do hash-based lookup while still retaining FIFO access.
+             *          This is so that the least accessed (first in) can get
+             *          garbage collected and cleaned out
+             */
+            nlohmann::fifo_map<ProvinceID, ProvinceDataPtr> m_data_cache;
     };
 }
 

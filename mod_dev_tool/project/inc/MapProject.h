@@ -6,8 +6,6 @@
 # include <string>
 # include <filesystem>
 
-# include "fifo_map.hpp"
-
 # include "ShapeFinder2.h"
 
 # include "Types.h"
@@ -26,12 +24,11 @@ namespace HMDT::Project {
      * @brief Defines a map project for HoI4
      */
     class MapProject: public IMapProject,
-                      public virtual IContinentProject,
-                      public virtual IStateProject
+                      public virtual IProvinceProject,
+                      public virtual IStateProject,
+                      public virtual IContinentProject
     {
         public:
-            using ProvinceDataPtr = std::shared_ptr<unsigned char[]>;
-
             MapProject(IProject&);
             virtual ~MapProject();
 
@@ -54,11 +51,6 @@ namespace HMDT::Project {
 
             const uint32_t* getLabelMatrix() const;
 
-            bool isValidProvinceLabel(uint32_t) const;
-
-            const Province& getProvinceForLabel(uint32_t) const;
-            Province& getProvinceForLabel(uint32_t);
-
             virtual const ContinentSet& getContinentList() const override;
             virtual const StateMap& getStates() const override;
 
@@ -68,11 +60,11 @@ namespace HMDT::Project {
 
             const std::vector<Terrain>& getTerrains() const;
 
-            ProvinceDataPtr getPreviewData(ProvinceID);
-            ProvinceDataPtr getPreviewData(const Province*);
+            virtual ProvinceDataPtr getPreviewData(ProvinceID) override;
+            virtual ProvinceDataPtr getPreviewData(const Province*) override;
 
-            ProvinceList& getProvinces();
-            const ProvinceList& getProvinces() const;
+            virtual ProvinceList& getProvinces() override;
+            virtual const ProvinceList& getProvinces() const override;
 
             void calculateCoastalProvinces(bool = false);
 
@@ -83,9 +75,6 @@ namespace HMDT::Project {
         private:
             virtual ContinentSet& getContinents() override;
             virtual StateMap& getStateMap() override;
-
-            void buildProvinceCache(const Province*);
-            void buildProvinceOutlines();
 
             //! The Provinces project
             ProvinceProject m_provinces_project;
@@ -98,15 +87,6 @@ namespace HMDT::Project {
 
             //! The shared map data
             std::shared_ptr<MapData> m_map_data;
-
-            /**
-             * @brief A cache of province previews
-             * @details Note: We use nlohmann::fifo_map for this so that we can
-             *          do hash-based lookup while still retaining FIFO access.
-             *          This is so that the least accessed (first in) can get
-             *          garbage collected and cleaned out
-             */
-            nlohmann::fifo_map<ProvinceID, ProvinceDataPtr> m_data_cache;
 
             //! All terrains defined for this project
             std::vector<Terrain> m_terrains;
