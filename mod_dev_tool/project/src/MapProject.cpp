@@ -103,6 +103,12 @@ auto HMDT::Project::MapProject::load(const std::filesystem::path& path)
         new (m_map_data.get()) MapData(iwidth, iheight);
     }
 
+    auto input_data = m_map_data->getInput().lock();
+
+    // Copy the input image's data into the input_data
+    std::copy(input_data.get(), input_data.get() + m_map_data->getInputSize(),
+              input_image->data);
+
     // Now load the other related data
     // This data is required
     RETURN_IF_ERROR(m_provinces_project.load(path));
@@ -121,51 +127,7 @@ auto HMDT::Project::MapProject::load(const std::filesystem::path& path)
         RETURN_IF_ERROR(result);
     }
 
-    // Rebuild the graphics data
-    auto [width, height] = m_map_data->getDimensions();
-
-    auto label_matrix = m_map_data->getLabelMatrix().lock();
-
-    auto input_data = m_map_data->getInput().lock();
-    auto graphics_data = m_map_data->getProvinces().lock();
-
-    // Copy the input image's data into the input_data
-    std::copy(input_data.get(), input_data.get() + m_map_data->getInputSize(), input_image->data);
-
-    // Rebuild the map_data array and the adjacency lists
-    for(uint32_t x = 0; x < width; ++x) {
-        for(uint32_t y = 0; y < height; ++y) {
-            // Get the index into the label matrix
-            auto lindex = xyToIndex(width, x, y);
-
-            // Get the index into the graphics data
-            //  3 == the depth
-            auto gindex = xyToIndex(width * 3, x * 3, y);
-
-            auto label = label_matrix[lindex];
-
-            // Error check
-            if(label <= 0 || label > m_provinces_project.getProvinces().size()) {
-                WRITE_WARN("Label matrix has label ", label,
-                             " at position (", x, ',', y, "), which is out of "
-                             "the range of valid labels [1,",
-                             m_provinces_project.getProvinces().size(), "]");
-                continue;
-            }
-
-            // Rebuild color data
-            auto& province = getProvinceForLabel(label);
-
-            // Flip the colors from RGB to BGR because BitMap is a bad format
-            graphics_data[gindex] = province.unique_color.b;
-            graphics_data[gindex + 1] = province.unique_color.g;
-            graphics_data[gindex + 2] = province.unique_color.r;
-        }
-    }
-
     RETURN_ERROR_IF(!validateData(), STATUS_PROJECT_VALIDATION_FAILED);
-
-    m_provinces_project.buildProvinceOutlines();
 
     return STATUS_SUCCESS;
 }

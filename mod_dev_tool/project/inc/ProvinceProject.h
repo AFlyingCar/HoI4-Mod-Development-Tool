@@ -39,6 +39,8 @@ namespace HMDT::Project {
             MaybeVoid loadShapeLabels(const std::filesystem::path&);
             MaybeVoid loadProvinceData(const std::filesystem::path&);
 
+            void buildGraphicsData();
+
         private:
             void buildProvinceCache(const Province*);
 

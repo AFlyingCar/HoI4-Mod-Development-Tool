@@ -55,6 +55,11 @@ auto HMDT::Project::ProvinceProject::load(const std::filesystem::path& path)
     auto shapelabels_result = loadShapeLabels(path);
     RETURN_IF_ERROR(shapelabels_result);
 
+    // Note that order is important here, graphics data _must_ be built before
+    //   the outlines
+    buildGraphicsData();
+    buildProvinceOutlines();
+
     return STATUS_SUCCESS;
 }
 
@@ -416,6 +421,49 @@ void HMDT::Project::ProvinceProject::buildProvinceOutlines() {
                 prov_outline_data[gindex + 2] = 0xFF;
                 prov_outline_data[gindex + 3] = 0xFF;
             }
+        }
+    }
+}
+
+/**
+ * @brief Builds the graphics data array
+ */
+void HMDT::Project::ProvinceProject::buildGraphicsData() {
+    // Rebuild the graphics data
+    auto [width, height] = getMapData()->getDimensions();
+
+    auto label_matrix = getMapData()->getLabelMatrix().lock();
+
+    auto graphics_data = getMapData()->getProvinces().lock();
+
+    // Rebuild the map_data array and the adjacency lists
+    for(uint32_t x = 0; x < width; ++x) {
+        for(uint32_t y = 0; y < height; ++y) {
+            // Get the index into the label matrix
+            auto lindex = xyToIndex(width, x, y);
+
+            // Get the index into the graphics data
+            //  3 == the depth
+            auto gindex = xyToIndex(width * 3, x * 3, y);
+
+            auto label = label_matrix[lindex];
+
+            // Error check
+            if(label <= 0 || label > getProvinces().size()) {
+                WRITE_WARN("Label matrix has label ", label,
+                             " at position (", x, ',', y, "), which is out of "
+                             "the range of valid labels [1,",
+                             getProvinces().size(), "]");
+                continue;
+            }
+
+            // Rebuild color data
+            auto& province = getProvinceForLabel(label);
+
+            // Flip the colors from RGB to BGR because BitMap is a bad format
+            graphics_data[gindex] = province.unique_color.b;
+            graphics_data[gindex + 1] = province.unique_color.g;
+            graphics_data[gindex + 2] = province.unique_color.r;
         }
     }
 }
