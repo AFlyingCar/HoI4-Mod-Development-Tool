@@ -44,6 +44,7 @@ namespace HMDT::Project {
         virtual std::filesystem::path getMetaRoot() const = 0;
         virtual std::filesystem::path getInputsRoot() const = 0;
         virtual std::filesystem::path getMapRoot() const = 0;
+        virtual std::filesystem::path getDebugRoot() const = 0;
 
         virtual IRootProject& getRootParent() override;
     };

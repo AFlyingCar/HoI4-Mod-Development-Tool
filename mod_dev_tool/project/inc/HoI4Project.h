@@ -30,6 +30,7 @@ namespace HMDT::Project {
             virtual std::filesystem::path getMetaRoot() const override;
             virtual std::filesystem::path getInputsRoot() const override;
             virtual std::filesystem::path getMapRoot() const override;
+            virtual std::filesystem::path getDebugRoot() const override;
 
             const std::string& getName() const;
             const Version& getToolVersion() const;

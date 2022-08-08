@@ -361,7 +361,7 @@ void HMDT::Project::ProvinceProject::buildProvinceCache(const Province* province
     WRITE_DEBUG("Done.");
 
     if(prog_opts.debug) {
-        auto path = getRootParent().getMetaRoot() / "debug";
+        auto path = getRootParent().getDebugRoot();
         auto fname = path / (std::string("prov_preview") + std::to_string(id) + ".pam");
 
         if(!std::filesystem::exists(path)) {

@@ -67,6 +67,10 @@ std::filesystem::path HMDT::Project::HoI4Project::getMapRoot() const {
     return getMetaRoot() / "map";
 }
 
+std::filesystem::path HMDT::Project::HoI4Project::getDebugRoot() const {
+    return getMetaRoot() / "debug";
+}
+
 const std::string& HMDT::Project::HoI4Project::getName() const {
     return m_name;
 }

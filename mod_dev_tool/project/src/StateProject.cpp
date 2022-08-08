@@ -270,7 +270,7 @@ void HMDT::Project::StateProject::updateStateIDMatrix() {
                       });
 
     if(prog_opts.debug) {
-        auto path = getRootParent().getMetaRoot() / "debug";
+        auto path = getRootParent().getDebugRoot();
         auto fname = path / "stateidmtx.txt";
 
         if(!std::filesystem::exists(path)) {
