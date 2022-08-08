@@ -46,7 +46,7 @@ namespace HMDT::Project {
         virtual std::filesystem::path getMapRoot() const = 0;
         virtual std::filesystem::path getDebugRoot() const = 0;
 
-        virtual IRootProject& getRootParent() override;
+        virtual IRootProject& getRootParent() override final;
     };
 
     struct IMapProject: public IProject {
