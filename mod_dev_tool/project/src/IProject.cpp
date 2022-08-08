@@ -3,6 +3,12 @@
 
 #include "StatusCodes.h"
 
+////////////////////////////////////////////////////////////////////////////////
+
+HMDT::Project::IRootProject& HMDT::Project::IRootProject::getRootParent() {
+    return *this;
+}
+
 bool HMDT::Project::IProvinceProject::isValidProvinceLabel(uint32_t label) const
 {
     return (label - 1) < getProvinces().size();

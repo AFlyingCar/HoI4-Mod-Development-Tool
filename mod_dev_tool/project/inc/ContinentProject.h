@@ -19,7 +19,7 @@ namespace HMDT::Project {
             virtual MaybeVoid save(const std::filesystem::path&) override;
             virtual MaybeVoid load(const std::filesystem::path&) override;
 
-            virtual IProject& getRootParent() override;
+            virtual IRootProject& getRootParent() override;
 
             virtual std::shared_ptr<MapData> getMapData() override;
             virtual const std::shared_ptr<MapData> getMapData() const override;

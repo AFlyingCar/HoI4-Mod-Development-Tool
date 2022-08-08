@@ -40,7 +40,7 @@ namespace HMDT::Project {
             virtual void import(const ShapeFinder&, std::shared_ptr<MapData>) override;
             virtual bool validateData() override;
 
-            virtual IProject& getRootParent() override;
+            virtual IRootProject& getRootParent() override;
             virtual IMapProject& getRootMapParent() override;
 
             ProvinceProject& getProvinceProject();

@@ -78,7 +78,7 @@ bool HMDT::Project::ProvinceProject::validateData() {
     return true;
 }
 
-HMDT::Project::IProject& HMDT::Project::ProvinceProject::getRootParent() {
+HMDT::Project::IRootProject& HMDT::Project::ProvinceProject::getRootParent() {
     return m_parent_project.getRootParent();
 }
 
@@ -361,7 +361,7 @@ void HMDT::Project::ProvinceProject::buildProvinceCache(const Province* province
     WRITE_DEBUG("Done.");
 
     if(prog_opts.debug) {
-        auto path = dynamic_cast<HoI4Project&>(getRootParent()).getMetaRoot() / "debug";
+        auto path = getRootParent().getMetaRoot() / "debug";
         auto fname = path / (std::string("prov_preview") + std::to_string(id) + ".pam");
 
         if(!std::filesystem::exists(path)) {

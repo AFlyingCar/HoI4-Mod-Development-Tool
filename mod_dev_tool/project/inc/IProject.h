@@ -20,6 +20,8 @@ namespace HMDT {
 }
 
 namespace HMDT::Project {
+    struct IRootProject;
+
     /**
      * @brief The interface for a project
      */
@@ -29,7 +31,21 @@ namespace HMDT::Project {
         virtual MaybeVoid save(const std::filesystem::path&) = 0;
         virtual MaybeVoid load(const std::filesystem::path&) = 0;
 
-        virtual IProject& getRootParent() = 0;
+        virtual IRootProject& getRootParent() = 0;
+    };
+
+    /**
+     * @brief Interface for the root of any project hierarchy
+     */
+    struct IRootProject: public IProject {
+        virtual const std::filesystem::path& getPath() const = 0;
+        virtual std::filesystem::path getRoot() const = 0;
+
+        virtual std::filesystem::path getMetaRoot() const = 0;
+        virtual std::filesystem::path getInputsRoot() const = 0;
+        virtual std::filesystem::path getMapRoot() const = 0;
+
+        virtual IRootProject& getRootParent() override;
     };
 
     struct IMapProject: public IProject {

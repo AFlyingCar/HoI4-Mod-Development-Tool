@@ -83,7 +83,7 @@ auto HMDT::Project::ContinentProject::load(const std::filesystem::path& root)
     return STATUS_SUCCESS;
 }
 
-auto HMDT::Project::ContinentProject::getRootParent() -> IProject& {
+auto HMDT::Project::ContinentProject::getRootParent() -> IRootProject& {
     return m_parent_project.getRootParent();
 }
 

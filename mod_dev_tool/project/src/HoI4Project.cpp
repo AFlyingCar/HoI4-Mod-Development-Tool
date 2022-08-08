@@ -280,11 +280,6 @@ HMDT::MaybeVoid HMDT::Project::HoI4Project::save(bool do_save_subprojects) {
     return save(m_path, do_save_subprojects);
 }
 
-HMDT::Project::IProject& HMDT::Project::HoI4Project::getRootParent() {
-    // We are the root, so just return ourselves
-    return *this;
-}
-
 /**
  * @brief Sets m_path and m_root
  *

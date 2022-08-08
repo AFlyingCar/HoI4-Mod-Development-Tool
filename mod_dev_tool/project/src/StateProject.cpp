@@ -234,7 +234,7 @@ auto HMDT::Project::StateProject::validateProvinceStateID(StateID province_state
 }
 
 
-HMDT::Project::IProject& HMDT::Project::StateProject::getRootParent() {
+HMDT::Project::IRootProject& HMDT::Project::StateProject::getRootParent() {
     return m_parent_project.getRootParent();
 }
 
@@ -270,7 +270,7 @@ void HMDT::Project::StateProject::updateStateIDMatrix() {
                       });
 
     if(prog_opts.debug) {
-        auto path = dynamic_cast<HoI4Project&>(getRootParent()).getMetaRoot() / "debug";
+        auto path = getRootParent().getMetaRoot() / "debug";
         auto fname = path / "stateidmtx.txt";
 
         if(!std::filesystem::exists(path)) {

@@ -22,7 +22,7 @@ namespace HMDT::Project {
 
             virtual bool validateData() override;
 
-            virtual IProject& getRootParent() override;
+            virtual IRootProject& getRootParent() override;
             virtual IMapProject& getRootMapParent() override;
 
             virtual ProvinceList& getProvinces() override;

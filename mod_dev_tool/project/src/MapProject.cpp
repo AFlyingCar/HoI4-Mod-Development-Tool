@@ -78,7 +78,7 @@ auto HMDT::Project::MapProject::load(const std::filesystem::path& path)
     //  about the map itself (such as dimensions, the original color value, etc...)
     std::unique_ptr<BitMap> input_image(new BitMap);
 
-    auto inputs_root = dynamic_cast<HoI4Project&>(m_parent_project).getInputsRoot();
+    auto inputs_root = getRootParent().getInputsRoot();
     auto input_provincemap_path = inputs_root / INPUT_PROVINCEMAP_FILENAME;
     if(!std::filesystem::exists(input_provincemap_path)) {
         WRITE_WARN("Source import image does not exist, unable to finish loading data.");
@@ -191,7 +191,7 @@ bool HMDT::Project::MapProject::validateData() {
     return success;
 }
 
-HMDT::Project::IProject& HMDT::Project::MapProject::getRootParent() {
+HMDT::Project::IRootProject& HMDT::Project::MapProject::getRootParent() {
     return m_parent_project.getRootParent();
 }
 

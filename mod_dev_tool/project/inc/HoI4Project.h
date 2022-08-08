@@ -14,7 +14,7 @@ namespace HMDT::Project {
     /**
      * @brief Defines a HoI4 project
      */
-    class HoI4Project: public IProject {
+    class HoI4Project: public IRootProject {
         public:
             HoI4Project();
 
@@ -24,12 +24,12 @@ namespace HMDT::Project {
 
             virtual ~HoI4Project() = default;
 
-            const std::filesystem::path& getPath() const;
-            std::filesystem::path getRoot() const;
+            virtual const std::filesystem::path& getPath() const override;
+            virtual std::filesystem::path getRoot() const override;
 
-            std::filesystem::path getMetaRoot() const;
-            std::filesystem::path getInputsRoot() const;
-            std::filesystem::path getMapRoot() const;
+            virtual std::filesystem::path getMetaRoot() const override;
+            virtual std::filesystem::path getInputsRoot() const override;
+            virtual std::filesystem::path getMapRoot() const override;
 
             const std::string& getName() const;
             const Version& getToolVersion() const;
@@ -51,8 +51,6 @@ namespace HMDT::Project {
 
             void setToolVersion(const Version&);
             void setHoI4Version(const Version&);
-
-            virtual IProject& getRootParent() override;
 
         protected:
             MaybeVoid save(const std::filesystem::path&, bool);
