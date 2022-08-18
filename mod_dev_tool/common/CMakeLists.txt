@@ -52,3 +52,10 @@ target_link_libraries(common PRIVATE nlohmann_json::nlohmann_json)
 
 target_link_libraries(common PUBLIC unique_colors logging)
 
+# Generate StatusCodes.csv after common is finished
+add_custom_command(TARGET common POST_BUILD
+    COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/genStatusCodesList.py" "${CMAKE_CURRENT_SOURCE_DIR}/inc/StatusCodesDef.h" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/inc/StatusCodesDef.h" "${CMAKE_SOURCE_DIR}/tools/genStatusCodesList.py"
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    )
+
