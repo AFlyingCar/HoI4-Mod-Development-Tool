@@ -423,7 +423,7 @@ TEST(UtilTests, StatusCodeGenerationTests) {
     // Do a check for each base value and define the base value locally
 #define Y(SYMBOL, BASE_VALUE) \
     constexpr uint32_t SYMBOL = BASE_VALUE; \
-    ASSERT_EQ(static_cast<uint32_t>(HMDT::StatusCode:: SYMBOL), BASE_VALUE); \
+    ASSERT_EQ(static_cast<uint32_t>(HMDT::StatusCode:: CONCAT(SYMBOL, _CODES)), BASE_VALUE); \
     value = SYMBOL;
 
 #define X(SYMBOL, DESCRIPTION) \

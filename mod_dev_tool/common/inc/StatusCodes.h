@@ -10,7 +10,7 @@
 
 namespace HMDT {
 # define Y(SYMBOL, BASE_VALUE) \
-    SYMBOL = BASE_VALUE,
+    CONCAT(SYMBOL, _CODES) = BASE_VALUE,
 
 # define X(SYMBOL, DESCRIPTION) \
     SYMBOL,
