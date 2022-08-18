@@ -9,6 +9,9 @@
 # include "StatusCodesDef.h"
 
 namespace HMDT {
+# define Y(SYMBOL, BASE_VALUE) \
+    SYMBOL = BASE_VALUE,
+
 # define X(SYMBOL, VALUE, DESCRIPTION) \
     SYMBOL = VALUE,
 
@@ -20,15 +23,18 @@ namespace HMDT {
     };
 
 # undef X
+# undef Y
 
     std::error_code makeErrorCode(const StatusCode&);
 
+# define Y(...)
 # define X(SYMBOL, VALUE, DESCRIPTION) \
     static inline const std::error_code CONCAT(STATUS_, SYMBOL) = makeErrorCode(StatusCode:: SYMBOL);
 
     HMDT_STATUS_CODES()
 
 # undef X
+# undef Y
 }
 
 #endif
