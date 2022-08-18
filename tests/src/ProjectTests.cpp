@@ -5,6 +5,7 @@
 
 #include "HoI4Project.h"
 #include "Constants.h"
+#include "StatusCodes.h"
 
 #include "TestUtils.h"
 
@@ -36,7 +37,7 @@ TEST(ProjectTests, LoadHoI4ProjectTest) {
 
     HMDT::Project::Project hproject(project_path);
 
-    ASSERT_TRUE(hproject.load());
+    ASSERT_STATUS(hproject.load(), HMDT::STATUS_SUCCESS);
 
     ASSERT_EQ(hproject.getPath(), project_path);
     ASSERT_EQ(hproject.getRoot(), root_path);

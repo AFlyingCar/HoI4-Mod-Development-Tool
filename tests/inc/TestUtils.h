@@ -16,6 +16,9 @@
     ASSERT_VALID(VAL); \
     ASSERT_FLOAT_EQ(*VAL, EXPECTED)
 
+# define ASSERT_STATUS(VAL, EXPECTED) \
+    ASSERT_EQ(VAL.error(), EXPECTED)
+
 # define TEST_COUT std::cerr << "[          ] [ INFO ]"
 # define TEST_CERR std::cerr << "[          ] [ ERR  ]"
 

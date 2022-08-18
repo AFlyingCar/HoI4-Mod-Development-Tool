@@ -140,12 +140,15 @@ int HMDT::runHeadless() {
     river_data = new unsigned char[data_size];
     normalmap_data = new unsigned char[data_size];
 
+    std::shared_ptr<MapData> map_data(new MapData(image->info_header.width,
+                                                  image->info_header.height));
+
     if(!prog_opts.quiet)
         WRITE_INFO("Finding all possible shapes.");
 
     // Find every shape
     EmptyGraphicsWorker worker;
-    ShapeFinder shape_finder(image, worker);
+    ShapeFinder shape_finder(image, worker, map_data);
     auto shapes = shape_finder.findAllShapes();
 
     // Redraw the new image so we can properly show how it should look in the

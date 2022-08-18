@@ -293,8 +293,8 @@ void HMDT::GUI::ProvincePropertiesPane::buildStateCreationButton() {
             auto& map_project = opt_project->get().getMapProject();
 
             auto selected = SelectionManager::getInstance().getSelectedProvinceLabels();
-            auto id = map_project.addNewState(std::vector<uint32_t>(selected.begin(),
-                                                                    selected.end()));
+            auto id = map_project.getStateProject().addNewState(std::vector<uint32_t>(selected.begin(),
+                                                                                      selected.end()));
             SelectionManager::getInstance().selectState(id);
 
             // TODO: If we have a State view, we should switch to it here

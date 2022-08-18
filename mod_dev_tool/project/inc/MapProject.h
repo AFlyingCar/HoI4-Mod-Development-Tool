@@ -2,12 +2,9 @@
 # define MAPPROJECT_H
 
 # include <set>
-# include <queue>
 # include <vector>
 # include <string>
 # include <filesystem>
-
-# include "fifo_map.hpp"
 
 # include "ShapeFinder2.h"
 
@@ -18,47 +15,42 @@
 # include "Terrain.h"
 
 # include "IProject.h"
+# include "ProvinceProject.h"
+# include "StateProject.h"
+# include "ContinentProject.h"
 
 namespace HMDT::Project {
     /**
      * @brief Defines a map project for HoI4
      */
-    class MapProject: public IProject {
+    class MapProject: public IMapProject,
+                      public virtual IProvinceProject,
+                      public virtual IStateProject,
+                      public virtual IContinentProject
+    {
         public:
-            using ProvinceDataPtr = std::shared_ptr<unsigned char[]>;
-
             MapProject(IProject&);
             virtual ~MapProject();
 
-            virtual bool save(const std::filesystem::path&,
-                              std::error_code& = last_error) override;
-            virtual bool load(const std::filesystem::path&,
-                              std::error_code& = last_error) override;
+            virtual MaybeVoid save(const std::filesystem::path&) override;
+            virtual MaybeVoid load(const std::filesystem::path&) override;
 
-            void importMapData(ShapeFinder&&, std::shared_ptr<MapData>);
+            virtual std::shared_ptr<MapData> getMapData() override;
+            virtual const std::shared_ptr<MapData> getMapData() const override;
+            virtual void import(const ShapeFinder&, std::shared_ptr<MapData>) override;
+            virtual bool validateData() override;
 
-            std::shared_ptr<MapData> getMapData();
-            const std::shared_ptr<MapData> getMapData() const;
+            virtual IRootProject& getRootParent() override;
+            virtual IMapProject& getRootMapParent() override;
 
-            const uint32_t* getLabelMatrix() const;
+            ProvinceProject& getProvinceProject();
+            const ProvinceProject& getProvinceProject() const;
 
-            bool isValidProvinceLabel(uint32_t) const;
-            bool isValidStateID(StateID) const;
+            StateProject& getStateProject();
+            const StateProject& getStateProject() const;
 
-            const Province& getProvinceForLabel(uint32_t) const;
-            Province& getProvinceForLabel(uint32_t);
-
-            const State& getStateForID(StateID) const;
-            State& getStateForID(StateID);
-
-            const std::set<std::string>& getContinentList() const;
-
-            void addNewContinent(const std::string&);
-            void removeContinent(const std::string&);
-            bool doesContinentExist(const std::string&) const;
-
-            StateID addNewState(const std::vector<uint32_t>&);
-            void removeState(StateID);
+            virtual const ContinentSet& getContinentList() const override;
+            virtual const StateMap& getStates() const override;
 
             void moveProvinceToState(uint32_t, StateID);
             void moveProvinceToState(Province&, StateID);
@@ -66,73 +58,32 @@ namespace HMDT::Project {
 
             const std::vector<Terrain>& getTerrains() const;
 
-            ProvinceDataPtr getPreviewData(ProvinceID);
-            ProvinceDataPtr getPreviewData(const Province*);
+            virtual ProvinceDataPtr getPreviewData(ProvinceID) override;
+            virtual ProvinceDataPtr getPreviewData(const Province*) override;
 
-            ProvinceList& getProvinces();
-            const ProvinceList& getProvinces() const;
-
-            const std::map<uint32_t, State>& getStates() const;
+            virtual ProvinceList& getProvinces() override;
+            virtual const ProvinceList& getProvinces() const override;
 
             void calculateCoastalProvinces(bool = false);
 
-        protected:
-            bool saveShapeLabels(const std::filesystem::path&,
-                                 std::error_code&);
-            bool saveProvinceData(const std::filesystem::path&,
-                                 std::error_code&);
-            bool saveContinentData(const std::filesystem::path&,
-                                   std::error_code&);
-            bool saveStateData(const std::filesystem::path&,
-                               std::error_code&);
-
-            bool loadShapeLabels(const std::filesystem::path&,
-                                 std::error_code&);
-            bool loadProvinceData(const std::filesystem::path&,
-                                 std::error_code&);
-            bool loadContinentData(const std::filesystem::path&,
-                                   std::error_code&);
-            bool loadStateData(const std::filesystem::path&,
-                               std::error_code&);
-
-            bool validateData();
-
-            void updateStateIDMatrix();
-
         private:
-            void buildProvinceCache(const Province*);
-            void buildProvinceOutlines();
+            virtual ContinentSet& getContinents() override;
+            virtual StateMap& getStateMap() override;
 
-            /**
-             * @brief A struct which holds information about shape detection
-             */
-            struct ShapeDetectionInfo {
-                ProvinceList provinces;
-                uint32_t label_matrix_size = 0;
+            //! The Provinces project
+            ProvinceProject m_provinces_project;
 
-                std::shared_ptr<MapData> map_data;
-            } m_shape_detection_info;
+            //! The State project
+            StateProject m_state_project;
 
-            /**
-             * @brief A cache of province previews
-             * @details Note: We use nlohmann::fifo_map for this so that we can
-             *          do hash-based lookup while still retaining FIFO access.
-             *          This is so that the least accessed (first in) can get
-             *          garbage collected and cleaned out
-             */
-            nlohmann::fifo_map<ProvinceID, ProvinceDataPtr> m_data_cache;
+            //! The Continent project
+            ContinentProject m_continent_project;
 
-            //! All continents defined for this project
-            std::set<std::string> m_continents;
+            //! The shared map data
+            std::shared_ptr<MapData> m_map_data;
 
             //! All terrains defined for this project
             std::vector<Terrain> m_terrains;
-
-            //! All states defined for this project
-            std::map<uint32_t, State> m_states;
-
-            //! All available state ids, which should be used before new ones
-            std::queue<StateID> m_available_state_ids;
 
             //! The parent project that this MapProject belongs to
             IProject& m_parent_project;

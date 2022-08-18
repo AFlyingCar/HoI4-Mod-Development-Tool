@@ -10,18 +10,18 @@
 #include "UniqueColorGenerator.h" // generateUniqueColor
 #include "Options.h"
 #include "Monad.h"
+#include "MapData.h"
 
 /**
  * @brief Constructs a ShapeFinder
  *
  * @param image The image to detect shapes from
  */
-HMDT::ShapeFinder::ShapeFinder(const BitMap* image, IGraphicsWorker& worker):
+HMDT::ShapeFinder::ShapeFinder(const BitMap* image, IGraphicsWorker& worker,
+                               std::shared_ptr<MapData> map_data):
     m_worker(worker),
     m_image(image),
-    m_label_matrix_size(m_image->info_header.width *
-                        m_image->info_header.height),
-    m_label_matrix(new uint32_t[m_label_matrix_size]),
+    m_map_data(map_data),
     m_label_parents(),
     m_border_pixels(),
     m_label_to_color(),
@@ -34,8 +34,7 @@ HMDT::ShapeFinder::ShapeFinder(const BitMap* image, IGraphicsWorker& worker):
 HMDT::ShapeFinder::ShapeFinder(IGraphicsWorker& worker):
     m_worker(worker),
     m_image(nullptr),
-    m_label_matrix_size(0),
-    m_label_matrix(nullptr),
+    m_map_data(nullptr),
     m_label_parents(),
     m_border_pixels(),
     m_label_to_color(),
@@ -47,8 +46,7 @@ HMDT::ShapeFinder::ShapeFinder(IGraphicsWorker& worker):
 HMDT::ShapeFinder::ShapeFinder(ShapeFinder&& other):
     m_worker(other.m_worker),
     m_image(std::move(other.m_image)),
-    m_label_matrix_size(std::move(other.m_label_matrix_size)),
-    m_label_matrix(std::move(other.m_label_matrix)),
+    m_map_data(std::move(other.m_map_data)),
     m_label_parents(std::move(other.m_label_parents)),
     m_border_pixels(std::move(other.m_border_pixels)),
     m_label_to_color(std::move(other.m_label_to_color)),
@@ -59,8 +57,7 @@ HMDT::ShapeFinder::ShapeFinder(ShapeFinder&& other):
 
 auto HMDT::ShapeFinder::operator=(ShapeFinder&& other) -> ShapeFinder& {
     m_image = std::move(other.m_image);
-    m_label_matrix_size = std::move(other.m_label_matrix_size);
-    m_label_matrix = std::move(other.m_label_matrix);
+    m_map_data = std::move(other.m_map_data);
     m_label_parents = std::move(other.m_label_parents);
     m_border_pixels = std::move(other.m_border_pixels);
     m_label_to_color = std::move(other.m_label_to_color);
@@ -84,6 +81,8 @@ uint32_t HMDT::ShapeFinder::pass1() {
 
     uint32_t num_border_pixels = 0;
 
+    auto label_matrix = m_map_data->getLabelMatrix().lock();
+
     WRITE_INFO("Performing Pass #1 of CCL.");
 
     // Go over every pixel of the image
@@ -95,11 +94,11 @@ uint32_t HMDT::ShapeFinder::pass1() {
 
             Color color = getColorAt(m_image, x, y);
             uint32_t index = xyToIndex(m_image, x, y);
-            uint32_t& label = m_label_matrix[index] = next_label;
+            uint32_t& label = label_matrix[index] = next_label;
 
             // Skip this pixel if it is part of a border
             if(color == BORDER_COLOR) {
-                m_label_matrix[index] = 0; // Reset the label back to 0
+                label_matrix[index] = 0; // Reset the label back to 0
                 ++num_border_pixels;
                 continue;
             }
@@ -184,6 +183,8 @@ auto HMDT::ShapeFinder::pass2(LabelShapeIdxMap& label_to_shapeidx)
     uint32_t width = m_image->info_header.width;
     uint32_t height = m_image->info_header.height;
 
+    auto label_matrix = m_map_data->getLabelMatrix().lock();
+
     m_shapes.clear();
 
     if(!prog_opts.quiet)
@@ -196,7 +197,7 @@ auto HMDT::ShapeFinder::pass2(LabelShapeIdxMap& label_to_shapeidx)
             }
 
             uint32_t index = xyToIndex(m_image, x, y);
-            uint32_t& label = m_label_matrix[index];
+            uint32_t& label = label_matrix[index];
             Color color = getColorAt(m_image, x, y);
             Point2D point{x, y};
 
@@ -237,6 +238,8 @@ bool HMDT::ShapeFinder::mergeBorders(PolygonList& shapes,
 {
     uint32_t width = m_image->info_header.width;
     uint32_t height = m_image->info_header.height;
+
+    auto label_matrix = m_map_data->getLabelMatrix().lock();
 
     if(!prog_opts.quiet)
         WRITE_INFO("Performing Pass #3 of CCL.");
@@ -301,13 +304,13 @@ bool HMDT::ShapeFinder::mergeBorders(PolygonList& shapes,
         }
 
         uint32_t index = xyToIndex(m_image, merge_with.x, merge_with.y);
-        uint32_t label = m_label_matrix[index];
+        uint32_t label = label_matrix[index];
 
         Polygon& shape = shapes[label_to_shapeidx.at(label)];
 
         addPixelToShape(shape, pixel);
 
-        m_label_matrix[xyToIndex(m_image, x, y)] = label;
+        label_matrix[xyToIndex(m_image, x, y)] = label;
 
         m_worker.writeDebugColor(x, y, shape.unique_color);
     }
@@ -417,6 +420,8 @@ const HMDT::PolygonList& HMDT::ShapeFinder::findAllShapes() {
 std::optional<uint32_t> HMDT::ShapeFinder::finalize(PolygonList& shapes) {
     uint32_t problematic_shapes = 0;
 
+    auto label_matrix = m_map_data->getLabelMatrix().lock();
+
     // Perform error-checking on shapes
     uint32_t label = 0;
     for(Polygon& shape : shapes) {
@@ -436,7 +441,7 @@ std::optional<uint32_t> HMDT::ShapeFinder::finalize(PolygonList& shapes) {
         //  calculated
         for(auto&& pixel : shape.pixels) {
             auto index = xyToIndex(m_image, pixel.point.x, pixel.point.y);
-            m_label_matrix[index] = label;
+            label_matrix[index] = label;
 
             auto&& [x, y] = pixel.point;
             left = std::min(x, left);
@@ -494,10 +499,12 @@ std::optional<uint32_t> HMDT::ShapeFinder::finalize(PolygonList& shapes) {
  * @param filename The filename to output the stage to.
  */
 void HMDT::ShapeFinder::outputStage(const std::filesystem::path& filename) {
-    unsigned char* label_data = new unsigned char[m_label_matrix_size * 3];
+    unsigned char* label_data = new unsigned char[m_map_data->getMatrixSize() * 3];
 
-    for(uint32_t i = 0; i < m_label_matrix_size; ++i) {
-        uint32_t label = m_label_matrix[i];
+    auto label_matrix = m_map_data->getLabelMatrix().lock();
+
+    for(uint32_t i = 0; i < m_map_data->getMatrixSize(); ++i) {
+        uint32_t label = label_matrix[i];
         const HMDT::Color& c = m_label_to_color[label];
         label_data[i * 3] = c.b;
         label_data[(i * 3) + 1] = c.g;
@@ -522,7 +529,7 @@ auto HMDT::ShapeFinder::getLabelAndColor(const Point2D& point,
                                          const Color& color)
     -> std::pair<uint32_t, Color>
 {
-    uint32_t label = m_label_matrix[xyToIndex(m_image, point.x, point.y)];
+    uint32_t label = m_map_data->getLabelMatrix().lock()[xyToIndex(m_image, point.x, point.y)];
     Color color_at = getColorAt(m_image, point.x, point.y);
 
     if(color_at != BORDER_COLOR && color_at != color) {
@@ -776,14 +783,6 @@ HMDT::ShapeFinder::Stage HMDT::ShapeFinder::getStage() const {
     return m_stage;
 }
 
-uint32_t HMDT::ShapeFinder::getLabelMatrixSize() {
-    return m_label_matrix_size;
-}
-
-uint32_t* HMDT::ShapeFinder::getLabelMatrix() {
-    return m_label_matrix;
-}
-
 auto HMDT::ShapeFinder::getBorderPixels() 
     -> std::vector<Pixel>&
 {
@@ -804,14 +803,6 @@ const HMDT::BitMap* HMDT::ShapeFinder::getImage() const {
     return m_image;
 }
 
-uint32_t HMDT::ShapeFinder::getLabelMatrixSize() const {
-    return m_label_matrix_size;
-}
-
-const uint32_t* HMDT::ShapeFinder::getLabelMatrix() const {
-    return m_label_matrix;
-}
-
 auto HMDT::ShapeFinder::getBorderPixels() const
     -> const std::vector<Pixel>&
 {
@@ -829,9 +820,11 @@ auto HMDT::ShapeFinder::getShapes() const -> const PolygonList& {
 }
 
 void HMDT::ShapeFinder::calculateAdjacencies(PolygonList& shapes) const {
+    auto label_matrix = m_map_data->getLabelMatrix().lock();
+
     for(Polygon& shape : shapes) {
         for(auto&& pixel : shape.pixels) {
-            calculateAdjacency(m_image, m_label_matrix, shape.adjacent_labels,
+            calculateAdjacency(m_image, label_matrix.get(), shape.adjacent_labels,
                                pixel.point);
         }
     }

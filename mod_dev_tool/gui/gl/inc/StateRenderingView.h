@@ -42,7 +42,7 @@ namespace HMDT::GUI::GL {
             Texture m_state_id_texture;
 
             //! A tag for the last state ID matrix value, used to know if it needs to be refreshed
-            uint32_t m_last_state_id_matrix_updated_tag;
+            uint32_t m_last_state_id_matrix_updated_tag = -1;
     };
 }
 

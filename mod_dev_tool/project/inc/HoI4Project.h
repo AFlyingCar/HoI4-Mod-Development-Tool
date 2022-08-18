@@ -14,7 +14,7 @@ namespace HMDT::Project {
     /**
      * @brief Defines a HoI4 project
      */
-    class HoI4Project: public IProject {
+    class HoI4Project: public IRootProject {
         public:
             HoI4Project();
 
@@ -24,12 +24,13 @@ namespace HMDT::Project {
 
             virtual ~HoI4Project() = default;
 
-            const std::filesystem::path& getPath() const;
-            std::filesystem::path getRoot() const;
+            virtual const std::filesystem::path& getPath() const override;
+            virtual std::filesystem::path getRoot() const override;
 
-            std::filesystem::path getMetaRoot() const;
-            std::filesystem::path getInputsRoot() const;
-            std::filesystem::path getMapRoot() const;
+            virtual std::filesystem::path getMetaRoot() const override;
+            virtual std::filesystem::path getInputsRoot() const override;
+            virtual std::filesystem::path getMapRoot() const override;
+            virtual std::filesystem::path getDebugRoot() const override;
 
             const std::string& getName() const;
             const Version& getToolVersion() const;
@@ -39,8 +40,8 @@ namespace HMDT::Project {
 
             MapProject& getMapProject();
 
-            bool load(std::error_code& = last_error);
-            bool save(bool = true, std::error_code& = last_error);
+            MaybeVoid load();
+            MaybeVoid save(bool = true);
 
             void setPath(const std::filesystem::path&);
             void setName(const std::string&);
@@ -53,13 +54,10 @@ namespace HMDT::Project {
             void setHoI4Version(const Version&);
 
         protected:
-            bool save(const std::filesystem::path&, bool,
-                      std::error_code& = last_error);
+            MaybeVoid save(const std::filesystem::path&, bool);
 
-            virtual bool save(const std::filesystem::path&,
-                              std::error_code& = last_error) override;
-            virtual bool load(const std::filesystem::path&,
-                              std::error_code& = last_error) override;
+            virtual MaybeVoid save(const std::filesystem::path&) override;
+            virtual MaybeVoid load(const std::filesystem::path&) override;
 
         private:
             //! The path to the project file (The .hoi4proj file)

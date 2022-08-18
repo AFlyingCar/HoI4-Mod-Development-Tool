@@ -505,10 +505,11 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                         //   has_selections_already variables since those are
                         //   referring to provinces, so we need to do similar
                         //   calculations again but for states
+                        map_project.getStateForID(state_id).andThen([this](auto state_ref)
                         {
-                            auto* state = &map_project.getStateForID(state_id);
+                            auto* state = &state_ref.get();
                             getStatePropertiesPane().setState(state);
-                        }
+                        });
 
                         // TODO: Update state drawing area once we have that
                         //   Use different behavior for add/select
@@ -643,7 +644,7 @@ bool HMDT::GUI::MainWindow::importProvinceMap(const Glib::ustring& filename) {
 
         m_drawing_area->setMapData(map_data);
 
-        ShapeFinder shape_finder(image, GraphicsWorker::getInstance());
+        ShapeFinder shape_finder(image, GraphicsWorker::getInstance(), map_data);
 
         // Open a progress bar dialog to show the user that we are actually doing
         //  something
@@ -754,7 +755,7 @@ bool HMDT::GUI::MainWindow::importProvinceMap(const Glib::ustring& filename) {
         }
 
         WRITE_DEBUG("Assigning the found data to the map project.");
-        project.getMapProject().importMapData(std::move(shape_finder), map_data);
+        project.getMapProject().import(shape_finder, map_data);
 
         WRITE_INFO("Calculating coastal provinces...");
         project.getMapProject().calculateCoastalProvinces();
@@ -816,7 +817,7 @@ void HMDT::GUI::MainWindow::newProject() {
 
             // Attempt to save just the root project (this will set up the
             //  initial metadata we will need for later)
-            if(!project->save(false)) {
+            if(IS_FAILURE(project->save(false))) {
                 Gtk::MessageDialog dialog(*this, "Failed to save project.", false,
                                           Gtk::MESSAGE_ERROR);
                 dialog.run();
@@ -856,7 +857,7 @@ void HMDT::GUI::MainWindow::openProject() {
 
     if(!path.empty()) {
         project->setPath(path);
-        if(!project->load()) {
+        if(IS_FAILURE(project->load())) {
             Gtk::MessageDialog err_diag("Failed to open file.", false,
                                         Gtk::MESSAGE_ERROR);
             err_diag.run();
@@ -938,7 +939,7 @@ void HMDT::GUI::MainWindow::saveProject() {
         auto& project = opt_project->get();
 
         // Make sure the user is notified if we failed to save the project
-        if(!project.save()) {
+        if(IS_FAILURE(project.save())) {
             Gtk::MessageDialog dialog(*this, "Failed to save file.", false,
                                       Gtk::MESSAGE_ERROR);
             dialog.run();

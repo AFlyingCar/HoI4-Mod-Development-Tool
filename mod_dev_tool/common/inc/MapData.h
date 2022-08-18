@@ -17,7 +17,10 @@ namespace HMDT {
             using MapType32 = std::weak_ptr<uint32_t[]>;
             using ConstMapType32 = std::weak_ptr<const uint32_t[]>;
 
+            MapData();
             MapData(uint32_t, uint32_t);
+            explicit MapData(const MapData*);
+
             MapData(MapData&&) = default;
 
             MapData(const MapData&) = delete;
@@ -29,10 +32,15 @@ namespace HMDT {
             uint32_t getHeight() const;
             std::pair<uint32_t, uint32_t> getDimensions() const;
 
+            uint32_t getInputSize() const;
+            uint32_t getProvincesSize() const;
+            uint32_t getProvinceOutlinesSize() const;
+            uint32_t getMatrixSize() const;
+
             bool isClosed() const;
 
-            void setLabelMatrix(uint32_t[]);
-            void setStateIDMatrix(uint32_t[]);
+            [[deprecated]] void setLabelMatrix(uint32_t[]);
+            [[deprecated]] void setStateIDMatrix(uint32_t[]);
 
             ////////////////////////////////////////////////////////////////////
 

@@ -6,6 +6,8 @@
 
 #include "ShapeFinder2.h"
 
+#include "MapData.h"
+
 #include "TestOverrides.h"
 #include "TestUtils.h"
 
@@ -55,7 +57,10 @@ TEST(ShapeFinderTests, TestPass1BorderCount) {
 
     ASSERT_NE(HMDT::readBMP(iii.path, image.get()), nullptr);
 
-    ShapeFinderMock finder(image.get(), GraphicsWorkerMock::getInstance());
+    std::shared_ptr<HMDT::MapData> map_data(new HMDT::MapData(image->info_header.width,
+                                                              image->info_header.height));
+
+    ShapeFinderMock finder(image.get(), GraphicsWorkerMock::getInstance(), map_data);
 
     auto border_pixel_count = finder.pass1();
 
@@ -75,7 +80,10 @@ TEST(ShapeFinderTests, TestDetectedShapeCount) {
 
     ASSERT_NE(HMDT::readBMP(iii.path, image.get()), nullptr);
 
-    ShapeFinderMock finder(image.get(), GraphicsWorkerMock::getInstance());
+    std::shared_ptr<HMDT::MapData> map_data(new HMDT::MapData(image->info_header.width,
+                                                              image->info_header.height));
+
+    ShapeFinderMock finder(image.get(), GraphicsWorkerMock::getInstance(), map_data);
 
     auto&& shapes = finder.findAllShapes();
 
@@ -83,8 +91,8 @@ TEST(ShapeFinderTests, TestDetectedShapeCount) {
 
     // Verify that there is exactly one label per shape
     std::set<uint32_t> colors;
-    std::for_each(finder.getLabelMatrix(),
-                  finder.getLabelMatrix() + finder.getLabelMatrixSize(),
+    std::for_each(map_data->getLabelMatrix().lock().get(),
+                  map_data->getLabelMatrix().lock().get() + map_data->getMatrixSize(),
                   [&colors](uint32_t c) { colors.insert(c); });
 
     ASSERT_EQ(colors.size(), iii.num_shapes);

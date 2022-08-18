@@ -23,7 +23,7 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
                 auto& map_project = project.getMapProject();
 
                 auto map_data = project.getMapProject().getMapData();
-                auto lmatrix = project.getMapProject().getLabelMatrix();
+                auto lmatrix = map_data->getLabelMatrix().lock();
 
                 // If the click happens outside of the bounds of the image, then
                 //   deselect the province
@@ -42,7 +42,7 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
                 // If this is a valid province, then select the state that it is
                 //  a part of (if it is a part of one at all, that is)
                 if(map_project.isValidProvinceLabel(label)) {
-                    auto& prov = map_project.getProvinceForLabel(label -1);
+                    auto& prov = map_project.getProvinceForLabel(label);
 
                     // Make sure we check for if the state ID is valid first so
                     //  that we deselect the state for provinces that aren't in
@@ -65,7 +65,7 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
                 auto& map_project = project.getMapProject();
 
                 auto map_data = map_project.getMapData();
-                auto lmatrix = map_project.getLabelMatrix();
+                auto lmatrix = map_data->getLabelMatrix().lock();
 
                 // Multiselect out of bounds will simply not add to the selections
                 if(x > map_data->getWidth() || y > map_data->getHeight()) {
