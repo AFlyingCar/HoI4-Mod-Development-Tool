@@ -12,8 +12,8 @@ namespace HMDT {
 # define Y(SYMBOL, BASE_VALUE) \
     SYMBOL = BASE_VALUE,
 
-# define X(SYMBOL, VALUE, DESCRIPTION) \
-    SYMBOL = VALUE,
+# define X(SYMBOL, DESCRIPTION) \
+    SYMBOL,
 
     /**
      * @brief An enum representation of each available status code
@@ -28,7 +28,7 @@ namespace HMDT {
     std::error_code makeErrorCode(const StatusCode&);
 
 # define Y(...)
-# define X(SYMBOL, VALUE, DESCRIPTION) \
+# define X(SYMBOL,  DESCRIPTION) \
     static inline const std::error_code CONCAT(STATUS_, SYMBOL) = makeErrorCode(StatusCode:: SYMBOL);
 
     HMDT_STATUS_CODES()

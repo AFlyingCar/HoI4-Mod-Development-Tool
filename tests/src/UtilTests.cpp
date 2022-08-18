@@ -416,13 +416,19 @@ TEST(UtilTests, StatusCodeEqualityTests) {
 TEST(UtilTests, StatusCodeGenerationTests) {
     // Verify that the enum is using the right values
 
+    // The next expected value. Start it at one less than we want for the case
+    //   of STATUS_SUCCESS.
+    uint32_t value = -1;
+
     // Do a check for each base value and define the base value locally
 #define Y(SYMBOL, BASE_VALUE) \
     constexpr uint32_t SYMBOL = BASE_VALUE; \
-    ASSERT_EQ(static_cast<uint32_t>(HMDT::StatusCode:: SYMBOL), BASE_VALUE);
+    ASSERT_EQ(static_cast<uint32_t>(HMDT::StatusCode:: SYMBOL), BASE_VALUE); \
+    value = SYMBOL;
 
-#define X(SYMBOL, VALUE, DESCRIPTION) \
-    ASSERT_EQ(static_cast<uint32_t>(HMDT::StatusCode:: SYMBOL), VALUE);
+#define X(SYMBOL, DESCRIPTION) \
+    ++value; \
+    ASSERT_EQ(static_cast<uint32_t>(HMDT::StatusCode:: SYMBOL), value);
 
     HMDT_STATUS_CODES()
 
@@ -433,13 +439,19 @@ TEST(UtilTests, StatusCodeGenerationTests) {
 TEST(UtilTests, StatusCodeCategoryTest) {
     const auto& category = HMDT::getStatusCategory();
 
-#define Y(SYMBOL, BASE_VALUE) \
-    constexpr uint32_t SYMBOL = BASE_VALUE;
+    // The next expected value. Start it at one less than we want for the case
+    //   of STATUS_SUCCESS.
+    uint32_t value = -1;
 
-#define X(SYMBOL, VALUE, DESCRIPTION) \
-    ASSERT_EQ(category.default_error_condition(VALUE), \
-              std::error_condition(VALUE, category));  \
-    ASSERT_EQ(category.message(VALUE), DESCRIPTION);
+#define Y(SYMBOL, BASE_VALUE) \
+    constexpr uint32_t SYMBOL = BASE_VALUE; \
+    value = SYMBOL;
+
+#define X(SYMBOL, DESCRIPTION) \
+    ++value; \
+    ASSERT_EQ(category.default_error_condition(value), \
+              std::error_condition(value, category));  \
+    ASSERT_EQ(category.message(value), DESCRIPTION);
 
     HMDT_STATUS_CODES()
 

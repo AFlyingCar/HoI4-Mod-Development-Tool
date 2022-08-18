@@ -15,21 +15,10 @@ const char* HMDT::StatusCategory::name() const noexcept {
 
 std::error_condition HMDT::StatusCategory::default_error_condition(int code) const noexcept
 {
-    // Define all base status code values here first
-#define X(...)
-#define Y(SYMBOL, BASE_VALUE) \
-    constexpr uint32_t SYMBOL = BASE_VALUE;
-
-    HMDT_STATUS_CODES()
-
-#undef Y
-#undef X
-
-////////////////////////////////////////////////////////////////////////////////
 
 #define Y(...)
-#define X(SYMBOL, VALUE, DESCRIPTION) \
-    case StatusCode:: SYMBOL : return std::error_condition(VALUE, *this);
+#define X(SYMBOL, DESCRIPTION) \
+    case StatusCode:: SYMBOL : return std::error_condition(code, *this);
 
     switch(static_cast<StatusCode>(code)) {
         HMDT_STATUS_CODES()
@@ -60,7 +49,7 @@ bool HMDT::StatusCategory::equivalent(int code,
 
 std::string HMDT::StatusCategory::message(int code) const {
 #define Y(...)
-#define X(SYMBOL, VALUE, DESCRIPTION) \
+#define X(SYMBOL, DESCRIPTION) \
     case StatusCode:: SYMBOL : return DESCRIPTION ;
 
     switch(static_cast<StatusCode>(code)) {
