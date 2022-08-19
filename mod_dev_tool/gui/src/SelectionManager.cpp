@@ -175,7 +175,7 @@ auto HMDT::GUI::SelectionManager::getSelectedStates() -> RefVector<State> {
 }
 
 auto HMDT::GUI::SelectionManager::getSelectedStateIDs() const
-    -> const std::set<uint32_t>&
+    -> const std::set<StateID>&
 {
     return m_selected_states;
 }

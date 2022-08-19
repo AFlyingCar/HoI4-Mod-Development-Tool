@@ -44,7 +44,7 @@ namespace HMDT::GUI {
 
             RefVector<const State> getSelectedStates() const;
             RefVector<State> getSelectedStates();
-            const std::set<uint32_t>& getSelectedStateIDs() const;
+            const std::set<StateID>& getSelectedStateIDs() const;
 
             bool isProvinceSelected(uint32_t) const;
             bool isStateSelected(uint32_t) const;

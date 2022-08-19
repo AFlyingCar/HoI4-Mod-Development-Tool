@@ -10,6 +10,8 @@
 # include <optional>
 # include <utility>
 
+# include "OpaqueType.h"
+
 namespace HMDT {
     /**
      * @brief A 2D point
@@ -101,7 +103,8 @@ namespace HMDT {
     using ProvinceID = std::uint32_t;
     using TerrainID = std::string;
     using Continent = std::string;
-    using StateID = std::uint32_t;
+
+    HMDT_OPAQUE_ALIAS(std::uint32_t) StateID;
 
     /**
      * @brief A province as HOI4 will recognize it.
