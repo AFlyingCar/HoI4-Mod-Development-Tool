@@ -143,6 +143,8 @@ install(FILES ${RESOURCE_C_SRC}
         DESTINATION ${INSTALL_DESTINATION}/bin)
 install(FILES README.md
         DESTINATION ${INSTALL_DESTINATION}/share/doc/)
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/StatusCodesList.csv
+        DESTINATION ${INSTALL_DESTINATION}/share/doc)
 # TODO: Install the license as well to /share/licenses/, once we have one
 
 # Code taken from here: https://stackoverflow.com/questions/62884439/how-to-use-cmake-file-get-runtime-dependencies-in-an-install-statement

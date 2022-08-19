@@ -406,11 +406,57 @@ TEST(UtilTests, BasicMaybeTest) {
     HMDT::Log::Logger::getInstance().reset();
 }
 
-TEST(UtilTests, StatusCodeTests) {
+TEST(UtilTests, StatusCodeEqualityTests) {
     HMDT::MaybeVoid result = HMDT::STATUS_SUCCESS;
 
     ASSERT_FALSE(result.has_value());
     ASSERT_EQ(result.error().value(), static_cast<int>(HMDT::StatusCode::SUCCESS));
+}
+
+TEST(UtilTests, StatusCodeGenerationTests) {
+    // Verify that the enum is using the right values
+
+    // The next expected value. Start it at one less than we want for the case
+    //   of STATUS_SUCCESS.
+    uint32_t value = -1;
+
+    // Do a check for each base value and define the base value locally
+#define Y(SYMBOL, BASE_VALUE) \
+    constexpr uint32_t SYMBOL = BASE_VALUE; \
+    ASSERT_EQ(static_cast<uint32_t>(HMDT::StatusCode:: CONCAT(SYMBOL, _CODES)), BASE_VALUE); \
+    value = SYMBOL;
+
+#define X(SYMBOL, DESCRIPTION) \
+    ++value; \
+    ASSERT_EQ(static_cast<uint32_t>(HMDT::StatusCode:: SYMBOL), value);
+
+    HMDT_STATUS_CODES()
+
+#undef X
+#undef Y
+}
+
+TEST(UtilTests, StatusCodeCategoryTest) {
+    const auto& category = HMDT::getStatusCategory();
+
+    // The next expected value. Start it at one less than we want for the case
+    //   of STATUS_SUCCESS.
+    uint32_t value = -1;
+
+#define Y(SYMBOL, BASE_VALUE) \
+    constexpr uint32_t SYMBOL = BASE_VALUE; \
+    value = SYMBOL;
+
+#define X(SYMBOL, DESCRIPTION) \
+    ++value; \
+    ASSERT_EQ(category.default_error_condition(value), \
+              std::error_condition(value, category));  \
+    ASSERT_EQ(category.message(value), DESCRIPTION);
+
+    HMDT_STATUS_CODES()
+
+#undef X
+#undef Y
 }
 
 TEST(UtilTests, SimpleParallelTransformTest) {
