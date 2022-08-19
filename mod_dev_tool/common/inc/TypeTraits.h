@@ -39,6 +39,14 @@ namespace HMDT {
      */
     template<typename...>
     constexpr std::false_type alwaysFalse{};
+
+    /**
+     * @brief Negates a given constant boolean value
+     *
+     * @tparam B The boolean value to negate
+     */
+    template<bool B>
+    constexpr bool Not = !B;
 }
 
 #endif
