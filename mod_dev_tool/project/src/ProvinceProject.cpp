@@ -69,11 +69,13 @@ auto HMDT::Project::ProvinceProject::export_(const std::filesystem::path& root) 
 {
     // First create the export path if it doesn't exist
     if(std::error_code fs_ec; !std::filesystem::exists(root, fs_ec)) {
-        RETURN_ERROR_IF(fs_ec != std::errc::no_such_file_or_directory, fs_ec);
+        RETURN_ERROR_IF(fs_ec.value() != 0 &&
+                        fs_ec != std::errc::no_such_file_or_directory,
+                        fs_ec);
 
         auto result = std::filesystem::create_directory(root, fs_ec);
 
-        RETURN_ERROR_IF(result, fs_ec);
+        RETURN_ERROR_IF(!result, fs_ec);
     }
 
     MaybeVoid result;

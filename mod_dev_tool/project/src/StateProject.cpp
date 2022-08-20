@@ -193,11 +193,16 @@ auto HMDT::Project::StateProject::export_(const std::filesystem::path& root) con
 {
     // First create the export path if it doesn't exist
     if(std::error_code fs_ec; !std::filesystem::exists(root, fs_ec)) {
-        RETURN_ERROR_IF(fs_ec != std::errc::no_such_file_or_directory, fs_ec);
+        RETURN_ERROR_IF(fs_ec.value() != 0 &&
+                        fs_ec != std::errc::no_such_file_or_directory,
+                        fs_ec);
 
-        auto result = std::filesystem::create_directory(root, fs_ec);
+        // TODO: This is temporary. It should just be create_directory
+        //   But since StateProject is not part of HistoryProject yet, we have
+        //    to create our entire path from root
+        auto result = std::filesystem::create_directories(root, fs_ec);
 
-        RETURN_ERROR_IF(result, fs_ec);
+        RETURN_ERROR_IF(!result, fs_ec);
     }
 
     for(auto&& [id, state] : m_states) {
@@ -260,7 +265,7 @@ auto HMDT::Project::StateProject::export_(const std::filesystem::path& root) con
             out << "\t}" << std::endl;
             // More general state information
             out << "\tprovinces={" << std::endl;
-            out << "\t\t" << provinces_ss.str();
+            out << "\t\t" << provinces_ss.str() << std::endl;
             out << "\t}" << std::endl;
             out << "\tlocal_supplies=0.0" << std::endl; // TODO. Can be undefined, where it is assumed to be 0
             out << "}";
