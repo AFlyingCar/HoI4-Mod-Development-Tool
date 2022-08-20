@@ -297,6 +297,18 @@ void HMDT::GUI::MainWindow::initializeProjectActions() {
         // This action should be disabled by default, until a project gets opened
         recalc_coasts_action->set_enabled(false);
     }
+
+    {
+        auto export_project_action = add_action("export_project", []() {
+            if(auto opt_project = Driver::getInstance().getProject(); opt_project)
+            {
+                opt_project->get().export_();
+            } else {
+                WRITE_ERROR("No project is loaded, unable to export.");
+            }
+        });
+        export_project_action->set_enabled(false);
+    }
 }
 
 /**
@@ -900,6 +912,7 @@ void HMDT::GUI::MainWindow::onProjectOpened() {
     getAction("save")->set_enabled(true);
     getAction("close")->set_enabled(true);
     getAction("recalc_coasts")->set_enabled(true);
+    getAction("export_project")->set_enabled(true);
 
     // Issue callback to the properties pane to inform it that a project has
     //   been opened
@@ -921,6 +934,7 @@ void HMDT::GUI::MainWindow::onProjectClosed() {
     getAction("save")->set_enabled(false);
     getAction("close")->set_enabled(false);
     getAction("recalc_coasts")->set_enabled(false);
+    getAction("export_project")->set_enabled(false);
 
     {
         ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
