@@ -71,8 +71,14 @@ namespace HMDT {
     //! The filename for storing data about provinces
     const std::string PROVINCEDATA_FILENAME = "definition.csv";
 
+    //! The filename for storing the exported provinces bitmap
+    const std::string PROVINCES_FILENAME = "provinces.bmp";
+
     //! The filename for storing data about continents
     const std::string CONTINENTDATA_FILENAME = "continents";
+
+    //! The filename for storing the exported continents
+    const std::string CONTINENT_FILENAME = "continent.txt";
 
     //! The filename for storing data about states
     const std::string STATEDATA_FILENAME = "states.csv";
