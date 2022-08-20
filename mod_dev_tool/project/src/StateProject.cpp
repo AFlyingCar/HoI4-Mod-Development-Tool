@@ -188,6 +188,91 @@ auto HMDT::Project::StateProject::load(const std::filesystem::path& root)
     return STATUS_SUCCESS;
 }
 
+auto HMDT::Project::StateProject::export_(const std::filesystem::path& root) const noexcept
+    -> MaybeVoid
+{
+    // First create the export path if it doesn't exist
+    if(std::error_code fs_ec; !std::filesystem::exists(root, fs_ec)) {
+        RETURN_ERROR_IF(fs_ec != std::errc::no_such_file_or_directory, fs_ec);
+
+        auto result = std::filesystem::create_directory(root, fs_ec);
+
+        RETURN_ERROR_IF(result, fs_ec);
+    }
+
+    for(auto&& [id, state] : m_states) {
+        auto filename = std::to_string(id) + "-" + state.name + ".txt";
+        auto state_path = root / filename;
+
+        if(std::ofstream out(state_path); out) {
+            std::stringstream provinces_ss;
+            for(auto&& id : state.provinces) {
+                provinces_ss << id << ' ';
+            }
+
+            out << "state={" << std::endl;
+            // General state information
+            out << "\tid=" << id << std::endl;
+            out << "\tname=\"" << state.name << '"' << std::endl; // TODO: HoI4 uses STATE_{ID} here, is that for localization?
+            out << "\tmanpower=" << state.manpower << std::endl;
+            out << "\tstate_category = " << state.category << std::endl;
+            out << "\tbuildings_max_level_factor=" << state.buildings_max_level_factor << std::endl; // TODO: wiki recommends avoiding this. Should we not support it at all?
+
+            // TODO: Resources
+
+            if(state.impassable) {
+                out << "\timpassable = yes" << std::endl;
+            }
+
+            // History here
+            out << "\thistory={" << std::endl;
+
+            out << "\t\tvictory_points={" << std::endl;
+            // TODO Format is "PROVID AMOUNT"
+            // NOTE (from wiki):
+            //   Only one province can be defined within one victory_points.
+            //   In order to have multiple provinces with victory points in one
+            //   state, several instances of victory_points = { ... } need to be
+            //   put in.
+            out << "\t\t}" << std::endl;
+
+            // TODO: Owner
+            //   Game will load without owners, but doing stuff to this state
+            //   (like transferring it) will cause a crash
+            // out << "owner = " << std::endl
+
+            out << "\t\tbuildings={" << std::endl;
+            // TODO
+            out << "\t\t}" << std::endl;
+
+            // TODO
+            //  This is optional, for if someone other than the owner should
+            //  start out controlling it
+            // out << "\t\tcontroller = " << std::endl;
+
+            // TODO
+            // Optional
+            // out << "\t\tadd_core_of = " << std::endl;
+
+            // TODO: This serves as an effect block. Do we want to allow
+            //   defining other effects on a state?
+
+            out << "\t}" << std::endl;
+            // More general state information
+            out << "\tprovinces={" << std::endl;
+            out << "\t\t" << provinces_ss.str();
+            out << "\t}" << std::endl;
+            out << "\tlocal_supplies=0.0" << std::endl; // TODO. Can be undefined, where it is assumed to be 0
+            out << "}";
+        } else {
+            WRITE_ERROR("Failed to open file ", state_path);
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
 void HMDT::Project::StateProject::import(const ShapeFinder& sf, std::shared_ptr<MapData> map_data)
 {
 }

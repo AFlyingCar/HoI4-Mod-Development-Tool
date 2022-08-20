@@ -34,6 +34,7 @@ namespace HMDT::Project {
 
             virtual MaybeVoid save(const std::filesystem::path&) override;
             virtual MaybeVoid load(const std::filesystem::path&) override;
+            virtual MaybeVoid export_(const std::filesystem::path&) const noexcept override;
 
             virtual std::shared_ptr<MapData> getMapData() override;
             virtual const std::shared_ptr<MapData> getMapData() const override;

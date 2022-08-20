@@ -18,6 +18,7 @@ namespace HMDT::Project {
 
             virtual MaybeVoid save(const std::filesystem::path&) override;
             virtual MaybeVoid load(const std::filesystem::path&) override;
+            virtual MaybeVoid export_(const std::filesystem::path&) const noexcept override;
 
             virtual IRootProject& getRootParent() override;
 

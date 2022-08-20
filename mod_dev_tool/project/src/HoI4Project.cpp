@@ -71,6 +71,10 @@ std::filesystem::path HMDT::Project::HoI4Project::getDebugRoot() const {
     return getMetaRoot() / "debug";
 }
 
+std::filesystem::path HMDT::Project::HoI4Project::getExportRoot() const {
+    return getMetaRoot() / "out";
+}
+
 const std::string& HMDT::Project::HoI4Project::getName() const {
     return m_name;
 }
@@ -276,12 +280,38 @@ auto HMDT::Project::HoI4Project::save(const std::filesystem::path& path,
     return STATUS_SUCCESS;
 }
 
+auto HMDT::Project::HoI4Project::export_(const std::filesystem::path& root) const noexcept
+    -> MaybeVoid
+{
+    std::error_code fs_ec;
+
+    // First create the root export path if it doesn't exist
+    if(!std::filesystem::exists(root, fs_ec)) {
+        RETURN_ERROR_IF(fs_ec != std::errc::no_such_file_or_directory, fs_ec);
+
+        auto result = std::filesystem::create_directory(root, fs_ec);
+
+        RETURN_ERROR_IF(result, fs_ec);
+    }
+
+    MaybeVoid result;
+
+    result = m_map_project.export_(root / "map");
+    RETURN_IF_ERROR(result);
+
+    return STATUS_SUCCESS;
+}
+
 HMDT::MaybeVoid HMDT::Project::HoI4Project::load() {
     return load(m_path);
 }
 
 HMDT::MaybeVoid HMDT::Project::HoI4Project::save(bool do_save_subprojects) {
     return save(m_path, do_save_subprojects);
+}
+
+HMDT::MaybeVoid HMDT::Project::HoI4Project::export_() const noexcept {
+    return export_(getExportRoot());
 }
 
 /**

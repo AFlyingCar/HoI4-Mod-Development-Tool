@@ -132,6 +132,34 @@ auto HMDT::Project::MapProject::load(const std::filesystem::path& path)
     return STATUS_SUCCESS;
 }
 
+auto HMDT::Project::MapProject::export_(const std::filesystem::path& root) const noexcept
+    -> MaybeVoid
+{
+    // First create the export path if it doesn't exist
+    if(std::error_code fs_ec; !std::filesystem::exists(root, fs_ec)) {
+        RETURN_ERROR_IF(fs_ec != std::errc::no_such_file_or_directory, fs_ec);
+
+        auto result = std::filesystem::create_directory(root, fs_ec);
+
+        RETURN_ERROR_IF(result, fs_ec);
+    }
+
+    MaybeVoid result;
+
+    result = m_provinces_project.export_(root);
+    RETURN_IF_ERROR(result);
+
+    result = m_continent_project.export_(root);
+    RETURN_IF_ERROR(result);
+
+    // TODO: States are actually part of history in HoI4, so we should move this
+    //   project to a new HistoryProject class instead of MapProject.
+    result = m_state_project.export_(root / "../history/states");
+    RETURN_IF_ERROR(result);
+
+    return STATUS_SUCCESS;
+}
+
 bool HMDT::Project::MapProject::validateData() {
     WRITE_DEBUG("Validating all project data.");
 

@@ -31,6 +31,7 @@ namespace HMDT::Project {
             virtual std::filesystem::path getInputsRoot() const override;
             virtual std::filesystem::path getMapRoot() const override;
             virtual std::filesystem::path getDebugRoot() const override;
+            virtual std::filesystem::path getExportRoot() const override;
 
             const std::string& getName() const;
             const Version& getToolVersion() const;
@@ -42,6 +43,7 @@ namespace HMDT::Project {
 
             MaybeVoid load();
             MaybeVoid save(bool = true);
+            MaybeVoid export_() const noexcept;
 
             void setPath(const std::filesystem::path&);
             void setName(const std::string&);
@@ -58,6 +60,8 @@ namespace HMDT::Project {
 
             virtual MaybeVoid save(const std::filesystem::path&) override;
             virtual MaybeVoid load(const std::filesystem::path&) override;
+
+            virtual MaybeVoid export_(const std::filesystem::path&) const noexcept override;
 
         private:
             //! The path to the project file (The .hoi4proj file)
