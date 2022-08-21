@@ -16,6 +16,35 @@
 #include "Constants.h"
 #include "Logger.h"
 #include "Util.h"
+#include "Maybe.h"
+#include "StatusCodes.h"
+
+HMDT::MaybeVoid flipImage(unsigned char* output, unsigned char* input,
+                          size_t pitch, int height) noexcept
+{
+    // Big enough to store exactly one line of the image
+    unsigned char* temp = nullptr;
+    try {
+        temp = new unsigned char[pitch];
+    } catch(const std::bad_alloc& e) {
+        WRITE_ERROR("Failed to allocate enough space for one line of pixels (",
+                    pitch, " bytes required): ", e.what());
+        return HMDT::STATUS_BADALLOC;
+    }
+
+    size_t idx_s = 0;
+    size_t idx_t = (height - 1) * pitch;
+    for(size_t y = 0; y < height / 2; ++y) {
+        std::memcpy(temp, input + idx_s, pitch);
+        std::memcpy(output + idx_s, input + idx_t, pitch);
+        std::memcpy(output + idx_t, temp, pitch);
+
+        idx_s += pitch;
+        idx_t -= pitch;
+    }
+
+    return HMDT::STATUS_SUCCESS;
+}
 
 /**
  * @brief Reads a bitmap file.
@@ -121,26 +150,9 @@ HMDT::BitMap* HMDT::readBMP(std::istream& file, BitMap* bm) {
     //----------------
     // Flip the entire image, because BitMap is a weird format.
     //----------------
-
-    // Big enough to store exactly one line of the image
-    unsigned char* temp = nullptr;
-    try {
-        temp = new unsigned char[new_pitch];
-    } catch(const std::bad_alloc& e) {
-        WRITE_ERROR("Failed to allocate enough space for one line of pixels (",
-                    new_pitch, " bytes required): ", e.what());
+    auto res = flipImage(bm->data, bm->data, new_pitch, bm->info_header.height);
+    if(IS_FAILURE(res)) {
         return nullptr;
-    }
-
-    size_t idx_s = 0;
-    size_t idx_t = (bm->info_header.height - 1) * new_pitch;
-    for(size_t y = 0; y < bm->info_header.height / 2; ++y) {
-        std::memcpy(temp, bm->data + idx_s, new_pitch);
-        std::memcpy(bm->data + idx_s, bm->data + idx_t, new_pitch);
-        std::memcpy(bm->data + idx_t, temp, new_pitch);
-
-        idx_s += new_pitch;
-        idx_t -= new_pitch;
     }
 
     return bm;
@@ -182,9 +194,25 @@ void HMDT::writeBMP(const std::filesystem::path& path, const BitMap* bmp) {
     WRITE_BMP_VALUE(bmp->info_header.colorsUsed);
     WRITE_BMP_VALUE(bmp->info_header.colorImportant);
 
-    // Pointers must be handled as a special case
-    file.write(reinterpret_cast<const char*>(bmp->data),
-               bmp->info_header.sizeOfBitmap);
+    //----------------
+    // Flip the entire image, because BitMap is a weird format.
+    //----------------
+
+    // This is how much space a single line takes up
+    size_t depth = bmp->info_header.bitsPerPixel / 8;
+    size_t pitch = bmp->info_header.width * depth;
+
+    WRITE_DEBUG("Flipping entire image before we write it.");
+    std::unique_ptr<unsigned char[]> output(new unsigned char[bmp->info_header.sizeOfBitmap]{ 0 });
+    auto res = flipImage(output.get(), bmp->data, pitch, bmp->info_header.height);
+
+    if(IS_FAILURE(res)) {
+        WRITE_ERROR("Failed to flip image!");
+    } else {
+        WRITE_DEBUG("Image flipped successfully, writing to file.");
+        file.write(reinterpret_cast<const char*>(output.get()),
+                   bmp->info_header.sizeOfBitmap);
+    }
 }
 
 /**

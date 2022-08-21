@@ -17,6 +17,7 @@
 //   Defines a single status code
 # define HMDT_STATUS_CODES() \
     X(SUCCESS, "Success") \
+    X(BADALLOC, "Memory allocation failed.") \
     /* Project Error Codes */ \
     Y(PROJECT, 0x100) \
     X(PROJECT_VALIDATION_FAILED, "Project Validation Failed.") \
