@@ -80,6 +80,9 @@ namespace HMDT {
     //! The filename for storing the exported continents
     const std::string CONTINENT_FILENAME = "continent.txt";
 
+    //! The filename for storing the exported cities bitmap
+    const std::string CITIESBMP_FILENAME = "cities.bmp";
+
     //! The filename for storing data about states
     const std::string STATEDATA_FILENAME = "states.csv";
 

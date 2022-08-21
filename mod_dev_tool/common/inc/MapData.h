@@ -35,6 +35,7 @@ namespace HMDT {
             uint32_t getInputSize() const;
             uint32_t getProvincesSize() const;
             uint32_t getProvinceOutlinesSize() const;
+            uint32_t getCitiesSize() const;
             uint32_t getMatrixSize() const;
 
             bool isClosed() const;
@@ -52,6 +53,9 @@ namespace HMDT {
 
             MapType getProvinceOutlines();
             ConstMapType getProvinceOutlines() const;
+
+            MapType getCities();
+            ConstMapType getCities() const;
 
             MapType32 getLabelMatrix();
             ConstMapType32 getLabelMatrix() const;
@@ -71,6 +75,7 @@ namespace HMDT {
             InternalMapType m_input;
             InternalMapType m_provinces;
             InternalMapType m_province_outlines;
+            InternalMapType m_cities;
             InternalMapType32 m_label_matrix;
             InternalMapType32 m_state_id_matrix;
             // More map representations as necessary

@@ -223,6 +223,40 @@ auto HMDT::Project::MapProject::export_(const std::filesystem::path& root) const
         }
     }
 
+    // Cities
+    {
+        // TODO: We need to come up with a custom cities.bmp to match the
+        //  dimensions of the map, but how is this file actually meant to be
+        //  used? The wiki doesn't really say, and other mods i can see tend to
+        //  leave it just blank.
+
+        // cities.bmp
+        {
+            // Fill the map with 0x081F82
+            {
+                auto cities_data = getMapData()->getCities().lock();
+                std::generate(cities_data.get(),
+                              cities_data.get() + getMapData()->getCitiesSize(),
+                              [i = 0]() mutable {
+                                  constexpr uint8_t cdata[] = { 0x82, 0x1F, 0x08 };
+                                  auto v = cdata[i % 3];
+                                  i = (i+1) % 3;
+                                  return v;
+                              });
+            }
+
+            // TODO: writeBMP does not actually return any errors out to us, so we
+            //  need to be careful here in case it does fail
+            writeBMP(root / CITIESBMP_FILENAME,
+                     getMapData()->getCities().lock().get(),
+                     getMapData()->getWidth(), getMapData()->getHeight());
+        }
+
+        // cities.txt
+        // TODO: My understanding is that this defines how cities.bmp should be
+        //   interpreted. Should we output a custom one?
+    }
+
     return STATUS_SUCCESS;
 }
 
