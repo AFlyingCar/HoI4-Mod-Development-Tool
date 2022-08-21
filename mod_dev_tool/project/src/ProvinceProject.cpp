@@ -93,6 +93,32 @@ auto HMDT::Project::ProvinceProject::export_(const std::filesystem::path& root) 
     result = saveProvinceData(root, false);
     RETURN_IF_ERROR(result);
 
+    // Next, export supply_nodes.txt and railways.txt
+    {
+        if(std::ofstream supply_nodes(root / "supply_nodes.txt"); supply_nodes)
+        {
+            // Level ProvinceID
+            // for(auto&& province : m_provinces) {
+                // TODO
+                // NOTE: Level is defined as 1 by default. This is only changed
+                //   in common/buildings/00_buildings.txt, so we will need to
+                //   limit the max to whatever is defined in there (either the
+                //   vanilla version or an overridden version defined in this
+                //   mod)
+            // }
+        } else {
+            WRITE_ERROR("Failed to open file ", root / "supply_nodes.txt");
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+
+        if(std::ofstream railways(root / "railways.txt"); railways) {
+            // TODO
+        } else {
+            WRITE_ERROR("Failed to open file ", root / "railways.txt");
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+    }
+
     return STATUS_SUCCESS;
 }
 
