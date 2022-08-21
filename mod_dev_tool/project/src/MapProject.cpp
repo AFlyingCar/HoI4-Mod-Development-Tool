@@ -161,6 +161,68 @@ auto HMDT::Project::MapProject::export_(const std::filesystem::path& root) const
     result = m_state_project.export_(root / "../history/states");
     RETURN_IF_ERROR(result);
 
+    ////////////////////////////////////////////////////////////////////////////
+    // TODO: These are files that will still be required by HoI4, but which we
+    //  have no editing capabilities for and which can be left blank
+
+    // Adjacencies
+    {
+        // adjacencies.csv
+        if(std::ofstream adjacencies(root / "adjacencies.csv"); adjacencies) {
+            adjacencies << "From;To;Type;Through;start_x;start_y;stop_x;stop_y;adjacency_rule_name;Comment";
+            // TODO
+        } else {
+            WRITE_ERROR("Failed to open file ", root / "adjacencies.csv");
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+
+        // adjacency_rules.txt
+        if(std::ofstream adjacency_rules(root / "adjacency_rules.txt"); adjacency_rules)
+        {
+            // TODO
+        } else {
+            WRITE_ERROR("Failed to open file ", root / "adjacency_rules.txt");
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+    }
+
+    // Buildings
+    {
+        // NOTE: These files can be modified with the Nudge tool, but they need to
+        //  at least exist first and have at least one entry
+        //  (otherwise the game could crash)
+        // TODO: Do we want to try and replicate the Nudge tool?
+
+        // buildings.txt
+        if(std::ofstream buildings(root / "buildings.txt"); buildings) {
+            // State ID (integer); building ID (string); X position; Y position; Z position; Rotation; Adjacent sea province (integer)
+            buildings << "1;arms_factory;0;0;0;0;0";
+        } else {
+            WRITE_ERROR("Failed to open file ", root / "buildings.txt");
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+
+        // airports.txt
+        //  Which province the airports appear in for each state
+        if(std::ofstream airports(root / "airports.txt"); airports) {
+            // State ID (integer)={province id }
+            airports << "1={1 }";
+        } else {
+            WRITE_ERROR("Failed to open file ", root / "airports.txt");
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+
+        // rocketsites.txt
+        //  Which province the rocketsites appear in for each state
+        if(std::ofstream rocketsites(root / "rocketsites.txt"); rocketsites) {
+            // State ID (integer)={province id }
+            rocketsites << "1={1 }";
+        } else {
+            WRITE_ERROR("Failed to open file ", root / "rocketsites.txt");
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+    }
+
     return STATUS_SUCCESS;
 }
 
