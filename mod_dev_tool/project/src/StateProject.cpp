@@ -221,7 +221,12 @@ auto HMDT::Project::StateProject::export_(const std::filesystem::path& root) con
             out << "\tname=\"" << state.name << '"' << std::endl; // TODO: HoI4 uses STATE_{ID} here, is that for localization?
             out << "\tmanpower=" << state.manpower << std::endl;
             out << "\tstate_category = " << state.category << std::endl;
-            out << "\tbuildings_max_level_factor=" << state.buildings_max_level_factor << std::endl; // TODO: wiki recommends avoiding this. Should we not support it at all?
+
+            // Leave this out of the export if it's left as the default 1.0
+            if(state.buildings_max_level_factor != 1.0) {
+                // TODO: wiki recommends avoiding this. Should we not support it at all?
+                out << "\tbuildings_max_level_factor=" << state.buildings_max_level_factor << std::endl;
+            }
 
             // TODO: Resources
 
