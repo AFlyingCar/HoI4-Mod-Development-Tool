@@ -310,6 +310,9 @@ auto HMDT::Project::StateProject::export_(const std::filesystem::path& root) con
         }
     }
 
+    // TODO: We should also export blank state files for all of the vanilla
+    //   states (if they are supposed to be overridden, that is)
+
     return STATUS_SUCCESS;
 }
 
