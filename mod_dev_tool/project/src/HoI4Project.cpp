@@ -300,6 +300,29 @@ auto HMDT::Project::HoI4Project::export_(const std::filesystem::path& root) cons
 
     MaybeVoid result;
 
+    // Export descriptor.mod
+    if(std::ofstream descriptor(root / "descriptor.mod"); descriptor) {
+        descriptor << "version=\"" << m_hoi4_version << "\"" << std::endl;
+        descriptor << "tags={" << std::endl;
+        for(auto&& tag : m_tags) {
+            descriptor << "\t\"" << tag << '"' << std::endl;
+        }
+        descriptor << "}" << std::endl;
+        // TODO: Do we want to force all thumbnails to be the same filename?
+        descriptor << "picture=\"thumbnail.png\"" << std::endl;
+        // TODO: How can we handle if dependencies exist?
+        // descriptor << "dependencies={" << std::endl;
+        //   list each dependency
+        // descriptor << "}" << std::endl;
+        descriptor << "name=\"" << m_name << '"' << std::endl;
+        // TODO: Is this supposed to be identical to version?
+        descriptor << "supported_version=\"" << m_hoi4_version << "\"" << std::endl;
+
+    } else {
+        WRITE_ERROR("Failed to open file ", root);
+        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+    }
+
     result = m_map_project.export_(root / "map");
     RETURN_IF_ERROR(result);
 
