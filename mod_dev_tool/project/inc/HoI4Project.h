@@ -33,6 +33,10 @@ namespace HMDT::Project {
             virtual std::filesystem::path getDebugRoot() const override;
             virtual std::filesystem::path getExportRoot() const override;
 
+            std::filesystem::path getDefaultExportRoot() const;
+
+            void setExportRoot(const std::filesystem::path&);
+
             const std::string& getName() const;
             const Version& getToolVersion() const;
             const Version& getHoI4Version() const;
@@ -87,6 +91,9 @@ namespace HMDT::Project {
 
             //! All maps for this project
             MapProject m_map_project;
+
+            //! The path to export into.
+            std::filesystem::path m_export_root;
     };
 
     using Project = HoI4Project;

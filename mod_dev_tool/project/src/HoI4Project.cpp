@@ -72,7 +72,17 @@ std::filesystem::path HMDT::Project::HoI4Project::getDebugRoot() const {
 }
 
 std::filesystem::path HMDT::Project::HoI4Project::getExportRoot() const {
+    return m_export_root;
+}
+
+std::filesystem::path HMDT::Project::HoI4Project::getDefaultExportRoot() const
+{
     return getMetaRoot() / "out";
+}
+
+void HMDT::Project::HoI4Project::setExportRoot(const std::filesystem::path& root)
+{
+    m_export_root = root;
 }
 
 const std::string& HMDT::Project::HoI4Project::getName() const {
