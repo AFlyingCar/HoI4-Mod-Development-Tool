@@ -84,7 +84,8 @@ void HMDT::GUI::Application::on_startup() {
     createMenu("Root", "Project", {
         { "_Import Province Map", "win.import_provincemap", {} },
         { "Recalculate Coastal Provinces", "win.recalc_coasts", {} },
-        { "Export Project", "win.export_project", {} }
+        { "Export Project", "win.export_project", {} },
+        { "Export Project To", "win.export_project_as", {} }
     });
 
     createMenu("Root", "Help", {
