@@ -1008,8 +1008,6 @@ void HMDT::GUI::MainWindow::saveProjectAs(const std::string& dtitle) {
 
 void HMDT::GUI::MainWindow::exportProject() {
     if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
-        auto export_path = opt_project->get().getExportRoot();
-
         if(auto res = opt_project->get().export_(); IS_FAILURE(res)) {
             std::stringstream ss;
             ss << "Reason: 0x"
