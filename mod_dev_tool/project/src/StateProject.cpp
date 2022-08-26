@@ -188,6 +188,134 @@ auto HMDT::Project::StateProject::load(const std::filesystem::path& root)
     return STATUS_SUCCESS;
 }
 
+auto HMDT::Project::StateProject::export_(const std::filesystem::path& root) const noexcept
+    -> MaybeVoid
+{
+    // First create the export path if it doesn't exist
+    if(std::error_code fs_ec; !std::filesystem::exists(root, fs_ec)) {
+        RETURN_ERROR_IF(fs_ec.value() != 0 &&
+                        fs_ec != std::errc::no_such_file_or_directory,
+                        fs_ec);
+
+        // TODO: This is temporary. It should just be create_directory
+        //   But since StateProject is not part of HistoryProject yet, we have
+        //    to create our entire path from root
+        auto result = std::filesystem::create_directories(root, fs_ec);
+
+        RETURN_ERROR_IF(!result, fs_ec);
+    }
+
+    for(auto&& [id, state] : m_states) {
+        auto filename = std::to_string(id) + "-" + state.name + ".txt";
+        auto state_path = root / filename;
+
+        if(std::ofstream out(state_path); out) {
+            std::stringstream provinces_ss;
+            for(auto&& id : state.provinces) {
+                provinces_ss << id << ' ';
+            }
+
+            out << "state={" << std::endl;
+            // General state information
+            out << "\tid=" << id << std::endl;
+            out << "\tname=\"" << state.name << '"' << std::endl; // TODO: HoI4 uses STATE_{ID} here, is that for localization?
+            out << "\tmanpower=" << state.manpower << std::endl;
+            out << "\tstate_category = " << state.category << std::endl;
+
+            // Leave this out of the export if it's left as the default 1.0
+            if(state.buildings_max_level_factor != 1.0) {
+                // TODO: wiki recommends avoiding this. Should we not support it at all?
+                out << "\tbuildings_max_level_factor=" << state.buildings_max_level_factor << std::endl;
+            }
+
+            // TODO: Resources
+
+            if(state.impassable) {
+                out << "\timpassable = yes" << std::endl;
+            }
+
+            // History here
+            out << "\thistory={" << std::endl;
+
+            // NOTE (from wiki):
+            //   Only one province can be defined within one victory_points.
+            //   In order to have multiple provinces with victory points in one
+            //   state, several instances of victory_points = { ... } need to be
+            //   put in.
+            // TODO: This should be a for-loop, generating a 'victory_points={}'
+            //   block for each victory point
+            // out << "\t\tvictory_points={" << std::endl;
+            // TODO Format is "PROVID AMOUNT"
+            // out << "\t\t}" << std::endl;
+
+            // TODO: Owner
+            //   Game will load without owners, but doing stuff to this state
+            //   (like transferring it) will cause a crash
+            // For now, we are using a country that does not exist at the start
+            //   of the game and has no focus tree for testing.
+            out << "\t\towner = CHA" << std::endl;
+
+            out << "\t\tbuildings={" << std::endl;
+            // TODO
+            //  NOTE: Each of these can be left blank if their count is 0
+            //  NOTE: When designing how these buildings are outputted, we
+            //    should keep in mind that custom buildings can be added as well
+            //
+            //  infrastructure = ...
+            //  arms_factory = ...
+            //  industrial_complex = ...
+            //  dockyard = ...
+            //  airbase = ... // TODO: air_base? wiki disagrees with what's in the files
+            //  anti_air_building = ...
+            //  synthetic_refinery = ...
+            //  fuel_silo = ...
+            //  radar_station = ...
+            //  rocket_site = ...
+            //  nuclear_reactor = ...
+            //  for each province: // Skip if province has no buildings
+            //    id = {
+            //      naval_base = ...
+            //      bunker = ...
+            //      coastal_bunker = ...
+            //      supply_node = ...
+            //      rail_way = ...
+            //    }
+            out << "\t\t}" << std::endl;
+
+            // TODO
+            //  This is optional, for if someone other than the owner should
+            //  start out controlling it
+            // out << "\t\tcontroller = " << std::endl;
+
+            // TODO
+            // Optional, for if claimed by another country
+            // out << "\t\tadd_core_of = " << std::endl;
+
+            // TODO: This serves as an effect block. Do we want to allow
+            //   defining other effects on a state?
+
+            out << "\t}" << std::endl;
+            // More general state information
+            out << "\tprovinces={" << std::endl;
+            out << "\t\t" << provinces_ss.str() << std::endl;
+            out << "\t}" << std::endl;
+            // TODO
+            //   This is optional, it is for defining the base supply of the
+            //    state
+            // out << "\tlocal_supplies=" << ... << std::endl;
+            out << "}";
+        } else {
+            WRITE_ERROR("Failed to open file ", state_path);
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+    }
+
+    // TODO: We should also export blank state files for all of the vanilla
+    //   states (if they are supposed to be overridden, that is)
+
+    return STATUS_SUCCESS;
+}
+
 void HMDT::Project::StateProject::import(const ShapeFinder& sf, std::shared_ptr<MapData> map_data)
 {
 }

@@ -65,6 +65,9 @@ namespace HMDT::GUI {
             void saveProject();
             void saveProjectAs(const std::string& = "Save As...");
 
+            void exportProject();
+            void exportProjectAs(const std::string& = "Export To...");
+
         private:
             //! The toolbar of the application
             Toolbar* m_toolbar;

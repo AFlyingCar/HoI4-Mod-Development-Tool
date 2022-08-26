@@ -15,6 +15,7 @@ namespace HMDT::Project {
 
             virtual MaybeVoid save(const std::filesystem::path&) override;
             virtual MaybeVoid load(const std::filesystem::path&) override;
+            virtual MaybeVoid export_(const std::filesystem::path&) const noexcept override;
             virtual void import(const ShapeFinder&, std::shared_ptr<MapData>) override;
 
             virtual std::shared_ptr<MapData> getMapData() override;
@@ -34,7 +35,7 @@ namespace HMDT::Project {
             void buildProvinceOutlines();
         protected:
             MaybeVoid saveShapeLabels(const std::filesystem::path&);
-            MaybeVoid saveProvinceData(const std::filesystem::path&);
+            MaybeVoid saveProvinceData(const std::filesystem::path&, bool = true) const noexcept;
 
             MaybeVoid loadShapeLabels(const std::filesystem::path&);
             MaybeVoid loadProvinceData(const std::filesystem::path&);

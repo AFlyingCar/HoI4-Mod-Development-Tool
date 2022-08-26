@@ -71,6 +71,20 @@ std::filesystem::path HMDT::Project::HoI4Project::getDebugRoot() const {
     return getMetaRoot() / "debug";
 }
 
+std::filesystem::path HMDT::Project::HoI4Project::getExportRoot() const {
+    return m_export_root;
+}
+
+std::filesystem::path HMDT::Project::HoI4Project::getDefaultExportRoot() const
+{
+    return getMetaRoot() / "out";
+}
+
+void HMDT::Project::HoI4Project::setExportRoot(const std::filesystem::path& root)
+{
+    m_export_root = root;
+}
+
 const std::string& HMDT::Project::HoI4Project::getName() const {
     return m_name;
 }
@@ -276,12 +290,65 @@ auto HMDT::Project::HoI4Project::save(const std::filesystem::path& path,
     return STATUS_SUCCESS;
 }
 
+auto HMDT::Project::HoI4Project::export_(const std::filesystem::path& root) const noexcept
+    -> MaybeVoid
+{
+    std::error_code fs_ec;
+
+    WRITE_DEBUG("Exporting to ", root);
+
+    // First create the root export path if it doesn't exist
+    if(!std::filesystem::exists(root, fs_ec)) {
+        RETURN_ERROR_IF(fs_ec.value() != 0 &&
+                        fs_ec != std::errc::no_such_file_or_directory,
+                        fs_ec);
+
+        auto result = std::filesystem::create_directory(root, fs_ec);
+
+        RETURN_ERROR_IF(!result, fs_ec);
+    }
+
+    MaybeVoid result;
+
+    // Export descriptor.mod
+    if(std::ofstream descriptor(root / "descriptor.mod"); descriptor) {
+        descriptor << "version=\"" << m_hoi4_version << "\"" << std::endl;
+        descriptor << "tags={" << std::endl;
+        for(auto&& tag : m_tags) {
+            descriptor << "\t\"" << tag << '"' << std::endl;
+        }
+        descriptor << "}" << std::endl;
+        // TODO: Do we want to force all thumbnails to be the same filename?
+        descriptor << "picture=\"thumbnail.png\"" << std::endl;
+        // TODO: How can we handle if dependencies exist?
+        // descriptor << "dependencies={" << std::endl;
+        //   list each dependency
+        // descriptor << "}" << std::endl;
+        descriptor << "name=\"" << m_name << '"' << std::endl;
+        // TODO: Is this supposed to be identical to version?
+        descriptor << "supported_version=\"" << m_hoi4_version << "\"" << std::endl;
+
+    } else {
+        WRITE_ERROR("Failed to open file ", root);
+        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+    }
+
+    result = m_map_project.export_(root / "map");
+    RETURN_IF_ERROR(result);
+
+    return STATUS_SUCCESS;
+}
+
 HMDT::MaybeVoid HMDT::Project::HoI4Project::load() {
     return load(m_path);
 }
 
 HMDT::MaybeVoid HMDT::Project::HoI4Project::save(bool do_save_subprojects) {
     return save(m_path, do_save_subprojects);
+}
+
+HMDT::MaybeVoid HMDT::Project::HoI4Project::export_() const noexcept {
+    return export_(getExportRoot());
 }
 
 /**

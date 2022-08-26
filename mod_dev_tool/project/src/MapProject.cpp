@@ -132,6 +132,134 @@ auto HMDT::Project::MapProject::load(const std::filesystem::path& path)
     return STATUS_SUCCESS;
 }
 
+auto HMDT::Project::MapProject::export_(const std::filesystem::path& root) const noexcept
+    -> MaybeVoid
+{
+    WRITE_DEBUG("Exporting to ", root);
+
+    // First create the export path if it doesn't exist
+    if(std::error_code fs_ec; !std::filesystem::exists(root, fs_ec)) {
+        RETURN_ERROR_IF(fs_ec.value() != 0 &&
+                        fs_ec != std::errc::no_such_file_or_directory,
+                        fs_ec);
+
+        auto result = std::filesystem::create_directory(root, fs_ec);
+
+        RETURN_ERROR_IF(!result, fs_ec);
+    }
+
+    MaybeVoid result;
+
+    result = m_provinces_project.export_(root);
+    RETURN_IF_ERROR(result);
+
+    result = m_continent_project.export_(root);
+    RETURN_IF_ERROR(result);
+
+    // TODO: States are actually part of history in HoI4, so we should move this
+    //   project to a new HistoryProject class instead of MapProject.
+    result = m_state_project.export_(root / "../history/states");
+    RETURN_IF_ERROR(result);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // TODO: These are files that will still be required by HoI4, but which we
+    //  have no editing capabilities for and which can be left blank
+
+    // Adjacencies
+    {
+        // adjacencies.csv
+        if(std::ofstream adjacencies(root / "adjacencies.csv"); adjacencies) {
+            adjacencies << "From;To;Type;Through;start_x;start_y;stop_x;stop_y;adjacency_rule_name;Comment";
+            // TODO
+        } else {
+            WRITE_ERROR("Failed to open file ", root / "adjacencies.csv");
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+
+        // adjacency_rules.txt
+        if(std::ofstream adjacency_rules(root / "adjacency_rules.txt"); adjacency_rules)
+        {
+            // TODO
+        } else {
+            WRITE_ERROR("Failed to open file ", root / "adjacency_rules.txt");
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+    }
+
+    // Buildings
+    {
+        // NOTE: These files can be modified with the Nudge tool, but they need to
+        //  at least exist first and have at least one entry
+        //  (otherwise the game could crash)
+        // TODO: Do we want to try and replicate the Nudge tool?
+
+        // buildings.txt
+        if(std::ofstream buildings(root / "buildings.txt"); buildings) {
+            // State ID (integer); building ID (string); X position; Y position; Z position; Rotation; Adjacent sea province (integer)
+            buildings << "1;arms_factory;0;0;0;0;0";
+        } else {
+            WRITE_ERROR("Failed to open file ", root / "buildings.txt");
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+
+        // airports.txt
+        //  Which province the airports appear in for each state
+        if(std::ofstream airports(root / "airports.txt"); airports) {
+            // State ID (integer)={province id }
+            airports << "1={1 }";
+        } else {
+            WRITE_ERROR("Failed to open file ", root / "airports.txt");
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+
+        // rocketsites.txt
+        //  Which province the rocketsites appear in for each state
+        if(std::ofstream rocketsites(root / "rocketsites.txt"); rocketsites) {
+            // State ID (integer)={province id }
+            rocketsites << "1={1 }";
+        } else {
+            WRITE_ERROR("Failed to open file ", root / "rocketsites.txt");
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+    }
+
+    // Cities
+    {
+        // TODO: We need to come up with a custom cities.bmp to match the
+        //  dimensions of the map, but how is this file actually meant to be
+        //  used? The wiki doesn't really say, and other mods i can see tend to
+        //  leave it just blank.
+
+        // cities.bmp
+        {
+            // Fill the map with 0x081F82
+            {
+                auto cities_data = getMapData()->getCities().lock();
+                std::generate(cities_data.get(),
+                              cities_data.get() + getMapData()->getCitiesSize(),
+                              [i = 0]() mutable {
+                                  constexpr uint8_t cdata[] = { 0x82, 0x1F, 0x08 };
+                                  auto v = cdata[i % 3];
+                                  i = (i+1) % 3;
+                                  return v;
+                              });
+            }
+
+            // TODO: writeBMP does not actually return any errors out to us, so we
+            //  need to be careful here in case it does fail
+            writeBMP(root / CITIESBMP_FILENAME,
+                     getMapData()->getCities().lock().get(),
+                     getMapData()->getWidth(), getMapData()->getHeight());
+        }
+
+        // cities.txt
+        // TODO: My understanding is that this defines how cities.bmp should be
+        //   interpreted. Should we output a custom one?
+    }
+
+    return STATUS_SUCCESS;
+}
+
 bool HMDT::Project::MapProject::validateData() {
     WRITE_DEBUG("Validating all project data.");
 

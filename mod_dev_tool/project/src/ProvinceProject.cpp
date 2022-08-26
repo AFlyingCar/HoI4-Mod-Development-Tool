@@ -10,6 +10,7 @@
 #include "Util.h"
 #include "StatusCodes.h"
 #include "Options.h"
+#include "BitMap.h"
 
 #include "ShapeFinder2.h"
 
@@ -59,6 +60,64 @@ auto HMDT::Project::ProvinceProject::load(const std::filesystem::path& path)
     //   the outlines
     buildGraphicsData();
     buildProvinceOutlines();
+
+    return STATUS_SUCCESS;
+}
+
+auto HMDT::Project::ProvinceProject::export_(const std::filesystem::path& root) const noexcept
+    -> MaybeVoid
+{
+    // First create the export path if it doesn't exist
+    if(std::error_code fs_ec; !std::filesystem::exists(root, fs_ec)) {
+        RETURN_ERROR_IF(fs_ec.value() != 0 &&
+                        fs_ec != std::errc::no_such_file_or_directory,
+                        fs_ec);
+
+        auto result = std::filesystem::create_directory(root, fs_ec);
+
+        RETURN_ERROR_IF(!result, fs_ec);
+    }
+
+    MaybeVoid result;
+
+    // Next, export the provinces.bmp file.
+    {
+        // TODO: writeBMP does not actually return any errors out to us, so we
+        //  need to be careful here in case it does fail
+        writeBMP(root / PROVINCES_FILENAME,
+                 getMapData()->getProvinces().lock().get(),
+                 getMapData()->getWidth(), getMapData()->getHeight());
+    }
+
+    // Next, export the definition.csv file.
+    result = saveProvinceData(root, false);
+    RETURN_IF_ERROR(result);
+
+    // Next, export supply_nodes.txt and railways.txt
+    {
+        if(std::ofstream supply_nodes(root / "supply_nodes.txt"); supply_nodes)
+        {
+            // Level ProvinceID
+            // for(auto&& province : m_provinces) {
+                // TODO
+                // NOTE: Level is defined as 1 by default. This is only changed
+                //   in common/buildings/00_buildings.txt, so we will need to
+                //   limit the max to whatever is defined in there (either the
+                //   vanilla version or an overridden version defined in this
+                //   mod)
+            // }
+        } else {
+            WRITE_ERROR("Failed to open file ", root / "supply_nodes.txt");
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+
+        if(std::ofstream railways(root / "railways.txt"); railways) {
+            // TODO
+        } else {
+            WRITE_ERROR("Failed to open file ", root / "railways.txt");
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+    }
 
     return STATUS_SUCCESS;
 }
@@ -133,10 +192,13 @@ auto HMDT::Project::ProvinceProject::saveShapeLabels(const std::filesystem::path
  *        would be loaded by HoI4
  *
  * @param root The root where the csv file should be written to
+ * @param include_extra_data Whether or not to include extra (i.e: non-HoI4) data,
+ *                           or only data that is used by HoI4
  *
  * @return True if the file was able to be successfully written, false otherwise.
  */
-auto HMDT::Project::ProvinceProject::saveProvinceData(const std::filesystem::path& root)
+auto HMDT::Project::ProvinceProject::saveProvinceData(const std::filesystem::path& root,
+                                                      bool include_extra_data) const noexcept
     -> MaybeVoid
 {
     auto path = root / PROVINCEDATA_FILENAME;
@@ -151,13 +213,17 @@ auto HMDT::Project::ProvinceProject::saveProvinceData(const std::filesystem::pat
                 << province.type << ';'
                 << (province.coastal ? "true" : "false")
                 << ';' << province.terrain << ';'
-                << province.continent << ';'
-                << province.bounding_box.bottom_left.x << ';'
-                << province.bounding_box.bottom_left.y << ';'
-                << province.bounding_box.top_right.x << ';'
-                << province.bounding_box.top_right.y << ';'
-                << province.state
-                << std::endl;
+                << province.continent << ';';
+
+            if(include_extra_data) {
+                out << province.bounding_box.bottom_left.x << ';'
+                    << province.bounding_box.bottom_left.y << ';'
+                    << province.bounding_box.top_right.x << ';'
+                    << province.bounding_box.top_right.y << ';'
+                    << province.state;
+            }
+
+            out << std::endl;
         }
     } else {
         WRITE_ERROR("Failed to open file ", path);

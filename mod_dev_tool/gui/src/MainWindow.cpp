@@ -297,6 +297,32 @@ void HMDT::GUI::MainWindow::initializeProjectActions() {
         // This action should be disabled by default, until a project gets opened
         recalc_coasts_action->set_enabled(false);
     }
+
+    {
+        auto export_project_action = add_action("export_project", [this]() {
+            if(auto opt_project = Driver::getInstance().getProject(); opt_project)
+            {
+                auto export_path = opt_project->get().getExportRoot();
+
+                if(!std::filesystem::exists(export_path)) {
+                    WRITE_DEBUG("ExportProjectAs(", export_path, ")");
+                    exportProjectAs();
+                } else {
+                    WRITE_DEBUG("ExportProject(", export_path, ")");
+                    exportProject();
+                }
+            } else {
+                WRITE_ERROR("No project is loaded, unable to export.");
+            }
+        });
+        export_project_action->set_enabled(false);
+
+        auto export_project_as_action = add_action("export_project_as", [this]()
+        {
+            exportProjectAs();
+        });
+        export_project_as_action->set_enabled(false);
+    }
 }
 
 /**
@@ -900,6 +926,8 @@ void HMDT::GUI::MainWindow::onProjectOpened() {
     getAction("save")->set_enabled(true);
     getAction("close")->set_enabled(true);
     getAction("recalc_coasts")->set_enabled(true);
+    getAction("export_project")->set_enabled(true);
+    getAction("export_project_as")->set_enabled(true);
 
     // Issue callback to the properties pane to inform it that a project has
     //   been opened
@@ -921,6 +949,8 @@ void HMDT::GUI::MainWindow::onProjectClosed() {
     getAction("save")->set_enabled(false);
     getAction("close")->set_enabled(false);
     getAction("recalc_coasts")->set_enabled(false);
+    getAction("export_project")->set_enabled(false);
+    getAction("export_project_as")->set_enabled(false);
 
     {
         ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
@@ -973,6 +1003,56 @@ void HMDT::GUI::MainWindow::saveProjectAs(const std::string& dtitle) {
                     project.setPathAndName(paths.front());
                     saveProject();
               }).show();
+    }
+}
+
+void HMDT::GUI::MainWindow::exportProject() {
+    if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+        if(auto res = opt_project->get().export_(); IS_FAILURE(res)) {
+            std::stringstream ss;
+            ss << "Reason: 0x"
+               << std::hex << res.error().value() << std::dec
+               << " '" << res.error().message() << "'";
+
+            Gtk::MessageDialog dialog(*this, "Failed to export project.",
+                                      false, Gtk::MESSAGE_ERROR);
+            dialog.set_secondary_text(ss.str());
+            dialog.run();
+        } else {
+            Gtk::MessageDialog dialog(*this,
+                                      "<b>Successfully exported project.</b>",
+                                      true, Gtk::MESSAGE_INFO);
+            dialog.run();
+        }
+    }
+}
+
+/**
+ * @brief Performs a exportAs operation, asking the user for a new file location
+ *        to save to before calling exportProject()
+ */
+void HMDT::GUI::MainWindow::exportProjectAs(const std::string& dtitle) {
+    if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+        auto& project = opt_project->get();
+
+        auto default_export_root = project.getDefaultExportRoot();
+
+        // Allocate this on the stack so that it gets automatically cleaned up
+        //  when we finish
+        NativeDialog::FileDialog dialog(dtitle,
+                                        NativeDialog::FileDialog::SELECT_DIR);
+        dialog.setDefaultPath(default_export_root.generic_string());
+        dialog.setAllowsMultipleSelection(false)
+              .setDecideHandler([&project](const NativeDialog::Dialog& dialog) {
+                    auto& fdlg = dynamic_cast<const NativeDialog::FileDialog&>(dialog);
+                    auto&& paths = fdlg.selectedPathes();
+
+                    project.setExportRoot(paths.front());
+              }).show();
+
+        // Call this outside of the DecideHandler because we want to ensure that
+        //   the dialog window is closed first
+        exportProject();
     }
 }
 
