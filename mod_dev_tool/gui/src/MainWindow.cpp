@@ -1041,7 +1041,7 @@ void HMDT::GUI::MainWindow::exportProjectAs(const std::string& dtitle) {
         //  when we finish
         NativeDialog::FileDialog dialog(dtitle,
                                         NativeDialog::FileDialog::SELECT_DIR);
-        dialog.setDefaultPath(default_export_root);
+        dialog.setDefaultPath(default_export_root.generic_string());
         dialog.setAllowsMultipleSelection(false)
               .setDecideHandler([&project](const NativeDialog::Dialog& dialog) {
                     auto& fdlg = dynamic_cast<const NativeDialog::FileDialog&>(dialog);
