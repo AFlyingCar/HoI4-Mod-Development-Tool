@@ -43,7 +43,7 @@ namespace HMDT::GUI {
             virtual Gtk::Orientation getDisplayOrientation() const override;
             virtual void addWidgetToParent(Gtk::Widget&) override;
 
-            bool importProvinceMap(const Glib::ustring&);
+            MaybeVoid addProvinceMap(const Glib::ustring&);
 
             void buildToolbar();
             void buildViewPane();
