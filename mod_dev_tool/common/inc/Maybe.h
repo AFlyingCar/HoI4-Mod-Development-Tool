@@ -46,6 +46,8 @@
 #ifndef MAYBE_H
 # define MAYBE_H
 
+# include <system_error> // std::error_code
+
 # include "Monad.h"
 # include "TypeTraits.h"
 
@@ -281,6 +283,18 @@ namespace HMDT {
  */
 # define WRITE_ERROR_CODE(ERROR_CODE) \
     WRITE_ERROR("Returning error - [", ( ERROR_CODE ).category().name(), "] 0x", FHEX(( ERROR_CODE ).value()), " '", ( ERROR_CODE ).message(), "'")
+
+/**
+ * @brief Logs an error code to ERROR if the MAYBE contains an error
+ *
+ * @param MAYBE The Maybe to check
+ */
+# define WRITE_IF_ERROR(MAYBE)                  \
+    do {                                        \
+        if(IS_FAILURE(MAYBE)) {                 \
+            WRITE_ERROR_CODE( MAYBE .error() ); \
+        }                                       \
+    } while(0)
 
 /**
  * @brief Returns an ERROR_CODE from the current function.
