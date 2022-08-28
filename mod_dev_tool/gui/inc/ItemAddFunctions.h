@@ -10,8 +10,8 @@
 
 namespace HMDT::GUI {
     Maybe<std::any> initAddProvinceMap(Window&, const std::filesystem::path&);
-    MaybeVoid startAddProvinceMap(Window&, std::any);
-    Maybe<bool> addProvinceMap(Window&, std::any);
+    MaybeVoid addProvinceMapWorker(Window&, std::any);
+    MaybeVoid postStartAddProvinceMap(Window&, std::any);
     MaybeVoid endAddProvinceMap(Window&, std::any);
 }
 

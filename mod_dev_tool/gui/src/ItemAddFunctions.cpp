@@ -45,6 +45,9 @@ namespace {
     };
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Province Maps
+
 auto HMDT::GUI::initAddProvinceMap(Window& window,
                                    const std::filesystem::path& path)
     -> Maybe<std::any>
@@ -161,7 +164,8 @@ auto HMDT::GUI::initAddProvinceMap(Window& window,
     return data;
 }
 
-HMDT::MaybeVoid HMDT::GUI::startAddProvinceMap(Window& window, std::any data) {
+HMDT::MaybeVoid HMDT::GUI::postStartAddProvinceMap(Window& window, std::any data)
+{
     AddProvinceMapData apd_data = std::any_cast<AddProvinceMapData>(data);
 
     // Run the progress bar dialog
@@ -188,8 +192,7 @@ HMDT::MaybeVoid HMDT::GUI::startAddProvinceMap(Window& window, std::any data) {
  *
  * @return 
  */
-HMDT::Maybe<bool> HMDT::GUI::addProvinceMap(Window& window, std::any data) {
-#if 1
+HMDT::MaybeVoid HMDT::GUI::addProvinceMapWorker(Window& window, std::any data) {
     AddProvinceMapData apd_data = std::any_cast<AddProvinceMapData>(data);
     auto& worker = GraphicsWorker::getInstance();
 
@@ -227,7 +230,6 @@ HMDT::Maybe<bool> HMDT::GUI::addProvinceMap(Window& window, std::any data) {
     //  done button so that the user can close the box and move on
     apd_data.done_button->set_sensitive(true);
     apd_data.cancel_button->set_sensitive(false);
-#endif
 
     return STATUS_SUCCESS;
 }
@@ -295,4 +297,6 @@ HMDT::MaybeVoid HMDT::GUI::endAddProvinceMap(Window& window, std::any data) {
 
     return STATUS_SUCCESS;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
