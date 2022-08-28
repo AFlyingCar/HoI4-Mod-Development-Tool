@@ -6,19 +6,19 @@
  */
 
 DEFINE_ITEM_TYPE(
-    "Province Map",
-    "Province Maps",
-    "",
+    "Province Map" /* name */,
+    "Province Maps" /* description */,
+    "" /* icon */,
     {
         "map/*",
         "history/states/*"
-    },
-    HMDT::GUI::initAddProvinceMap,
-    HMDT::GUI::addProvinceMapWorker,
-    HMDT::GUI::postStartAddProvinceMap,
-    HMDT::GUI::endAddProvinceMap,
+    } /* extra_overrides */,
+    HMDT::GUI::initAddProvinceMap /* init_add_callback */,
+    HMDT::GUI::addProvinceMapWorker /* add_worker_callback */,
+    HMDT::GUI::postStartAddProvinceMap /* post_start_add_callback */,
+    HMDT::GUI::endAddProvinceMap /* end_add_callback */,
     [](HMDT::GUI::Window& parent_window) -> HMDT::MaybeVoid {
         return HMDT::STATUS_NOT_IMPLEMENTED;
-    }
+    } /* on_remove_callback */
 );
 
