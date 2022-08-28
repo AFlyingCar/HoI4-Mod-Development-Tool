@@ -35,6 +35,7 @@
     X(DISPATCHER_DOES_NOT_EXIST, "The provided dispatcher id does not exist.") \
     X(ITEM_ADD_FAILURE, "Failed to add item.") \
     X(ITEM_BITMAP_READ_FAILURE, "Failed to read bitmap when adding item.") \
+    X(NO_SUCH_ITEM_TYPE, "No such item type of the given name exists.") \
     Y(SHAPEFINDER, 0x5000) \
     X(SHAPEFINDER_ESTOP, "Shape Finder was stopped early.") \
 

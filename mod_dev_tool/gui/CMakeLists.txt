@@ -26,7 +26,9 @@ add_library(gui STATIC
     src/Toolbar.cpp
     src/MainWindowDrawingAreaPart.cpp
     src/MainWindowPropertiesPanePart.cpp
+    src/Item.cpp
     src/ItemAddFunctions.cpp
+    src/ItemRegistrar.cpp
 )
 
 target_include_directories(gui PUBLIC inc)
