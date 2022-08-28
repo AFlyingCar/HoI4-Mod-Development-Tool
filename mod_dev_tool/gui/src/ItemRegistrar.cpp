@@ -6,6 +6,8 @@
 
 #include "StatusCodes.h"
 
+#include "Logger.h"
+
 #include "ItemAddFunctions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -18,7 +20,9 @@
 HMDT::GUI::ItemTypeMap HMDT::GUI::genRegisteredItemTypes() {
     HMDT::GUI::ItemTypeMap item_type_map;
 
-#define X(NAME) item_type_map[NAME .name] = NAME
+#define X(NAME)                                              \
+    WRITE_INFO("Defining new Item Type '", NAME .name, "'"); \
+    item_type_map[NAME .name] = NAME
 #include "ItemTypes.inl"
 #undef X
 
