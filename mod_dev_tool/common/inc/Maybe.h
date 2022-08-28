@@ -267,7 +267,7 @@ namespace HMDT {
  *        is 0
  */
 # define IS_SUCCESS(MAYBE) \
-    ( MAYBE .has_value() || MAYBE .error().value() == 0 )
+    [](auto&& maybe) { return ( maybe.has_value() || maybe.error().value() == 0 ); }(MAYBE)
 
 /**
  * @brief Negation of IS_SUCCESS()
