@@ -96,6 +96,18 @@ void HMDT::GUI::MainWindow::initializeFileActions() {
         // TODO: Confirmation menu first
         std::exit(0);
     });
+
+    auto add_item_action = add_action("add_item", [this]() {
+        if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+            if(m_add_file_window == nullptr) {
+                m_add_file_window.reset(new AddFileWindow(*this));
+                m_add_file_window->show_all();
+            } else {
+                m_add_file_window->present();
+            }
+        }
+    });
+    add_item_action->set_enabled(false);
 }
 
 /**
@@ -738,6 +750,7 @@ void HMDT::GUI::MainWindow::onProjectOpened() {
     getAction("recalc_coasts")->set_enabled(true);
     getAction("export_project")->set_enabled(true);
     getAction("export_project_as")->set_enabled(true);
+    getAction("add_item")->set_enabled(true);
 
     // Issue callback to the properties pane to inform it that a project has
     //   been opened
@@ -761,6 +774,7 @@ void HMDT::GUI::MainWindow::onProjectClosed() {
     getAction("recalc_coasts")->set_enabled(false);
     getAction("export_project")->set_enabled(false);
     getAction("export_project_as")->set_enabled(false);
+    getAction("add_item")->set_enabled(false);
 
     {
         ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
