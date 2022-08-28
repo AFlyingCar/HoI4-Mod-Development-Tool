@@ -1,9 +1,17 @@
 /**
  * @file ItemTypes.inl
  * 
- * @brief Define every item type here. Make sure that every item type name is
- *        unique.
+ * @brief Define every item type here.
+ *
+ * @details Make sure that every item type name is unique, clashes will override
+ *          earlier definitions.
  */
+
+/////////////////////////////////////////////////
+// DO NOT WRITE ANY #include STATEMENTS HERE!  //
+//                                             //
+// Any includes should go in ItemRegistrar.cpp //
+/////////////////////////////////////////////////
 
 DEFINE_ITEM_TYPE(
     "Province Map" /* name */,

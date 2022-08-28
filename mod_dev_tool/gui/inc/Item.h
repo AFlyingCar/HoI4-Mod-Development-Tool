@@ -64,6 +64,8 @@ namespace HMDT::GUI {
 
 /**
  * @brief Implementation for defining an item type
+ * @details Will also use X(DEFINITION_NAME) to do something with the name
+ *          after creating the object.
  *
  * @param DEFINITION_NAME The name of this item type definition
  * @param ... Every field of ItemType
