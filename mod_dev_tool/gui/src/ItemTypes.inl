@@ -17,6 +17,8 @@ DEFINE_ITEM_TYPE(
     "Province Map" /* name */,
     "Province Maps" /* description */,
     "" /* icon */,
+    { { "Province Image Files", "bmp" } } /* filters */,
+    false /* allow_multiselect */,
     {
         "map/*",
         "history/states/*"

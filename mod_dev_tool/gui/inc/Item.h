@@ -23,6 +23,16 @@ namespace HMDT::GUI {
         std::string icon;
 
         /**
+         * @brief The file filters for choosing a file.
+         * @details The key is a label. The value is a ';' separated list of
+         *          extensions that are valid for this item type
+         */
+        std::map<std::string, std::string> filters;
+
+        //! Whether multiselect is allowed
+        bool allow_multiselect;
+
+        /**
          * @brief A list of default files that will be overridden/invalidated
          *        along with whatever files this item explicitly adds/modifies.
          * @details These files will be included as blank files unless
