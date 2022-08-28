@@ -271,13 +271,14 @@ void HMDT::GUI::MainWindow::initializeProjectActions() {
                         path = fdlg.selectedPathes().front();
                   }).show();
 
-              if(!path.empty() &&
-                 IS_FAILURE(addItem("Province Map", *this, std::string(path))))
-              {
-                  Gtk::MessageDialog err_diag("Failed to open file.",
-                                              false, Gtk::MESSAGE_ERROR);
-                  err_diag.run();
-              }
+            WRITE_INFO("importProvinceMapAction triggered.");
+            if(!path.empty() &&
+               IS_FAILURE(addItem("Province Map", *this, std::string(path))))
+            {
+                Gtk::MessageDialog err_diag("Failed to open file.",
+                                            false, Gtk::MESSAGE_ERROR);
+                err_diag.run();
+            }
         });
 
         // This action should be disabled by default, until a project gets opened

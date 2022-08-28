@@ -235,8 +235,6 @@ HMDT::MaybeVoid HMDT::GUI::addProvinceMapWorker(Window& window, std::any data) {
 }
 
 HMDT::MaybeVoid HMDT::GUI::endAddProvinceMap(Window& window, std::any data) {
-    WRITE_DEBUG("endAddProvinceMap");
-
     if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
         auto& project = opt_project->get();
 
