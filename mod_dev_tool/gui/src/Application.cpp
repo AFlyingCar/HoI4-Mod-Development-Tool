@@ -58,6 +58,7 @@ void HMDT::GUI::Application::on_startup() {
         { "_Open Project", "win.open", {} }, // TODO: We should probably have a subsubmenu for this: different input types (province-map, heightmap, etc...)
         { "_Save Project", "win.save", {} },
         { "_Close Project", "win.close", {} },
+        { "_Add", "win.add_item", {} },
         { "_Quit", "win.quit", {} }
     });
 
