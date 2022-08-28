@@ -27,7 +27,7 @@
 #include "MapDrawingArea.h"
 #include "SelectionManager.h"
 
-#include "ItemAddFunctions.h"
+#include "Item.h"
 
 /**
  * @brief Constructs the main window.
@@ -271,7 +271,9 @@ void HMDT::GUI::MainWindow::initializeProjectActions() {
                         path = fdlg.selectedPathes().front();
                   }).show();
 
-              if(!path.empty() && IS_FAILURE(addProvinceMap(path))) {
+              if(!path.empty() &&
+                 IS_FAILURE(addItem("Province Map", *this, std::string(path))))
+              {
                   Gtk::MessageDialog err_diag("Failed to open file.",
                                               false, Gtk::MESSAGE_ERROR);
                   err_diag.run();
@@ -625,67 +627,6 @@ void HMDT::GUI::MainWindow::addWidgetToParent(Gtk::Widget& widget) {
             Window::addWidgetToParent(widget);
         }
     }, getActiveChild());
-}
-
-/**
- * @brief Opens the province input map.
- *
- * @param filename The full path to the input map to open.
- *
- * @return true if the input was successfully opened, false otherwise
- */
-auto HMDT::GUI::MainWindow::addProvinceMap(const Glib::ustring& filename)
-    -> MaybeVoid
-{
-    // Setup
-    auto maybe_data = initAddProvinceMap(*this, std::string(filename));
-    RETURN_IF_ERROR(maybe_data);
-
-    {
-        auto data = *maybe_data;
-
-        // First set up the dispatcher to run the 'end' function
-        uint32_t end_dispatcher_id;
-
-        setupDispatcher([data, this](uint32_t dispatch_id) -> void {
-            auto res = endAddProvinceMap(*this, data);
-            WRITE_IF_ERROR(res);
-
-            // remove ourselves
-            res = teardownDispatcher(dispatch_id);
-            WRITE_IF_ERROR(res);
-        }).andThen([&end_dispatcher_id](const uint32_t& new_id) {
-            end_dispatcher_id = new_id;
-        });
-
-        // Capture only by copy since we don't want to read data out of scope
-        std::thread add_thread([end_dispatcher_id, data, this]() -> MaybeVoid {
-            auto res = ::HMDT::GUI::addProvinceMap(*this, data);
-            RETURN_IF_ERROR(res);
-
-            res = notifyDispatcher(end_dispatcher_id);
-            RETURN_IF_ERROR(res);
-
-            return STATUS_SUCCESS;
-        });
-
-        auto res = startAddProvinceMap(*this, data);
-        if(!IS_FAILURE(res)) {
-            WRITE_DEBUG("Detaching worker thread.");
-            // If start succeeded, then detach the thread
-            add_thread.detach();
-        } else {
-            // Otherwise, wait for it to rejoin and just call end manually
-            WRITE_DEBUG("Waiting for worker thread to rejoin.");
-            add_thread.join();
-
-            res = endAddProvinceMap(*this, data);
-        }
-
-        RETURN_IF_ERROR(res);
-    }
-
-    return STATUS_SUCCESS;
 }
 
 /**
