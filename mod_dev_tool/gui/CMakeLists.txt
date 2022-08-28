@@ -29,6 +29,7 @@ add_library(gui STATIC
     src/Item.cpp
     src/ItemAddFunctions.cpp
     src/ItemRegistrar.cpp
+    src/AddFileWindow.cpp
 )
 
 target_include_directories(gui PUBLIC inc)
