@@ -80,6 +80,12 @@ namespace HMDT::GUI {
             //! The list of item types
             Gtk::ListBox m_item_types_list;
 
+            //! Title above the description area
+            Gtk::Label m_description_title;
+
+            //! Image shown above the description
+            Gtk::Image m_description_image;
+
             //! The area where the description for the current item is displayed
             Gtk::Label m_description_area;
 

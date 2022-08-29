@@ -111,6 +111,8 @@ void HMDT::GUI::AddFileWindow::initWidgets() {
         // Add it to a special box so that we can ensure that the label is
         //   aligned with the top-left of the right frame
         auto box = manage(new Gtk::Box(Gtk::ORIENTATION_VERTICAL));
+        box->pack_start(m_description_title, false, false, 1);
+        box->pack_start(m_description_image, false, false, 10);
         box->pack_start(m_description_area, false, false);
 
         m_right_frame.add(*box);
@@ -176,8 +178,8 @@ void HMDT::GUI::AddFileWindow::initWidgets() {
     });
 
     // Add the buttons to the window
-    m_buttons_box.add(m_cancel_button);
-    m_buttons_box.add(m_continue_button);
+    m_buttons_box.pack_end(m_cancel_button, false, false);
+    m_buttons_box.pack_end(m_continue_button, false, false);
 
     m_box.add(m_buttons_box);
 }
@@ -191,7 +193,16 @@ void HMDT::GUI::AddFileWindow::buildItemTypesList() {
         {
             getItemType(named_row->getName())
                 .andThen([this](const ItemType& item_type) {
-                    // m_description_area.get_buffer()->set_text(item_type.description);
+                    m_description_title.set_markup("<span size=\"14000\"><b>" + item_type.name + "</b></span>");
+
+                    try {
+                        m_description_image.set(Gdk::Pixbuf::create_from_resource(item_type.icon, 64, 64));
+                    } catch(...) {
+                        WRITE_ERROR("Failed to load icon '", item_type.icon,
+                                    "'. Using broken-image fallback.");
+                        m_description_image.set_from_icon_name("", Gtk::ICON_SIZE_DIALOG);
+                    }
+
                     m_description_area.set_text(item_type.description);
                 });
         }
