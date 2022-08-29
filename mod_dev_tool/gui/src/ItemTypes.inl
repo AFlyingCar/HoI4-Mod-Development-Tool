@@ -15,8 +15,8 @@
 
 DEFINE_ITEM_TYPE(
     "Province Map" /* name */,
-    "Province Maps" /* description */,
-    "" /* icon */,
+    "Description of how Province Maps work. TODO: Finish writing this." /* description */,
+    "/com/aflyingcar/HoI4ModDevelopmentTool/textures/provinces.png" /* icon */,
     { { "Province Image Files", "bmp" } } /* filters */,
     false /* allow_multiselect */,
     {
