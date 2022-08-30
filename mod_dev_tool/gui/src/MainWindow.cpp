@@ -268,36 +268,6 @@ void HMDT::GUI::MainWindow::initializeViewActions() {
  */
 void HMDT::GUI::MainWindow::initializeProjectActions() {
     {
-        auto ipm_action = add_action("import_provincemap", [this]() {
-            // Allocate this on the stack so that it gets automatically cleaned up
-            //  when we finish
-            NativeDialog::FileDialog dialog("Choose an input image file",
-                                            NativeDialog::FileDialog::SELECT_FILE);
-            // dialog.setDefaultPath() // TODO: Start in the installation directory/Documents
-            std::string path;
-            dialog.addFilter("Province Image Files", "bmp")
-                  .addFilter("All files", "*")
-                  .setAllowsMultipleSelection(false)
-                  .setDecideHandler([&path](const NativeDialog::Dialog& dialog) {
-                        auto& fdlg = dynamic_cast<const NativeDialog::FileDialog&>(dialog);
-                        path = fdlg.selectedPathes().front();
-                  }).show();
-
-            WRITE_INFO("importProvinceMapAction triggered.");
-            if(!path.empty() &&
-               IS_FAILURE(addItem("Province Map", *this, std::string(path))))
-            {
-                Gtk::MessageDialog err_diag("Failed to open file.",
-                                            false, Gtk::MESSAGE_ERROR);
-                err_diag.run();
-            }
-        });
-
-        // This action should be disabled by default, until a project gets opened
-        ipm_action->set_enabled(false);
-    }
-
-    {
         auto recalc_coasts_action = add_action("recalc_coasts", [this]() {
             if(auto opt_project = Driver::getInstance().getProject(); opt_project)
             {
@@ -744,7 +714,6 @@ void HMDT::GUI::MainWindow::openProject() {
  */
 void HMDT::GUI::MainWindow::onProjectOpened() {
     // Enable all actions that can only be done on an opened project
-    getAction("import_provincemap")->set_enabled(true);
     getAction("save")->set_enabled(true);
     getAction("close")->set_enabled(true);
     getAction("recalc_coasts")->set_enabled(true);
@@ -768,7 +737,6 @@ void HMDT::GUI::MainWindow::onProjectClosed() {
     m_drawing_area->queueDraw();
 
     // Disable all actions that can only be done on an opened project
-    getAction("import_provincemap")->set_enabled(false);
     getAction("save")->set_enabled(false);
     getAction("close")->set_enabled(false);
     getAction("recalc_coasts")->set_enabled(false);
