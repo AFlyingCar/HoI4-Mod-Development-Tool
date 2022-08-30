@@ -32,7 +32,7 @@ auto HMDT::GUI::getItemType(const std::string& name) -> MaybeRef<const ItemType>
 }
 
 auto HMDT::GUI::addItem(const std::string& type_name, Window& window,
-                        const std::filesystem::path& path)
+                        const std::vector<std::filesystem::path>& paths)
     -> MaybeVoid
 {
     auto maybe_item_type = getItemType(type_name);
@@ -41,7 +41,7 @@ auto HMDT::GUI::addItem(const std::string& type_name, Window& window,
     const auto& item_type = maybe_item_type->get();
 
     // Setup
-    auto maybe_data = item_type.init_add_callback(window, path);
+    auto maybe_data = item_type.init_add_callback(window, paths);
     RETURN_IF_ERROR(maybe_data);
 
     {

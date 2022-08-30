@@ -49,10 +49,19 @@ namespace {
 // Province Maps
 
 auto HMDT::GUI::initAddProvinceMap(Window& window,
-                                   const std::filesystem::path& path)
+                                   const std::vector<std::filesystem::path>& paths)
     -> Maybe<std::any>
 {
     MainWindow& main_window = dynamic_cast<MainWindow&>(window);
+
+    if(paths.empty()) {
+        WRITE_ERROR("Expected at least 1 path, got 0.");
+        RETURN_ERROR(STATUS_EXPECTED_PATHS);
+    } else if(paths.size() > 1) {
+        WRITE_WARN("Got multiple paths, but we only expected 1. Only going to use the first one.");
+    }
+
+    const auto& path = paths.front();
 
     // First, load the image into memory
     BitMap* image = nullptr;

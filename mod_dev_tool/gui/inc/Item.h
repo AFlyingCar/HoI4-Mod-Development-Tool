@@ -3,6 +3,7 @@
 
 # include <any>
 # include <set>
+# include <vector>
 # include <string>
 # include <functional>
 # include <filesystem>
@@ -13,6 +14,18 @@
 
 namespace HMDT::GUI {
     struct ItemType {
+        struct FileChooseInfo {
+            /**
+             * @brief The file filters for choosing a file.
+             * @details The key is a label. The value is a ';' separated list of
+             *          extensions that are valid for this item type
+             */
+            std::map<std::string, std::string> filters;
+
+            //! Whether multiselect is allowed
+            bool allow_multiselect;
+        };
+
         //! The name of the item
         std::string name;
 
@@ -23,14 +36,10 @@ namespace HMDT::GUI {
         std::string icon;
 
         /**
-         * @brief The file filters for choosing a file.
-         * @details The key is a label. The value is a ';' separated list of
-         *          extensions that are valid for this item type
+         * @brief Info for choosing a file. Only required if this item type
+         *        needs to choose a file from the disk.
          */
-        std::map<std::string, std::string> filters;
-
-        //! Whether multiselect is allowed
-        bool allow_multiselect;
+        MonadOptional<FileChooseInfo> file_info;
 
         /**
          * @brief A list of default files that will be overridden/invalidated
@@ -41,7 +50,7 @@ namespace HMDT::GUI {
         std::set<std::string> extra_overrides;
 
         //! Called once to initialize the add item routine
-        std::function<Maybe<std::any>(Window&, const std::filesystem::path&)> init_add_callback;
+        std::function<Maybe<std::any>(Window&, const std::vector<std::filesystem::path>&)> init_add_callback;
 
         //! Called once after initialization in a std::thread
         std::function<MaybeVoid(Window&, std::any)> add_worker_callback;
@@ -61,7 +70,8 @@ namespace HMDT::GUI {
     const ItemTypeMap& getRegisteredItemTypes();
     MaybeRef<const ItemType> getItemType(const std::string&);
 
-    MaybeVoid addItem(const std::string&, Window&, const std::filesystem::path&);
+    MaybeVoid addItem(const std::string&, Window&,
+                      const std::vector<std::filesystem::path>&);
 }
 
 /**

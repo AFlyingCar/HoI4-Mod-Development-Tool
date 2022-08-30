@@ -142,31 +142,33 @@ void HMDT::GUI::AddFileWindow::initWidgets() {
 
             const auto& item_type = maybe_item_type->get();
 
-            // Allocate this on the stack so that it gets automatically cleaned up
-            //  when we finish
-            NativeDialog::FileDialog dialog("Choose an input file",
-                                            NativeDialog::FileDialog::SELECT_FILE);
-            // dialog.setDefaultPath() // TODO: Start in the installation directory/Documents
+            std::vector<std::filesystem::path> paths;
 
-            // Build all specialized filters
-            for(auto&& [label, filters] : item_type.filters) {
-                dialog.addFilter(label, filters);
-            }
+            item_type.file_info.andThen([&paths](const auto& file_info) {
+                // Allocate this on the stack so that it gets automatically cleaned up
+                //  when we finish
+                NativeDialog::FileDialog dialog("Choose an input file",
+                                                NativeDialog::FileDialog::SELECT_FILE);
+                // dialog.setDefaultPath() // TODO: Start in the installation directory/Documents
 
-            std::string path;
-            dialog.addFilter("All files", "")
-                  .setAllowsMultipleSelection(item_type.allow_multiselect)
-                  .setDecideHandler([&path](const NativeDialog::Dialog& dialog) {
-                        auto& fdlg = dynamic_cast<const NativeDialog::FileDialog&>(dialog);
-                        path = fdlg.selectedPathes().front();
-                  }).show();
+                // Build all specialized filters
+                for(auto&& [label, filters] : file_info.filters) {
+                    dialog.addFilter(label, filters);
+                }
 
-            // TODO: Handle the case of allowing multiselect
+                dialog.addFilter("All files", "")
+                      .setAllowsMultipleSelection(file_info.allow_multiselect)
+                      .setDecideHandler([&paths](const NativeDialog::Dialog& dialog) {
+                            auto& fdlg = dynamic_cast<const NativeDialog::FileDialog&>(dialog);
+                            auto pathes = fdlg.selectedPathes();
+                            std::transform(pathes.begin(), pathes.end(),
+                                           std::back_inserter(paths),
+                                           [](const auto& p) -> std::filesystem::path { return p; });
+                      }).show();
+            });
 
-            if(!path.empty() &&
-               IS_FAILURE(addItem(item_type.name, m_parent, std::string(path))))
-            {
-                Gtk::MessageDialog err_diag("Failed to open file.",
+            if(IS_FAILURE(addItem(item_type.name, m_parent, paths))) {
+                Gtk::MessageDialog err_diag("Failed to add item.",
                                             false, Gtk::MESSAGE_ERROR);
                 err_diag.run();
             }
