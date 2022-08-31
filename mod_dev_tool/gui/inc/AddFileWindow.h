@@ -80,6 +80,9 @@ namespace HMDT::GUI {
             //! The list of item types
             Gtk::ListBox m_item_types_list;
 
+            //! The window where the description is shown.
+            Gtk::ScrolledWindow m_description_window;
+
             //! Title above the description area
             Gtk::Label m_description_title;
 

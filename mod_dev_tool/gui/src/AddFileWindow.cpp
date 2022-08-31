@@ -102,11 +102,14 @@ void HMDT::GUI::AddFileWindow::initWidgets() {
 
     // Build right side
     {
+        m_description_window.set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_AUTOMATIC);
+
         // Set up all properties we want on the description area
         m_description_area.set_line_wrap(true);
         m_description_area.set_line_wrap_mode(Pango::WRAP_WORD_CHAR);
         m_description_area.set_justify(Gtk::JUSTIFY_LEFT);
         m_description_area.set_xalign(0.0);
+        m_description_area.set_selectable(true);
 
         // Add it to a special box so that we can ensure that the label is
         //   aligned with the top-left of the right frame
@@ -115,7 +118,8 @@ void HMDT::GUI::AddFileWindow::initWidgets() {
         box->pack_start(m_description_image, false, false, 10);
         box->pack_start(m_description_area, false, false);
 
-        m_right_frame.add(*box);
+        m_description_window.add(*box);
+        m_right_frame.add(m_description_window);
 
         m_paned.pack2(m_right_frame, true, false);
     }
@@ -132,7 +136,13 @@ void HMDT::GUI::AddFileWindow::initWidgets() {
         close();
     });
     m_continue_button.signal_clicked().connect([this]() -> MaybeVoid {
-        RUN_AT_SCOPE_END([this]() { close(); });
+        bool was_canceled = false;
+
+        RUN_AT_SCOPE_END([this, &was_canceled]() {
+            if(!was_canceled) {
+                close();
+            }
+        });
 
         Gtk::ListBoxRow* selected = m_item_types_list.get_selected_row();
 
@@ -144,7 +154,8 @@ void HMDT::GUI::AddFileWindow::initWidgets() {
 
             std::vector<std::filesystem::path> paths;
 
-            item_type.file_info.andThen([&paths](const auto& file_info) {
+            item_type.file_info.andThen([&paths, &was_canceled](const auto& file_info)
+            {
                 // Allocate this on the stack so that it gets automatically cleaned up
                 //  when we finish
                 NativeDialog::FileDialog dialog("Choose an input file",
@@ -164,8 +175,16 @@ void HMDT::GUI::AddFileWindow::initWidgets() {
                             std::transform(pathes.begin(), pathes.end(),
                                            std::back_inserter(paths),
                                            [](const auto& p) -> std::filesystem::path { return p; });
+                      })
+                      .setCancelHandler([&was_canceled](const auto&...) {
+                          was_canceled = true;
                       }).show();
             });
+
+            if(was_canceled) {
+                WRITE_DEBUG("User canceled the interaction.");
+                return STATUS_SUCCESS;
+            }
 
             if(IS_FAILURE(addItem(item_type.name, m_parent, paths))) {
                 Gtk::MessageDialog err_diag("Failed to add item.",
@@ -174,10 +193,15 @@ void HMDT::GUI::AddFileWindow::initWidgets() {
             }
         } else {
             WRITE_ERROR("Invalid row selected! Unable to convert selected row to ItemTypeRow.");
+            was_canceled = true;
         }
 
         return STATUS_SUCCESS;
     });
+
+    // Start this button out as not sensitive to make sure that the user has to
+    //   actually select an option before being allowed to continue
+    m_continue_button.set_sensitive(false);
 
     // Add the buttons to the window
     m_buttons_box.pack_end(m_cancel_button, false, false);
@@ -206,6 +230,8 @@ void HMDT::GUI::AddFileWindow::buildItemTypesList() {
                     }
 
                     m_description_area.set_text(item_type.description);
+
+                    m_continue_button.set_sensitive(true);
                 });
         }
     });
