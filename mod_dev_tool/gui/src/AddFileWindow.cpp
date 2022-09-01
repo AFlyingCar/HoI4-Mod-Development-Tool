@@ -135,7 +135,7 @@ void HMDT::GUI::AddFileWindow::initWidgets() {
     m_cancel_button.signal_clicked().connect([this]() {
         close();
     });
-    m_continue_button.signal_clicked().connect([this]() -> MaybeVoid {
+    m_continue_button.signal_clicked().connect([this]() -> void {
         bool was_canceled = false;
 
         RUN_AT_SCOPE_END([this, &was_canceled]() {
@@ -148,7 +148,10 @@ void HMDT::GUI::AddFileWindow::initWidgets() {
 
         if(auto* row = dynamic_cast<ItemTypeRow*>(selected); row != nullptr) {
             auto maybe_item_type = getItemType(row->getName());
-            RETURN_IF_ERROR(maybe_item_type);
+            if(IS_FAILURE(maybe_item_type)) {
+                WRITE_ERROR_CODE(maybe_item_type.error());
+                return;
+            }
 
             const auto& item_type = maybe_item_type->get();
 
@@ -183,7 +186,7 @@ void HMDT::GUI::AddFileWindow::initWidgets() {
 
             if(was_canceled) {
                 WRITE_DEBUG("User canceled the interaction.");
-                return STATUS_SUCCESS;
+                return;
             }
 
             if(IS_FAILURE(addItem(item_type.name, m_parent, paths))) {
@@ -195,8 +198,6 @@ void HMDT::GUI::AddFileWindow::initWidgets() {
             WRITE_ERROR("Invalid row selected! Unable to convert selected row to ItemTypeRow.");
             was_canceled = true;
         }
-
-        return STATUS_SUCCESS;
     });
 
     // Start this button out as not sensitive to make sure that the user has to
