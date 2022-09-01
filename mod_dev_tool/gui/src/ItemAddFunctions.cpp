@@ -282,21 +282,20 @@ HMDT::MaybeVoid HMDT::GUI::endAddProvinceMap(Window& window, std::any data) {
         WRITE_DEBUG("Assigning the found data into the drawing area.");
         apd_data.drawing_area->setMapData(apd_data.map_data);
 
-        std::filesystem::path imported{std::string(apd_data.path)};
         std::filesystem::path input_root = project.getInputsRoot();
 
-        WRITE_DEBUG("Copying the imported map into ", input_root);
+        WRITE_DEBUG("Copying the province map into ", input_root);
         if(!std::filesystem::exists(input_root)) {
             std::filesystem::create_directory(input_root);
         }
 
         // TODO: We should actually do two things here:
         //  1) If filename == input_full_path: do nothing
-        //  2) Otherwise ask if they want to overrite/replace the imported province map
+        //  2) Otherwise ask if they want to overrite/replace the province map
         if(auto input_full_path = input_root / INPUT_PROVINCEMAP_FILENAME;
            !std::filesystem::exists(input_full_path))
         {
-            std::filesystem::copy_file(imported, input_full_path);
+            std::filesystem::copy_file(apd_data.path, input_full_path);
         }
     } else {
         return STATUS_NO_PROJECT_LOADED;
