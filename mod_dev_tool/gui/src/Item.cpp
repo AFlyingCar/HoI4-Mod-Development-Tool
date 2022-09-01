@@ -47,7 +47,7 @@ auto HMDT::GUI::addItem(const std::string& type_name, Window& window,
     RETURN_IF_ERROR(maybe_data);
 
     {
-        auto data = *maybe_data;
+        auto data = maybe_data.orElse(std::monostate{});
 
         // First set up the dispatcher to run the 'end' function
         uint32_t end_dispatcher_id;
