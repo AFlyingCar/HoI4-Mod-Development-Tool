@@ -16,7 +16,9 @@ namespace {
     }
 }
 
-const std::map<std::string, HMDT::GUI::ItemType>& HMDT::GUI::getRegisteredItemTypes()
+const HMDT::GUI::ItemType::PostInitCallbackType HMDT::GUI::ItemType::DEFAULT_POSTINIT_CALLBACK = [](auto&&...) { return STATUS_SUCCESS; };
+
+const HMDT::GUI::ItemTypeMap& HMDT::GUI::getRegisteredItemTypes()
 {
     return getMutableRegisteredItemTypes();
 }

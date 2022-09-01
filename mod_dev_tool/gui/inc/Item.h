@@ -8,12 +8,17 @@
 # include <functional>
 # include <filesystem>
 
+# include "fifo_map.hpp"
+
 # include "Maybe.h"
 
 # include "Window.h"
 
 namespace HMDT::GUI {
     struct ItemType {
+        using PostInitCallbackType = std::function<MaybeVoid(Window&, std::any)>;
+        static const PostInitCallbackType DEFAULT_POSTINIT_CALLBACK;
+
         struct FileChooseInfo {
             /**
              * @brief The file filters for choosing a file.
@@ -53,19 +58,19 @@ namespace HMDT::GUI {
         std::function<Maybe<std::any>(Window&, const std::vector<std::filesystem::path>&)> init_add_callback;
 
         //! Called once after initialization in a std::thread
-        std::function<MaybeVoid(Window&, std::any)> add_worker_callback;
+        PostInitCallbackType add_worker_callback;
 
         //! Called once after the std::thread has been created
-        std::function<MaybeVoid(Window&, std::any)> post_start_add_callback;
+        PostInitCallbackType post_start_add_callback;
 
         //! Called once when this item is done getting added.
-        std::function<MaybeVoid(Window&, std::any)> end_add_callback;
+        PostInitCallbackType end_add_callback;
 
         //! Called when this item is removed
         std::function<MaybeVoid(Window&)> on_remove_callback;
     };
 
-    using ItemTypeMap = std::map<std::string, ItemType>;
+    using ItemTypeMap = nlohmann::fifo_map<std::string, ItemType>;
 
     const ItemTypeMap& getRegisteredItemTypes();
     MaybeRef<const ItemType> getItemType(const std::string&);
