@@ -53,6 +53,12 @@ namespace HMDT {
     std::string rtrim(const std::string&);
     std::string trim(const std::string&);
 
+    std::string& toLower(std::string&);
+    std::string toLower(const std::string&);
+
+    std::string& toUpper(std::string&);
+    std::string toUpper(const std::string&);
+
     template<typename T>
     T clamp(T val, T min, T max) {
         return std::min(std::max(val, min), max);

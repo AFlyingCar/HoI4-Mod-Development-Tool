@@ -1,6 +1,8 @@
 
 #include "Util.h"
 
+#include <cstdlib>
+
 #include "Constants.h"
 #include "BitMap.h"
 
@@ -82,6 +84,28 @@ std::string HMDT::trim(const std::string& str) {
     std::string s = str;
     trim(s);
     return s;
+}
+
+std::string& HMDT::toLower(std::string& str) {
+    return (str = toLower(const_cast<const std::string&>(str)));
+}
+
+std::string HMDT::toLower(const std::string& str) {
+    auto lower_str = str;
+    std::transform(str.begin(), str.end(), lower_str.begin(),
+                   static_cast<int(*)(int)>(std::tolower));
+    return lower_str;
+}
+
+std::string& HMDT::toUpper(std::string& str) {
+    return (str = toUpper(const_cast<const std::string&>(str)));
+}
+
+std::string HMDT::toUpper(const std::string& str) {
+    auto upper_str = str;
+    std::transform(str.begin(), str.end(), upper_str.begin(),
+                   static_cast<int(*)(int)>(std::toupper));
+    return upper_str;
 }
 
 /**
