@@ -70,7 +70,7 @@ namespace HMDT {
             constexpr const T* operator->() const {
                 return m_opt.operator->();
             }
-            constexpr const T* operator->() {
+            constexpr T* operator->() {
                 return m_opt.operator->();
             }
             constexpr const T& operator*() const& {
@@ -128,11 +128,11 @@ namespace HMDT {
 
             template<typename... Args>
             T& emplace(Args&&... args) {
-                m_opt.template emplate<Args...>(std::forward<Args>(args)...);
+                return m_opt.template emplace<Args...>(std::forward<Args>(args)...);
             }
             template<typename U, typename... Args>
             T& emplace(std::initializer_list<U> ilist, Args&&... args) {
-                m_opt.template emplate<U, Args...>(ilist, std::forward<Args>(args)...);
+                return m_opt.template emplace<U, Args...>(ilist, std::forward<Args>(args)...);
             }
 
             ////////////////////////////////////////////////////////////////////
@@ -168,7 +168,45 @@ namespace HMDT {
              *         does not hold a value.
              */
             template<typename R>
-            MonadOptional<R> andThen(std::function<MonadOptional<R>(const T&)> func)
+            MonadOptional<R> andThen(std::function<MonadOptional<R>(T&)> func) {
+                if(m_opt) {
+                    return func(*m_opt);
+                }
+
+                return std::nullopt;
+            }
+
+            /**
+             * @brief Performs an additional operation if this function holds
+             *        a value, and returns a std::monostate.
+             *
+             * @param func A function which returns nothing.
+             *
+             * @return A std::monostate, or std::nullopt if this object does not
+             *         hold a value.
+             */
+            MonadOptional<std::monostate> andThen(std::function<void(T&)> func)
+            {
+                if(m_opt) {
+                    func(*m_opt);
+                    return std::monostate{};
+                }
+
+                return std::nullopt;
+            }
+
+            /**
+             * @brief Performs an additional operation if this function holds
+             *        a value, and returns the result.
+             *
+             * @tparam R The type returned by the given function
+             * @param func A function which returns a MonadOptional
+             *
+             * @return The return value of func, or std::nullopt if this object
+             *         does not hold a value.
+             */
+            template<typename R>
+            MonadOptional<R> andThen(std::function<MonadOptional<R>(const T&)> func) const
             {
                 if(m_opt) {
                     return func(*m_opt);
@@ -186,7 +224,7 @@ namespace HMDT {
              * @return A std::monostate, or std::nullopt if this object does not
              *         hold a value.
              */
-            MonadOptional<std::monostate> andThen(std::function<void(const T&)> func)
+            MonadOptional<std::monostate> andThen(std::function<void(const T&)> func) const
             {
                 if(m_opt) {
                     func(*m_opt);
@@ -236,7 +274,8 @@ namespace HMDT {
              *         returned, otherwise this optional's value is returned.
              */
             template<typename R,
-                     typename = std::enable_if_t<std::is_convertible_v<R, T>>>
+                     typename = std::enable_if_t<std::is_convertible_v<R, T> ||
+                                                 std::is_constructible_v<T, R>>>
             T orElse(const R& value) {
                 if(m_opt) {
                     return *m_opt;

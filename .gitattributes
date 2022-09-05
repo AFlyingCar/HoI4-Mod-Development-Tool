@@ -3,3 +3,4 @@ tests/bin/complex.bmp filter=lfs diff=lfs merge=lfs -text
 resources/textures/selection.bmp filter=lfs diff=lfs merge=lfs -text
 resources/textures/logo.png filter=lfs diff=lfs merge=lfs -text
 resources/icons/logo.ico filter=lfs diff=lfs merge=lfs -text
+resources/textures/provinces.png filter=lfs diff=lfs merge=lfs -text

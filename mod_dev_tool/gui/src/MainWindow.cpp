@@ -13,6 +13,7 @@
 #include "Util.h" // overloaded
 #include "Options.h"
 #include "Preferences.h"
+#include "StatusCodes.h"
 
 #include "ShapeFinder2.h" // ShapeFinder
 
@@ -25,6 +26,8 @@
 #include "Driver.h"
 #include "MapDrawingArea.h"
 #include "SelectionManager.h"
+
+#include "Item.h"
 
 /**
  * @brief Constructs the main window.
@@ -93,6 +96,18 @@ void HMDT::GUI::MainWindow::initializeFileActions() {
         // TODO: Confirmation menu first
         std::exit(0);
     });
+
+    auto add_item_action = add_action("add_item", [this]() {
+        if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+            if(m_add_file_window == nullptr) {
+                m_add_file_window.reset(new AddFileWindow(*this));
+                m_add_file_window->show_all();
+            } else {
+                m_add_file_window->present();
+            }
+        }
+    });
+    add_item_action->set_enabled(false);
 }
 
 /**
@@ -252,33 +267,6 @@ void HMDT::GUI::MainWindow::initializeViewActions() {
  * @brief Initializes every action in the Project menu
  */
 void HMDT::GUI::MainWindow::initializeProjectActions() {
-    {
-        auto ipm_action = add_action("import_provincemap", [this]() {
-            // Allocate this on the stack so that it gets automatically cleaned up
-            //  when we finish
-            NativeDialog::FileDialog dialog("Choose an input image file",
-                                            NativeDialog::FileDialog::SELECT_FILE);
-            // dialog.setDefaultPath() // TODO: Start in the installation directory/Documents
-            std::string path;
-            dialog.addFilter("Province Image Files", "bmp")
-                  .addFilter("All files", "*")
-                  .setAllowsMultipleSelection(false)
-                  .setDecideHandler([&path](const NativeDialog::Dialog& dialog) {
-                        auto& fdlg = dynamic_cast<const NativeDialog::FileDialog&>(dialog);
-                        path = fdlg.selectedPathes().front();
-                  }).show();
-
-              if(!path.empty() && !importProvinceMap(path)) {
-                  Gtk::MessageDialog err_diag("Failed to open file.",
-                                              false, Gtk::MESSAGE_ERROR);
-                  err_diag.run();
-              }
-        });
-
-        // This action should be disabled by default, until a project gets opened
-        ipm_action->set_enabled(false);
-    }
-
     {
         auto recalc_coasts_action = add_action("recalc_coasts", [this]() {
             if(auto opt_project = Driver::getInstance().getProject(); opt_project)
@@ -625,202 +613,6 @@ void HMDT::GUI::MainWindow::addWidgetToParent(Gtk::Widget& widget) {
 }
 
 /**
- * @brief Opens the province input map.
- *
- * @param filename The full path to the input map to open.
- *
- * @return true if the input was successfully opened, false otherwise
- */
-bool HMDT::GUI::MainWindow::importProvinceMap(const Glib::ustring& filename) {
-    // We are checking if the project exists, even though this action should
-    //  never be able to be called if theere is no project loaded
-    if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
-        auto& project = opt_project->get();
-
-        // First, load the image into memory
-        BitMap* image = nullptr;
-        if(image = readBMP(std::string(filename)); image == nullptr) {
-            WRITE_ERROR("Failed to read bitmap from ", filename);
-            return false;
-        }
-
-        if(image == nullptr) {
-            WRITE_ERROR("Reading bitmap failed.");
-            return false;
-        }
-
-        auto& worker = GraphicsWorker::getInstance();
-
-        // We now need a new array that the graphics worker can use to display the
-        //  rendered image
-        std::shared_ptr<MapData> map_data(new MapData(image->info_header.width,
-                                                      image->info_header.height));
-
-        // No memory leak here, since the data will get deleted either at program
-        //  exit, or when the next value is loaded
-        worker.init(map_data);
-        worker.resetDebugData();
-        worker.updateCallback({0, 0, static_cast<uint32_t>(image->info_header.width),
-                                     static_cast<uint32_t>(image->info_header.height)});
-
-        // Make sure that the drawing area is sized correctly to draw the entire
-        //  image
-        m_drawing_area->getWindow()->resize(image->info_header.width,
-                                            image->info_header.height);
-
-        m_drawing_area->setMapData(map_data);
-
-        ShapeFinder shape_finder(image, GraphicsWorker::getInstance(), map_data);
-
-        // Open a progress bar dialog to show the user that we are actually doing
-        //  something
-        ProgressBarDialog progress_dialog(*this, "Loading...", "", true);
-        progress_dialog.setShowText(true);
-
-        // We add the buttons manually here because we need to be able to set their
-        //  sensitivity manually
-        // TODO: Do we even want a Done button? Or should we just close the
-        //  dialog when we're done?
-        Gtk::Button* done_button = progress_dialog.add_button("OK", Gtk::RESPONSE_OK);
-        done_button->set_sensitive(false);
-
-        Gtk::Button* cancel_button = progress_dialog.add_button("Cancel", Gtk::RESPONSE_CANCEL);
-
-        progress_dialog.show_all();
-
-        // Set up the graphics worker callback
-        auto last_stage = shape_finder.getStage();
-        worker.setWriteCallback([this, &shape_finder, &progress_dialog, &last_stage](const Rectangle& r)
-        {
-            m_drawing_area->graphicsUpdateCallback(r);
-
-            auto stage = shape_finder.getStage();
-            float fstage = static_cast<uint32_t>(stage);
-            float fraction = fstage / static_cast<uint32_t>(ShapeFinder::Stage::DONE);
-
-            // TODO: Do we want to calculate a more precise fraction based on
-            //   progress during a given stage?
-
-            if(stage != last_stage) {
-                last_stage = stage;
-                progress_dialog.setText(toString(stage));
-            }
-            progress_dialog.setFraction(fraction);
-        });
-
-        // TODO: This threading stuff is dangerous because GTK is not actually
-        //  thread safe. We should make sure to do GTK things to ensure that
-        //  nothing causes thread race conditions.
-
-        // Start processing the data
-        std::thread sf_worker([&shape_finder, map_data, done_button, cancel_button]()
-        {
-            auto& worker = GraphicsWorker::getInstance();
-
-            auto shapes = shape_finder.findAllShapes();
-
-            auto* image = shape_finder.getImage();
-
-            auto prov_ptr = map_data->getProvinces().lock();
-
-            // Redraw the new image so we can properly show how it should look in the
-            //  final output
-            // TODO: Do we still want to do this here? Would it not be better to do
-            //  it later on?
-            for(auto&& shape : shapes) {
-                for(auto&& pixel : shape.pixels) {
-                    // Write to both the output data and into the displayed data
-                    writeColorTo(prov_ptr.get(), image->info_header.width,
-                                 pixel.point.x, pixel.point.y,
-                                 shape.unique_color);
-
-                    worker.writeDebugColor(pixel.point.x, pixel.point.y,
-                                           shape.unique_color);
-                }
-            }
-
-            // One final callback update so that the map drawer has the latest
-            //  graphical information
-            worker.updateCallback({0, 0, static_cast<uint32_t>(image->info_header.width),
-                                         static_cast<uint32_t>(image->info_header.height)});
-
-            WRITE_INFO("Detected ", shapes.size(), " shapes.");
-
-            // Disable the cancel button (we've already finished), and enable the
-            //  done button so that the user can close the box and move on
-            done_button->set_sensitive(true);
-            cancel_button->set_sensitive(false);
-        });
-
-        bool did_estop = false;
-
-        // Run the progress bar dialog
-        // If the user cancels the action, then we need to kill sf_worker ASAP
-        if(auto response = progress_dialog.run();
-                response == Gtk::RESPONSE_DELETE_EVENT ||
-                response == Gtk::RESPONSE_CANCEL)
-        {
-            shape_finder.estop();
-            did_estop = true;
-        }
-
-        WRITE_DEBUG("Waiting for ShapeFinder worker to rejoin.");
-        sf_worker.join();
-
-        // Note: We reset the zoom here so that we can ensure that the drawing
-        //  area actually updates the image.
-        // TODO: Why do I have to do this? What about this PR has caused this
-        //  to suddenly be required?
-        m_drawing_area->resetZoom();
-
-        worker.resetWriteCallback();
-
-        // Don't finish importing if we stopped early
-        if(did_estop) {
-            return true;
-        }
-
-        WRITE_DEBUG("Assigning the found data to the map project.");
-        project.getMapProject().import(shape_finder, map_data);
-
-        WRITE_INFO("Calculating coastal provinces...");
-        project.getMapProject().calculateCoastalProvinces();
-
-        // We need to re-assign the data into the drawing area to update the
-        //   texture on the drawing area
-        // TODO: For OpenGL we should probably use a Pixel Buffer Object (PBO)
-        //   so that the texture data doesn't have to be uploaded twice and
-        //   instead can be drawn as it is getting generated
-        WRITE_DEBUG("Assigning the found data into the drawing area.");
-        m_drawing_area->setMapData(map_data);
-
-        std::filesystem::path imported{std::string(filename)};
-        std::filesystem::path input_root = project.getInputsRoot();
-
-        WRITE_DEBUG("Copying the imported map into ", input_root);
-        if(!std::filesystem::exists(input_root)) {
-            std::filesystem::create_directory(input_root);
-        }
-
-        // TODO: We should actually do two things here:
-        //  1) If filename == input_full_path: do nothing
-        //  2) Otherwise ask if they want to overrite/replace the imported province map
-        if(auto input_full_path = input_root / INPUT_PROVINCEMAP_FILENAME;
-           !std::filesystem::exists(input_full_path))
-        {
-            std::filesystem::copy_file(imported, input_full_path);
-        }
-    } else {
-        WRITE_ERROR("Unable to complete importing '", filename, "'. Reason: There is no project currently loaded.");
-        return false;
-    }
-
-    WRITE_INFO("Import Finished!");
-
-    return true;
-}
-
-/**
  * @brief Creates a dialog box and, if successful, will create and set a new
  *        project on the Driver
  */
@@ -922,12 +714,12 @@ void HMDT::GUI::MainWindow::openProject() {
  */
 void HMDT::GUI::MainWindow::onProjectOpened() {
     // Enable all actions that can only be done on an opened project
-    getAction("import_provincemap")->set_enabled(true);
     getAction("save")->set_enabled(true);
     getAction("close")->set_enabled(true);
     getAction("recalc_coasts")->set_enabled(true);
     getAction("export_project")->set_enabled(true);
     getAction("export_project_as")->set_enabled(true);
+    getAction("add_item")->set_enabled(true);
 
     // Issue callback to the properties pane to inform it that a project has
     //   been opened
@@ -945,12 +737,12 @@ void HMDT::GUI::MainWindow::onProjectClosed() {
     m_drawing_area->queueDraw();
 
     // Disable all actions that can only be done on an opened project
-    getAction("import_provincemap")->set_enabled(false);
     getAction("save")->set_enabled(false);
     getAction("close")->set_enabled(false);
     getAction("recalc_coasts")->set_enabled(false);
     getAction("export_project")->set_enabled(false);
     getAction("export_project_as")->set_enabled(false);
+    getAction("add_item")->set_enabled(false);
 
     {
         ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct

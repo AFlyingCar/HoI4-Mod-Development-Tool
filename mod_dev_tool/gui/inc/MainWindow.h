@@ -20,6 +20,7 @@
 # include "ConfigEditorWindow.h"
 # include "LogViewerWindow.h"
 # include "Toolbar.h"
+# include "AddFileWindow.h"
 
 namespace HMDT::GUI {
     /**
@@ -42,8 +43,6 @@ namespace HMDT::GUI {
         protected:
             virtual Gtk::Orientation getDisplayOrientation() const override;
             virtual void addWidgetToParent(Gtk::Widget&) override;
-
-            bool importProvinceMap(const Glib::ustring&);
 
             void buildToolbar();
             void buildViewPane();
@@ -80,6 +79,9 @@ namespace HMDT::GUI {
 
             //! The window for editing the config
             std::unique_ptr<ConfigEditorWindow> m_config_editor_window;
+
+            //! The window for adding files into the current project
+            std::unique_ptr<AddFileWindow> m_add_file_window;
     };
 }
 

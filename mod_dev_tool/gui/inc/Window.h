@@ -5,9 +5,14 @@
 # include <string>
 # include <type_traits>
 
+# include <glibmm/dispatcher.h>
+
 # include <gtkmm/applicationwindow.h>
 # include <gtkmm/widget.h>
 # include <gtkmm/box.h>
+
+# include "Monad.h"
+# include "Maybe.h"
 
 # include "WidgetContainer.h"
 
@@ -24,6 +29,11 @@ namespace HMDT::GUI {
             {
                 return Glib::RefPtr<T>::cast_dynamic(lookup_action(action_name));
             }
+
+            Maybe<uint32_t> setupDispatcher(const std::function<void()>&);
+            Maybe<uint32_t> setupDispatcher(const std::function<void(uint32_t)>&);
+            MaybeVoid notifyDispatcher(uint32_t);
+            MaybeVoid teardownDispatcher(uint32_t);
 
         protected:
             virtual bool initializeActions() = 0;
@@ -64,6 +74,9 @@ namespace HMDT::GUI {
             Gtk::Box* m_box;
 
             Gtk::Application& m_application;
+
+            uint32_t m_next_dispatcher_id = 0;
+            std::map<uint32_t, Glib::Dispatcher> m_dispatchers;
     };
 }
 
