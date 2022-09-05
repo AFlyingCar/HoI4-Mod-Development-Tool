@@ -40,6 +40,9 @@
     /* ShapeFinder Error Codes */ \
     Y(SHAPEFINDER, 0x5000) \
     X(SHAPEFINDER_ESTOP, "Shape Finder was stopped early.") \
+    /* Logger Error Codes */ \
+    Y(LOGGER, 0x16000) \
+    X(INVALID_LEVEL_STRING, "String is unable to be converted to a level enum.") \
 
 #endif
 
