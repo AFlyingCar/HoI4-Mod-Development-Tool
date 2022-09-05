@@ -104,6 +104,12 @@ namespace HMDT::GUI {
 
             //////////////////////////////////////////////////////
 
+            //! A special column view for m_level
+            Gtk::TreeView::Column m_level;
+
+            //! A custom text cell renderer for certain columns
+            Gtk::CellRendererText m_cell_renderer_text;
+
             //! We want the view to be scrollable
             Gtk::ScrolledWindow m_swindow;
 
@@ -145,6 +151,12 @@ namespace HMDT::GUI {
 
             //! Used to reset filtering options
             Gtk::Button m_filter_reset;
+
+            /**
+             * @brief Check-button for determining if cells should be colorized
+             *        if applicable.
+             */
+            Gtk::CheckButton m_cell_colorize_enabled;
 
             //////////////////////////////////////////////////////
 
