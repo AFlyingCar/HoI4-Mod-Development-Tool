@@ -4,6 +4,68 @@
 #include <chrono>
 
 #include "Logger.h"
+#include "Maybe.h"
+#include "StatusCodes.h"
+#include "Util.h"
+
+namespace {
+    auto levelFromString(const std::string& s)
+        -> HMDT::Maybe<HMDT::Log::Message::Level>
+    {
+        auto level = HMDT::toUpper(s);
+
+        if(level == "ERROR") {
+            return HMDT::Log::Message::Level::ERROR;
+        } else if(level == "WARN") {
+            return HMDT::Log::Message::Level::WARN;
+        } else if(level == "INFO") {
+            return HMDT::Log::Message::Level::INFO;
+        } else if(level == "DEBUG") {
+            return HMDT::Log::Message::Level::DEBUG;
+        } else {
+            RETURN_ERROR(HMDT::STATUS_INVALID_LEVEL_STRING);
+        }
+    }
+
+    std::string debugLevelToColorString(const HMDT::Log::Message::Level& level) noexcept
+    {
+        std::stringstream ss;
+
+        // NOTE: I changed the color value for #12 since I think it looks better
+        //       against a dark background (which is what I'm testing against on
+        //       my machine
+        constexpr const char* low_rgb[] = {
+            "000000", "800000", "008000", "808000",
+            "000080", "800080", "008080", "c0c0c0",
+            "808080", "ff0000", "00ff00", "ffff00",
+            "0092ff", "ff00ff", "00ffff", "ffffff"
+        };
+
+        uint8_t color = HMDT::Log::getLevelDefaultColor(level);
+
+        // https://gist.github.com/MightyPork/1d9bd3a3fd4eb1a661011560f6921b5b
+        ss << '#';
+        if(color < 16) {
+            ss << std::hex << low_rgb[color] << std::dec;
+        } else if(color > 231) {
+            auto s = (color - 232) * 10 + 8;
+            ss << std::hex << s << s << s << std::dec;
+        } else {
+            auto n = color - 16;
+            auto b = n % 6;
+            auto g = (n - b) / 6 % 6;
+            auto r = (n - b - g * 6) / 36 % 6;
+
+            b = (b != 0) ? b * 40 + 55 : 0;
+            r = (r != 0) ? r * 40 + 55 : 0;
+            g = (g != 0) ? g * 40 + 55 : 0;
+
+            ss << std::hex << r << g << b << std::dec;
+        }
+
+        return ss.str();
+    }
+}
 
 std::deque<HMDT::Log::Message> HMDT::GUI::LogViewerWindow::viewable_messages;
 std::mutex HMDT::GUI::LogViewerWindow::next_message_mutex;
@@ -31,6 +93,7 @@ HMDT::GUI::LogViewerWindow::LogViewerWindow():
     m_filename_search_label("Filename search:"),
     m_message_search_label("Text search:"),
     m_filter_reset("Reset Filters"),
+    m_cell_colorize_enabled("Colorize Cells"),
     m_dispatcher(),
     m_dispatcher_ptr(nullptr)
 {
@@ -96,6 +159,7 @@ void HMDT::GUI::LogViewerWindow::initWidgets() {
             m_debug_enabled.set_active(true);
             m_error_enabled.set_active(true);
             m_warn_enabled.set_active(true);
+            m_cell_colorize_enabled.set_active(true);
 
             auto update_func = [this]() { updateFilter(); };
 
@@ -103,6 +167,7 @@ void HMDT::GUI::LogViewerWindow::initWidgets() {
             m_debug_enabled.signal_toggled().connect(update_func);
             m_error_enabled.signal_toggled().connect(update_func);
             m_warn_enabled.signal_toggled().connect(update_func);
+            m_cell_colorize_enabled.signal_toggled().connect(update_func);
         }
 
         // Time search fields
@@ -274,8 +339,17 @@ void HMDT::GUI::LogViewerWindow::initWidgets() {
         {
             m_filter_reset.set_vexpand(false);
             m_filter_reset.set_valign(Gtk::ALIGN_CENTER);
-            m_filtering_box.pack_start(m_filter_reset, Gtk::PACK_SHRINK, 5);
+
+            // Create a vertical box and place both the filter-reset button and
+            //  the colorize cells in it (so that they are on top of each other)
+            auto* reset_options_box = manage(new Gtk::Box(Gtk::ORIENTATION_VERTICAL));
+
+            reset_options_box->pack_start(m_filter_reset, Gtk::PACK_SHRINK, 5);
+            reset_options_box->pack_start(m_cell_colorize_enabled, Gtk::PACK_SHRINK);
+
+            m_filtering_box.pack_start(*reset_options_box, Gtk::PACK_SHRINK, 5);
         }
+        ++x;
     }
     // m_filtering_grid.set_grid_lines(Gtk::TREE_VIEW_GRID_LINES_HORIZONTAL);
     m_filtering_grid.set_column_spacing(5);
@@ -295,7 +369,7 @@ void HMDT::GUI::LogViewerWindow::initWidgets() {
     populateTreeModel();
 
     // Add all of the columns to the view
-    m_log_view.append_column("Level", m_columns.m_level);
+    m_log_view.append_column(m_level);
     m_log_view.append_column("Timestamp", m_columns.m_timestamp);
 
     m_log_view.append_column("Module", m_columns.m_module);
@@ -309,6 +383,39 @@ void HMDT::GUI::LogViewerWindow::initWidgets() {
     for(Gtk::TreeViewColumn* column : m_log_view.get_columns()) {
         column->set_resizable(true);
         column->set_reorderable(true);
+    }
+
+    // Set special CellRenderers per column
+    {
+        m_level.pack_start(m_cell_renderer_text);
+        m_level.set_title("Level");
+
+        // Level cell renderer
+        // https://stackoverflow.com/questions/62124020/color-property-reverted-when-selecting-a-cell-in-gtk3
+        m_level.set_cell_data_func(m_cell_renderer_text,
+            [this](Gtk::CellRenderer*, const Gtk::TreeModel::const_iterator& iter)
+            {
+                if(iter) {
+                    const Glib::ustring& row_level = (*iter)[m_columns.m_level];
+
+                    m_cell_renderer_text.property_text() = row_level;
+
+                    if(m_cell_colorize_enabled.get_active()) {
+                        auto level = levelFromString(std::string(row_level));
+
+                        level.andThen([this](auto&& level) {
+                            m_cell_renderer_text.property_foreground().set_value(debugLevelToColorString(level));
+                        })
+                        .orElse<void>([this, &row_level]() {
+                            WRITE_WARN("Failed to parse level string '", row_level);
+                            // Make sure we disable the check-box as well so we
+                            //   don't risk spamming the log with constant
+                            //   failures
+                            m_cell_colorize_enabled.set_active(false);
+                        });
+                    }
+                }
+            });
     }
 
     show_all_children();
