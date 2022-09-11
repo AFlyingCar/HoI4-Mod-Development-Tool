@@ -24,6 +24,7 @@
     Y(PROJECT, 0x100) \
     X(PROJECT_VALIDATION_FAILED, "Project Validation Failed.") \
     X(NO_PROJECT_LOADED, "No project is currently loaded.") \
+    X(NO_DATA_LOADED, "No data is currently loaded.") \
     /* Province Project Error Codes */ \
     Y(PROVINCE_PROJECT, 0x200) \
     X(PROVINCE_INVALID_STATE_ID, "The Province's StateID is invalid.") \
