@@ -15,6 +15,10 @@ namespace HMDT::GUI {
     MaybeVoid addProvinceMapWorker(Window&, std::any);
     MaybeVoid postStartAddProvinceMap(Window&, std::any);
     MaybeVoid endAddProvinceMap(Window&, std::any);
+
+    ////////////////////////////////////////////////////////////////////////////
+    Maybe<std::any> addHeightMap(Window&,
+                                 const std::vector<std::filesystem::path>&);
 }
 
 #endif

@@ -14,7 +14,7 @@
 /////////////////////////////////////////////////
 
 DEFINE_ITEM_TYPE(
-    "Province Map" /* name */,
+    "Province Map Input" /* name */,
     "Province maps are 24-bit RGB bitmaps which describe the positions of every"
     " province in a custom map. It is recommended that the dimensions be a "
     "multiple of 256 each, as while this tool can load files which do not match"
@@ -44,6 +44,27 @@ DEFINE_ITEM_TYPE(
     HMDT::GUI::addProvinceMapWorker /* add_worker_callback */,
     HMDT::GUI::postStartAddProvinceMap /* post_start_add_callback */,
     HMDT::GUI::endAddProvinceMap /* end_add_callback */,
+    [](HMDT::GUI::Window& parent_window) -> HMDT::MaybeVoid {
+        return HMDT::STATUS_NOT_IMPLEMENTED;
+    } /* on_remove_callback */
+);
+
+DEFINE_ITEM_TYPE(
+    "Height Map" /* name */,
+    "" /* description */,
+    "/com/aflyingcar/HoI4ModDevelopmentTool/textures/heightmap.png" /* icon */,
+    {{
+        { { "Height Map Image Files", "bmp" } } /* filters */,
+        false /* allow_multiselect */,
+    }} /* file_info */,
+    {
+        "map/*",
+        "history/states/*"
+    } /* extra_overrides */,
+    HMDT::GUI::addHeightMap /* init_add_callback */,
+    HMDT::GUI::ItemType::DEFAULT_POSTINIT_CALLBACK /* add_worker_callback */,
+    HMDT::GUI::ItemType::DEFAULT_POSTINIT_CALLBACK /* post_start_add_callback */,
+    HMDT::GUI::ItemType::DEFAULT_POSTINIT_CALLBACK /* end_add_callback  */,
     [](HMDT::GUI::Window& parent_window) -> HMDT::MaybeVoid {
         return HMDT::STATUS_NOT_IMPLEMENTED;
     } /* on_remove_callback */

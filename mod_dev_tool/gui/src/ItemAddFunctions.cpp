@@ -306,3 +306,18 @@ HMDT::MaybeVoid HMDT::GUI::endAddProvinceMap(Window& window, std::any data) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+auto HMDT::GUI::addHeightMap(Window&,
+                             const std::vector<std::filesystem::path>& paths)
+    -> Maybe<std::any>
+{
+    if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+        auto& project = opt_project->get();
+
+        WRITE_DEBUG("Loading new heightmap into HeightMapProject.");
+        auto res = project.getMapProject().getHeightMapProject().loadFile(paths.front());
+        RETURN_IF_ERROR(res);
+    }
+
+    return STATUS_SUCCESS;
+}
+
