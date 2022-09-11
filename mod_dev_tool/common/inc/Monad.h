@@ -50,8 +50,10 @@ namespace HMDT {
                 m_opt(i, ilist, args...)
             { }
 
-            template<typename U = T>
-            constexpr MonadOptional(U&& value): m_opt(value)
+            template<typename U = T,
+                     typename = std::enable_if_t<!std::is_same_v<U, MonadOptional<T>>>
+                    >
+            constexpr MonadOptional(U&& value): m_opt(std::forward<U>(value))
             { }
 
             MonadOptional(const MonadOptional<T>& mopt): m_opt(mopt.m_opt)
