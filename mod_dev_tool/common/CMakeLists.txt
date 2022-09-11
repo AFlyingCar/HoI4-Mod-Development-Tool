@@ -41,6 +41,7 @@ add_library(common STATIC
     src/Preferences.cpp
     src/StatusCategory.cpp
     src/StatusCodes.cpp
+    src/WorldNormalBuilder.cpp
 
     "${CMAKE_BINARY_DIR}/ToolsVersion.h"
 )

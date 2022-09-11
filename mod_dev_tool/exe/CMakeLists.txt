@@ -6,7 +6,6 @@ cmake_minimum_required(VERSION 3.0)
 add_library(mod_dev_tool_lib OBJECT
     src/ArgParser.cpp
     src/StateDefinitionBuilder.cpp
-    src/WorldNormalBuilder.cpp
     src/Interfaces.cpp
     src/main.cpp
 )
