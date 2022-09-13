@@ -21,6 +21,8 @@
 # include "Logger.h"
 # include "PreprocessorUtils.h"
 # include "TypeTraits.h"
+# include "Maybe.h"
+# include "StatusCodes.h"
 
 namespace HMDT {
     // Forward declare this, as we don't need to include the whole file yet.
@@ -90,6 +92,8 @@ namespace HMDT {
             stream.read(reinterpret_cast<char*>(destination), sizeof(T));
             return stream.gcount() == sizeof(T);
         } else {
+            WRITE_ERROR("Failed to safely read ", sizeof(T),
+                        " bytes. EOF=", stream.eof(), ", good=", stream.good());
             return false;
         }
     }
@@ -110,6 +114,8 @@ namespace HMDT {
             stream.read(reinterpret_cast<char*>(destination), size);
             return stream.gcount() == size;
         } else {
+            WRITE_ERROR("Failed to safely read ", size,
+                        " bytes. EOF=", stream.eof(), ", good=", stream.good());
             return false;
         }
     }
@@ -127,6 +133,78 @@ namespace HMDT {
     template<typename... Ts>
     bool safeRead(std::istream& stream, Ts*... destinations) {
         return (safeRead(destinations, stream) && ...);
+    }
+
+    /**
+     * @brief Safely reads from stream if and only if the stream has not reached eof
+     *        and is still good.
+     *
+     * @tparam T The type of data to read.
+     * @param destination A pointer to the data location to read into.
+     * @param stream The stream to read from.
+     * @return True if the read was successful, false otherwise.
+     */
+    template<typename T>
+    MaybeVoid safeRead2(T* destination, std::istream& stream) {
+        if(!stream.eof() && stream.good()) {
+            stream.read(reinterpret_cast<char*>(destination), sizeof(T));
+            RETURN_ERROR_IF(stream.gcount() != sizeof(T),
+                            STATUS_READ_TOO_FEW_BYTES);
+        } else {
+            WRITE_ERROR("Failed to safely read ", sizeof(T),
+                        " bytes. EOF=", stream.eof(), ", good=", stream.good());
+            RETURN_ERROR(STATUS_CANNOT_READ_FROM_STREAM);
+        }
+
+        return STATUS_SUCCESS;
+    }
+
+    /**
+     * @brief Safely reads from stream if and only if the stream has not reached eof
+     *        and is still good.
+     *
+     * @tparam T The type of data to read.
+     * @param destination A pointer to the data location to read into.
+     * @param size The total number of bytes to read.
+     * @param stream The stream to read from.
+     * @return True if the read was successful, false otherwise.
+     */
+    template<typename T>
+    MaybeVoid safeRead2(T* destination, size_t size, std::istream& stream) {
+        if(!stream.eof() && stream.good()) {
+            stream.read(reinterpret_cast<char*>(destination), size);
+            RETURN_ERROR_IF(stream.gcount() != size, STATUS_READ_TOO_FEW_BYTES);
+        } else {
+            WRITE_ERROR("Failed to safely read ", size,
+                        " bytes. EOF=", stream.eof(), ", good=", stream.good());
+            RETURN_ERROR(STATUS_CANNOT_READ_FROM_STREAM);
+        }
+
+        return STATUS_SUCCESS;
+    }
+
+    /**
+     * @brief Safely reads from a stream if and only if the stream has not
+     *        reached eof and is still good.
+     *
+     * @tparam Ts All types of data to read.
+     * @param stream The stream to read from.
+     * @param destinations Each pointer to data locations to read into.
+     *
+     * @return True if the reads were successful, false otherwise.
+     */
+    template<typename T1, typename... Ts>
+    MaybeVoid safeRead2(std::istream& stream, T1* dest1, Ts*... destinations) {
+        auto res = safeRead2(dest1, stream);
+        RETURN_IF_ERROR(res);
+
+        // Only bother recursing again if there still more destinations left.
+        if constexpr(sizeof...(Ts) > 0) {
+            auto res = safeRead2<Ts...>(stream, destinations...);
+            RETURN_IF_ERROR(res);
+        }
+
+        return STATUS_SUCCESS;
     }
 
     /**

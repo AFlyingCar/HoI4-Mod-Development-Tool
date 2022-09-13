@@ -131,6 +131,54 @@ TEST(UtilTests, SimpleSafeReadTests) {
     ASSERT_EQ(std::string(read_sdata.get()), sdata);
 }
 
+TEST(UtilTests, SimpleSafeRead2Tests) {
+    std::stringstream sstream;
+
+    // Input data points
+    uint32_t idata = 11234;
+    bool bdata = true;
+    float fdata = 3.14159f;
+    std::string sdata = "foobar";
+
+    // Output data points
+    uint32_t read_idata;
+    bool read_bdata;
+    float read_fdata;
+    std::shared_ptr<char[]> read_sdata(new char[sdata.size() + 1]);
+    uint32_t read_idata2;
+    bool read_bdata2;
+    float read_fdata2;
+
+    // Write data points into the stream
+    HMDT::writeData(sstream, idata);
+    HMDT::writeData(sstream, bdata);
+    HMDT::writeData(sstream, fdata);
+    sstream.write(sdata.c_str(), sdata.size() + 1);
+
+    // Write each data point again
+    HMDT::writeData(sstream, idata, bdata, fdata);
+
+    // Read all of the data out of the stream
+    ASSERT_SUCCEEDED(HMDT::safeRead2(&read_idata, sstream));
+    ASSERT_SUCCEEDED(HMDT::safeRead2(&read_bdata, sstream));
+    ASSERT_SUCCEEDED(HMDT::safeRead2(&read_fdata, sstream));
+
+    // Read one more character than size() for the \0
+    ASSERT_SUCCEEDED(HMDT::safeRead2(read_sdata.get(), sdata.size() + 1, sstream));
+
+    // Read multiple values at once
+    ASSERT_SUCCEEDED(HMDT::safeRead2(sstream, &read_idata2, &read_bdata2, &read_fdata2));
+
+    // Make sure that the data got read back out of the stream correctly
+    ASSERT_EQ(read_idata, idata);
+    ASSERT_EQ(read_bdata, bdata);
+    ASSERT_EQ(read_fdata, fdata);
+    ASSERT_EQ(std::string(read_sdata.get()), sdata);
+    ASSERT_EQ(read_idata2, idata);
+    ASSERT_EQ(read_bdata2, bdata);
+    ASSERT_EQ(read_fdata2, fdata);
+}
+
 TEST(UtilTests, SimpleWriteDataTests) {
     std::stringstream sstream;
 
