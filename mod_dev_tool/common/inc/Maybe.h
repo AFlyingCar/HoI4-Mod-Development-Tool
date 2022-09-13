@@ -87,8 +87,9 @@ namespace HMDT {
             { }
 
             template<typename U = T,
-                     typename = std::enable_if_t<!std::is_same_v<U, Maybe<T>> ||
-                                                 !std::is_same_v<U, MonadOptional<T>>>
+                     typename = std::enable_if_t<!std::is_same_v<U, Maybe<T>> &&
+                                                 !std::is_same_v<U, MonadOptional<T>> &&
+                                                 std::is_convertible_v<U, T>>
                     >
             constexpr Maybe(U&& value): MonadOptional<T>(std::forward<U>(value))
             { }
