@@ -19,6 +19,7 @@
     X(SUCCESS, "Success") \
     X(BADALLOC, "Memory allocation failed.") \
     X(NOT_IMPLEMENTED, "Feature is not implemented yet.") \
+    X(PARAM_CANNOT_BE_NULL, "Given parameter may not be null.") \
     /* Project Error Codes */ \
     Y(PROJECT, 0x100) \
     X(PROJECT_VALIDATION_FAILED, "Project Validation Failed.") \
@@ -40,9 +41,17 @@
     /* ShapeFinder Error Codes */ \
     Y(SHAPEFINDER, 0x5000) \
     X(SHAPEFINDER_ESTOP, "Shape Finder was stopped early.") \
+    /* File Error Codes */ \
+    Y(FILECODES, 0x10000) \
+    X(CANNOT_READ_FROM_STREAM, "Unable to read from the given stream.") \
+    X(READ_TOO_FEW_BYTES, "Too few bytes were read from the given stream.") \
     /* Logger Error Codes */ \
     Y(LOGGER, 0x16000) \
     X(INVALID_LEVEL_STRING, "String is unable to be converted to a level enum.") \
+    /* BitMap Error Codes */ \
+    Y(BITMAP, 0x16200) \
+    X(BITMAP_OFFSET_VALIDATION_ERROR, "Validation using the BitMap's offset failed.") \
+    X(INVALID_BITS_PER_PIXEL, "Invalid Bits Per Pixel.") \
 
 #endif
 
