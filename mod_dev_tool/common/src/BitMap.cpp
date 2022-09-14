@@ -662,14 +662,12 @@ auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
     switch(hdr_version_to_use) {
         case BMPHeaderToUse::V5:
             info_header_size += (V5_INFO_HEADER_LENGTH - V4_INFO_HEADER_LENGTH);
-            WRITE_DEBUG("info_header_size=", info_header_size);
 
             bmp.info_header.v5.profileData = 0;
             bmp.info_header.v5.profileSize = 0;
             bmp.info_header.v5.reserved = 0;
         case BMPHeaderToUse::V4:
             info_header_size += (V4_INFO_HEADER_LENGTH - V1_INFO_HEADER_LENGTH);
-            WRITE_DEBUG("info_header_size=", info_header_size);
 
             bmp.info_header.v4.redMask   = 0x00FF0000;
             bmp.info_header.v4.greenMask = 0x0000FF00;
@@ -693,7 +691,6 @@ auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
             bmp.info_header.v4.gammaBlue = 0;
         case BMPHeaderToUse::V1:
             info_header_size += V1_INFO_HEADER_LENGTH;
-            WRITE_DEBUG("info_header_size=", info_header_size);
 
             bmp.info_header.v1.headerSize = info_header_size;
             bmp.info_header.v1.width = static_cast<int>(width);
