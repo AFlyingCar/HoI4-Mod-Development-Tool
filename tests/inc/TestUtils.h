@@ -18,6 +18,8 @@
 
 # define ASSERT_STATUS(VAL, EXPECTED) \
     ASSERT_EQ(VAL.error(), EXPECTED)
+# define ASSERT_SUCCEEDED(VAL)    \
+    ASSERT_TRUE(IS_SUCCESS(VAL)); \
 
 # define TEST_COUT std::cerr << "[          ] [ INFO ]"
 # define TEST_CERR std::cerr << "[          ] [ ERR  ]"
