@@ -20,7 +20,7 @@ namespace HMDT {
     constexpr uint32_t V1_INFO_HEADER_LENGTH = 40;
 
     //! The length of the V4 InfoHeader (108 bytes)
-    constexpr uint32_t V4_INFO_HEADER_LENGTH = V1_INFO_HEADER_LENGTH + 54;
+    constexpr uint32_t V4_INFO_HEADER_LENGTH = V1_INFO_HEADER_LENGTH + 68;
 
     //! The length of the V5 InfoHeader (124 bytes)
     constexpr uint32_t V5_INFO_HEADER_LENGTH = V4_INFO_HEADER_LENGTH + 16;
