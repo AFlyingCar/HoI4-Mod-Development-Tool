@@ -654,7 +654,7 @@ auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
     bmp.file_header.reserved2 = 0;
     bmp.file_header.bitmapOffset = FILE_HEADER_LENGTH;
 
-    auto info_header_size = FILE_HEADER_LENGTH;
+    auto info_header_size = 0;
 
     // Fill out the info header based on what version is requested
     //   Note: we populate it backwards to take advantage of switch-case
@@ -729,6 +729,9 @@ auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
                             bmp.info_header.v1.bitsPerPixel);
                 RETURN_ERROR(STATUS_INVALID_BITS_PER_PIXEL);
         }
+
+        // colorsImportant will always match colorsUsed
+        bmp.info_header.v1.colorImportant = bmp.info_header.v1.colorsUsed;
 
         WRITE_DEBUG("Generating color table with ", bmp.info_header.v1.colorsUsed,
                     " values.");
