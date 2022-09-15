@@ -5,3 +5,4 @@ resources/textures/logo.png filter=lfs diff=lfs merge=lfs -text
 resources/icons/logo.ico filter=lfs diff=lfs merge=lfs -text
 resources/textures/provinces.png filter=lfs diff=lfs merge=lfs -text
 tests/bin/8bpp_greyscale_no_color_management.bmp filter=lfs diff=lfs merge=lfs -text
+tests/bin/8bpp_greyscale.bmp filter=lfs diff=lfs merge=lfs -text
