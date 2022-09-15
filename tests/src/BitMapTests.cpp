@@ -94,14 +94,63 @@ TEST(BitMapTests, Load8BPP) {
     auto res = HMDT::readBMP(bmp1_path, bmp1);
     ASSERT_SUCCEEDED(res);
 
-    TEST_COUT << bmp1 << std::endl;
+    // Check the file header
+    ASSERT_EQ(bmp1.file_header.filetype, HMDT::BM_TYPE);
+    ASSERT_EQ(bmp1.file_header.fileSize, 66614);
+    ASSERT_EQ(bmp1.file_header.reserved1, 0);
+    ASSERT_EQ(bmp1.file_header.reserved2, 0);
+    ASSERT_EQ(bmp1.file_header.bitmapOffset, 1078);
+    // Check the info header
+
+    // Make sure that we have the right header version (In this case, it should
+    //   be the V4 Info Header)
+    ASSERT_EQ(bmp1.info_header.v1.headerSize, HMDT::V1_INFO_HEADER_LENGTH);
+
+    // If the above assertion is true, we know that we have the V4 header
+    //   However, we should still be able to utilize the v1 variable to access
+    //   the v1 header
+    ASSERT_EQ(bmp1.info_header.v1.width, 256);
+    ASSERT_EQ(bmp1.info_header.v1.height, 256);
+    ASSERT_EQ(bmp1.info_header.v1.bitPlanes, 1);
+    ASSERT_EQ(bmp1.info_header.v1.bitsPerPixel, 8);
+    ASSERT_EQ(bmp1.info_header.v1.compression, 0);
+    ASSERT_EQ(bmp1.info_header.v1.sizeOfBitmap, 65536);
+    ASSERT_EQ(bmp1.info_header.v1.horzResolution, 11811);
+    ASSERT_EQ(bmp1.info_header.v1.vertResolution, 11811);
+    ASSERT_EQ(bmp1.info_header.v1.colorsUsed, 256);
+    ASSERT_EQ(bmp1.info_header.v1.colorImportant, 256);
+
+    // Do not verify the V4 part of the header as this image has no color management
+
+    // Verify that there is a color table
+    // Not really easy to test the whole color table, so as long as it is
+    //   non-null then we're probably fine (can't really verify the length
+    //   easily)
+    ASSERT_NE(bmp1.color_table, nullptr);
+
+    // Not really easy to test the whole data-set, so as long as it is non-null
+    //   then we're probably fine (can't really verify the length easily)
+    ASSERT_NE(bmp1.data, nullptr);
+
+    HMDT::Log::Logger::getInstance().reset();
+}
+
+TEST(BitMapTests, Load8BPPWithColorManagement) {
+    // We also want to see log outputs in the test output
+    HMDT::UnitTests::registerTestLogOutputFunction(true, true, true, true);
+
+    auto bmp1_path = HMDT::UnitTests::getTestProgramPath() / "bin" / "8bpp_greyscale.bmp";
+
+    HMDT::BitMap2 bmp1;
+    auto res = HMDT::readBMP(bmp1_path, bmp1);
+    ASSERT_SUCCEEDED(res);
 
     // Check the file header
     ASSERT_EQ(bmp1.file_header.filetype, HMDT::BM_TYPE);
-    ASSERT_EQ(bmp1.file_header.fileSize, 1049722);
+    ASSERT_EQ(bmp1.file_header.fileSize, 66682);
     ASSERT_EQ(bmp1.file_header.reserved1, 0);
     ASSERT_EQ(bmp1.file_header.reserved2, 0);
-    ASSERT_EQ(bmp1.file_header.bitmapOffset, 1146); // fileHeader + infoHeaderV4 + color table
+    ASSERT_EQ(bmp1.file_header.bitmapOffset, 1146);
     // Check the info header
 
     // Make sure that we have the right header version (In this case, it should
@@ -111,14 +160,14 @@ TEST(BitMapTests, Load8BPP) {
     // If the above assertion is true, we know that we have the V4 header
     //   However, we should still be able to utilize the v1 variable to access
     //   the v1 header
-    ASSERT_EQ(bmp1.info_header.v1.width, 1024);
-    ASSERT_EQ(bmp1.info_header.v1.height, 1024);
+    ASSERT_EQ(bmp1.info_header.v1.width, 256);
+    ASSERT_EQ(bmp1.info_header.v1.height, 256);
     ASSERT_EQ(bmp1.info_header.v1.bitPlanes, 1);
     ASSERT_EQ(bmp1.info_header.v1.bitsPerPixel, 8);
     ASSERT_EQ(bmp1.info_header.v1.compression, 0);
-    ASSERT_EQ(bmp1.info_header.v1.sizeOfBitmap, 1048576);
-    ASSERT_EQ(bmp1.info_header.v1.horzResolution, 2835);
-    ASSERT_EQ(bmp1.info_header.v1.vertResolution, 2835);
+    ASSERT_EQ(bmp1.info_header.v1.sizeOfBitmap, 65536);
+    ASSERT_EQ(bmp1.info_header.v1.horzResolution, 11811);
+    ASSERT_EQ(bmp1.info_header.v1.vertResolution, 11811);
     ASSERT_EQ(bmp1.info_header.v1.colorsUsed, 256);
     ASSERT_EQ(bmp1.info_header.v1.colorImportant, 256);
 
