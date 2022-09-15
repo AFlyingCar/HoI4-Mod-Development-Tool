@@ -487,7 +487,7 @@ auto HMDT::readBMP2(std::filesystem::path& path) -> Maybe<BitMap2> {
     auto res = readBMP(path, bm);
     RETURN_IF_ERROR(res);
 
-    return std::move(bm);
+    return bm;
 }
 
 auto HMDT::writeBMP(const std::filesystem::path& path,
