@@ -473,6 +473,8 @@ auto HMDT::readBMP(std::istream& stream, BitMap2& bm) -> MaybeRef<BitMap2> {
                          bm.info_header.v1.height);
     RETURN_IF_ERROR(res);
 
+    WRITE_DEBUG("Successfully loaded ", bm);
+
     return std::ref(bm);
 
 #undef READ_FROM_BMP
@@ -637,8 +639,7 @@ auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
                      bool is_greyscale, BMPHeaderToUse hdr_version_to_use)
     -> MaybeVoid
 {
-    BitMap2 bmp;
-    std::memset(&bmp, 0, sizeof(BitMap2));
+    BitMap2 bmp{};
 
     // Make sure we release the grabbed 'data' pointer when we exit, as it is
     //   not ours to delete
@@ -666,6 +667,8 @@ auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
             bmp.info_header.v5.profileData = 0;
             bmp.info_header.v5.profileSize = 0;
             bmp.info_header.v5.reserved = 0;
+
+            [[fallthrough]];
         case BMPHeaderToUse::V4:
             info_header_size += (V4_INFO_HEADER_LENGTH - V1_INFO_HEADER_LENGTH);
 
@@ -689,6 +692,8 @@ auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
             bmp.info_header.v4.gammaRed = 0;
             bmp.info_header.v4.gammaGreen = 0;
             bmp.info_header.v4.gammaBlue = 0;
+
+            [[fallthrough]];
         case BMPHeaderToUse::V1:
             info_header_size += V1_INFO_HEADER_LENGTH;
 
