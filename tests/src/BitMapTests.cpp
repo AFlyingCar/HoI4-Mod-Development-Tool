@@ -217,6 +217,12 @@ TEST(BitMapTests, WriteSimpleBMP) {
     auto write_base_path = HMDT::UnitTests::getTestProgramPath() / "tmp";
     auto bmp2_path = write_base_path / "simple_out.bmp";
 
+    if(!std::filesystem::exists(write_base_path)) {
+        TEST_COUT << "Directory " << write_base_path
+                  << " does not exist, creating." << std::endl;
+        ASSERT_TRUE(std::filesystem::create_directory(write_base_path));
+    }
+
     HMDT::BitMap2 bmp1;
     auto res = HMDT::readBMP(bmp1_path, bmp1);
     ASSERT_SUCCEEDED(res);
@@ -300,6 +306,12 @@ TEST(BitMapTests, WriteSimpleBMPWithoutObject) {
     auto bmp1_path = HMDT::UnitTests::getTestProgramPath() / "bin" / "simple.bmp";
     auto write_base_path = HMDT::UnitTests::getTestProgramPath() / "tmp";
     auto bmp2_path = write_base_path / "simple_out.bmp";
+
+    if(!std::filesystem::exists(write_base_path)) {
+        TEST_COUT << "Directory " << write_base_path
+                  << " does not exist, creating." << std::endl;
+        ASSERT_TRUE(std::filesystem::create_directory(write_base_path));
+    }
 
     WRITE_INFO("Reading BitMap from ", bmp1_path);
     HMDT::BitMap2 bmp1;
@@ -397,6 +409,12 @@ TEST(BitMapTests, Write8BPP) {
     auto bmp1_path = HMDT::UnitTests::getTestProgramPath() / "bin" / "8bpp_greyscale_no_color_management.bmp";
     auto write_base_path = HMDT::UnitTests::getTestProgramPath() / "tmp";
     auto bmp2_path = write_base_path / "8bpp_greyscale_no_color_management_out.bmp";
+
+    if(!std::filesystem::exists(write_base_path)) {
+        TEST_COUT << "Directory " << write_base_path
+                  << " does not exist, creating." << std::endl;
+        ASSERT_TRUE(std::filesystem::create_directory(write_base_path));
+    }
 
     WRITE_INFO("Reading BitMap from ", bmp1_path);
     HMDT::BitMap2 bmp1;
@@ -513,6 +531,12 @@ TEST(BitMapTests, Write8BPPWithoutObject) {
     auto bmp1_path = HMDT::UnitTests::getTestProgramPath() / "bin" / "8bpp_greyscale_no_color_management.bmp";
     auto write_base_path = HMDT::UnitTests::getTestProgramPath() / "tmp";
     auto bmp2_path = write_base_path / "8bpp_greyscale_no_color_management_noobj_out.bmp";
+
+    if(!std::filesystem::exists(write_base_path)) {
+        TEST_COUT << "Directory " << write_base_path
+                  << " does not exist, creating." << std::endl;
+        ASSERT_TRUE(std::filesystem::create_directory(write_base_path));
+    }
 
     WRITE_INFO("Reading BitMap from ", bmp1_path);
     HMDT::BitMap2 bmp1;
