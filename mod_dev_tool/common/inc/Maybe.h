@@ -86,6 +86,14 @@ namespace HMDT {
                 MonadOptional<T>(value), m_ec()
             { }
 
+            template<typename U = T,
+                     typename = std::enable_if_t<!std::is_same_v<U, Maybe<T>> &&
+                                                 !std::is_same_v<U, MonadOptional<T>> &&
+                                                 std::is_convertible_v<U, T>>
+                    >
+            constexpr Maybe(U&& value): MonadOptional<T>(std::forward<U>(value))
+            { }
+
             template<typename U = T>
             Maybe(const Maybe<U>& maybe):
                 Maybe<T>(maybe, Identity_t<U>{})
@@ -101,7 +109,7 @@ namespace HMDT {
             { }
 
             Maybe(Maybe<T>&& maybe):
-                MonadOptional<T>(std::forward<Maybe<T>>(maybe)),
+                MonadOptional<T>(std::forward<MonadOptional<T>>(maybe)),
                 m_ec(std::move(maybe.m_ec))
             { }
 
