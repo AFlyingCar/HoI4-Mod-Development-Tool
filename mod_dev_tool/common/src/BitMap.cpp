@@ -297,7 +297,7 @@ std::ostream& HMDT::operator<<(std::ostream& stream, const HMDT::BitMap& bm) {
 }
 
 auto HMDT::readBMP(const std::filesystem::path& path,
-                   std::shared_ptr<BitMap2> bm)
+                   std::shared_ptr<BitMap2> bm) noexcept
     -> MaybeRef<BitMap2>
 {
     if(bm == nullptr) {
@@ -307,7 +307,7 @@ auto HMDT::readBMP(const std::filesystem::path& path,
     return readBMP(path, *bm);
 }
 
-auto HMDT::readBMP(const std::filesystem::path& path, BitMap2& bm)
+auto HMDT::readBMP(const std::filesystem::path& path, BitMap2& bm) noexcept
     -> MaybeRef<BitMap2>
 {
     // Make sure we clear errno first
@@ -326,8 +326,7 @@ auto HMDT::readBMP(const std::filesystem::path& path, BitMap2& bm)
     return res;
 }
 
-auto HMDT::readBMP(std::istream& stream,
-                   std::shared_ptr<BitMap2> bm)
+auto HMDT::readBMP(std::istream& stream, std::shared_ptr<BitMap2> bm) noexcept
     -> MaybeRef<BitMap2>
 {
     if(bm == nullptr) {
@@ -340,7 +339,9 @@ auto HMDT::readBMP(std::istream& stream,
     return res;
 }
 
-auto HMDT::readBMP(std::istream& stream, BitMap2& bm) -> MaybeRef<BitMap2> {
+auto HMDT::readBMP(std::istream& stream, BitMap2& bm) noexcept
+    -> MaybeRef<BitMap2>
+{
 #define READ_FROM_BMP(FIELD)                    \
     do {                                        \
         auto res = safeRead2(FIELD, stream); \
@@ -481,7 +482,7 @@ auto HMDT::readBMP(std::istream& stream, BitMap2& bm) -> MaybeRef<BitMap2> {
 #undef READ_FROM_BMP2
 }
 
-auto HMDT::readBMP2(std::filesystem::path& path) -> Maybe<BitMap2> {
+auto HMDT::readBMP2(std::filesystem::path& path) noexcept -> Maybe<BitMap2> {
     BitMap2 bm;
 
     auto res = readBMP(path, bm);
@@ -491,7 +492,7 @@ auto HMDT::readBMP2(std::filesystem::path& path) -> Maybe<BitMap2> {
 }
 
 auto HMDT::writeBMP(const std::filesystem::path& path,
-                    std::shared_ptr<const BitMap2> bmp)
+                    std::shared_ptr<const BitMap2> bmp) noexcept
     -> MaybeVoid
 {
     if(bmp == nullptr) {
@@ -504,7 +505,7 @@ auto HMDT::writeBMP(const std::filesystem::path& path,
     return res;
 }
 
-auto HMDT::writeBMP(const std::filesystem::path& path, const BitMap2& bmp)
+auto HMDT::writeBMP(const std::filesystem::path& path, const BitMap2& bmp) noexcept
     -> MaybeVoid
 {
     std::ofstream file(path, std::ios::out | std::ios::binary);
@@ -598,7 +599,13 @@ auto HMDT::writeBMP(const std::filesystem::path& path, const BitMap2& bmp)
     size_t pitch = bmp.info_header.v1.width * depth;
 
     WRITE_DEBUG("Flipping entire image before we write it. depth=", depth, ", pitch=", pitch);
-    std::unique_ptr<unsigned char[]> output(new unsigned char[bmp.info_header.v1.sizeOfBitmap]{ 0 });
+    std::unique_ptr<unsigned char[]> output;
+    try {
+        output.reset(new unsigned char[bmp.info_header.v1.sizeOfBitmap]{ 0 });
+    } catch(std::bad_alloc e) {
+        WRITE_ERROR("Failed to allocate enough space for flipped output data: ", e.what());
+        RETURN_ERROR(STATUS_BADALLOC);
+    }
 
     auto res = flipImage(output.get(), bmp.data.get(), pitch, bmp.info_header.v1.height);
     RETURN_IF_ERROR(res);
@@ -636,7 +643,7 @@ auto HMDT::writeBMP(const std::filesystem::path& path, const BitMap2& bmp)
 
 auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
                      uint32_t width, uint32_t height, uint16_t depth,
-                     bool is_greyscale, BMPHeaderToUse hdr_version_to_use)
+                     bool is_greyscale, BMPHeaderToUse hdr_version_to_use) noexcept
     -> MaybeVoid
 {
     BitMap2 bmp{};

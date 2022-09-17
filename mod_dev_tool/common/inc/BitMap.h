@@ -167,19 +167,19 @@ namespace HMDT {
     enum class BMPHeaderToUse { V1, V4, V5 };
 
     MaybeRef<BitMap2> readBMP(const std::filesystem::path&,
-                              std::shared_ptr<BitMap2>);
-    MaybeRef<BitMap2> readBMP(std::istream&, std::shared_ptr<BitMap2>);
+                              std::shared_ptr<BitMap2>) noexcept;
+    MaybeRef<BitMap2> readBMP(std::istream&, std::shared_ptr<BitMap2>) noexcept;
 
-    MaybeRef<BitMap2> readBMP(const std::filesystem::path&, BitMap2&);
-    MaybeRef<BitMap2> readBMP(std::istream&, BitMap2&);
-    Maybe<BitMap2> readBMP2(std::filesystem::path&);
+    MaybeRef<BitMap2> readBMP(const std::filesystem::path&, BitMap2&) noexcept;
+    MaybeRef<BitMap2> readBMP(std::istream&, BitMap2&) noexcept;
+    Maybe<BitMap2> readBMP2(std::filesystem::path&) noexcept;
 
     MaybeVoid writeBMP(const std::filesystem::path&,
-                       std::shared_ptr<const BitMap2>);
-    MaybeVoid writeBMP(const std::filesystem::path&, const BitMap2&);
+                       std::shared_ptr<const BitMap2>) noexcept;
+    MaybeVoid writeBMP(const std::filesystem::path&, const BitMap2&) noexcept;
     MaybeVoid writeBMP2(const std::filesystem::path&, unsigned char*,
                         uint32_t, uint32_t, uint16_t = 3, bool = false,
-                        BMPHeaderToUse = BMPHeaderToUse::V4);
+                        BMPHeaderToUse = BMPHeaderToUse::V4) noexcept;
 
     std::ostream& operator<<(std::ostream&, const HMDT::BitMap2&);
 }
