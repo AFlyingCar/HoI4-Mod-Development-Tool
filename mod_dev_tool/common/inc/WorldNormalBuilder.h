@@ -7,10 +7,17 @@
 #ifndef WORLD_NORMAL_BUILDER_H
 # define WORLD_NORMAL_BUILDER_H
 
+# include <cstdint>
+
+# include "Maybe.h"
+
 namespace HMDT {
     struct BitMap;
+    struct BitMap2;
 
-    void generateWorldNormalMap(BitMap*, unsigned char*);
+    [[deprecated]] void generateWorldNormalMap(BitMap*, unsigned char*);
+
+    MaybeVoid generateWorldNormalMap(const BitMap2&, unsigned char*);
 }
 
 #endif
