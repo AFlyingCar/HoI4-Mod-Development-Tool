@@ -53,6 +53,8 @@
     Y(BITMAP, 0x16200) \
     X(BITMAP_OFFSET_VALIDATION_ERROR, "Validation using the BitMap's offset failed.") \
     X(INVALID_BITS_PER_PIXEL, "Invalid Bits Per Pixel.") \
+    X(COLOR_TABLE_REQUIRED, "A color table is required to be provided.") \
+    X(INVALID_BIT_DEPTH, "The bit-depth of the image is invalid.") \
 
 #endif
 
