@@ -36,17 +36,9 @@ auto HMDT::Project::HeightMapProject::save(const std::filesystem::path& root)
 
     auto path = root / HEIGHTMAP_FILENAME;
 
-    // Try to open the heightmap file for saving.
-    // TODO: We really need to do some error checking from writeBMP
-#if 0
-    writeBMP(path, m_heightmap_bmp.get());
-#else
-    writeBMP(path,
-             getMapData()->getHeightMap().lock().get(),
-             getMapData()->getWidth(), getMapData()->getHeight(),
-             1 /* depth */,
-             true /* is_greyscale */);
-#endif
+    // Write the heightmap to a file
+    auto res = writeBMP(path, m_heightmap_bmp);
+    RETURN_IF_ERROR(res);
 
     return STATUS_SUCCESS;
 }
@@ -80,28 +72,34 @@ auto HMDT::Project::HeightMapProject::load(const std::filesystem::path& root)
 auto HMDT::Project::HeightMapProject::export_(const std::filesystem::path& root) const noexcept
     -> MaybeVoid
 {
-    // TODO: writeBMP does not actually return any errors out to us, so we
-    //  need to be careful here in case it does fail
     // TODO: Do we want to export from MapData's heightmap? Or just use the
     //       BitMap object?
-    writeBMP(root / HEIGHTMAP_FILENAME,
-             getMapData()->getHeightMap().lock().get(),
-             getMapData()->getWidth(), getMapData()->getHeight(),
-             1 /* depth */,
-             true /* is_greyscale */);
+    auto res = writeBMP2(root / HEIGHTMAP_FILENAME,
+                         getMapData()->getHeightMap().lock().get(),
+                         getMapData()->getWidth(), getMapData()->getHeight(),
+                         1 /* depth */,
+                         true /* is_greyscale */);
+    RETURN_IF_ERROR(res);
 
     {
         // Normal map is a 24-bit bitmap
         auto normal_data_size = getMapData()->getWidth() *
                                 getMapData()->getWidth() * 3;
-        std::unique_ptr<unsigned char[]> normal_data(new unsigned char[normal_data_size]);
+        std::unique_ptr<unsigned char[]> normal_data;
+        try {
+            normal_data.reset(new unsigned char[normal_data_size]);
+        } catch(const std::bad_alloc& e) {
+            WRITE_ERROR("Failed to allocate enough space for the world normal data.");
+            RETURN_ERROR(STATUS_BADALLOC);
+        }
 
-        // TODO: Do we need to do any error checking?
-        generateWorldNormalMap(m_heightmap_bmp.get(), normal_data.get());
+        res = generateWorldNormalMap(*m_heightmap_bmp, normal_data.get());
+        RETURN_IF_ERROR(res);
 
-        // TODO: Also do error-checking here as well :)
-        writeBMP(root / NORMALMAP_FILENAME, normal_data.get(),
-                 getMapData()->getWidth(), getMapData()->getHeight());
+        res = writeBMP2(root / NORMALMAP_FILENAME, normal_data.get(),
+                        getMapData()->getWidth(), getMapData()->getHeight(),
+                        3 /* depth */);
+        RETURN_IF_ERROR(res);
     }
 
     return STATUS_SUCCESS;
@@ -132,15 +130,18 @@ auto HMDT::Project::HeightMapProject::getRootMapParent() -> IMapProject& {
     return m_parent_project.getRootMapParent();
 }
 
-auto HMDT::Project::HeightMapProject::loadFile(const std::filesystem::path& path)
+auto HMDT::Project::HeightMapProject::loadFile(const std::filesystem::path& path) noexcept
     -> MaybeVoid
 {
-    m_heightmap_bmp.reset(readBMP(path));
-
-    if(m_heightmap_bmp == nullptr) {
-        WRITE_ERROR("Failed to open bitmap ", path);
-        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+    try {
+        m_heightmap_bmp.reset(new BitMap2);
+    } catch(std::bad_alloc e) {
+        WRITE_ERROR("Failed to allocate space for new bitmap: ", e.what());
+        RETURN_ERROR(STATUS_BADALLOC);
     }
+
+    auto res = readBMP(path, m_heightmap_bmp);
+    RETURN_IF_ERROR(res);
 
     WRITE_DEBUG(*m_heightmap_bmp);
 
@@ -148,9 +149,19 @@ auto HMDT::Project::HeightMapProject::loadFile(const std::filesystem::path& path
     // This operation is fairly simple, as we are not making any modifications
     //   to the data itself, and just loading it into memory
     std::memcpy(getMapData()->getHeightMap().lock().get(),
-                m_heightmap_bmp->data,
+                m_heightmap_bmp->data.get(),
                 getMapData()->getHeightMapSize());
 
     return STATUS_SUCCESS;
+}
+
+auto HMDT::Project::HeightMapProject::getBitMap() const
+    -> MonadOptionalRef<const BitMap2>
+{
+    if(m_heightmap_bmp != nullptr) {
+        return *m_heightmap_bmp;
+    } else {
+        return std::nullopt;
+    }
 }
 

@@ -30,13 +30,15 @@ namespace HMDT::Project {
 
             virtual IMapProject& getRootMapParent() override;
 
-            MaybeVoid loadFile(const std::filesystem::path&);
+            MaybeVoid loadFile(const std::filesystem::path&) noexcept;
+
+            MonadOptionalRef<const BitMap2> getBitMap() const;
 
         private:
             //! The parent project
             IMapProject& m_parent_project;
 
-            std::shared_ptr<BitMap> m_heightmap_bmp;
+            std::shared_ptr<BitMap2> m_heightmap_bmp;
     };
 }
 
