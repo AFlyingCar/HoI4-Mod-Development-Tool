@@ -4,6 +4,7 @@
         <file>textures/selection.bmp</file>
         <file>textures/logo.png</file>
         <file>textures/provinces.png</file>
+        <file>textures/heightmap.png</file>
     </gresource>
 </gresources>
 
