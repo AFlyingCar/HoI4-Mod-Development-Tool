@@ -183,6 +183,15 @@ auto HMDT::getColorAt(const BitMap2& image, uint32_t x, uint32_t y)
     auto depth = image.info_header.v1.bitsPerPixel / 8;
     auto index = xyToIndex(image.info_header.v1.width * depth, x * depth, y);
 
+    auto res = getColorAt(image, index);
+    RETURN_IF_ERROR(res);
+
+    return res;
+}
+
+auto HMDT::getColorAt(const BitMap2& image, uint32_t index) -> Maybe<Color> {
+    auto depth = image.info_header.v1.bitsPerPixel / 8;
+
     switch(depth) {
         case 3:
             return Color { image.data[index],

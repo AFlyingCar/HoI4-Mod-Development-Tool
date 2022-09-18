@@ -42,6 +42,7 @@ namespace HMDT {
                      uint32_t, uint32_t, uint32_t = 3);
 
     Maybe<Color> getColorAt(const BitMap2&, uint32_t, uint32_t);
+    Maybe<Color> getColorAt(const BitMap2&, uint32_t);
 
     Pixel getAsPixel(const BitMap*, uint32_t, uint32_t, uint32_t = 3);
     Maybe<Pixel> getAsPixel(const BitMap2&, uint32_t, uint32_t);
