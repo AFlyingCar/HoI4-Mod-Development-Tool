@@ -183,6 +183,8 @@ namespace HMDT {
 
     MaybeVoid createColorTable(BitMap2&, bool = false);
 
+    MaybeVoid convertBitMapTo8BPPGreyscale(BitMap2&) noexcept;
+
     std::ostream& operator<<(std::ostream&, const HMDT::BitMap2&);
 }
 

@@ -825,6 +825,52 @@ auto HMDT::createColorTable(BitMap2& bmp, bool is_greyscale) -> MaybeVoid {
     return STATUS_SUCCESS;
 }
 
+HMDT::MaybeVoid HMDT::convertBitMapTo8BPPGreyscale(BitMap2& bmp) noexcept {
+    auto depth = bmp.info_header.v1.bitsPerPixel / 8;
+
+    auto new_bmp_size = bmp.info_header.v1.sizeOfBitmap / depth;
+
+    std::unique_ptr<unsigned char[]> new_data;
+    try {
+        new_data.reset(new unsigned char[new_bmp_size]);
+    } catch(const std::bad_alloc& e) {
+        WRITE_ERROR("Failed to allocate ", new_bmp_size,
+                    " bytes of space for new BitMap data: ", e.what());
+        RETURN_ERROR(STATUS_BADALLOC);
+    }
+
+    WRITE_DEBUG("Walking each color (", depth, " bytes each) and converting it to greyscale.");
+    for(uint32_t i = 0; i < bmp.info_header.v1.sizeOfBitmap; i += depth) {
+        Maybe<Color> color = getColorAt(bmp, i);
+        RETURN_IF_ERROR(color);
+
+        // We have to divide the target index by the depth as well to make sure
+        //   that we stay within the range of the new data array
+        new_data[i / depth] = (static_cast<uint32_t>(color->r) +
+                               static_cast<uint32_t>(color->g) +
+                               static_cast<uint32_t>(color->b)) / 3;
+    }
+
+    if(bmp.color_table == nullptr) {
+        WRITE_DEBUG("Input image does not have a color table, generating one.");
+        bmp.info_header.v1.colorsUsed = bmp.info_header.v1.colorImportant = 256;
+        auto res = createColorTable(bmp, true /* is_greyscale */);
+        RETURN_IF_ERROR(res);
+    }
+
+    // Update the BitMap's data
+    // Do this last so we don't clobber any important information for above
+    //   functions for referring to the old data.
+    WRITE_DEBUG("Updating bmp header information to match the new information.");
+    bmp.file_header.fileSize = (bmp.file_header.fileSize - bmp.info_header.v1.sizeOfBitmap + new_bmp_size);
+    bmp.info_header.v1.bitsPerPixel = 8;
+    bmp.info_header.v1.sizeOfBitmap = new_bmp_size;
+
+    bmp.data.swap(new_data);
+
+    return STATUS_SUCCESS;
+}
+
 /**
  * @brief Outputs a BitMap to an ostream
  *
