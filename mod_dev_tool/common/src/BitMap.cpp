@@ -799,7 +799,7 @@ auto HMDT::createColorTable(BitMap2& bmp, bool is_greyscale) -> MaybeVoid {
                 ", bitmapOffset=", bmp.file_header.bitmapOffset,
                 ", sizeOfBitmap=", bmp.info_header.v1.sizeOfBitmap);
 
-    bmp.color_table.reset(new RGBQuad[bmp.info_header.v1.colorsUsed]);
+    std::unique_ptr<RGBQuad[]> color_table(new RGBQuad[bmp.info_header.v1.colorsUsed]{});
 
     // No need for a default block here, as we already checked that condition
     //   up above
@@ -809,7 +809,7 @@ auto HMDT::createColorTable(BitMap2& bmp, bool is_greyscale) -> MaybeVoid {
             if(is_greyscale) {
                 for(auto i = 0U; i < bmp.info_header.v1.colorsUsed; ++i) {
                     uint8_t c = i * (0x100 / bmp.info_header.v1.colorsUsed);
-                    bmp.color_table[i] = { { c, c, c, 0x00 } };
+                    color_table[i] = { { c, c, c, 0x00 } };
                 }
             } else {
                 // TODO: Will we need to even support this case?
@@ -817,10 +817,16 @@ auto HMDT::createColorTable(BitMap2& bmp, bool is_greyscale) -> MaybeVoid {
             }
             break;
         case 1:
-            bmp.color_table[0] = { { 0xFF, 0xFF, 0xFF, 0x00 } };
-            bmp.color_table[1] = { { 0x00, 0x00, 0x00, 0x00 } };
+            color_table[0] = { { 0xFF, 0xFF, 0xFF, 0x00 } };
+            color_table[1] = { { 0x00, 0x00, 0x00, 0x00 } };
             break;
+        default:
+            WRITE_ERROR("We do not yet support generating a color table for ", 
+                        bmp.info_header.v1.bitsPerPixel, "BPP images.");
+            RETURN_ERROR(STATUS_NOT_IMPLEMENTED);
     }
+
+    bmp.color_table.swap(color_table);
 
     return STATUS_SUCCESS;
 }
@@ -851,20 +857,18 @@ HMDT::MaybeVoid HMDT::convertBitMapTo8BPPGreyscale(BitMap2& bmp) noexcept {
                                static_cast<uint32_t>(color->b)) / 3;
     }
 
+    // Update the BitMap's data
+    WRITE_DEBUG("Updating bmp header information to match the new information.");
+    bmp.file_header.fileSize = (bmp.file_header.fileSize - bmp.info_header.v1.sizeOfBitmap + new_bmp_size);
+    bmp.info_header.v1.sizeOfBitmap = new_bmp_size;
+    bmp.info_header.v1.bitsPerPixel = 8;
+
     if(bmp.color_table == nullptr) {
         WRITE_DEBUG("Input image does not have a color table, generating one.");
         bmp.info_header.v1.colorsUsed = bmp.info_header.v1.colorImportant = 256;
         auto res = createColorTable(bmp, true /* is_greyscale */);
         RETURN_IF_ERROR(res);
     }
-
-    // Update the BitMap's data
-    // Do this last so we don't clobber any important information for above
-    //   functions for referring to the old data.
-    WRITE_DEBUG("Updating bmp header information to match the new information.");
-    bmp.file_header.fileSize = (bmp.file_header.fileSize - bmp.info_header.v1.sizeOfBitmap + new_bmp_size);
-    bmp.info_header.v1.bitsPerPixel = 8;
-    bmp.info_header.v1.sizeOfBitmap = new_bmp_size;
 
     bmp.data.swap(new_data);
 
