@@ -10,6 +10,7 @@
 #include "Constants.h"
 #include "StatusCodes.h"
 #include "MapData.h"
+#include "Util.h"
 
 #include "WorldNormalBuilder.h"
 
@@ -145,11 +146,59 @@ auto HMDT::Project::HeightMapProject::loadFile(const std::filesystem::path& path
 
     WRITE_DEBUG(*m_heightmap_bmp);
 
+    if(auto d = getMapData()->getDimensions();
+            d.first != m_heightmap_bmp->info_header.v1.width ||
+            d.second != m_heightmap_bmp->info_header.v1.height)
+    {
+        WRITE_ERROR("Heightmap dimensions (",
+                    m_heightmap_bmp->info_header.v1.width, ", ",
+                    m_heightmap_bmp->info_header.v1.height, ") do not match the"
+                    " previously loaded dimensions (", d.first, ", ", d.second,
+                    ")");
+        RETURN_ERROR(STATUS_DIMENSION_MISMATCH);
+    }
+
+    // Just in case the input image is not actually an 8-bit images
+    uint8_t* heightmap_data;
+    if(auto bpp = m_heightmap_bmp->info_header.v1.bitsPerPixel; bpp != 8) {
+        WRITE_WARN("Heightmaps must be 8-bit greyscale images, not ", bpp, ". "
+                   "Checking if the user is okay with converting it.");
+
+        std::stringstream prompt_ss;
+        prompt_ss << "Heightmaps must be an 8-bit greyscale image (loaded "
+                     "image has BPP=" << bpp << "). Convert to 8-bit image?";
+
+        auto response = prompt(prompt_ss.str(), {"Yes", "No"});
+        if(response.error() == STATUS_CALLBACK_NOT_REGISTERED) {
+            WRITE_WARN("No prompt callback registered, not going to convert the"
+                       " input just to be safe.");
+            response = 1U; // Do not convert unless the user explicitly says
+                           //  that's okay.
+        }
+        RETURN_IF_ERROR(response);
+
+        switch(*response) {
+            case 0:
+                res = convertBitMapTo8BPPGreyscale(*m_heightmap_bmp);
+                RETURN_IF_ERROR(res);
+                break;
+            case 1:
+                WRITE_ERROR("Not converting input image. Cannot continue loading.");
+                RETURN_ERROR(STATUS_INVALID_BIT_DEPTH);
+                break;
+            default:
+                WRITE_ERROR("Unexpected response from prompt ", *response);
+                RETURN_ERROR(STATUS_UNEXPECTED_RESPONSE);
+        }
+    }
+
+    heightmap_data = m_heightmap_bmp->data.get();
+
     // Load heightmap data into MapData
     // This operation is fairly simple, as we are not making any modifications
     //   to the data itself, and just loading it into memory
     std::memcpy(getMapData()->getHeightMap().lock().get(),
-                m_heightmap_bmp->data.get(),
+                heightmap_data,
                 getMapData()->getHeightMapSize());
 
     return STATUS_SUCCESS;
