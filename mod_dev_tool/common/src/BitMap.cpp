@@ -669,6 +669,7 @@ auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
     //   fallthrough
     switch(hdr_version_to_use) {
         case BMPHeaderToUse::V5:
+            WRITE_DEBUG("Build V5 header");
             info_header_size += (V5_INFO_HEADER_LENGTH - V4_INFO_HEADER_LENGTH);
 
             bmp.info_header.v5.profileData = 0;
@@ -677,6 +678,7 @@ auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
 
             [[fallthrough]];
         case BMPHeaderToUse::V4:
+            WRITE_DEBUG("Build V4 header");
             info_header_size += (V4_INFO_HEADER_LENGTH - V1_INFO_HEADER_LENGTH);
 
             bmp.info_header.v4.redMask   = 0x00FF0000;
@@ -702,6 +704,7 @@ auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
 
             [[fallthrough]];
         case BMPHeaderToUse::V1:
+            WRITE_DEBUG("Build V1 header");
             info_header_size += V1_INFO_HEADER_LENGTH;
 
             bmp.info_header.v1.headerSize = info_header_size;
@@ -744,49 +747,80 @@ auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
 
         WRITE_DEBUG("Generating color table with ", bmp.info_header.v1.colorsUsed,
                     " values.");
-        WRITE_DEBUG("Old File Header values:"
-                    " fileSize=", bmp.file_header.fileSize,
-                    ", bitmapOffset=", bmp.file_header.bitmapOffset,
-                    ", sizeOfBitmap=", bmp.info_header.v1.sizeOfBitmap);
 
-        // Increase all of the sizes and offsets
-        auto color_table_size = sizeof(RGBQuad) * bmp.info_header.v1.colorsUsed;
-        bmp.file_header.fileSize += color_table_size;
-        bmp.file_header.bitmapOffset += color_table_size;
-
-        WRITE_DEBUG("Updated File Header values:"
-                    " fileSize=", bmp.file_header.fileSize,
-                    ", bitmapOffset=", bmp.file_header.bitmapOffset,
-                    ", sizeOfBitmap=", bmp.info_header.v1.sizeOfBitmap);
-
-        bmp.color_table.reset(new RGBQuad[bmp.info_header.v1.colorsUsed]);
-
-        // No need for a default block here, as we already checked that condition
-        //   up above
-        switch(bmp.info_header.v1.bitsPerPixel) {
-            case 8:
-            case 4:
-                if(is_greyscale) {
-                    for(auto i = 0U; i < bmp.info_header.v1.colorsUsed; ++i) {
-                        uint8_t c = i * (0x100 / bmp.info_header.v1.colorsUsed);
-                        bmp.color_table[i] = { { c, c, c, 0x00 } };
-                    }
-                } else {
-                    // TODO: Will we need to even support this case?
-                    RETURN_ERROR(STATUS_NOT_IMPLEMENTED);
-                }
-                break;
-            case 1:
-                bmp.color_table[0] = { { 0xFF, 0xFF, 0xFF, 0x00 } };
-                bmp.color_table[1] = { { 0x00, 0x00, 0x00, 0x00 } };
-                break;
-        }
+        auto res = createColorTable(bmp, is_greyscale);
+        RETURN_IF_ERROR(res);
     }
 
     bmp.data.reset(data);
 
     auto res = writeBMP(path, bmp);
     RETURN_IF_ERROR(res);
+
+    return STATUS_SUCCESS;
+}
+
+
+/**
+ * @brief Generates a color table for the given bitmap
+ *
+ * @param bmp
+ * @param is_greyscale
+ *
+ * @return 
+ */
+auto HMDT::createColorTable(BitMap2& bmp, bool is_greyscale) -> MaybeVoid {
+    WRITE_DEBUG("Old File Header values:"
+                " fileSize=", bmp.file_header.fileSize,
+                ", bitmapOffset=", bmp.file_header.bitmapOffset,
+                ", sizeOfBitmap=", bmp.info_header.v1.sizeOfBitmap);
+
+    // Make sure we first remove any extra data that we would have from an older
+    //   color table
+    if(bmp.color_table != nullptr) {
+        WRITE_DEBUG("Old color table is present, removing that first...");
+
+        auto old_color_table_size = sizeof(RGBQuad) * bmp.info_header.v1.colorsUsed;
+        bmp.file_header.fileSize -= old_color_table_size;
+        bmp.file_header.bitmapOffset -= old_color_table_size;
+    }
+
+    // Increase all of the sizes and offsets
+    auto color_table_size = sizeof(RGBQuad) * bmp.info_header.v1.colorsUsed;
+
+    WRITE_DEBUG("New color table size = ", color_table_size, ". Shifting all "
+                "values down to account for it.");
+
+    bmp.file_header.fileSize += color_table_size;
+    bmp.file_header.bitmapOffset += color_table_size;
+
+    WRITE_DEBUG("Updated File Header values:"
+                " fileSize=", bmp.file_header.fileSize,
+                ", bitmapOffset=", bmp.file_header.bitmapOffset,
+                ", sizeOfBitmap=", bmp.info_header.v1.sizeOfBitmap);
+
+    bmp.color_table.reset(new RGBQuad[bmp.info_header.v1.colorsUsed]);
+
+    // No need for a default block here, as we already checked that condition
+    //   up above
+    switch(bmp.info_header.v1.bitsPerPixel) {
+        case 8:
+        case 4:
+            if(is_greyscale) {
+                for(auto i = 0U; i < bmp.info_header.v1.colorsUsed; ++i) {
+                    uint8_t c = i * (0x100 / bmp.info_header.v1.colorsUsed);
+                    bmp.color_table[i] = { { c, c, c, 0x00 } };
+                }
+            } else {
+                // TODO: Will we need to even support this case?
+                RETURN_ERROR(STATUS_NOT_IMPLEMENTED);
+            }
+            break;
+        case 1:
+            bmp.color_table[0] = { { 0xFF, 0xFF, 0xFF, 0x00 } };
+            bmp.color_table[1] = { { 0x00, 0x00, 0x00, 0x00 } };
+            break;
+    }
 
     return STATUS_SUCCESS;
 }

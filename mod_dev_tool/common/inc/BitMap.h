@@ -181,6 +181,8 @@ namespace HMDT {
                         uint32_t, uint32_t, uint16_t = 3, bool = false,
                         BMPHeaderToUse = BMPHeaderToUse::V4) noexcept;
 
+    MaybeVoid createColorTable(BitMap2&, bool = false);
+
     std::ostream& operator<<(std::ostream&, const HMDT::BitMap2&);
 }
 
