@@ -188,7 +188,14 @@ TEST(ProjectTests, HeightMapProjectLoadWithNon8BPPImage) {
     auto projmeta_path = root_path / HMDT::PROJ_META_FOLDER;
 
     auto write_base_path = HMDT::UnitTests::getTestProgramPath() / "tmp";
+    auto save_path = write_base_path / "heightmap_non8bpp_save";
     auto export_path = write_base_path / "heightmap_non8bpp_export";
+
+    if(!std::filesystem::exists(save_path)) {
+        TEST_COUT << "Directory " << save_path
+                  << " does not exist, creating." << std::endl;
+        ASSERT_TRUE(std::filesystem::create_directories(save_path));
+    }
 
     if(!std::filesystem::exists(export_path)) {
         TEST_COUT << "Directory " << export_path
@@ -249,6 +256,9 @@ TEST(ProjectTests, HeightMapProjectLoadWithNon8BPPImage) {
         });
     res = heightmap_project.loadFile(input_heightmap);
     ASSERT_STATUS(res, HMDT::STATUS_SUCCESS);
+
+    res = heightmap_project.save(save_path);
+    ASSERT_SUCCEEDED(res);
 
     res = heightmap_project.export_(export_path);
     ASSERT_SUCCEEDED(res);
