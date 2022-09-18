@@ -26,6 +26,10 @@ namespace HMDT::Project {
      * @brief The interface for a project
      */
     struct IProject {
+        //! Callback type for prompting the user with some question
+        using PromptCallback = std::function<Maybe<uint32_t>(const std::string&,
+                                                             const std::vector<std::string>&)>;
+
         virtual ~IProject() = default;
 
         virtual MaybeVoid save(const std::filesystem::path&) = 0;
@@ -34,6 +38,19 @@ namespace HMDT::Project {
         virtual MaybeVoid export_(const std::filesystem::path&) const noexcept = 0;
 
         virtual IRootProject& getRootParent() = 0;
+
+        void setPromptCallback(const PromptCallback&);
+        void resetPromptCallback();
+
+        protected:
+            Maybe<uint32_t> prompt(const std::string&,
+                                   const std::vector<std::string>&);
+
+        private:
+            static PromptCallback DEFAULT_PROMPT_CALLBACK;
+
+            //! A generic callback which can be used to ask the user a question.
+            PromptCallback m_prompt_callback = DEFAULT_PROMPT_CALLBACK;
     };
 
     /**
