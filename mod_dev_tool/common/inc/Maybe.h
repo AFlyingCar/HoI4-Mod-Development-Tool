@@ -51,6 +51,8 @@
 # include "Monad.h"
 # include "TypeTraits.h"
 
+# include "Logger.h"
+
 namespace HMDT {
     /**
      * @brief A special version of MonadOptional specifically for use with
