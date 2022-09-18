@@ -136,7 +136,7 @@ auto HMDT::Project::HeightMapProject::loadFile(const std::filesystem::path& path
 {
     try {
         m_heightmap_bmp.reset(new BitMap2);
-    } catch(std::bad_alloc e) {
+    } catch(const std::bad_alloc& e) {
         WRITE_ERROR("Failed to allocate space for new bitmap: ", e.what());
         RETURN_ERROR(STATUS_BADALLOC);
     }

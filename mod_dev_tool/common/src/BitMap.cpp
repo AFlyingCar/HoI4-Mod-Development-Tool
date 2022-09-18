@@ -602,7 +602,7 @@ auto HMDT::writeBMP(const std::filesystem::path& path, const BitMap2& bmp) noexc
     std::unique_ptr<unsigned char[]> output;
     try {
         output.reset(new unsigned char[bmp.info_header.v1.sizeOfBitmap]{ 0 });
-    } catch(std::bad_alloc e) {
+    } catch(const std::bad_alloc& e) {
         WRITE_ERROR("Failed to allocate enough space for flipped output data: ", e.what());
         RETURN_ERROR(STATUS_BADALLOC);
     }
