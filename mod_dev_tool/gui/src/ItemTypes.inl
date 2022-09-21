@@ -14,7 +14,7 @@
 /////////////////////////////////////////////////
 
 DEFINE_ITEM_TYPE(
-    "Province Map" /* name */,
+    "Province Map Input" /* name */,
     "Province maps are 24-bit RGB bitmaps which describe the positions of every"
     " province in a custom map. It is recommended that the dimensions be a "
     "multiple of 256 each, as while this tool can load files which do not match"
@@ -44,6 +44,36 @@ DEFINE_ITEM_TYPE(
     HMDT::GUI::addProvinceMapWorker /* add_worker_callback */,
     HMDT::GUI::postStartAddProvinceMap /* post_start_add_callback */,
     HMDT::GUI::endAddProvinceMap /* end_add_callback */,
+    [](HMDT::GUI::Window& parent_window) -> HMDT::MaybeVoid {
+        return HMDT::STATUS_NOT_IMPLEMENTED;
+    } /* on_remove_callback */
+);
+
+DEFINE_ITEM_TYPE(
+    "Height Map" /* name */,
+    "Heightmaps are 8-bit greyscale bitmaps which determine the height of the "
+    "positions on the map. The dimensions of this bitmap <i>must</i> match the "
+    "dimensions of the provinces image.\n\n"
+    "A minimum value of 0 (pure black) will translate to a height of 0 on the "
+    "Y-axis, while a maximum value of 255 (pure white) will translate to a "
+    "height of 25.5 on the Y-axis. HoI4 renders the ocean at a height of 9.5 "
+    "by default (this can be modified however, see the HoI4 wiki about "
+    "heightmaps for more information).\n\n"
+    "Finally, note that this item will also automatically generate a world "
+    "normal map when exporting the project."/* description */,
+    "/com/aflyingcar/HoI4ModDevelopmentTool/textures/heightmap.png" /* icon */,
+    {{
+        { { "Height Map Image Files", "bmp" } } /* filters */,
+        false /* allow_multiselect */,
+    }} /* file_info */,
+    {
+        "map/*",
+        "history/states/*"
+    } /* extra_overrides */,
+    HMDT::GUI::addHeightMap /* init_add_callback */,
+    HMDT::GUI::ItemType::DEFAULT_POSTINIT_CALLBACK /* add_worker_callback */,
+    HMDT::GUI::ItemType::DEFAULT_POSTINIT_CALLBACK /* post_start_add_callback */,
+    HMDT::GUI::ItemType::DEFAULT_POSTINIT_CALLBACK /* end_add_callback  */,
     [](HMDT::GUI::Window& parent_window) -> HMDT::MaybeVoid {
         return HMDT::STATUS_NOT_IMPLEMENTED;
     } /* on_remove_callback */

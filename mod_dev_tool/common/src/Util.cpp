@@ -177,6 +177,49 @@ HMDT::Color HMDT::getColorAt(const Dimensions& dimensions, const uint8_t* data,
            };
 }
 
+auto HMDT::getColorAt(const BitMap2& image, uint32_t x, uint32_t y)
+    -> Maybe<Color>
+{
+    auto depth = image.info_header.v1.bitsPerPixel / 8;
+    auto index = xyToIndex(image.info_header.v1.width * depth, x * depth, y);
+
+    auto res = getColorAt(image, index);
+    RETURN_IF_ERROR(res);
+
+    return res;
+}
+
+auto HMDT::getColorAt(const BitMap2& image, uint32_t index) -> Maybe<Color> {
+    auto depth = image.info_header.v1.bitsPerPixel / 8;
+
+    switch(depth) {
+        case 3:
+            return Color { image.data[index],
+                           image.data[index + 1],
+                           image.data[index + 2]
+                         };
+        case 2:
+            RETURN_ERROR(STATUS_NOT_IMPLEMENTED);
+        case 1:
+            // 8-bit images require a color table
+            if(image.color_table == nullptr) {
+                WRITE_ERROR("8-bit bitmaps require a color table to be provided!");
+                RETURN_ERROR(STATUS_COLOR_TABLE_REQUIRED);
+            }
+
+            // Rather than returning the data in the image, we instead will
+            //   return the RGB data stored in the color table, at the index
+            //   specified in the image data
+            return Color { image.color_table[image.data[index]].red,
+                           image.color_table[image.data[index]].green,
+                           image.color_table[image.data[index]].blue,
+                         };
+        default:
+            WRITE_ERROR("Unknown color depth ", depth);
+            RETURN_ERROR(STATUS_NOT_IMPLEMENTED);
+    }
+}
+
 /**
  * @brief Gets the given XY coordinate as a Pixel from the given BitMap
  *
@@ -193,6 +236,15 @@ HMDT::Pixel HMDT::getAsPixel(const BitMap* image, uint32_t x, uint32_t y,
         { x, y },
         getColorAt(image, x, y, depth)
     };
+}
+
+auto HMDT::getAsPixel(const BitMap2& image, uint32_t x, uint32_t y)
+    -> Maybe<Pixel>
+{
+    auto color = getColorAt(image, x, y);
+    RETURN_IF_ERROR(color);
+
+    return Pixel { { x, y }, color.value() };
 }
 
 /**

@@ -24,6 +24,9 @@
     Y(PROJECT, 0x100) \
     X(PROJECT_VALIDATION_FAILED, "Project Validation Failed.") \
     X(NO_PROJECT_LOADED, "No project is currently loaded.") \
+    X(NO_DATA_LOADED, "No data is currently loaded.") \
+    X(DIMENSION_MISMATCH, "The loaded map image has dimensions which do not match previously loaded maps.") \
+    X(CALLBACK_NOT_REGISTERED, "No prompt callback was registered with this project.") \
     /* Province Project Error Codes */ \
     Y(PROVINCE_PROJECT, 0x200) \
     X(PROVINCE_INVALID_STATE_ID, "The Province's StateID is invalid.") \
@@ -38,6 +41,7 @@
     X(ITEM_BITMAP_READ_FAILURE, "Failed to read bitmap when adding item.") \
     X(NO_SUCH_ITEM_TYPE, "No such item type of the given name exists.") \
     X(EXPECTED_PATHS, "The path list for adding an item is empty.") \
+    X(UNEXPECTED_RESPONSE, "The response returned from the user prompt was unexpected.") \
     /* ShapeFinder Error Codes */ \
     Y(SHAPEFINDER, 0x5000) \
     X(SHAPEFINDER_ESTOP, "Shape Finder was stopped early.") \
@@ -52,6 +56,8 @@
     Y(BITMAP, 0x16200) \
     X(BITMAP_OFFSET_VALIDATION_ERROR, "Validation using the BitMap's offset failed.") \
     X(INVALID_BITS_PER_PIXEL, "Invalid Bits Per Pixel.") \
+    X(COLOR_TABLE_REQUIRED, "A color table is required to be provided.") \
+    X(INVALID_BIT_DEPTH, "The bit-depth of the image is invalid.") \
 
 #endif
 

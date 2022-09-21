@@ -230,7 +230,7 @@ void HMDT::GUI::AddFileWindow::buildItemTypesList() {
                         m_description_image.set_from_icon_name("", Gtk::ICON_SIZE_DIALOG);
                     }
 
-                    m_description_area.set_text(item_type.description);
+                    m_description_area.set_markup(item_type.description);
 
                     m_continue_button.set_sensitive(true);
                 });

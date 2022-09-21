@@ -3,6 +3,48 @@
 
 #include "StatusCodes.h"
 
+namespace HMDT::Project {
+    IProject::PromptCallback IProject::DEFAULT_PROMPT_CALLBACK =
+        [](auto&&...) { RETURN_ERROR(STATUS_CALLBACK_NOT_REGISTERED); };
+}
+
+/**
+ * @brief Sets the prompt callback
+ *
+ * @param callback The callback to set
+ */
+void HMDT::Project::IProject::setPromptCallback(const PromptCallback& callback)
+{
+    m_prompt_callback = callback;
+}
+
+/**
+ * @brief Resets the prompt callback
+ */
+void HMDT::Project::IProject::resetPromptCallback() {
+    m_prompt_callback = DEFAULT_PROMPT_CALLBACK;
+}
+
+/**
+ * @brief Prompts the user with a question for some response.
+ * @details This is meant for cases where load/save/export/import can continue
+ *          based on some input from the user. If no callback has been
+ *          registered then STATUS_CALLBACK_NOT_REGISTERED is returned.
+ *
+ * @param prompt The prompt to ask the user
+ * @param opts The options to present the user with
+ *
+ * @return Maybe an index into opts, referencing which option was chosen. If no
+ *         callback has been registered then STATUS_CALLBACK_NOT_REGISTERED is
+ *         returned instead.
+ */
+auto HMDT::Project::IProject::prompt(const std::string& prompt,
+                                     const std::vector<std::string>& opts)
+    -> Maybe<uint32_t>
+{
+    return m_prompt_callback(prompt, opts);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 HMDT::Project::IRootProject& HMDT::Project::IRootProject::getRootParent() {

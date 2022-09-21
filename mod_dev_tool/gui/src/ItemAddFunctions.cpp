@@ -306,3 +306,41 @@ HMDT::MaybeVoid HMDT::GUI::endAddProvinceMap(Window& window, std::any data) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+auto HMDT::GUI::addHeightMap(Window& window,
+                             const std::vector<std::filesystem::path>& paths)
+    -> Maybe<std::any>
+{
+    if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+        auto& project = opt_project->get();
+
+        project.getMapProject().getHeightMapProject().setPromptCallback(
+            [&window](const std::string& message,
+                      const std::vector<std::string>& opts)
+                -> uint32_t
+            {
+                // Create a dialog with no buttons, as we will just add the ones
+                //   specified in opts.
+                Gtk::MessageDialog dialog(window,
+                                          message,
+                                          true /* use_markup */,
+                                          Gtk::MESSAGE_QUESTION /* type */,
+                                          Gtk::BUTTONS_NONE /* buttons */);
+                for(uint32_t i = 0; i < opts.size(); ++i) {
+                    dialog.add_button(opts.at(i), i);
+                }
+
+                return dialog.run();
+            });
+
+        WRITE_DEBUG("Loading new heightmap into HeightMapProject.");
+        auto res = project.getMapProject().getHeightMapProject().loadFile(paths.front());
+
+        // Make sure we reset before checking for errors
+        project.getMapProject().getHeightMapProject().resetPromptCallback();
+
+        RETURN_IF_ERROR(res);
+    }
+
+    return STATUS_SUCCESS;
+}
+

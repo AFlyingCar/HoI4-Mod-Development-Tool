@@ -55,6 +55,76 @@ namespace {
     }
 }
 
+auto HMDT::generateWorldNormalMap(const BitMap2& heightmap,
+                                  unsigned char* normal_data)
+    -> MaybeVoid
+{
+    auto width = heightmap.info_header.v1.width;
+    auto height = heightmap.info_header.v1.height;
+
+    // Heightmaps _MUST_ be 8-bit images
+    if(heightmap.info_header.v1.bitsPerPixel != 8) {
+        RETURN_ERROR(STATUS_INVALID_BIT_DEPTH);
+    }
+
+    // For every single pixel
+    for(int y = 0; y < height; ++y) {
+        for(int x = 0; x < width; ++x) {
+            // Index into normal_data based on our current X,Y coordinate
+            // Hardcode 3 because we want the output to have a pixel-depth of 3
+            auto index = xyToIndex(width * 3, x * 3, y);
+
+            // Surrounding pixels
+            auto top_left  = getAsPixel(heightmap, clamp(x - 1, 0, width), clamp(y - 1, 0, height));
+            RETURN_IF_ERROR(top_left);
+            auto top       = getAsPixel(heightmap, x, clamp(y - 1, 0, height));
+            RETURN_IF_ERROR(top);
+            auto top_right = getAsPixel(heightmap, clamp(x + 1, 0, width), clamp(y - 1, 0, height));
+            RETURN_IF_ERROR(top_right);
+            auto left      = getAsPixel(heightmap, clamp(x - 1, 0, width), y);
+            RETURN_IF_ERROR(left);
+            auto right     = getAsPixel(heightmap, clamp(x + 1, 0, width), y);
+            RETURN_IF_ERROR(right);
+            auto bot_left  = getAsPixel(heightmap, clamp(x - 1, 0, width), clamp(y + 1, 0, height));
+            RETURN_IF_ERROR(bot_left);
+            auto bot       = getAsPixel(heightmap, x, clamp(y + 1, 0, height));
+            RETURN_IF_ERROR(bot);
+            auto bot_right = getAsPixel(heightmap, clamp(x + 1, 0, width), clamp(y + 1, 0, height));
+            RETURN_IF_ERROR(bot_right);
+
+            // Get intensities of surrounding pixels
+            double tl_intensity = intensity(top_left->color);
+            double t_intensity = intensity(top->color);
+            double tr_intensity = intensity(top_right->color);
+            double l_intensity = intensity(left->color);
+            double r_intensity = intensity(right->color);
+            double bl_intensity = intensity(bot_left->color);
+            double b_intensity = intensity(bot->color);
+            double br_intensity = intensity(bot_right->color);
+
+            // sobel filter
+            double dX = (tr_intensity + 2.0 * r_intensity + br_intensity) - (tl_intensity + 2.0 * l_intensity + bl_intensity);
+            double dY = (bl_intensity + 2.0 * b_intensity + br_intensity) - (tl_intensity + 2.0 * t_intensity + tr_intensity);
+            double dZ = 1.0 / 2.0;
+
+            // Normalize the sobel filter values
+            auto [nX, nY, nZ] = normalize(dX, dY, dZ);
+
+            // Convert the coordinates back into color values
+            auto r = static_cast<std::uint8_t>((nX + 1.0) * (255.0 / 2.0));
+            auto g = static_cast<std::uint8_t>((nY + 1.0) * (255.0 / 2.0));
+            auto b = static_cast<std::uint8_t>((nZ + 1.0) * (255.0 / 2.0));
+
+            // Finally, place the new color data into the output array.
+            normal_data[index] = r;
+            normal_data[index + 1] = g;
+            normal_data[index + 2] = b;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
 /**
  * @brief Generates a world normal map from the given input.
  *

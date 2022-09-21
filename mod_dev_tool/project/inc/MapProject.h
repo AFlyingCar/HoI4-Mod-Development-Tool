@@ -18,6 +18,7 @@
 # include "ProvinceProject.h"
 # include "StateProject.h"
 # include "ContinentProject.h"
+# include "HeightMapProject.h"
 
 namespace HMDT::Project {
     /**
@@ -50,6 +51,9 @@ namespace HMDT::Project {
             StateProject& getStateProject();
             const StateProject& getStateProject() const;
 
+            HeightMapProject& getHeightMapProject();
+            const HeightMapProject& getHeightMapProject() const;
+
             virtual const ContinentSet& getContinentList() const override;
             virtual const StateMap& getStates() const override;
 
@@ -79,6 +83,9 @@ namespace HMDT::Project {
 
             //! The Continent project
             ContinentProject m_continent_project;
+
+            //! The HeightMap project
+            HeightMapProject m_heightmap_project;
 
             //! The shared map data
             std::shared_ptr<MapData> m_map_data;

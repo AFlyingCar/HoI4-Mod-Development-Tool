@@ -297,7 +297,7 @@ std::ostream& HMDT::operator<<(std::ostream& stream, const HMDT::BitMap& bm) {
 }
 
 auto HMDT::readBMP(const std::filesystem::path& path,
-                   std::shared_ptr<BitMap2> bm)
+                   std::shared_ptr<BitMap2> bm) noexcept
     -> MaybeRef<BitMap2>
 {
     if(bm == nullptr) {
@@ -307,7 +307,7 @@ auto HMDT::readBMP(const std::filesystem::path& path,
     return readBMP(path, *bm);
 }
 
-auto HMDT::readBMP(const std::filesystem::path& path, BitMap2& bm)
+auto HMDT::readBMP(const std::filesystem::path& path, BitMap2& bm) noexcept
     -> MaybeRef<BitMap2>
 {
     // Make sure we clear errno first
@@ -326,8 +326,7 @@ auto HMDT::readBMP(const std::filesystem::path& path, BitMap2& bm)
     return res;
 }
 
-auto HMDT::readBMP(std::istream& stream,
-                   std::shared_ptr<BitMap2> bm)
+auto HMDT::readBMP(std::istream& stream, std::shared_ptr<BitMap2> bm) noexcept
     -> MaybeRef<BitMap2>
 {
     if(bm == nullptr) {
@@ -340,7 +339,9 @@ auto HMDT::readBMP(std::istream& stream,
     return res;
 }
 
-auto HMDT::readBMP(std::istream& stream, BitMap2& bm) -> MaybeRef<BitMap2> {
+auto HMDT::readBMP(std::istream& stream, BitMap2& bm) noexcept
+    -> MaybeRef<BitMap2>
+{
 #define READ_FROM_BMP(FIELD)                    \
     do {                                        \
         auto res = safeRead2(FIELD, stream); \
@@ -481,7 +482,7 @@ auto HMDT::readBMP(std::istream& stream, BitMap2& bm) -> MaybeRef<BitMap2> {
 #undef READ_FROM_BMP2
 }
 
-auto HMDT::readBMP2(std::filesystem::path& path) -> Maybe<BitMap2> {
+auto HMDT::readBMP2(std::filesystem::path& path) noexcept -> Maybe<BitMap2> {
     BitMap2 bm;
 
     auto res = readBMP(path, bm);
@@ -491,7 +492,7 @@ auto HMDT::readBMP2(std::filesystem::path& path) -> Maybe<BitMap2> {
 }
 
 auto HMDT::writeBMP(const std::filesystem::path& path,
-                    std::shared_ptr<const BitMap2> bmp)
+                    std::shared_ptr<const BitMap2> bmp) noexcept
     -> MaybeVoid
 {
     if(bmp == nullptr) {
@@ -504,7 +505,7 @@ auto HMDT::writeBMP(const std::filesystem::path& path,
     return res;
 }
 
-auto HMDT::writeBMP(const std::filesystem::path& path, const BitMap2& bmp)
+auto HMDT::writeBMP(const std::filesystem::path& path, const BitMap2& bmp) noexcept
     -> MaybeVoid
 {
     std::ofstream file(path, std::ios::out | std::ios::binary);
@@ -598,7 +599,13 @@ auto HMDT::writeBMP(const std::filesystem::path& path, const BitMap2& bmp)
     size_t pitch = bmp.info_header.v1.width * depth;
 
     WRITE_DEBUG("Flipping entire image before we write it. depth=", depth, ", pitch=", pitch);
-    std::unique_ptr<unsigned char[]> output(new unsigned char[bmp.info_header.v1.sizeOfBitmap]{ 0 });
+    std::unique_ptr<unsigned char[]> output;
+    try {
+        output.reset(new unsigned char[bmp.info_header.v1.sizeOfBitmap]{ 0 });
+    } catch(const std::bad_alloc& e) {
+        WRITE_ERROR("Failed to allocate enough space for flipped output data: ", e.what());
+        RETURN_ERROR(STATUS_BADALLOC);
+    }
 
     auto res = flipImage(output.get(), bmp.data.get(), pitch, bmp.info_header.v1.height);
     RETURN_IF_ERROR(res);
@@ -636,7 +643,7 @@ auto HMDT::writeBMP(const std::filesystem::path& path, const BitMap2& bmp)
 
 auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
                      uint32_t width, uint32_t height, uint16_t depth,
-                     bool is_greyscale, BMPHeaderToUse hdr_version_to_use)
+                     bool is_greyscale, BMPHeaderToUse hdr_version_to_use) noexcept
     -> MaybeVoid
 {
     BitMap2 bmp{};
@@ -662,6 +669,7 @@ auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
     //   fallthrough
     switch(hdr_version_to_use) {
         case BMPHeaderToUse::V5:
+            WRITE_DEBUG("Build V5 header");
             info_header_size += (V5_INFO_HEADER_LENGTH - V4_INFO_HEADER_LENGTH);
 
             bmp.info_header.v5.profileData = 0;
@@ -670,6 +678,7 @@ auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
 
             [[fallthrough]];
         case BMPHeaderToUse::V4:
+            WRITE_DEBUG("Build V4 header");
             info_header_size += (V4_INFO_HEADER_LENGTH - V1_INFO_HEADER_LENGTH);
 
             bmp.info_header.v4.redMask   = 0x00FF0000;
@@ -695,6 +704,7 @@ auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
 
             [[fallthrough]];
         case BMPHeaderToUse::V1:
+            WRITE_DEBUG("Build V1 header");
             info_header_size += V1_INFO_HEADER_LENGTH;
 
             bmp.info_header.v1.headerSize = info_header_size;
@@ -737,49 +747,130 @@ auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
 
         WRITE_DEBUG("Generating color table with ", bmp.info_header.v1.colorsUsed,
                     " values.");
-        WRITE_DEBUG("Old File Header values:"
-                    " fileSize=", bmp.file_header.fileSize,
-                    ", bitmapOffset=", bmp.file_header.bitmapOffset,
-                    ", sizeOfBitmap=", bmp.info_header.v1.sizeOfBitmap);
 
-        // Increase all of the sizes and offsets
-        auto color_table_size = sizeof(RGBQuad) * bmp.info_header.v1.colorsUsed;
-        bmp.file_header.fileSize += color_table_size;
-        bmp.file_header.bitmapOffset += color_table_size;
-
-        WRITE_DEBUG("Updated File Header values:"
-                    " fileSize=", bmp.file_header.fileSize,
-                    ", bitmapOffset=", bmp.file_header.bitmapOffset,
-                    ", sizeOfBitmap=", bmp.info_header.v1.sizeOfBitmap);
-
-        bmp.color_table.reset(new RGBQuad[bmp.info_header.v1.colorsUsed]);
-
-        // No need for a default block here, as we already checked that condition
-        //   up above
-        switch(bmp.info_header.v1.bitsPerPixel) {
-            case 8:
-            case 4:
-                if(is_greyscale) {
-                    for(auto i = 0U; i < bmp.info_header.v1.colorsUsed; ++i) {
-                        uint8_t c = i * (0x100 / bmp.info_header.v1.colorsUsed);
-                        bmp.color_table[i] = { { c, c, c, 0x00 } };
-                    }
-                } else {
-                    // TODO: Will we need to even support this case?
-                    RETURN_ERROR(STATUS_NOT_IMPLEMENTED);
-                }
-                break;
-            case 1:
-                bmp.color_table[0] = { { 0xFF, 0xFF, 0xFF, 0x00 } };
-                bmp.color_table[1] = { { 0x00, 0x00, 0x00, 0x00 } };
-                break;
-        }
+        auto res = createColorTable(bmp, is_greyscale);
+        RETURN_IF_ERROR(res);
     }
 
     bmp.data.reset(data);
 
     auto res = writeBMP(path, bmp);
     RETURN_IF_ERROR(res);
+
+    return STATUS_SUCCESS;
+}
+
+
+/**
+ * @brief Generates a color table for the given bitmap
+ *
+ * @param bmp
+ * @param is_greyscale
+ *
+ * @return 
+ */
+auto HMDT::createColorTable(BitMap2& bmp, bool is_greyscale) -> MaybeVoid {
+    WRITE_DEBUG("Old File Header values:"
+                " fileSize=", bmp.file_header.fileSize,
+                ", bitmapOffset=", bmp.file_header.bitmapOffset,
+                ", sizeOfBitmap=", bmp.info_header.v1.sizeOfBitmap);
+
+    // Make sure we first remove any extra data that we would have from an older
+    //   color table
+    if(bmp.color_table != nullptr) {
+        WRITE_DEBUG("Old color table is present, removing that first...");
+
+        auto old_color_table_size = sizeof(RGBQuad) * bmp.info_header.v1.colorsUsed;
+        bmp.file_header.fileSize -= old_color_table_size;
+        bmp.file_header.bitmapOffset -= old_color_table_size;
+    }
+
+    // Increase all of the sizes and offsets
+    auto color_table_size = sizeof(RGBQuad) * bmp.info_header.v1.colorsUsed;
+
+    WRITE_DEBUG("New color table size = ", color_table_size, ". Shifting all "
+                "values down to account for it.");
+
+    bmp.file_header.fileSize += color_table_size;
+    bmp.file_header.bitmapOffset += color_table_size;
+
+    WRITE_DEBUG("Updated File Header values:"
+                " fileSize=", bmp.file_header.fileSize,
+                ", bitmapOffset=", bmp.file_header.bitmapOffset,
+                ", sizeOfBitmap=", bmp.info_header.v1.sizeOfBitmap);
+
+    std::unique_ptr<RGBQuad[]> color_table(new RGBQuad[bmp.info_header.v1.colorsUsed]{});
+
+    // No need for a default block here, as we already checked that condition
+    //   up above
+    switch(bmp.info_header.v1.bitsPerPixel) {
+        case 8:
+        case 4:
+            if(is_greyscale) {
+                for(auto i = 0U; i < bmp.info_header.v1.colorsUsed; ++i) {
+                    uint8_t c = i * (0x100 / bmp.info_header.v1.colorsUsed);
+                    color_table[i] = { { c, c, c, 0x00 } };
+                }
+            } else {
+                // TODO: Will we need to even support this case?
+                RETURN_ERROR(STATUS_NOT_IMPLEMENTED);
+            }
+            break;
+        case 1:
+            color_table[0] = { { 0xFF, 0xFF, 0xFF, 0x00 } };
+            color_table[1] = { { 0x00, 0x00, 0x00, 0x00 } };
+            break;
+        default:
+            WRITE_ERROR("We do not yet support generating a color table for ", 
+                        bmp.info_header.v1.bitsPerPixel, "BPP images.");
+            RETURN_ERROR(STATUS_NOT_IMPLEMENTED);
+    }
+
+    bmp.color_table.swap(color_table);
+
+    return STATUS_SUCCESS;
+}
+
+HMDT::MaybeVoid HMDT::convertBitMapTo8BPPGreyscale(BitMap2& bmp) noexcept {
+    auto depth = bmp.info_header.v1.bitsPerPixel / 8;
+
+    auto new_bmp_size = bmp.info_header.v1.sizeOfBitmap / depth;
+
+    std::unique_ptr<unsigned char[]> new_data;
+    try {
+        new_data.reset(new unsigned char[new_bmp_size]);
+    } catch(const std::bad_alloc& e) {
+        WRITE_ERROR("Failed to allocate ", new_bmp_size,
+                    " bytes of space for new BitMap data: ", e.what());
+        RETURN_ERROR(STATUS_BADALLOC);
+    }
+
+    WRITE_DEBUG("Walking each color (", depth, " bytes each) and converting it to greyscale.");
+    for(uint32_t i = 0; i < bmp.info_header.v1.sizeOfBitmap; i += depth) {
+        Maybe<Color> color = getColorAt(bmp, i);
+        RETURN_IF_ERROR(color);
+
+        // We have to divide the target index by the depth as well to make sure
+        //   that we stay within the range of the new data array
+        new_data[i / depth] = (static_cast<uint32_t>(color->r) +
+                               static_cast<uint32_t>(color->g) +
+                               static_cast<uint32_t>(color->b)) / 3;
+    }
+
+    // Update the BitMap's data
+    WRITE_DEBUG("Updating bmp header information to match the new information.");
+    bmp.file_header.fileSize = (bmp.file_header.fileSize - bmp.info_header.v1.sizeOfBitmap + new_bmp_size);
+    bmp.info_header.v1.sizeOfBitmap = new_bmp_size;
+    bmp.info_header.v1.bitsPerPixel = 8;
+
+    if(bmp.color_table == nullptr) {
+        WRITE_DEBUG("Input image does not have a color table, generating one.");
+        bmp.info_header.v1.colorsUsed = bmp.info_header.v1.colorImportant = 256;
+        auto res = createColorTable(bmp, true /* is_greyscale */);
+        RETURN_IF_ERROR(res);
+    }
+
+    bmp.data.swap(new_data);
 
     return STATUS_SUCCESS;
 }

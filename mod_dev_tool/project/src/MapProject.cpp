@@ -19,6 +19,7 @@ HMDT::Project::MapProject::MapProject(IProject& parent_project):
     m_provinces_project(*this),
     m_state_project(*this),
     m_continent_project(*this),
+    m_heightmap_project(*this),
     m_map_data(new MapData),
     m_terrains(getDefaultTerrains()),
     m_parent_project(parent_project)
@@ -51,6 +52,9 @@ auto HMDT::Project::MapProject::save(const std::filesystem::path& path)
 
     auto states_result = m_state_project.save(path);
     RETURN_IF_ERROR(states_result);
+
+    auto heightmap_result = m_heightmap_project.save(path);
+    RETURN_IF_ERROR(heightmap_result);
 
     return STATUS_SUCCESS;
 }
@@ -127,6 +131,12 @@ auto HMDT::Project::MapProject::load(const std::filesystem::path& path)
         RETURN_IF_ERROR(result);
     }
 
+    if(auto result = m_heightmap_project.load(path);
+            result.error() != std::errc::no_such_file_or_directory)
+    {
+        RETURN_IF_ERROR(result);
+    }
+
     RETURN_ERROR_IF(!validateData(), STATUS_PROJECT_VALIDATION_FAILED);
 
     return STATUS_SUCCESS;
@@ -159,6 +169,9 @@ auto HMDT::Project::MapProject::export_(const std::filesystem::path& root) const
     // TODO: States are actually part of history in HoI4, so we should move this
     //   project to a new HistoryProject class instead of MapProject.
     result = m_state_project.export_(root / "../history/states");
+    RETURN_IF_ERROR(result);
+
+    result = m_heightmap_project.export_(root);
     RETURN_IF_ERROR(result);
 
     ////////////////////////////////////////////////////////////////////////////
@@ -382,6 +395,16 @@ auto HMDT::Project::MapProject::getContinentList() const -> const ContinentSet&
 
 auto HMDT::Project::MapProject::getContinents() -> ContinentSet& {
     return m_continent_project.getContinents();
+}
+
+auto HMDT::Project::MapProject::getHeightMapProject() -> HeightMapProject& {
+    return m_heightmap_project;
+}
+
+auto HMDT::Project::MapProject::getHeightMapProject() const
+    -> const HeightMapProject&
+{
+    return m_heightmap_project;
 }
 
 auto HMDT::Project::MapProject::getTerrains() const

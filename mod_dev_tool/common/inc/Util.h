@@ -27,6 +27,7 @@
 namespace HMDT {
     // Forward declare this, as we don't need to include the whole file yet.
     struct BitMap;
+    struct BitMap2;
 
     std::uint32_t indexOfLSB(std::uint32_t);
     std::uint32_t swapBytes(std::uint32_t);
@@ -39,7 +40,12 @@ namespace HMDT {
     Color getColorAt(const BitMap*, uint32_t, uint32_t, uint32_t = 3);
     Color getColorAt(const Dimensions&, const uint8_t*,
                      uint32_t, uint32_t, uint32_t = 3);
+
+    Maybe<Color> getColorAt(const BitMap2&, uint32_t, uint32_t);
+    Maybe<Color> getColorAt(const BitMap2&, uint32_t);
+
     Pixel getAsPixel(const BitMap*, uint32_t, uint32_t, uint32_t = 3);
+    Maybe<Pixel> getAsPixel(const BitMap2&, uint32_t, uint32_t);
 
     bool isInImage(const Dimensions&, uint32_t, uint32_t);
 

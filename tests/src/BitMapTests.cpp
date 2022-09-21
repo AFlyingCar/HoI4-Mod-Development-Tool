@@ -649,3 +649,93 @@ TEST(BitMapTests, Write8BPPWithoutObject) {
     HMDT::Log::Logger::getInstance().reset();
 }
 
+TEST(BitMapTests, Convert24BPPTo8BPPTest) {
+    // We also want to see log outputs in the test output
+    HMDT::UnitTests::registerTestLogOutputFunction(true, true, true, true);
+
+    auto bmp1_path = HMDT::UnitTests::getTestProgramPath() / "bin" / "simple.bmp";
+
+    HMDT::BitMap2 bmp1;
+    auto res = HMDT::readBMP(bmp1_path, bmp1);
+    ASSERT_SUCCEEDED(res);
+
+    // Load the bitmap again so we have a point of comparison
+    HMDT::BitMap2 bmp2;
+    res = HMDT::readBMP(bmp1_path, bmp2);
+    ASSERT_SUCCEEDED(res);
+
+    // Convert bmp1 to an 8-bit greyscale image
+    res = HMDT::convertBitMapTo8BPPGreyscale(bmp1);
+    ASSERT_SUCCEEDED(res);
+
+    WRITE_DEBUG("After conversion: ", bmp1);
+
+    // Check the file header
+    ASSERT_EQ(bmp1.file_header.filetype, HMDT::BM_TYPE);
+    ASSERT_EQ(bmp1.file_header.fileSize, 263290); // (786554 / 3) + 1024
+    ASSERT_EQ(bmp1.file_header.reserved1, 0);
+    ASSERT_EQ(bmp1.file_header.reserved2, 0);
+    ASSERT_EQ(bmp1.file_header.bitmapOffset, 1146); // fileHeader + infoHeaderV4 + color_table
+    // Check the info header
+
+    // Make sure that we have the right header version (In this case, it should
+    //   be the V4 Info Header)
+    ASSERT_EQ(bmp1.info_header.v1.headerSize, HMDT::V4_INFO_HEADER_LENGTH);
+
+    // If the above assertion is true, we know that we have the V4 header
+    //   However, we should still be able to utilize the v1 variable to access
+    //   the v1 header
+    ASSERT_EQ(bmp1.info_header.v1.width, 512);
+    ASSERT_EQ(bmp1.info_header.v1.height, 512);
+    ASSERT_EQ(bmp1.info_header.v1.bitPlanes, 1);
+    ASSERT_EQ(bmp1.info_header.v1.bitsPerPixel, 8);
+    ASSERT_EQ(bmp1.info_header.v1.compression, 0);
+    ASSERT_EQ(bmp1.info_header.v1.sizeOfBitmap, 262144); // (786432 / 3)
+    ASSERT_EQ(bmp1.info_header.v1.horzResolution, 2835);
+    ASSERT_EQ(bmp1.info_header.v1.vertResolution, 2835);
+    ASSERT_EQ(bmp1.info_header.v1.colorsUsed, 256);
+    ASSERT_EQ(bmp1.info_header.v1.colorImportant, 256);
+
+    // Now verify the V4 part of the header
+    {
+        ASSERT_EQ(bmp1.info_header.v4.redMask, 1934772034);
+        ASSERT_EQ(bmp1.info_header.v4.greenMask, 0);
+        ASSERT_EQ(bmp1.info_header.v4.blueMask, 0);
+        ASSERT_EQ(bmp1.info_header.v4.alphaMask, 0);
+        ASSERT_EQ(bmp1.info_header.v4.CSType, HMDT::LogicalColorSpace::CALIBRATED_RGB);
+
+        ASSERT_EQ(bmp1.info_header.v4.redX, 0);
+        ASSERT_EQ(bmp1.info_header.v4.redY, 0);
+        ASSERT_EQ(bmp1.info_header.v4.redZ, 0);
+        ASSERT_EQ(bmp1.info_header.v4.greenX, 0);
+        ASSERT_EQ(bmp1.info_header.v4.greenY, 0);
+        ASSERT_EQ(bmp1.info_header.v4.greenZ, 0);
+        ASSERT_EQ(bmp1.info_header.v4.blueX, 0);
+        ASSERT_EQ(bmp1.info_header.v4.blueY, 0);
+        ASSERT_EQ(bmp1.info_header.v4.blueZ, 2);
+
+        ASSERT_EQ(bmp1.info_header.v4.gammaRed, 0);
+        ASSERT_EQ(bmp1.info_header.v4.gammaGreen, 0);
+        ASSERT_EQ(bmp1.info_header.v4.gammaBlue, 0);
+    }
+
+    // Do not verify the V5 header part, as the size is only 108
+
+    // Verify that there is a color table
+    ASSERT_NE(bmp1.color_table, nullptr);
+
+    // Check each value in the color table
+    for(uint32_t i = 0; i < bmp1.info_header.v1.colorsUsed; ++i) {
+        uint8_t c = i * (0x100 / bmp1.info_header.v1.colorsUsed);
+
+        ASSERT_EQ(bmp1.color_table[i].red, c);
+        ASSERT_EQ(bmp1.color_table[i].green, c);
+        ASSERT_EQ(bmp1.color_table[i].blue, c);
+    }
+
+    // Not really easy to test the whole data-set, so as long as it is non-null
+    //   then we're probably fine (can't really verify the length easily)
+    ASSERT_NE(bmp1.data, nullptr);
+
+    HMDT::Log::Logger::getInstance().reset();
+}
