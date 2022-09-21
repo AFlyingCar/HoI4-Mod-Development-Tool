@@ -48,6 +48,7 @@ for code_def in status_codes:
     if code_def.startswith("X("):
         symbol, description = getParensContents(code_def).split(',')
         status_codes_list.append( (value, symbol.strip(), description.strip()[1:-1], group) )
+        value += 1
     elif code_def.startswith("Y("):
         symbol, base_value = getParensContents(code_def).split(',')
 
