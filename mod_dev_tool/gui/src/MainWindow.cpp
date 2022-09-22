@@ -452,13 +452,13 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                     case SelectionManager::Action::ADD:
                         // If the label is a valid province, then go ahead and mark it as
                         //  selected everywhere that needs it to be marked as such
-                        if(map_project.isValidProvinceLabel(prov_id)) {
+                        if(map_project.getProvinceProject().isValidProvinceLabel(prov_id)) {
                             // The selected province
-                            auto* province = &map_project.getProvinceForLabel(prov_id);
+                            auto* province = &map_project.getProvinceProject().getProvinceForLabel(prov_id);
 
                             // TODO: We should really move preview data out of MapProject
                             //   too
-                            auto preview_data = map_project.getPreviewData(province);
+                            auto preview_data = map_project.getProvinceProject().getPreviewData(province);
 
                             if(action == SelectionManager::Action::SET) {
                                 getProvincePropertiesPane().setProvince(province, preview_data);
@@ -519,7 +519,7 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                         //   has_selections_already variables since those are
                         //   referring to provinces, so we need to do similar
                         //   calculations again but for states
-                        map_project.getStateForID(state_id).andThen([this](auto state_ref)
+                        map_project.getStateProject().getStateForID(state_id).andThen([this](auto state_ref)
                         {
                             auto* state = &state_ref.get();
                             getStatePropertiesPane().setState(state);

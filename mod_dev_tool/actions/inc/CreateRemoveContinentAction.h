@@ -3,7 +3,7 @@
 
 # include <string>
 
-# include "MapProject.h"
+# include "IProject.h"
 
 # include "IAction.h"
 
@@ -15,7 +15,7 @@ namespace HMDT::Action {
                 REMOVE
             };
 
-            CreateRemoveContinentAction(Project::MapProject&,
+            CreateRemoveContinentAction(Project::IRootMapProject&,
                                         const std::string&,
                                         Type);
 
@@ -31,7 +31,7 @@ namespace HMDT::Action {
             //   instead try to find an elegant solution for getting the current
             //   map project, as it is potentially possible for the map project
             //   to go out of scope before this action is destroyed
-            Project::MapProject& m_map_project;
+            Project::IRootMapProject& m_map_project;
             std::string m_continent_name;
             Type m_type;
     };

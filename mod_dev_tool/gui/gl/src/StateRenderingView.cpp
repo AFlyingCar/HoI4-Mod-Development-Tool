@@ -104,8 +104,8 @@ void HMDT::GUI::GL::StateRenderingView::render() {
             std::transform(selections.begin(), selections.end(),
                            std::inserter(selection_ids, selection_ids.begin()),
                            [&map_project](const auto& s) {
-                               return map_project.isValidProvinceLabel(s.id) ?
-                                      map_project.getProvinceForLabel(s.id).state :
+                               return map_project.getProvinceProject().isValidProvinceLabel(s.id) ?
+                                      map_project.getProvinceProject().getProvinceForLabel(s.id).state :
                                       0;
                            });
 
@@ -116,7 +116,7 @@ void HMDT::GUI::GL::StateRenderingView::render() {
         }
 
         // Render the normal map first for each state that exists
-        for(auto&& [id, state] : map_project.getStates()) {
+        for(auto&& [id, state] : map_project.getStateProject().getStates()) {
             if(state.provinces.empty()) continue;
 
             getMapProgram().uniform("state_color", state.color);
