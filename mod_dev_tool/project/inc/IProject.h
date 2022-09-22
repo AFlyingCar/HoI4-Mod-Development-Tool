@@ -53,21 +53,6 @@ namespace HMDT::Project {
             PromptCallback m_prompt_callback = DEFAULT_PROMPT_CALLBACK;
     };
 
-    /**
-     * @brief Interface for the root of any project hierarchy
-     */
-    struct IRootProject: public IProject {
-        virtual const std::filesystem::path& getPath() const = 0;
-        virtual std::filesystem::path getRoot() const = 0;
-
-        virtual std::filesystem::path getMetaRoot() const = 0;
-        virtual std::filesystem::path getInputsRoot() const = 0;
-        virtual std::filesystem::path getMapRoot() const = 0;
-        virtual std::filesystem::path getDebugRoot() const = 0;
-        virtual std::filesystem::path getExportRoot() const = 0;
-
-        virtual IRootProject& getRootParent() override final;
-    };
 
     struct IMapProject: public IProject {
         virtual ~IMapProject() = default;
@@ -126,6 +111,25 @@ namespace HMDT::Project {
 
         protected:
             virtual ContinentSet& getContinents() = 0;
+    };
+
+    /**
+     * @brief Interface for the root of any project hierarchy
+     */
+    struct IRootProject: public IProject {
+        virtual const std::filesystem::path& getPath() const = 0;
+        virtual std::filesystem::path getRoot() const = 0;
+
+        virtual std::filesystem::path getMetaRoot() const = 0;
+        virtual std::filesystem::path getInputsRoot() const = 0;
+        virtual std::filesystem::path getMapRoot() const = 0;
+        virtual std::filesystem::path getDebugRoot() const = 0;
+        virtual std::filesystem::path getExportRoot() const = 0;
+
+        virtual IRootProject& getRootParent() override final;
+
+        virtual IMapProject& getMapProject() noexcept = 0;
+        virtual const IMapProject& getMapProject() const noexcept = 0;
     };
 }
 
