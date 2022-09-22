@@ -18,7 +18,7 @@
 
 #include "HoI4Project.h"
 
-HMDT::Project::ProvinceProject::ProvinceProject(IMapProject& parent_project):
+HMDT::Project::ProvinceProject::ProvinceProject(IRootMapProject& parent_project):
     m_parent_project(parent_project),
     m_provinces()
 {
@@ -141,7 +141,8 @@ HMDT::Project::IRootProject& HMDT::Project::ProvinceProject::getRootParent() {
     return m_parent_project.getRootParent();
 }
 
-HMDT::Project::IMapProject& HMDT::Project::ProvinceProject::getRootMapParent() {
+HMDT::Project::IRootMapProject& HMDT::Project::ProvinceProject::getRootMapParent()
+{
     return m_parent_project.getRootMapParent();
 }
 

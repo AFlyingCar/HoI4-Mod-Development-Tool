@@ -8,7 +8,7 @@
 #include "Constants.h"
 #include "StatusCodes.h"
 
-HMDT::Project::ContinentProject::ContinentProject(IMapProject& parent):
+HMDT::Project::ContinentProject::ContinentProject(IRootMapProject& parent):
     m_parent_project(parent),
     m_continents()
 { }
@@ -135,7 +135,7 @@ bool HMDT::Project::ContinentProject::validateData() {
     return true;
 }
 
-auto HMDT::Project::ContinentProject::getRootMapParent() -> IMapProject& {
+auto HMDT::Project::ContinentProject::getRootMapParent() -> IRootMapProject& {
     return m_parent_project.getRootMapParent();
 }
 

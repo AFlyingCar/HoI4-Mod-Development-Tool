@@ -43,8 +43,8 @@ namespace HMDT::Project {
             const std::vector<std::string>& getTags() const;
             const std::vector<std::filesystem::path>& getOverrides() const;
 
-            virtual MapProject& getMapProject() noexcept override;
-            virtual const MapProject& getMapProject() const noexcept override;
+            virtual IRootMapProject& getMapProject() noexcept override;
+            virtual const IRootMapProject& getMapProject() const noexcept override;
 
             MaybeVoid load();
             MaybeVoid save(bool = true);

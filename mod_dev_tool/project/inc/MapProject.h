@@ -24,11 +24,7 @@ namespace HMDT::Project {
     /**
      * @brief Defines a map project for HoI4
      */
-    class MapProject: public IMapProject,
-                      public virtual IProvinceProject,
-                      public virtual IStateProject,
-                      public virtual IContinentProject
-    {
+    class MapProject: public IRootMapProject {
         public:
             MapProject(IProject&);
             virtual ~MapProject();
@@ -43,38 +39,29 @@ namespace HMDT::Project {
             virtual bool validateData() override;
 
             virtual IRootProject& getRootParent() override;
-            virtual IMapProject& getRootMapParent() override;
+            virtual IRootMapProject& getRootMapParent() override;
 
-            ProvinceProject& getProvinceProject();
-            const ProvinceProject& getProvinceProject() const;
+            virtual ProvinceProject& getProvinceProject() noexcept override;
+            virtual const ProvinceProject& getProvinceProject() const noexcept override;
 
-            StateProject& getStateProject();
-            const StateProject& getStateProject() const;
+            virtual StateProject& getStateProject() noexcept override;
+            virtual const StateProject& getStateProject() const noexcept override;
 
-            HeightMapProject& getHeightMapProject();
-            const HeightMapProject& getHeightMapProject() const;
+            virtual ContinentProject& getContinentProject() noexcept override;
+            virtual const ContinentProject& getContinentProject() const noexcept override;
 
-            virtual const ContinentSet& getContinentList() const override;
-            virtual const StateMap& getStates() const override;
+            virtual HeightMapProject& getHeightMapProject() noexcept override;
+            virtual const HeightMapProject& getHeightMapProject() const noexcept override;
 
-            void moveProvinceToState(uint32_t, StateID);
-            void moveProvinceToState(Province&, StateID);
-            void removeProvinceFromState(Province&, bool = true);
+            virtual void moveProvinceToState(uint32_t, StateID) override;
+            virtual void moveProvinceToState(Province&, StateID) override;
+            virtual void removeProvinceFromState(Province&, bool = true) override;
 
-            const std::vector<Terrain>& getTerrains() const;
+            virtual const std::vector<Terrain>& getTerrains() const override;
 
-            virtual ProvinceDataPtr getPreviewData(ProvinceID) override;
-            virtual ProvinceDataPtr getPreviewData(const Province*) override;
-
-            virtual ProvinceList& getProvinces() override;
-            virtual const ProvinceList& getProvinces() const override;
-
-            void calculateCoastalProvinces(bool = false);
+            virtual void calculateCoastalProvinces(bool = false) override;
 
         private:
-            virtual ContinentSet& getContinents() override;
-            virtual StateMap& getStateMap() override;
-
             //! The Provinces project
             ProvinceProject m_provinces_project;
 

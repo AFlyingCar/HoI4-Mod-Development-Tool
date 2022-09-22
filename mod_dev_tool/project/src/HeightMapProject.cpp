@@ -14,7 +14,7 @@
 
 #include "WorldNormalBuilder.h"
 
-HMDT::Project::HeightMapProject::HeightMapProject(IMapProject& parent):
+HMDT::Project::HeightMapProject::HeightMapProject(IRootMapProject& parent):
     m_parent_project(parent),
     m_heightmap_bmp(nullptr)
 { }
@@ -127,7 +127,7 @@ bool HMDT::Project::HeightMapProject::validateData() {
     return true;
 }
 
-auto HMDT::Project::HeightMapProject::getRootMapParent() -> IMapProject& {
+auto HMDT::Project::HeightMapProject::getRootMapParent() -> IRootMapProject& {
     return m_parent_project.getRootMapParent();
 }
 

@@ -107,12 +107,12 @@ const std::vector<std::filesystem::path>& HMDT::Project::HoI4Project::getOverrid
     return m_overrides;
 }
 
-auto HMDT::Project::HoI4Project::getMapProject() noexcept -> MapProject& {
+auto HMDT::Project::HoI4Project::getMapProject() noexcept -> IRootMapProject& {
     return m_map_project;
 }
 
 auto HMDT::Project::HoI4Project::getMapProject() const noexcept
-    -> const MapProject&
+    -> const IRootMapProject&
 {
     return m_map_project;
 }

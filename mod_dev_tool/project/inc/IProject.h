@@ -13,6 +13,8 @@
 # include "Maybe.h"
 # include "Types.h"
 
+# include "Terrain.h"
+
 // Forward declarations
 namespace HMDT {
     class MapData;
@@ -53,7 +55,16 @@ namespace HMDT::Project {
             PromptCallback m_prompt_callback = DEFAULT_PROMPT_CALLBACK;
     };
 
+////////////////////////////////////////////////////////////////////////////////
+// Forward declarations
+    struct IRootMapProject;
 
+////////////////////////////////////////////////////////////////////////////////
+// Map Projects
+
+    /**
+     * @brief The base project class used by all Map-related projects
+     */
     struct IMapProject: public IProject {
         virtual ~IMapProject() = default;
 
@@ -64,10 +75,13 @@ namespace HMDT::Project {
 
         virtual bool validateData() = 0;
 
-        virtual IMapProject& getRootMapParent() = 0;
+        virtual IRootMapProject& getRootMapParent() = 0;
     };
 
-    struct IProvinceProject: public IProject {
+    /**
+     * @brief The interface for the ProvinceProject
+     */
+    struct IProvinceProject: public IMapProject {
         using ProvinceDataPtr = std::shared_ptr<unsigned char[]>;
 
         bool isValidProvinceLabel(uint32_t) const;
@@ -82,7 +96,10 @@ namespace HMDT::Project {
         virtual const ProvinceList& getProvinces() const = 0;
     };
 
-    struct IStateProject: public IProject {
+    /**
+     * @brief The interface for StateProject
+     */
+    struct IStateProject: public IMapProject {
         using StateMap = std::map<uint32_t, State>;
 
         virtual ~IStateProject() = default;
@@ -94,11 +111,26 @@ namespace HMDT::Project {
 
         virtual const StateMap& getStates() const = 0;
 
+        virtual StateID addNewState(const std::vector<uint32_t>&) = 0;
+        virtual void removeState(StateID) = 0;
+
         protected:
             virtual StateMap& getStateMap() = 0;
     };
 
-    struct IContinentProject: public IProject {
+    /**
+     * @brief The interface for the HeightMapProject
+     */
+    struct IHeightMapProject: public IMapProject {
+        virtual ~IHeightMapProject() = default;
+
+        virtual MaybeVoid loadFile(const std::filesystem::path&) noexcept = 0;
+    };
+
+    /**
+     * @brief The interface for the ContinentProject
+     */
+    struct IContinentProject: public IMapProject {
         using ContinentSet = std::set<std::string>;
 
         virtual ~IContinentProject() = default;
@@ -112,6 +144,46 @@ namespace HMDT::Project {
         protected:
             virtual ContinentSet& getContinents() = 0;
     };
+
+////////////////////////////////////////////////////////////////////////////////
+// Root Projects (Level 2)
+
+    /**
+     * @brief The interface for the root of all map-based projects
+     */
+    struct IRootMapProject: public IMapProject {
+        virtual ~IRootMapProject() = default;
+
+        virtual std::shared_ptr<MapData> getMapData() = 0;
+        virtual const std::shared_ptr<MapData> getMapData() const = 0;
+
+        virtual void moveProvinceToState(uint32_t, StateID) = 0;
+        virtual void moveProvinceToState(Province&, StateID) = 0;
+        virtual void removeProvinceFromState(Province&, bool = true) = 0;
+
+        virtual void calculateCoastalProvinces(bool = false) = 0;
+
+        // TODO: This should be its own sub-project
+        virtual const std::vector<Terrain>& getTerrains() const = 0;
+
+        ////////////////////////////////////////////////////////////////////////
+
+        virtual IProvinceProject& getProvinceProject() noexcept = 0;
+        virtual const IProvinceProject& getProvinceProject() const noexcept = 0;
+
+        virtual IStateProject& getStateProject() noexcept = 0;
+        virtual const IStateProject& getStateProject() const noexcept = 0;
+
+        virtual IHeightMapProject& getHeightMapProject() noexcept = 0;
+        virtual const IHeightMapProject& getHeightMapProject() const noexcept = 0;
+
+        virtual IContinentProject& getContinentProject() noexcept = 0;
+        virtual const IContinentProject& getContinentProject() const noexcept = 0;
+    };
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Root Project (Level 1)
 
     /**
      * @brief Interface for the root of any project hierarchy
@@ -128,8 +200,8 @@ namespace HMDT::Project {
 
         virtual IRootProject& getRootParent() override final;
 
-        virtual IMapProject& getMapProject() noexcept = 0;
-        virtual const IMapProject& getMapProject() const noexcept = 0;
+        virtual IRootMapProject& getMapProject() noexcept = 0;
+        virtual const IRootMapProject& getMapProject() const noexcept = 0;
     };
 }
 

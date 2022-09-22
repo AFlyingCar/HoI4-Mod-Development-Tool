@@ -15,7 +15,7 @@
 
 #include "HoI4Project.h"
 
-HMDT::Project::StateProject::StateProject(MapProject& parent_project):
+HMDT::Project::StateProject::StateProject(IRootMapProject& parent_project):
     m_parent_project(parent_project),
     m_available_state_ids(),
     m_states()
@@ -366,7 +366,8 @@ HMDT::Project::IRootProject& HMDT::Project::StateProject::getRootParent() {
     return m_parent_project.getRootParent();
 }
 
-HMDT::Project::IMapProject& HMDT::Project::StateProject::getRootMapParent() {
+HMDT::Project::IRootMapProject& HMDT::Project::StateProject::getRootMapParent()
+{
     return m_parent_project.getRootMapParent();
 }
 
@@ -388,8 +389,9 @@ void HMDT::Project::StateProject::updateStateIDMatrix() {
     parallelTransform(label_matrix_start, label_matrix_start + getMapData()->getMatrixSize(),
                       state_id_matrix.get(),
                       [this](uint32_t prov_id) -> uint32_t {
-                          if(m_parent_project.isValidProvinceLabel(prov_id)) {
-                              return m_parent_project.getProvinceForLabel(prov_id).state;
+                          if(m_parent_project.getProvinceProject().isValidProvinceLabel(prov_id))
+                          {
+                              return m_parent_project.getProvinceProject().getProvinceForLabel(prov_id).state;
                           } else {
                               WRITE_WARN("Invalid province ID ", prov_id,
                                          " detected when building state id matrix. Treating as though there's no state here.");
@@ -440,7 +442,7 @@ auto HMDT::Project::StateProject::addNewState(const std::vector<uint32_t>& provi
     std::transform(province_ids.begin(), province_ids.end(),
                    std::back_inserter(provinces),
                    [this](uint32_t prov_id) -> std::reference_wrapper<Province> {
-                       return std::ref(m_parent_project.getProvinceForLabel(prov_id));
+                       return std::ref(m_parent_project.getProvinceProject().getProvinceForLabel(prov_id));
                    });
 
     // Increment by 1 because we do not want 0 to be a state ID

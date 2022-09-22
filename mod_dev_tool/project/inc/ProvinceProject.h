@@ -8,9 +8,9 @@ namespace HMDT::Project {
     /**
      * @brief Defines a province project for HoI4
      */
-    class ProvinceProject: public IMapProject, public virtual IProvinceProject {
+    class ProvinceProject: public IProvinceProject {
         public:
-            ProvinceProject(IMapProject&);
+            ProvinceProject(IRootMapProject&);
             virtual ~ProvinceProject();
 
             virtual MaybeVoid save(const std::filesystem::path&) override;
@@ -24,7 +24,7 @@ namespace HMDT::Project {
             virtual bool validateData() override;
 
             virtual IRootProject& getRootParent() override;
-            virtual IMapProject& getRootMapParent() override;
+            virtual IRootMapProject& getRootMapParent() override;
 
             virtual ProvinceList& getProvinces() override;
             virtual const ProvinceList& getProvinces() const override;
@@ -46,7 +46,7 @@ namespace HMDT::Project {
             void buildProvinceCache(const Province*);
 
             //! The parent project that this MapProject belongs to
-            IMapProject& m_parent_project;
+            IRootMapProject& m_parent_project;
 
             //! List of all provinces
             ProvinceList m_provinces;
