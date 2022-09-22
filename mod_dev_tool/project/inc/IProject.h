@@ -58,6 +58,7 @@ namespace HMDT::Project {
 ////////////////////////////////////////////////////////////////////////////////
 // Forward declarations
     struct IRootMapProject;
+    struct IRootHistoryProject;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Map Projects
@@ -146,6 +147,17 @@ namespace HMDT::Project {
     };
 
 ////////////////////////////////////////////////////////////////////////////////
+// History Projects
+    struct IHistoryProject: public IProject {
+        virtual ~IHistoryProject() = default;
+
+        virtual IRootHistoryProject& getRootHistoryParent() noexcept = 0;
+        virtual const IRootHistoryProject& getRootHistoryParent() const noexcept = 0;
+
+        virtual bool validateData() = 0;
+    };
+
+////////////////////////////////////////////////////////////////////////////////
 // Root Projects (Level 2)
 
     /**
@@ -181,6 +193,12 @@ namespace HMDT::Project {
         virtual const IContinentProject& getContinentProject() const noexcept = 0;
     };
 
+    struct IRootHistoryProject: public IHistoryProject {
+        virtual ~IRootHistoryProject() = default;
+
+        virtual IStateProject& getStateProject() noexcept = 0;
+        virtual const IStateProject& getStateProject() const noexcept = 0;
+    };
 
 ////////////////////////////////////////////////////////////////////////////////
 // Root Project (Level 1)
