@@ -43,8 +43,8 @@ void HMDT::GUI::SelectionManager::clearProvinceSelection() {
 
 void HMDT::GUI::SelectionManager::selectState(StateID state_id) {
     // Do not select if the state_id isn't valid
-    if(auto opt_mproj = getCurrentMapProject();
-            opt_mproj && opt_mproj->get().getStateProject().isValidStateID(state_id))
+    if(auto opt_hproj = getCurrentHistoryProject();
+            opt_hproj && opt_hproj->get().getStateProject().isValidStateID(state_id))
     {
         m_on_state_selected_callback(state_id, Action::SET);
         m_selected_states = {state_id};
@@ -53,8 +53,8 @@ void HMDT::GUI::SelectionManager::selectState(StateID state_id) {
 
 void HMDT::GUI::SelectionManager::addStateSelection(StateID state_id) {
     // Do not select if the state_id isn't valid
-    if(auto opt_mproj = getCurrentMapProject();
-            opt_mproj && opt_mproj->get().getStateProject().isValidStateID(state_id))
+    if(auto opt_hproj = getCurrentHistoryProject();
+            opt_hproj && opt_hproj->get().getStateProject().isValidStateID(state_id))
     {
         m_on_state_selected_callback(state_id, Action::ADD);
         m_selected_states.insert(state_id);
@@ -147,13 +147,13 @@ auto HMDT::GUI::SelectionManager::getSelectedStates() const
     -> RefVector<const State>
 {
     RefVector<const State> states;
-    if(auto opt_mproj = getCurrentMapProject(); opt_mproj)
+    if(auto opt_hproj = getCurrentHistoryProject(); opt_hproj)
     {
-        auto& mproj = opt_mproj->get();
+        auto& hproj = opt_hproj->get();
         std::transform(m_selected_states.begin(), m_selected_states.end(),
                        std::back_inserter(states),
-                       [&mproj](StateID state_id) -> const State& {
-                           return mproj.getStateProject().getStateForID(state_id)->get();
+                       [&hproj](StateID state_id) -> const State& {
+                           return hproj.getStateProject().getStateForID(state_id)->get();
                        });
     }
     return states;
@@ -166,13 +166,13 @@ auto HMDT::GUI::SelectionManager::getSelectedStates() const
  */
 auto HMDT::GUI::SelectionManager::getSelectedStates() -> RefVector<State> {
     RefVector<State> states;
-    if(auto opt_mproj = getCurrentMapProject(); opt_mproj)
+    if(auto opt_hproj = getCurrentHistoryProject(); opt_hproj)
     {
-        auto& mproj = opt_mproj->get();
+        auto& hproj = opt_hproj->get();
         std::transform(m_selected_states.begin(), m_selected_states.end(),
                        std::back_inserter(states),
-                       [&mproj](StateID state_id) -> State& {
-                           return mproj.getStateProject().getStateForID(state_id)->get();
+                       [&hproj](StateID state_id) -> State& {
+                           return hproj.getStateProject().getStateForID(state_id)->get();
                        });
     }
     return states;
@@ -204,6 +204,16 @@ auto HMDT::GUI::SelectionManager::getCurrentMapProject() const
 {
     if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
         return std::ref(opt_project->get().getMapProject());
+    } else {
+        return std::nullopt;
+    }
+}
+
+auto HMDT::GUI::SelectionManager::getCurrentHistoryProject() const
+    -> OptionalReference<Project::IRootHistoryProject>
+{
+    if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+        return std::ref(opt_project->get().getHistoryProject());
     } else {
         return std::nullopt;
     }

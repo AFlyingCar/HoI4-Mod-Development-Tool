@@ -260,8 +260,8 @@ void HMDT::GUI::StatePropertiesPane::buildDeleteStateButton() {
         if(auto opt_project = Driver::getInstance().getProject();
                 m_state != nullptr && opt_project)
         {
-            auto& map_project = opt_project->get().getMapProject();
-            map_project.getStateProject().removeState(m_state->id);
+            auto& history_project = opt_project->get().getHistoryProject();
+            history_project.getStateProject().removeState(m_state->id);
 
             SelectionManager::getInstance().removeStateSelection(m_state->id);
         }

@@ -141,7 +141,17 @@ HMDT::Project::IRootProject& HMDT::Project::ProvinceProject::getRootParent() {
     return m_parent_project.getRootParent();
 }
 
+const HMDT::Project::IRootProject& HMDT::Project::ProvinceProject::getRootParent() const
+{
+    return m_parent_project.getRootParent();
+}
+
 HMDT::Project::IRootMapProject& HMDT::Project::ProvinceProject::getRootMapParent()
+{
+    return m_parent_project.getRootMapParent();
+}
+
+const HMDT::Project::IRootMapProject& HMDT::Project::ProvinceProject::getRootMapParent() const
 {
     return m_parent_project.getRootMapParent();
 }

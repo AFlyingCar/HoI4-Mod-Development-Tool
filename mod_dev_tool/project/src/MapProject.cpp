@@ -17,7 +17,6 @@
 
 HMDT::Project::MapProject::MapProject(IProject& parent_project):
     m_provinces_project(*this),
-    m_state_project(*this),
     m_continent_project(*this),
     m_heightmap_project(*this),
     m_map_data(new MapData),
@@ -49,9 +48,6 @@ auto HMDT::Project::MapProject::save(const std::filesystem::path& path)
 
     auto continents_result = m_continent_project.save(path);
     RETURN_IF_ERROR(continents_result);
-
-    auto states_result = m_state_project.save(path);
-    RETURN_IF_ERROR(states_result);
 
     auto heightmap_result = m_heightmap_project.save(path);
     RETURN_IF_ERROR(heightmap_result);
@@ -125,19 +121,11 @@ auto HMDT::Project::MapProject::load(const std::filesystem::path& path)
         RETURN_IF_ERROR(result);
     }
 
-    if(auto result = m_state_project.load(path);
-            result.error() != std::errc::no_such_file_or_directory)
-    {
-        RETURN_IF_ERROR(result);
-    }
-
     if(auto result = m_heightmap_project.load(path);
             result.error() != std::errc::no_such_file_or_directory)
     {
         RETURN_IF_ERROR(result);
     }
-
-    RETURN_ERROR_IF(!validateData(), STATUS_PROJECT_VALIDATION_FAILED);
 
     return STATUS_SUCCESS;
 }
@@ -164,11 +152,6 @@ auto HMDT::Project::MapProject::export_(const std::filesystem::path& root) const
     RETURN_IF_ERROR(result);
 
     result = m_continent_project.export_(root);
-    RETURN_IF_ERROR(result);
-
-    // TODO: States are actually part of history in HoI4, so we should move this
-    //   project to a new HistoryProject class instead of MapProject.
-    result = m_state_project.export_(root / "../history/states");
     RETURN_IF_ERROR(result);
 
     result = m_heightmap_project.export_(root);
@@ -273,6 +256,35 @@ auto HMDT::Project::MapProject::export_(const std::filesystem::path& root) const
     return STATUS_SUCCESS;
 }
 
+auto HMDT::Project::MapProject::validateProvinceStateID(StateID province_state_id,
+                                                        ProvinceID province_id)
+    -> MaybeVoid
+{
+    if(province_state_id != -1) {
+        const auto& state_project = getRootParent().getHistoryProject().getStateProject();
+
+        if(!state_project.isValidStateID(province_state_id)) {
+            WRITE_WARN("Province has state ID of ", province_state_id, " which is invalid!");
+            return STATUS_PROVINCE_INVALID_STATE_ID;
+        }
+
+        MaybeRef<const State> state = state_project.getStateForID(province_state_id);
+        return state.andThen([&](auto state_ref) {
+            auto& state = state_ref.get();
+            if(std::find(state.provinces.begin(), state.provinces.end(), province_id) == state.provinces.end())
+            {
+                WRITE_WARN("State ", state.id, " does not contain province #", province_id, "!");
+
+                return STATUS_PROVINCE_NOT_IN_STATE;
+            }
+
+            return STATUS_SUCCESS;
+        });
+    }
+
+    return STATUS_SUCCESS;
+}
+
 bool HMDT::Project::MapProject::validateData() {
     WRITE_DEBUG("Validating all project data.");
 
@@ -281,7 +293,7 @@ bool HMDT::Project::MapProject::validateData() {
     success = success && m_provinces_project.validateData();
 
     for(auto&& province : m_provinces_project.getProvinces()) {
-        auto result = m_state_project.validateProvinceStateID(province.state, province.id);
+        auto result = validateProvinceStateID(province.state, province.id);
 
         if(IS_FAILURE(result)) {
             if(prog_opts.fix_warnings_on_load) {
@@ -290,7 +302,7 @@ bool HMDT::Project::MapProject::validateData() {
                     WRITE_INFO("Setting province state ID to -1.");
                     province.state = -1;
                 } else if(result.error() == STATUS_PROVINCE_NOT_IN_STATE) {
-                    getStateProject().getStateForID(province.state).andThen([&](auto prov_state_ref)
+                    getRootParent().getHistoryProject().getStateProject().getStateForID(province.state).andThen([&](auto prov_state_ref)
                     {
                         auto& prov_state = prov_state_ref.get();
 
@@ -306,8 +318,8 @@ bool HMDT::Project::MapProject::validateData() {
 
                     WRITE_INFO("Searching for any state that currently has this province...");
                     std::vector<ProvinceID>::const_iterator province_it;
-                    auto it = std::find_if(getStateProject().getStates().begin(),
-                                           getStateProject().getStates().end(),
+                    auto it = std::find_if(getRootParent().getHistoryProject().getStateProject().getStates().begin(),
+                                           getRootParent().getHistoryProject().getStateProject().getStates().end(),
                                            [&province, &province_it](auto& id_state_pair)
                                            {
                                                return (province_it = std::find(id_state_pair.second.provinces.begin(),
@@ -315,14 +327,16 @@ bool HMDT::Project::MapProject::validateData() {
                                                                                province.id)) != id_state_pair.second.provinces.end();
                                            });
 
-                    if(it == getStateProject().getStates().end()) {
+                    if(it == getRootParent().getHistoryProject().getStateProject().getStates().end()) {
                         WRITE_INFO("No states found containing this province.");
                     } else {
                         WRITE_INFO("Found state ", it->second.id, " that contains province ", province.id, ". Removing the province from the state.");
-                        State& state = m_state_project.getStateForIterator(it);
+                        State& state = getRootParent().getHistoryProject().getStateProject().getStateForIterator(it);
                         state.provinces.erase(province_it);
                     }
                 }
+            } else {
+                success = false;
             }
 
             continue;
@@ -336,7 +350,16 @@ HMDT::Project::IRootProject& HMDT::Project::MapProject::getRootParent() {
     return m_parent_project.getRootParent();
 }
 
+const HMDT::Project::IRootProject& HMDT::Project::MapProject::getRootParent() const
+{
+    return m_parent_project.getRootParent();
+}
+
 HMDT::Project::IRootMapProject& HMDT::Project::MapProject::getRootMapParent() {
+    return *this;
+}
+
+const HMDT::Project::IRootMapProject& HMDT::Project::MapProject::getRootMapParent() const {
     return *this;
 }
 
@@ -370,16 +393,6 @@ auto HMDT::Project::MapProject::getProvinceProject() const noexcept
     -> const ProvinceProject&
 {
     return m_provinces_project;
-}
-
-auto HMDT::Project::MapProject::getStateProject() noexcept -> StateProject& {
-    return m_state_project;
-}
-
-auto HMDT::Project::MapProject::getStateProject() const noexcept
-    -> const StateProject&
-{
-    return m_state_project;
 }
 
 auto HMDT::Project::MapProject::getContinentProject() noexcept
@@ -445,9 +458,9 @@ void HMDT::Project::MapProject::moveProvinceToState(Province& province,
 {
     removeProvinceFromState(province);
     province.state = state_id;
-    m_state_project.addProvinceToState(state_id, province.id);
+    getRootParent().getHistoryProject().getStateProject().addProvinceToState(state_id, province.id);
 
-    m_state_project.updateStateIDMatrix();
+    getRootParent().getHistoryProject().getStateProject().updateStateIDMatrix();
 }
 
 /**
@@ -460,13 +473,13 @@ void HMDT::Project::MapProject::removeProvinceFromState(Province& province,
 {
     // Remove from its old state
     if(auto prov_state_id = province.state;
-            getStateProject().isValidStateID(prov_state_id))
+            getRootParent().getHistoryProject().getStateProject().isValidStateID(prov_state_id))
     {
-        m_state_project.removeProvinceFromState(prov_state_id, province.id);
+        getRootParent().getHistoryProject().getStateProject().removeProvinceFromState(prov_state_id, province.id);
     }
     province.state = -1;
 
-    if(update_state_id_matrix) m_state_project.updateStateIDMatrix();
+    if(update_state_id_matrix) getRootParent().getHistoryProject().getStateProject().updateStateIDMatrix();
 }
 
 /**

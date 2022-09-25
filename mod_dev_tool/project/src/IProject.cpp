@@ -51,6 +51,11 @@ HMDT::Project::IRootProject& HMDT::Project::IRootProject::getRootParent() {
     return *this;
 }
 
+const HMDT::Project::IRootProject& HMDT::Project::IRootProject::getRootParent() const
+{
+    return *this;
+}
+
 bool HMDT::Project::IProvinceProject::isValidProvinceLabel(uint32_t label) const
 {
     return (label - 1) < getProvinces().size();

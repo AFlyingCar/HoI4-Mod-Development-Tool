@@ -510,7 +510,7 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
         SelectionManager::getInstance().setOnSelectStateCallback(
             [this](StateID state_id, SelectionManager::Action action)
             {
-                auto& map_project = Driver::getInstance().getProject()->get().getMapProject();
+                auto& history_project = Driver::getInstance().getProject()->get().getHistoryProject();
 
                 switch(action) {
                     case SelectionManager::Action::SET:
@@ -519,7 +519,7 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                         //   has_selections_already variables since those are
                         //   referring to provinces, so we need to do similar
                         //   calculations again but for states
-                        map_project.getStateProject().getStateForID(state_id).andThen([this](auto state_ref)
+                        history_project.getStateProject().getStateForID(state_id).andThen([this](auto state_ref)
                         {
                             auto* state = &state_ref.get();
                             getStatePropertiesPane().setState(state);

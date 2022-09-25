@@ -64,6 +64,7 @@ namespace HMDT::GUI {
             SelectionManager();
 
             OptionalReference<Project::IRootMapProject> getCurrentMapProject() const;
+            OptionalReference<Project::IRootHistoryProject> getCurrentHistoryProject() const;
 
             //! The currently selected provinces
             std::set<uint32_t> m_selected_provinces;

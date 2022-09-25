@@ -110,6 +110,12 @@ auto HMDT::Project::HeightMapProject::getRootParent() -> IRootProject& {
     return m_parent_project.getRootParent();
 }
 
+auto HMDT::Project::HeightMapProject::getRootParent() const
+    -> const IRootProject&
+{
+    return m_parent_project.getRootParent();
+}
+
 auto HMDT::Project::HeightMapProject::getMapData() -> std::shared_ptr<MapData> {
     return m_parent_project.getMapData();
 }
@@ -128,6 +134,12 @@ bool HMDT::Project::HeightMapProject::validateData() {
 }
 
 auto HMDT::Project::HeightMapProject::getRootMapParent() -> IRootMapProject& {
+    return m_parent_project.getRootMapParent();
+}
+
+auto HMDT::Project::HeightMapProject::getRootMapParent() const
+    -> const IRootMapProject&
+{
     return m_parent_project.getRootMapParent();
 }
 

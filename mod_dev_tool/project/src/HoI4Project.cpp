@@ -20,7 +20,8 @@ HMDT::Project::HoI4Project::HoI4Project():
     m_hoi4_version(),
     m_tags(),
     m_overrides(),
-    m_map_project(*this)
+    m_map_project(*this),
+    m_history_project(*this)
 { }
 
 HMDT::Project::HoI4Project::HoI4Project(const std::filesystem::path& path):
@@ -31,7 +32,8 @@ HMDT::Project::HoI4Project::HoI4Project(const std::filesystem::path& path):
     m_hoi4_version(),
     m_tags(),
     m_overrides(),
-    m_map_project(*this)
+    m_map_project(*this),
+    m_history_project(*this)
 {
 }
 
@@ -43,7 +45,8 @@ HMDT::Project::HoI4Project::HoI4Project(HoI4Project&& other):
     m_hoi4_version(std::move(other.m_hoi4_version)),
     m_tags(std::move(other.m_tags)),
     m_overrides(std::move(other.m_overrides)),
-    m_map_project(*this)
+    m_map_project(*this),
+    m_history_project(*this)
 { }
 
 const std::filesystem::path& HMDT::Project::HoI4Project::getPath() const {
@@ -65,6 +68,10 @@ std::filesystem::path HMDT::Project::HoI4Project::getInputsRoot() const
 
 std::filesystem::path HMDT::Project::HoI4Project::getMapRoot() const {
     return getMetaRoot() / "map";
+}
+
+std::filesystem::path HMDT::Project::HoI4Project::getHistoryRoot() const {
+    return getMetaRoot() / "history";
 }
 
 std::filesystem::path HMDT::Project::HoI4Project::getDebugRoot() const {
@@ -115,6 +122,18 @@ auto HMDT::Project::HoI4Project::getMapProject() const noexcept
     -> const IRootMapProject&
 {
     return m_map_project;
+}
+
+auto HMDT::Project::HoI4Project::getHistoryProject() noexcept
+    -> IRootHistoryProject&
+{
+    return m_history_project;
+}
+
+auto HMDT::Project::HoI4Project::getHistoryProject() const noexcept
+    -> const IRootHistoryProject&
+{
+    return m_history_project;
 }
 
 /**
@@ -222,8 +241,15 @@ auto HMDT::Project::HoI4Project::load(const std::filesystem::path& path)
     }
 
     // Load in sub-projects
-    auto map_result = m_map_project.load(getMapRoot());
-    RETURN_IF_ERROR(map_result);
+    auto result = m_map_project.load(getMapRoot());
+    RETURN_IF_ERROR(result);
+
+    result = m_history_project.load(getHistoryRoot());
+    RETURN_IF_ERROR(result);
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    RETURN_ERROR_IF(!validateData(), STATUS_PROJECT_VALIDATION_FAILED);
 
     return STATUS_SUCCESS;
 }
@@ -290,8 +316,11 @@ auto HMDT::Project::HoI4Project::save(const std::filesystem::path& path,
     }
 
     // Save sub-projects
-    auto map_result = m_map_project.save(getMapRoot());
-    RETURN_IF_ERROR(map_result);
+    auto result = m_map_project.save(getMapRoot());
+    RETURN_IF_ERROR(result);
+
+    result = m_history_project.save(getHistoryRoot());
+    RETURN_IF_ERROR(result);
 
     return STATUS_SUCCESS;
 }
@@ -340,6 +369,9 @@ auto HMDT::Project::HoI4Project::export_(const std::filesystem::path& root) cons
     }
 
     result = m_map_project.export_(root / "map");
+    RETURN_IF_ERROR(result);
+
+    result = m_history_project.export_(root / "history");
     RETURN_IF_ERROR(result);
 
     return STATUS_SUCCESS;
@@ -396,5 +428,10 @@ void HMDT::Project::HoI4Project::setToolVersion(const Version& version) {
 
 void HMDT::Project::HoI4Project::setHoI4Version(const Version& version) {
     m_hoi4_version = version;
+}
+
+bool HMDT::Project::HoI4Project::validateData() {
+    return m_map_project.validateData() &&
+           m_history_project.validateData();
 }
 

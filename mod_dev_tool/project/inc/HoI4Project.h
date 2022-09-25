@@ -9,6 +9,7 @@
 
 # include "IProject.h"
 # include "MapProject.h"
+# include "HistoryProject.h"
 
 namespace HMDT::Project {
     /**
@@ -30,8 +31,11 @@ namespace HMDT::Project {
             virtual std::filesystem::path getMetaRoot() const override;
             virtual std::filesystem::path getInputsRoot() const override;
             virtual std::filesystem::path getMapRoot() const override;
+            virtual std::filesystem::path getHistoryRoot() const override;
             virtual std::filesystem::path getDebugRoot() const override;
             virtual std::filesystem::path getExportRoot() const override;
+
+            virtual bool validateData() override;
 
             std::filesystem::path getDefaultExportRoot() const;
 
@@ -45,6 +49,9 @@ namespace HMDT::Project {
 
             virtual IRootMapProject& getMapProject() noexcept override;
             virtual const IRootMapProject& getMapProject() const noexcept override;
+
+            virtual IRootHistoryProject& getHistoryProject() noexcept override;
+            virtual const IRootHistoryProject& getHistoryProject() const noexcept override;
 
             MaybeVoid load();
             MaybeVoid save(bool = true);
@@ -92,6 +99,9 @@ namespace HMDT::Project {
 
             //! All maps for this project
             MapProject m_map_project;
+
+            //! The root history project
+            HistoryProject m_history_project;
 
             //! The path to export into.
             std::filesystem::path m_export_root;

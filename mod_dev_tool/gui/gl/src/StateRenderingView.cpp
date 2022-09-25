@@ -87,6 +87,7 @@ void HMDT::GUI::GL::StateRenderingView::render() {
 
     if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
         auto& map_project = opt_project->get().getMapProject();
+        auto& history_project = opt_project->get().getHistoryProject();
 
         getMapProgram().uniform("tex_dimensions", glm::ivec2(m_state_id_texture.getWidth(),
                                                              m_state_id_texture.getHeight()));
@@ -116,7 +117,7 @@ void HMDT::GUI::GL::StateRenderingView::render() {
         }
 
         // Render the normal map first for each state that exists
-        for(auto&& [id, state] : map_project.getStateProject().getStates()) {
+        for(auto&& [id, state] : history_project.getStateProject().getStates()) {
             if(state.provinces.empty()) continue;
 
             getMapProgram().uniform("state_color", state.color);

@@ -118,6 +118,12 @@ auto HMDT::Project::ContinentProject::getRootParent() -> IRootProject& {
     return m_parent_project.getRootParent();
 }
 
+auto HMDT::Project::ContinentProject::getRootParent() const
+    -> const IRootProject&
+{
+    return m_parent_project.getRootParent();
+}
+
 auto HMDT::Project::ContinentProject::getMapData() -> std::shared_ptr<MapData> {
     return m_parent_project.getMapData();
 }
@@ -136,6 +142,12 @@ bool HMDT::Project::ContinentProject::validateData() {
 }
 
 auto HMDT::Project::ContinentProject::getRootMapParent() -> IRootMapProject& {
+    return m_parent_project.getRootMapParent();
+}
+
+auto HMDT::Project::ContinentProject::getRootMapParent() const
+    -> const IRootMapProject&
+{
     return m_parent_project.getRootMapParent();
 }
 

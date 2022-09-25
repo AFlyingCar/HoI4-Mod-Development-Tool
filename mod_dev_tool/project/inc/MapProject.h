@@ -39,13 +39,13 @@ namespace HMDT::Project {
             virtual bool validateData() override;
 
             virtual IRootProject& getRootParent() override;
+            virtual const IRootProject& getRootParent() const override;
+
             virtual IRootMapProject& getRootMapParent() override;
+            virtual const IRootMapProject& getRootMapParent() const override;
 
             virtual ProvinceProject& getProvinceProject() noexcept override;
             virtual const ProvinceProject& getProvinceProject() const noexcept override;
-
-            virtual StateProject& getStateProject() noexcept override;
-            virtual const StateProject& getStateProject() const noexcept override;
 
             virtual ContinentProject& getContinentProject() noexcept override;
             virtual const ContinentProject& getContinentProject() const noexcept override;
@@ -61,12 +61,12 @@ namespace HMDT::Project {
 
             virtual void calculateCoastalProvinces(bool = false) override;
 
+        protected:
+            MaybeVoid validateProvinceStateID(StateID, ProvinceID);
+
         private:
             //! The Provinces project
             ProvinceProject m_provinces_project;
-
-            //! The State project
-            StateProject m_state_project;
 
             //! The Continent project
             ContinentProject m_continent_project;

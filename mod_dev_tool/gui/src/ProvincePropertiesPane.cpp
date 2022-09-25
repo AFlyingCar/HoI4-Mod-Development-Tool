@@ -290,10 +290,10 @@ void HMDT::GUI::ProvincePropertiesPane::buildStateCreationButton() {
 
     m_create_state_button->signal_clicked().connect([]() {
         if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
-            auto& map_project = opt_project->get().getMapProject();
+            auto& history_project = opt_project->get().getHistoryProject();
 
             auto selected = SelectionManager::getInstance().getSelectedProvinceLabels();
-            auto id = map_project.getStateProject().addNewState(std::vector<uint32_t>(selected.begin(),
+            auto id = history_project.getStateProject().addNewState(std::vector<uint32_t>(selected.begin(),
                                                                                       selected.end()));
             SelectionManager::getInstance().selectState(id);
 

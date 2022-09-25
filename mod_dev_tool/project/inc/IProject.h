@@ -40,6 +40,9 @@ namespace HMDT::Project {
         virtual MaybeVoid export_(const std::filesystem::path&) const noexcept = 0;
 
         virtual IRootProject& getRootParent() = 0;
+        virtual const IRootProject& getRootParent() const = 0;
+
+        virtual bool validateData() = 0;
 
         void setPromptCallback(const PromptCallback&);
         void resetPromptCallback();
@@ -74,9 +77,8 @@ namespace HMDT::Project {
 
         virtual void import(const ShapeFinder&, std::shared_ptr<MapData>) = 0;
 
-        virtual bool validateData() = 0;
-
         virtual IRootMapProject& getRootMapParent() = 0;
+        virtual const IRootMapProject& getRootMapParent() const = 0;
     };
 
     /**
@@ -95,28 +97,6 @@ namespace HMDT::Project {
 
         virtual ProvinceList& getProvinces() = 0;
         virtual const ProvinceList& getProvinces() const = 0;
-    };
-
-    /**
-     * @brief The interface for StateProject
-     */
-    struct IStateProject: public IMapProject {
-        using StateMap = std::map<uint32_t, State>;
-
-        virtual ~IStateProject() = default;
-
-        bool isValidStateID(StateID) const;
-
-        MaybeRef<const State> getStateForID(StateID) const;
-        MaybeRef<State> getStateForID(StateID);
-
-        virtual const StateMap& getStates() const = 0;
-
-        virtual StateID addNewState(const std::vector<uint32_t>&) = 0;
-        virtual void removeState(StateID) = 0;
-
-        protected:
-            virtual StateMap& getStateMap() = 0;
     };
 
     /**
@@ -157,6 +137,36 @@ namespace HMDT::Project {
         virtual bool validateData() = 0;
     };
 
+    /**
+     * @brief The interface for StateProject
+     */
+    struct IStateProject: public IHistoryProject {
+        using StateMap = std::map<uint32_t, State>;
+
+        virtual ~IStateProject() = default;
+
+        bool isValidStateID(StateID) const;
+
+        MaybeRef<const State> getStateForID(StateID) const;
+        MaybeRef<State> getStateForID(StateID);
+
+        virtual const StateMap& getStates() const = 0;
+
+        virtual StateID addNewState(const std::vector<uint32_t>&) = 0;
+        virtual void removeState(StateID) = 0;
+
+        virtual State& getStateForIterator(StateMap::const_iterator) = 0;
+        virtual const State& getStateForIterator(StateMap::const_iterator) const = 0;
+
+        virtual void updateStateIDMatrix() = 0;
+
+        virtual MaybeVoid addProvinceToState(StateID, ProvinceID) = 0;
+        virtual MaybeVoid removeProvinceFromState(StateID, ProvinceID) = 0;
+
+        protected:
+            virtual StateMap& getStateMap() = 0;
+    };
+
 ////////////////////////////////////////////////////////////////////////////////
 // Root Projects (Level 2)
 
@@ -182,9 +192,6 @@ namespace HMDT::Project {
 
         virtual IProvinceProject& getProvinceProject() noexcept = 0;
         virtual const IProvinceProject& getProvinceProject() const noexcept = 0;
-
-        virtual IStateProject& getStateProject() noexcept = 0;
-        virtual const IStateProject& getStateProject() const noexcept = 0;
 
         virtual IHeightMapProject& getHeightMapProject() noexcept = 0;
         virtual const IHeightMapProject& getHeightMapProject() const noexcept = 0;
@@ -213,13 +220,18 @@ namespace HMDT::Project {
         virtual std::filesystem::path getMetaRoot() const = 0;
         virtual std::filesystem::path getInputsRoot() const = 0;
         virtual std::filesystem::path getMapRoot() const = 0;
+        virtual std::filesystem::path getHistoryRoot() const = 0;
         virtual std::filesystem::path getDebugRoot() const = 0;
         virtual std::filesystem::path getExportRoot() const = 0;
 
         virtual IRootProject& getRootParent() override final;
+        virtual const IRootProject& getRootParent() const override final;
 
         virtual IRootMapProject& getMapProject() noexcept = 0;
         virtual const IRootMapProject& getMapProject() const noexcept = 0;
+
+        virtual IRootHistoryProject& getHistoryProject() noexcept = 0;
+        virtual const IRootHistoryProject& getHistoryProject() const noexcept = 0;
     };
 }
 

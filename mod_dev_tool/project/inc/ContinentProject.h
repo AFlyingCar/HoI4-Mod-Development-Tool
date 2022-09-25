@@ -20,6 +20,7 @@ namespace HMDT::Project {
             virtual MaybeVoid export_(const std::filesystem::path&) const noexcept override;
 
             virtual IRootProject& getRootParent() override;
+            virtual const IRootProject& getRootParent() const override;
 
             virtual std::shared_ptr<MapData> getMapData() override;
             virtual const std::shared_ptr<MapData> getMapData() const override;
@@ -29,6 +30,7 @@ namespace HMDT::Project {
             virtual bool validateData() override;
 
             virtual IRootMapProject& getRootMapParent() override;
+            virtual const IRootMapProject& getRootMapParent() const override;
 
         private:
             virtual ContinentSet& getContinents() override;

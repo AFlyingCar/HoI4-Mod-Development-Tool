@@ -24,7 +24,10 @@ namespace HMDT::Project {
             virtual bool validateData() override;
 
             virtual IRootProject& getRootParent() override;
+            virtual const IRootProject& getRootParent() const override;
+
             virtual IRootMapProject& getRootMapParent() override;
+            virtual const IRootMapProject& getRootMapParent() const override;
 
             virtual ProvinceList& getProvinces() override;
             virtual const ProvinceList& getProvinces() const override;
