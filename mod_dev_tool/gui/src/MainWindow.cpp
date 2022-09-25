@@ -455,9 +455,6 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                         if(map_project.getProvinceProject().isValidProvinceLabel(prov_id)) {
                             // The selected province
                             auto* province = &map_project.getProvinceProject().getProvinceForLabel(prov_id);
-
-                            // TODO: We should really move preview data out of MapProject
-                            //   too
                             auto preview_data = map_project.getProvinceProject().getPreviewData(province);
 
                             if(action == SelectionManager::Action::SET) {
