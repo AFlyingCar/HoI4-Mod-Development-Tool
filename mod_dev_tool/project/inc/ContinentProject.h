@@ -7,10 +7,9 @@ namespace HMDT::Project {
     /**
      * @brief Defines a province project for HoI4
      */
-    class ContinentProject: public IMapProject, public virtual IContinentProject
-    {
+    class ContinentProject: public IContinentProject {
         public:
-            ContinentProject(IMapProject&);
+            ContinentProject(IRootMapProject&);
 
             virtual ~ContinentProject() = default;
 
@@ -21,6 +20,7 @@ namespace HMDT::Project {
             virtual MaybeVoid export_(const std::filesystem::path&) const noexcept override;
 
             virtual IRootProject& getRootParent() override;
+            virtual const IRootProject& getRootParent() const override;
 
             virtual std::shared_ptr<MapData> getMapData() override;
             virtual const std::shared_ptr<MapData> getMapData() const override;
@@ -29,13 +29,14 @@ namespace HMDT::Project {
 
             virtual bool validateData() override;
 
-            virtual IMapProject& getRootMapParent() override;
+            virtual IRootMapProject& getRootMapParent() override;
+            virtual const IRootMapProject& getRootMapParent() const override;
 
         private:
             virtual ContinentSet& getContinents() override;
 
             //! The parent project
-            IMapProject& m_parent_project;
+            IRootMapProject& m_parent_project;
 
             //! All continents defined for this project
             std::set<std::string> m_continents;

@@ -21,6 +21,7 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
             if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
                 auto& project = opt_project->get();
                 auto& map_project = project.getMapProject();
+                auto& history_project = project.getHistoryProject();
 
                 auto map_data = project.getMapProject().getMapData();
                 auto lmatrix = map_data->getLabelMatrix().lock();
@@ -41,13 +42,15 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
 
                 // If this is a valid province, then select the state that it is
                 //  a part of (if it is a part of one at all, that is)
-                if(map_project.isValidProvinceLabel(label)) {
-                    auto& prov = map_project.getProvinceForLabel(label);
+                if(map_project.getProvinceProject().isValidProvinceLabel(label))
+                {
+                    auto& prov = map_project.getProvinceProject().getProvinceForLabel(label);
 
                     // Make sure we check for if the state ID is valid first so
                     //  that we deselect the state for provinces that aren't in
                     //  one
-                    if(map_project.isValidStateID(prov.state)) {
+                    if(history_project.getStateProject().isValidStateID(prov.state))
+                    {
                         SelectionManager::getInstance().selectState(prov.state);
                     } else {
                         SelectionManager::getInstance().clearStateSelection();
@@ -97,8 +100,8 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
 
                 // If this is a valid province, then select the state that it is
                 //  a part of (if it is a part of one at all, that is)
-                if(map_project.isValidProvinceLabel(label)) {
-                    auto& prov = map_project.getProvinceForLabel(label -1);
+                if(map_project.getProvinceProject().isValidProvinceLabel(label)) {
+                    auto& prov = map_project.getProvinceProject().getProvinceForLabel(label -1);
 
                     // Don't bother checking for if it's valid or not, as
                     //  MapProject will do that for us

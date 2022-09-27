@@ -15,7 +15,7 @@
 
 #include "HoI4Project.h"
 
-HMDT::Project::StateProject::StateProject(MapProject& parent_project):
+HMDT::Project::StateProject::StateProject(IRootHistoryProject& parent_project):
     m_parent_project(parent_project),
     m_available_state_ids(),
     m_states()
@@ -316,18 +316,14 @@ auto HMDT::Project::StateProject::export_(const std::filesystem::path& root) con
     return STATUS_SUCCESS;
 }
 
-void HMDT::Project::StateProject::import(const ShapeFinder& sf, std::shared_ptr<MapData> map_data)
-{
-}
-
 auto HMDT::Project::StateProject::getMapData() -> std::shared_ptr<MapData> {
-    return m_parent_project.getMapData();
+    return getRootParent().getMapProject().getMapData();
 }
 
 auto HMDT::Project::StateProject::getMapData() const
     -> const std::shared_ptr<MapData>
 {
-    return m_parent_project.getMapData();
+    return getRootParent().getMapProject().getMapData();
 }
 
 bool HMDT::Project::StateProject::validateData() {
@@ -335,39 +331,23 @@ bool HMDT::Project::StateProject::validateData() {
     return true;
 }
 
-auto HMDT::Project::StateProject::validateProvinceStateID(StateID province_state_id, ProvinceID province_id)
-    -> MaybeVoid
-{
-    if(province_state_id != -1) {
-        if(!isValidStateID(province_state_id)) {
-            WRITE_WARN("Province has state ID of ", province_state_id, " which is invalid!");
-            return STATUS_PROVINCE_INVALID_STATE_ID;
-        }
-
-        MaybeRef<State> state = getStateForID(province_state_id);
-        return state.andThen([&](auto state_ref) {
-            auto& state = state_ref.get();
-            if(std::find(state.provinces.begin(), state.provinces.end(), province_id) == state.provinces.end())
-            {
-                WRITE_WARN("State ", state.id, " does not contain province #", province_id, "!");
-
-                return STATUS_PROVINCE_NOT_IN_STATE;
-            }
-
-            return STATUS_SUCCESS;
-        });
-    }
-
-    return STATUS_SUCCESS;
-}
-
-
 HMDT::Project::IRootProject& HMDT::Project::StateProject::getRootParent() {
     return m_parent_project.getRootParent();
 }
 
-HMDT::Project::IMapProject& HMDT::Project::StateProject::getRootMapParent() {
-    return m_parent_project.getRootMapParent();
+const HMDT::Project::IRootProject& HMDT::Project::StateProject::getRootParent() const
+{
+    return m_parent_project.getRootParent();
+}
+
+HMDT::Project::IRootHistoryProject& HMDT::Project::StateProject::getRootHistoryParent() noexcept
+{
+    return m_parent_project.getRootHistoryParent();
+}
+
+const HMDT::Project::IRootHistoryProject& HMDT::Project::StateProject::getRootHistoryParent() const noexcept
+{
+    return m_parent_project.getRootHistoryParent();
 }
 
 auto HMDT::Project::StateProject::getStateMap() -> StateMap& {
@@ -388,8 +368,9 @@ void HMDT::Project::StateProject::updateStateIDMatrix() {
     parallelTransform(label_matrix_start, label_matrix_start + getMapData()->getMatrixSize(),
                       state_id_matrix.get(),
                       [this](uint32_t prov_id) -> uint32_t {
-                          if(m_parent_project.isValidProvinceLabel(prov_id)) {
-                              return m_parent_project.getProvinceForLabel(prov_id).state;
+                          if(getRootParent().getMapProject().getProvinceProject().isValidProvinceLabel(prov_id))
+                          {
+                              return getRootParent().getMapProject().getProvinceProject().getProvinceForLabel(prov_id).state;
                           } else {
                               WRITE_WARN("Invalid province ID ", prov_id,
                                          " detected when building state id matrix. Treating as though there's no state here.");
@@ -440,7 +421,7 @@ auto HMDT::Project::StateProject::addNewState(const std::vector<uint32_t>& provi
     std::transform(province_ids.begin(), province_ids.end(),
                    std::back_inserter(provinces),
                    [this](uint32_t prov_id) -> std::reference_wrapper<Province> {
-                       return std::ref(m_parent_project.getProvinceForLabel(prov_id));
+                       return std::ref(getRootParent().getMapProject().getProvinceProject().getProvinceForLabel(prov_id));
                    });
 
     // Increment by 1 because we do not want 0 to be a state ID
@@ -454,7 +435,7 @@ auto HMDT::Project::StateProject::addNewState(const std::vector<uint32_t>& provi
 
     // Make sure that the provinces are decoupled from their original state
     for(auto&& prov : provinces) {
-        m_parent_project.removeProvinceFromState(prov, false);
+        getRootParent().getMapProject().removeProvinceFromState(prov, false);
         prov.get().state = id;
     }
 

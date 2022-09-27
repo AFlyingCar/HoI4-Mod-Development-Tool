@@ -107,12 +107,13 @@ void HMDT::GUI::GL::ProvinceRenderingView::render() {
                     // We only have one selection here, but do a loop anyway in case
                     //   I change my mind on doing that later
                     for(auto&& selection_info : selections) {
-                        if(!map_project.isValidProvinceLabel(selection_info.id)) {
+                        if(!map_project.getProvinceProject().isValidProvinceLabel(selection_info.id))
+                        {
                             WRITE_WARN("Unable to render adjacency for invalid province ID ", selection_info.id);
                             continue;
                         }
 
-                        const auto& selection = map_project.getProvinceForLabel(selection_info.id);
+                        const auto& selection = map_project.getProvinceProject().getProvinceForLabel(selection_info.id);
 
                         adjacent_ids.insert(selection.adjacent_provinces.begin(),
                                             selection.adjacent_provinces.end());

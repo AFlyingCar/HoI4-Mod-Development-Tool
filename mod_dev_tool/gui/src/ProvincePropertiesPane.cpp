@@ -168,7 +168,7 @@ void HMDT::GUI::ProvincePropertiesPane::buildContinentField() {
             if(auto opt_project = Driver::getInstance().getProject(); opt_project)
             {
                 auto& map_project = opt_project->get().getMapProject();
-                const auto& continents = map_project.getContinentList();
+                const auto& continents = map_project.getContinentProject().getContinentList();
 
                 Gtk::Dialog add_dialog("Add a continent");
                 Gtk::Entry continent_name_entry;
@@ -227,7 +227,7 @@ void HMDT::GUI::ProvincePropertiesPane::buildContinentField() {
             if(auto opt_project = Driver::getInstance().getProject(); opt_project)
             {
                 auto& map_project = opt_project->get().getMapProject();
-                const auto& continents = map_project.getContinentList();
+                const auto& continents = map_project.getContinentProject().getContinentList();
 
                 Gtk::Dialog rem_dialog("Remove a Continent");
                 Gtk::Entry continent_name_entry;
@@ -290,10 +290,10 @@ void HMDT::GUI::ProvincePropertiesPane::buildStateCreationButton() {
 
     m_create_state_button->signal_clicked().connect([]() {
         if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
-            auto& map_project = opt_project->get().getMapProject();
+            auto& history_project = opt_project->get().getHistoryProject();
 
             auto selected = SelectionManager::getInstance().getSelectedProvinceLabels();
-            auto id = map_project.getStateProject().addNewState(std::vector<uint32_t>(selected.begin(),
+            auto id = history_project.getStateProject().addNewState(std::vector<uint32_t>(selected.begin(),
                                                                                       selected.end()));
             SelectionManager::getInstance().selectState(id);
 
@@ -408,7 +408,7 @@ void HMDT::GUI::ProvincePropertiesPane::rebuildContinentMenu(const std::set<std:
 void HMDT::GUI::ProvincePropertiesPane::onProjectOpened() {
     if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
         auto& map_project = opt_project->get().getMapProject();
-        const auto& continents = map_project.getContinentList();
+        const auto& continents = map_project.getContinentProject().getContinentList();
 
         rebuildContinentMenu(continents);
 

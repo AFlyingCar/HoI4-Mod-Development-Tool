@@ -11,6 +11,7 @@ add_library(project STATIC
     src/StateProject.cpp
     src/ContinentProject.cpp
     src/HeightMapProject.cpp
+    src/HistoryProject.cpp
 )
 
 target_include_directories(project PUBLIC inc)

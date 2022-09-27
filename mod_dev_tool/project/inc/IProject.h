@@ -13,6 +13,8 @@
 # include "Maybe.h"
 # include "Types.h"
 
+# include "Terrain.h"
+
 // Forward declarations
 namespace HMDT {
     class MapData;
@@ -38,6 +40,9 @@ namespace HMDT::Project {
         virtual MaybeVoid export_(const std::filesystem::path&) const noexcept = 0;
 
         virtual IRootProject& getRootParent() = 0;
+        virtual const IRootProject& getRootParent() const = 0;
+
+        virtual bool validateData() = 0;
 
         void setPromptCallback(const PromptCallback&);
         void resetPromptCallback();
@@ -53,22 +58,17 @@ namespace HMDT::Project {
             PromptCallback m_prompt_callback = DEFAULT_PROMPT_CALLBACK;
     };
 
+////////////////////////////////////////////////////////////////////////////////
+// Forward declarations
+    struct IRootMapProject;
+    struct IRootHistoryProject;
+
+////////////////////////////////////////////////////////////////////////////////
+// Map Projects
+
     /**
-     * @brief Interface for the root of any project hierarchy
+     * @brief The base project class used by all Map-related projects
      */
-    struct IRootProject: public IProject {
-        virtual const std::filesystem::path& getPath() const = 0;
-        virtual std::filesystem::path getRoot() const = 0;
-
-        virtual std::filesystem::path getMetaRoot() const = 0;
-        virtual std::filesystem::path getInputsRoot() const = 0;
-        virtual std::filesystem::path getMapRoot() const = 0;
-        virtual std::filesystem::path getDebugRoot() const = 0;
-        virtual std::filesystem::path getExportRoot() const = 0;
-
-        virtual IRootProject& getRootParent() override final;
-    };
-
     struct IMapProject: public IProject {
         virtual ~IMapProject() = default;
 
@@ -77,12 +77,14 @@ namespace HMDT::Project {
 
         virtual void import(const ShapeFinder&, std::shared_ptr<MapData>) = 0;
 
-        virtual bool validateData() = 0;
-
-        virtual IMapProject& getRootMapParent() = 0;
+        virtual IRootMapProject& getRootMapParent() = 0;
+        virtual const IRootMapProject& getRootMapParent() const = 0;
     };
 
-    struct IProvinceProject: public IProject {
+    /**
+     * @brief The interface for the ProvinceProject
+     */
+    struct IProvinceProject: public IMapProject {
         using ProvinceDataPtr = std::shared_ptr<unsigned char[]>;
 
         bool isValidProvinceLabel(uint32_t) const;
@@ -97,23 +99,19 @@ namespace HMDT::Project {
         virtual const ProvinceList& getProvinces() const = 0;
     };
 
-    struct IStateProject: public IProject {
-        using StateMap = std::map<uint32_t, State>;
+    /**
+     * @brief The interface for the HeightMapProject
+     */
+    struct IHeightMapProject: public IMapProject {
+        virtual ~IHeightMapProject() = default;
 
-        virtual ~IStateProject() = default;
-
-        bool isValidStateID(StateID) const;
-
-        MaybeRef<const State> getStateForID(StateID) const;
-        MaybeRef<State> getStateForID(StateID);
-
-        virtual const StateMap& getStates() const = 0;
-
-        protected:
-            virtual StateMap& getStateMap() = 0;
+        virtual MaybeVoid loadFile(const std::filesystem::path&) noexcept = 0;
     };
 
-    struct IContinentProject: public IProject {
+    /**
+     * @brief The interface for the ContinentProject
+     */
+    struct IContinentProject: public IMapProject {
         using ContinentSet = std::set<std::string>;
 
         virtual ~IContinentProject() = default;
@@ -126,6 +124,114 @@ namespace HMDT::Project {
 
         protected:
             virtual ContinentSet& getContinents() = 0;
+    };
+
+////////////////////////////////////////////////////////////////////////////////
+// History Projects
+    struct IHistoryProject: public IProject {
+        virtual ~IHistoryProject() = default;
+
+        virtual IRootHistoryProject& getRootHistoryParent() noexcept = 0;
+        virtual const IRootHistoryProject& getRootHistoryParent() const noexcept = 0;
+
+        virtual bool validateData() = 0;
+    };
+
+    /**
+     * @brief The interface for StateProject
+     */
+    struct IStateProject: public IHistoryProject {
+        using StateMap = std::map<uint32_t, State>;
+
+        virtual ~IStateProject() = default;
+
+        bool isValidStateID(StateID) const;
+
+        MaybeRef<const State> getStateForID(StateID) const;
+        MaybeRef<State> getStateForID(StateID);
+
+        virtual const StateMap& getStates() const = 0;
+
+        virtual StateID addNewState(const std::vector<uint32_t>&) = 0;
+        virtual void removeState(StateID) = 0;
+
+        virtual State& getStateForIterator(StateMap::const_iterator) = 0;
+        virtual const State& getStateForIterator(StateMap::const_iterator) const = 0;
+
+        virtual void updateStateIDMatrix() = 0;
+
+        virtual MaybeVoid addProvinceToState(StateID, ProvinceID) = 0;
+        virtual MaybeVoid removeProvinceFromState(StateID, ProvinceID) = 0;
+
+        protected:
+            virtual StateMap& getStateMap() = 0;
+    };
+
+////////////////////////////////////////////////////////////////////////////////
+// Root Projects (Level 2)
+
+    /**
+     * @brief The interface for the root of all map-based projects
+     */
+    struct IRootMapProject: public IMapProject {
+        virtual ~IRootMapProject() = default;
+
+        virtual std::shared_ptr<MapData> getMapData() = 0;
+        virtual const std::shared_ptr<MapData> getMapData() const = 0;
+
+        virtual void moveProvinceToState(uint32_t, StateID) = 0;
+        virtual void moveProvinceToState(Province&, StateID) = 0;
+        virtual void removeProvinceFromState(Province&, bool = true) = 0;
+
+        virtual void calculateCoastalProvinces(bool = false) = 0;
+
+        // TODO: This should be its own sub-project
+        virtual const std::vector<Terrain>& getTerrains() const = 0;
+
+        ////////////////////////////////////////////////////////////////////////
+
+        virtual IProvinceProject& getProvinceProject() noexcept = 0;
+        virtual const IProvinceProject& getProvinceProject() const noexcept = 0;
+
+        virtual IHeightMapProject& getHeightMapProject() noexcept = 0;
+        virtual const IHeightMapProject& getHeightMapProject() const noexcept = 0;
+
+        virtual IContinentProject& getContinentProject() noexcept = 0;
+        virtual const IContinentProject& getContinentProject() const noexcept = 0;
+    };
+
+    struct IRootHistoryProject: public IHistoryProject {
+        virtual ~IRootHistoryProject() = default;
+
+        virtual IStateProject& getStateProject() noexcept = 0;
+        virtual const IStateProject& getStateProject() const noexcept = 0;
+    };
+
+////////////////////////////////////////////////////////////////////////////////
+// Root Project (Level 1)
+
+    /**
+     * @brief Interface for the root of any project hierarchy
+     */
+    struct IRootProject: public IProject {
+        virtual const std::filesystem::path& getPath() const = 0;
+        virtual std::filesystem::path getRoot() const = 0;
+
+        virtual std::filesystem::path getMetaRoot() const = 0;
+        virtual std::filesystem::path getInputsRoot() const = 0;
+        virtual std::filesystem::path getMapRoot() const = 0;
+        virtual std::filesystem::path getHistoryRoot() const = 0;
+        virtual std::filesystem::path getDebugRoot() const = 0;
+        virtual std::filesystem::path getExportRoot() const = 0;
+
+        virtual IRootProject& getRootParent() override final;
+        virtual const IRootProject& getRootParent() const override final;
+
+        virtual IRootMapProject& getMapProject() noexcept = 0;
+        virtual const IRootMapProject& getMapProject() const noexcept = 0;
+
+        virtual IRootHistoryProject& getHistoryProject() noexcept = 0;
+        virtual const IRootHistoryProject& getHistoryProject() const noexcept = 0;
     };
 }
 

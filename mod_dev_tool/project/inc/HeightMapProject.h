@@ -9,9 +9,9 @@ namespace HMDT::Project {
     /**
      * @brief Defines a province project for HoI4
      */
-    class HeightMapProject: public IMapProject {
+    class HeightMapProject: public IHeightMapProject {
         public:
-            HeightMapProject(IMapProject&);
+            HeightMapProject(IRootMapProject&);
 
             virtual ~HeightMapProject() = default;
 
@@ -20,6 +20,7 @@ namespace HMDT::Project {
             virtual MaybeVoid export_(const std::filesystem::path&) const noexcept override;
 
             virtual IRootProject& getRootParent() override;
+            virtual const IRootProject& getRootParent() const override;
 
             virtual std::shared_ptr<MapData> getMapData() override;
             virtual const std::shared_ptr<MapData> getMapData() const override;
@@ -28,15 +29,16 @@ namespace HMDT::Project {
 
             virtual bool validateData() override;
 
-            virtual IMapProject& getRootMapParent() override;
+            virtual IRootMapProject& getRootMapParent() override;
+            virtual const IRootMapProject& getRootMapParent() const override;
 
-            MaybeVoid loadFile(const std::filesystem::path&) noexcept;
+            virtual MaybeVoid loadFile(const std::filesystem::path&) noexcept override;
 
             MonadOptionalRef<const BitMap2> getBitMap() const;
 
         private:
             //! The parent project
-            IMapProject& m_parent_project;
+            IRootMapProject& m_parent_project;
 
             std::shared_ptr<BitMap2> m_heightmap_bmp;
     };

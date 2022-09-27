@@ -17,7 +17,6 @@
 
 HMDT::Project::MapProject::MapProject(IProject& parent_project):
     m_provinces_project(*this),
-    m_state_project(*this),
     m_continent_project(*this),
     m_heightmap_project(*this),
     m_map_data(new MapData),
@@ -49,9 +48,6 @@ auto HMDT::Project::MapProject::save(const std::filesystem::path& path)
 
     auto continents_result = m_continent_project.save(path);
     RETURN_IF_ERROR(continents_result);
-
-    auto states_result = m_state_project.save(path);
-    RETURN_IF_ERROR(states_result);
 
     auto heightmap_result = m_heightmap_project.save(path);
     RETURN_IF_ERROR(heightmap_result);
@@ -125,19 +121,11 @@ auto HMDT::Project::MapProject::load(const std::filesystem::path& path)
         RETURN_IF_ERROR(result);
     }
 
-    if(auto result = m_state_project.load(path);
-            result.error() != std::errc::no_such_file_or_directory)
-    {
-        RETURN_IF_ERROR(result);
-    }
-
     if(auto result = m_heightmap_project.load(path);
             result.error() != std::errc::no_such_file_or_directory)
     {
         RETURN_IF_ERROR(result);
     }
-
-    RETURN_ERROR_IF(!validateData(), STATUS_PROJECT_VALIDATION_FAILED);
 
     return STATUS_SUCCESS;
 }
@@ -164,11 +152,6 @@ auto HMDT::Project::MapProject::export_(const std::filesystem::path& root) const
     RETURN_IF_ERROR(result);
 
     result = m_continent_project.export_(root);
-    RETURN_IF_ERROR(result);
-
-    // TODO: States are actually part of history in HoI4, so we should move this
-    //   project to a new HistoryProject class instead of MapProject.
-    result = m_state_project.export_(root / "../history/states");
     RETURN_IF_ERROR(result);
 
     result = m_heightmap_project.export_(root);
@@ -273,6 +256,35 @@ auto HMDT::Project::MapProject::export_(const std::filesystem::path& root) const
     return STATUS_SUCCESS;
 }
 
+auto HMDT::Project::MapProject::validateProvinceStateID(StateID province_state_id,
+                                                        ProvinceID province_id)
+    -> MaybeVoid
+{
+    if(province_state_id != -1) {
+        const auto& state_project = getRootParent().getHistoryProject().getStateProject();
+
+        if(!state_project.isValidStateID(province_state_id)) {
+            WRITE_WARN("Province has state ID of ", province_state_id, " which is invalid!");
+            return STATUS_PROVINCE_INVALID_STATE_ID;
+        }
+
+        MaybeRef<const State> state = state_project.getStateForID(province_state_id);
+        return state.andThen([&](auto state_ref) {
+            auto& state = state_ref.get();
+            if(std::find(state.provinces.begin(), state.provinces.end(), province_id) == state.provinces.end())
+            {
+                WRITE_WARN("State ", state.id, " does not contain province #", province_id, "!");
+
+                return STATUS_PROVINCE_NOT_IN_STATE;
+            }
+
+            return STATUS_SUCCESS;
+        });
+    }
+
+    return STATUS_SUCCESS;
+}
+
 bool HMDT::Project::MapProject::validateData() {
     WRITE_DEBUG("Validating all project data.");
 
@@ -281,7 +293,7 @@ bool HMDT::Project::MapProject::validateData() {
     success = success && m_provinces_project.validateData();
 
     for(auto&& province : m_provinces_project.getProvinces()) {
-        auto result = m_state_project.validateProvinceStateID(province.state, province.id);
+        auto result = validateProvinceStateID(province.state, province.id);
 
         if(IS_FAILURE(result)) {
             if(prog_opts.fix_warnings_on_load) {
@@ -290,7 +302,7 @@ bool HMDT::Project::MapProject::validateData() {
                     WRITE_INFO("Setting province state ID to -1.");
                     province.state = -1;
                 } else if(result.error() == STATUS_PROVINCE_NOT_IN_STATE) {
-                    getStateForID(province.state).andThen([&](auto prov_state_ref)
+                    getRootParent().getHistoryProject().getStateProject().getStateForID(province.state).andThen([&](auto prov_state_ref)
                     {
                         auto& prov_state = prov_state_ref.get();
 
@@ -306,8 +318,8 @@ bool HMDT::Project::MapProject::validateData() {
 
                     WRITE_INFO("Searching for any state that currently has this province...");
                     std::vector<ProvinceID>::const_iterator province_it;
-                    auto it = std::find_if(getStates().begin(),
-                                           getStates().end(),
+                    auto it = std::find_if(getRootParent().getHistoryProject().getStateProject().getStates().begin(),
+                                           getRootParent().getHistoryProject().getStateProject().getStates().end(),
                                            [&province, &province_it](auto& id_state_pair)
                                            {
                                                return (province_it = std::find(id_state_pair.second.provinces.begin(),
@@ -315,14 +327,16 @@ bool HMDT::Project::MapProject::validateData() {
                                                                                province.id)) != id_state_pair.second.provinces.end();
                                            });
 
-                    if(it == getStates().end()) {
+                    if(it == getRootParent().getHistoryProject().getStateProject().getStates().end()) {
                         WRITE_INFO("No states found containing this province.");
                     } else {
                         WRITE_INFO("Found state ", it->second.id, " that contains province ", province.id, ". Removing the province from the state.");
-                        State& state = m_state_project.getStateForIterator(it);
+                        State& state = getRootParent().getHistoryProject().getStateProject().getStateForIterator(it);
                         state.provinces.erase(province_it);
                     }
                 }
+            } else {
+                success = false;
             }
 
             continue;
@@ -336,7 +350,16 @@ HMDT::Project::IRootProject& HMDT::Project::MapProject::getRootParent() {
     return m_parent_project.getRootParent();
 }
 
-HMDT::Project::IMapProject& HMDT::Project::MapProject::getRootMapParent() {
+const HMDT::Project::IRootProject& HMDT::Project::MapProject::getRootParent() const
+{
+    return m_parent_project.getRootParent();
+}
+
+HMDT::Project::IRootMapProject& HMDT::Project::MapProject::getRootMapParent() {
+    return *this;
+}
+
+const HMDT::Project::IRootMapProject& HMDT::Project::MapProject::getRootMapParent() const {
     return *this;
 }
 
@@ -360,22 +383,28 @@ void HMDT::Project::MapProject::import(const ShapeFinder& sf,
     }
 }
 
-auto HMDT::Project::MapProject::getProvinceProject() -> ProvinceProject& {
+auto HMDT::Project::MapProject::getProvinceProject() noexcept
+    -> ProvinceProject&
+{
     return m_provinces_project;
 }
 
-auto HMDT::Project::MapProject::getProvinceProject() const
+auto HMDT::Project::MapProject::getProvinceProject() const noexcept
     -> const ProvinceProject&
 {
     return m_provinces_project;
 }
 
-auto HMDT::Project::MapProject::getStateProject() -> StateProject& {
-    return m_state_project;
+auto HMDT::Project::MapProject::getContinentProject() noexcept
+    -> ContinentProject&
+{
+    return m_continent_project;
 }
 
-auto HMDT::Project::MapProject::getStateProject() const -> const StateProject& {
-    return m_state_project;
+auto HMDT::Project::MapProject::getContinentProject() const noexcept
+    -> const ContinentProject&
+{
+    return m_continent_project;
 }
 
 auto HMDT::Project::MapProject::getMapData() -> std::shared_ptr<MapData> {
@@ -388,20 +417,13 @@ auto HMDT::Project::MapProject::getMapData() const
     return m_map_data;
 }
 
-auto HMDT::Project::MapProject::getContinentList() const -> const ContinentSet&
+auto HMDT::Project::MapProject::getHeightMapProject() noexcept
+    -> HeightMapProject&
 {
-    return m_continent_project.getContinentList();
-}
-
-auto HMDT::Project::MapProject::getContinents() -> ContinentSet& {
-    return m_continent_project.getContinents();
-}
-
-auto HMDT::Project::MapProject::getHeightMapProject() -> HeightMapProject& {
     return m_heightmap_project;
 }
 
-auto HMDT::Project::MapProject::getHeightMapProject() const
+auto HMDT::Project::MapProject::getHeightMapProject() const noexcept
     -> const HeightMapProject&
 {
     return m_heightmap_project;
@@ -422,7 +444,7 @@ auto HMDT::Project::MapProject::getTerrains() const
 void HMDT::Project::MapProject::moveProvinceToState(uint32_t prov_id,
                                                     StateID state_id)
 {
-    moveProvinceToState(getProvinceForLabel(prov_id), state_id);
+    moveProvinceToState(getProvinceProject().getProvinceForLabel(prov_id), state_id);
 }
 
 /**
@@ -436,9 +458,9 @@ void HMDT::Project::MapProject::moveProvinceToState(Province& province,
 {
     removeProvinceFromState(province);
     province.state = state_id;
-    m_state_project.addProvinceToState(state_id, province.id);
+    getRootParent().getHistoryProject().getStateProject().addProvinceToState(state_id, province.id);
 
-    m_state_project.updateStateIDMatrix();
+    getRootParent().getHistoryProject().getStateProject().updateStateIDMatrix();
 }
 
 /**
@@ -450,54 +472,14 @@ void HMDT::Project::MapProject::removeProvinceFromState(Province& province,
                                                         bool update_state_id_matrix)
 {
     // Remove from its old state
-    if(auto prov_state_id = province.state; isValidStateID(prov_state_id)) {
-        m_state_project.removeProvinceFromState(prov_state_id, province.id);
+    if(auto prov_state_id = province.state;
+            getRootParent().getHistoryProject().getStateProject().isValidStateID(prov_state_id))
+    {
+        getRootParent().getHistoryProject().getStateProject().removeProvinceFromState(prov_state_id, province.id);
     }
     province.state = -1;
 
-    if(update_state_id_matrix) m_state_project.updateStateIDMatrix();
-}
-
-/**
- * @brief Gets province preview data for the given ID
- *
- * @param id
- *
- * @return The preview data, or nullptr if the ID does not exist
- */
-auto HMDT::Project::MapProject::getPreviewData(ProvinceID id) -> ProvinceDataPtr
-{
-    return m_provinces_project.getPreviewData(id);
-}
-
-/**
- * @brief Gets the preview data for the given province. If no data currently
- *        exists, construct it and cache it.
- *
- * @param province_ptr
- *
- * @return The preview data. This method should never return nullptr
- */
-auto HMDT::Project::MapProject::getPreviewData(const Province* province_ptr)
-    -> ProvinceDataPtr
-{
-    return m_provinces_project.getPreviewData(province_ptr);
-}
-
-auto HMDT::Project::MapProject::getProvinces() const -> const ProvinceList& {
-    return m_provinces_project.getProvinces();
-}
-
-auto HMDT::Project::MapProject::getProvinces() -> ProvinceList& {
-    return m_provinces_project.getProvinces();
-}
-
-auto HMDT::Project::MapProject::getStates() const -> const StateMap& {
-    return m_state_project.getStates();
-}
-
-auto HMDT::Project::MapProject::getStateMap() -> StateMap& {
-    return m_state_project.getStateMap(StateProject::Token{});
+    if(update_state_id_matrix) getRootParent().getHistoryProject().getStateProject().updateStateIDMatrix();
 }
 
 /**
@@ -509,7 +491,7 @@ auto HMDT::Project::MapProject::getStateMap() -> StateMap& {
  */
 void HMDT::Project::MapProject::calculateCoastalProvinces(bool dry) {
     WRITE_INFO("Calculating coastal provinces...");
-    for(auto& province : getProvinces()) {
+    for(auto& province : getProvinceProject().getProvinces()) {
         // Only allow LAND provinces to be auto-marked as coastal
         //   I'm not actually sure if the game will allow LAKE and SEA to be
         //   coasts, but the cases where we would want that should be rare

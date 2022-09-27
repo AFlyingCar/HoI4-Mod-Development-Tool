@@ -4,7 +4,7 @@
 #include "Logger.h"
 
 HMDT::Action::CreateRemoveContinentAction::CreateRemoveContinentAction(
-        Project::MapProject& map_project,
+        Project::IRootMapProject& map_project,
         const std::string& continent_name,
         Type type):
     m_map_project(map_project),
@@ -50,25 +50,25 @@ bool HMDT::Action::CreateRemoveContinentAction::undoAction(const Callback& callb
 }
 
 bool HMDT::Action::CreateRemoveContinentAction::create() {
-    if(m_map_project.doesContinentExist(m_continent_name)) {
+    if(m_map_project.getContinentProject().doesContinentExist(m_continent_name)) {
         WRITE_ERROR("Continent ", m_continent_name, " does not exist.");
         return false;
     }
 
     WRITE_DEBUG("Creating continent ", m_continent_name);
-    m_map_project.addNewContinent(m_continent_name);
+    m_map_project.getContinentProject().addNewContinent(m_continent_name);
 
     return true;
 }
 
 bool HMDT::Action::CreateRemoveContinentAction::remove() {
-    if(!m_map_project.doesContinentExist(m_continent_name)) {
+    if(!m_map_project.getContinentProject().doesContinentExist(m_continent_name)) {
         WRITE_ERROR("Continent ", m_continent_name, " does not exist.");
         return false;
     }
 
     WRITE_DEBUG("Removing continent ", m_continent_name);
-    m_map_project.removeContinent(m_continent_name);
+    m_map_project.getContinentProject().removeContinent(m_continent_name);
 
     return true;
 }

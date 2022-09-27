@@ -24,7 +24,7 @@ namespace HMDT::GUI {
              * @brief Holds information about the currently selected province
              */
             struct SelectionInfo {
-                [[deprecated]] Project::MapProject::ProvinceDataPtr data;
+                [[deprecated]] Project::IProvinceProject::ProvinceDataPtr data;
                 [[deprecated]] BoundingBox bounding_box;
                 ProvinceID id;
             };

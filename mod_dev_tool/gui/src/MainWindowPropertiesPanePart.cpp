@@ -81,7 +81,7 @@ Gtk::Frame* HMDT::GUI::MainWindowPropertiesPanePart::buildPropertiesPane(Gtk::Pa
             auto* province = &selected.begin()->get();
             auto label = province->id;
             m_province_properties_pane->setProvince(province,
-                                                    map_project.getPreviewData(label),
+                                                    map_project.getProvinceProject().getPreviewData(label),
                                                     selected.size() > 1);
         }
     }
