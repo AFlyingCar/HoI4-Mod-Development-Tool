@@ -90,7 +90,7 @@ auto HMDT::Project::ProvinceProject::export_(const std::filesystem::path& root) 
     }
 
     // Next, export the definition.csv file.
-    result = saveProvinceData(root, false);
+    result = saveProvinceData(root, true);
     RETURN_IF_ERROR(result);
 
     // Next, export supply_nodes.txt and railways.txt
@@ -203,18 +203,22 @@ auto HMDT::Project::ProvinceProject::saveShapeLabels(const std::filesystem::path
  *        would be loaded by HoI4
  *
  * @param root The root where the csv file should be written to
- * @param include_extra_data Whether or not to include extra (i.e: non-HoI4) data,
- *                           or only data that is used by HoI4
+ * @param is_export Whether or not to include extra (i.e: non-HoI4) data, or
+ *                  only data that is used by HoI4
  *
  * @return True if the file was able to be successfully written, false otherwise.
  */
 auto HMDT::Project::ProvinceProject::saveProvinceData(const std::filesystem::path& root,
-                                                      bool include_extra_data) const noexcept
+                                                      bool is_export) const noexcept
     -> MaybeVoid
 {
     auto path = root / PROVINCEDATA_FILENAME;
 
     if(std::ofstream out(path); out) {
+        const auto& continents = getRootMapParent().getContinentProject().getContinentList();
+
+        bool assume_unknown_continents = false;
+
         // Write one line to the CSV for each province
         for(auto&& province : m_provinces) {
             out << province.id << ';'
@@ -223,15 +227,46 @@ auto HMDT::Project::ProvinceProject::saveProvinceData(const std::filesystem::pat
                 << static_cast<int>(province.unique_color.b) << ';'
                 << province.type << ';'
                 << (province.coastal ? "true" : "false")
-                << ';' << province.terrain << ';'
-                << province.continent << ';';
+                << ';' << province.terrain << ';';
 
-            if(include_extra_data) {
-                out << province.bounding_box.bottom_left.x << ';'
+            if(!is_export) {
+                out << province.continent << ';'
+                    << province.bounding_box.bottom_left.x << ';'
                     << province.bounding_box.bottom_left.y << ';'
                     << province.bounding_box.top_right.x << ';'
                     << province.bounding_box.top_right.y << ';'
                     << province.state;
+            } else {
+                auto index = getIndexInSet(continents, province.continent);
+                if(IS_FAILURE(index)) {
+                    // Make sure we don't prompt the user for every single issue
+                    if(!assume_unknown_continents) {
+                        WRITE_WARN("Unknown continent '", province.continent,
+                                   "' detected for province ID=", province.id);
+
+                        std::stringstream ss;
+                        ss << "An unknown continent '" << province.continent
+                           << "' was detected for province ID=" << province.id
+                           << ".\nContinuing will assume all unknown "
+                              "continents are blank/0.";
+                        auto result = prompt(ss.str(),
+                                             {"Continue", "Stop Exporting"},
+                                             PromptType::ERROR);
+
+                        if(IS_FAILURE(result) || *result == 1) {
+                            RETURN_IF_ERROR(index);
+                        } else {
+                            assume_unknown_continents = true;
+                        }
+                    }
+
+                    index = 0;
+                } else {
+                    // Continents are 1 based, so convert the index to the ID
+                    ++(*index);
+                }
+
+                out << *index;
             }
 
             out << std::endl;
