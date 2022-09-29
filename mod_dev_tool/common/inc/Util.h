@@ -562,6 +562,15 @@ namespace HMDT {
         return ss.str();
     }
 
+    template<typename T>
+    Maybe<size_t> getIndexInSet(const std::set<T>& set, const T& elem) {
+        if(auto it = set.find(elem); it != set.end()) {
+            return std::distance(set.begin(), it);
+        } else {
+            RETURN_ERROR(STATUS_VALUE_NOT_FOUND);
+        }
+    }
+
     /**
      * @brief Runs the given function when the current scope ends
      */
