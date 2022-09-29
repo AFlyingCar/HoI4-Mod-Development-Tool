@@ -228,7 +228,9 @@ TEST(ProjectTests, HeightMapProjectLoadWithNon8BPPImage) {
 
     // First test that it fails if the user chooses not to convert the image
     heightmap_project.setPromptCallback(
-        [](const std::string& message, const std::vector<std::string>& opts)
+        [](const std::string& message,
+           const std::vector<std::string>& opts,
+           const HMDT::Project::IProject::PromptType&)
             -> uint32_t
         {
             WRITE_INFO("Mocking prompt asking: '", message, "': Response=1");
@@ -238,7 +240,9 @@ TEST(ProjectTests, HeightMapProjectLoadWithNon8BPPImage) {
     ASSERT_STATUS(res, HMDT::STATUS_INVALID_BIT_DEPTH);
 
     heightmap_project.setPromptCallback(
-        [](const std::string& message, const std::vector<std::string>& opts)
+        [](const std::string& message,
+           const std::vector<std::string>& opts,
+           const HMDT::Project::IProject::PromptType&)
             -> uint32_t
         {
             WRITE_INFO("Mocking prompt asking: '", message, "': Response=-1");
@@ -248,7 +252,9 @@ TEST(ProjectTests, HeightMapProjectLoadWithNon8BPPImage) {
     ASSERT_STATUS(res, HMDT::STATUS_UNEXPECTED_RESPONSE);
 
     heightmap_project.setPromptCallback(
-        [](const std::string& message, const std::vector<std::string>& opts)
+        [](const std::string& message,
+           const std::vector<std::string>& opts,
+           const HMDT::Project::IProject::PromptType&)
             -> uint32_t
         {
             WRITE_INFO("Mocking prompt asking: '", message, "': Response=0");
