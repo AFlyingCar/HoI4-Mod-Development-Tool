@@ -3,9 +3,8 @@
 
 #include "StatusCodes.h"
 
-namespace HMDT::Project {
-    IProject::PromptCallback IProject::DEFAULT_PROMPT_CALLBACK =
-        [](auto&&...) { RETURN_ERROR(STATUS_CALLBACK_NOT_REGISTERED); };
+HMDT::Project::IProject::IProject() {
+    resetPromptCallback();
 }
 
 /**
@@ -22,7 +21,15 @@ void HMDT::Project::IProject::setPromptCallback(const PromptCallback& callback)
  * @brief Resets the prompt callback
  */
 void HMDT::Project::IProject::resetPromptCallback() {
-    m_prompt_callback = DEFAULT_PROMPT_CALLBACK;
+    m_prompt_callback = [this](auto&&... args) {
+        return defaultPromptCallback(args...);
+    };
+}
+
+auto HMDT::Project::IProject::getPromptCallback() const noexcept
+    -> const PromptCallback&
+{
+    return m_prompt_callback;
 }
 
 /**
@@ -39,10 +46,23 @@ void HMDT::Project::IProject::resetPromptCallback() {
  *         returned instead.
  */
 auto HMDT::Project::IProject::prompt(const std::string& prompt,
-                                     const std::vector<std::string>& opts)
+                                     const std::vector<std::string>& opts,
+                                     const PromptType& type) const
     -> Maybe<uint32_t>
 {
-    return m_prompt_callback(prompt, opts);
+    return m_prompt_callback(prompt, opts, type);
+}
+
+auto HMDT::Project::IProject::defaultPromptCallback(const std::string& prompt,
+                                                    const std::vector<std::string>& opts,
+                                                    const PromptType& type)
+    -> Maybe<uint32_t>
+{
+    if(&getRootParent() != this) {
+        return getRootParent().getPromptCallback()(prompt, opts, type);
+    }
+
+    RETURN_ERROR(STATUS_CALLBACK_NOT_REGISTERED);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

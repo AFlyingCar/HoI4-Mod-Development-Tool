@@ -315,9 +315,12 @@ auto HMDT::GUI::addHeightMap(Window& window,
 
         project.getMapProject().getHeightMapProject().setPromptCallback(
             [&window](const std::string& message,
-                      const std::vector<std::string>& opts)
+                      const std::vector<std::string>& opts,
+                      const Project::IProject::PromptType& /*type*/)
                 -> uint32_t
             {
+                // TODO: We should make use of the PromptType here
+
                 // Create a dialog with no buttons, as we will just add the ones
                 //   specified in opts.
                 Gtk::MessageDialog dialog(window,

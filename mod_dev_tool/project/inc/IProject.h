@@ -28,10 +28,24 @@ namespace HMDT::Project {
      * @brief The interface for a project
      */
     struct IProject {
+        /**
+         * @brief Defines the different prompt types that might be given to the
+         *        PromptCallback
+         */
+        enum class PromptType {
+            INFO,
+            WARN,
+            ERROR,
+            ALERT,
+            QUESTION,
+        };
+
         //! Callback type for prompting the user with some question
         using PromptCallback = std::function<Maybe<uint32_t>(const std::string&,
-                                                             const std::vector<std::string>&)>;
+                                                             const std::vector<std::string>&,
+                                                             const PromptType&)>;
 
+        IProject();
         virtual ~IProject() = default;
 
         virtual MaybeVoid save(const std::filesystem::path&) = 0;
@@ -49,13 +63,18 @@ namespace HMDT::Project {
 
         protected:
             Maybe<uint32_t> prompt(const std::string&,
-                                   const std::vector<std::string>&);
+                                   const std::vector<std::string>&,
+                                   const PromptType& = PromptType::INFO) const;
+
+            const PromptCallback& getPromptCallback() const noexcept;
 
         private:
-            static PromptCallback DEFAULT_PROMPT_CALLBACK;
+            Maybe<uint32_t> defaultPromptCallback(const std::string&,
+                                                  const std::vector<std::string>&,
+                                                  const PromptType&);
 
             //! A generic callback which can be used to ask the user a question.
-            PromptCallback m_prompt_callback = DEFAULT_PROMPT_CALLBACK;
+            PromptCallback m_prompt_callback;
     };
 
 ////////////////////////////////////////////////////////////////////////////////
