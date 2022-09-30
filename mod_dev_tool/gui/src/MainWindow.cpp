@@ -803,7 +803,7 @@ void HMDT::GUI::MainWindow::exportProject() {
                       const Project::IProject::PromptType& type)
                 -> uint32_t
             {
-                Gtk::MessageType gtk_msg_type;
+                Gtk::MessageType gtk_msg_type = Gtk::MESSAGE_INFO;
                 switch(type) {
                     case Project::IProject::PromptType::INFO:
                         gtk_msg_type = Gtk::MESSAGE_INFO;
