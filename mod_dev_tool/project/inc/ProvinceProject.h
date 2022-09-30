@@ -38,7 +38,7 @@ namespace HMDT::Project {
             void buildProvinceOutlines();
         protected:
             MaybeVoid saveShapeLabels(const std::filesystem::path&);
-            MaybeVoid saveProvinceData(const std::filesystem::path&, bool = true) const noexcept;
+            MaybeVoid saveProvinceData(const std::filesystem::path&, bool = false) const noexcept;
 
             MaybeVoid loadShapeLabels(const std::filesystem::path&);
             MaybeVoid loadProvinceData(const std::filesystem::path&);

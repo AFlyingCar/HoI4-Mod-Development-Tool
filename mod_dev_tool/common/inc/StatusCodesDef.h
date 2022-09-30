@@ -20,6 +20,7 @@
     X(BADALLOC, "Memory allocation failed.") \
     X(NOT_IMPLEMENTED, "Feature is not implemented yet.") \
     X(PARAM_CANNOT_BE_NULL, "Given parameter may not be null.") \
+    X(VALUE_NOT_FOUND, "The requested value could not be found.") \
     /* Project Error Codes */ \
     Y(PROJECT, 0x100) \
     X(PROJECT_VALIDATION_FAILED, "Project Validation Failed.") \

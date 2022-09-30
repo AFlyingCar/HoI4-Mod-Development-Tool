@@ -797,6 +797,43 @@ void HMDT::GUI::MainWindow::saveProjectAs(const std::string& dtitle) {
 
 void HMDT::GUI::MainWindow::exportProject() {
     if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+        opt_project->get().setPromptCallback(
+            [this](const std::string& message,
+                      const std::vector<std::string>& opts,
+                      const Project::IProject::PromptType& type)
+                -> uint32_t
+            {
+                Gtk::MessageType gtk_msg_type = Gtk::MESSAGE_INFO;
+                switch(type) {
+                    case Project::IProject::PromptType::INFO:
+                        gtk_msg_type = Gtk::MESSAGE_INFO;
+                        break;
+                    case Project::IProject::PromptType::WARN:
+                        gtk_msg_type = Gtk::MESSAGE_WARNING;
+                        break;
+                    case Project::IProject::PromptType::ERROR:
+                    case Project::IProject::PromptType::ALERT:
+                        gtk_msg_type = Gtk::MESSAGE_ERROR;
+                        break;
+                    case Project::IProject::PromptType::QUESTION:
+                        gtk_msg_type = Gtk::MESSAGE_QUESTION;
+                        break;
+                }
+
+                // Create a dialog with no buttons, as we will just add the ones
+                //   specified in opts.
+                Gtk::MessageDialog dialog(*this,
+                                          message,
+                                          true /* use_markup */,
+                                          gtk_msg_type /* type */,
+                                          Gtk::BUTTONS_NONE /* buttons */);
+                for(uint32_t i = 0; i < opts.size(); ++i) {
+                    dialog.add_button(opts.at(i), i);
+                }
+
+                return dialog.run();
+            });
+
         if(auto res = opt_project->get().export_(); IS_FAILURE(res)) {
             std::stringstream ss;
             ss << "Reason: 0x"
@@ -813,6 +850,9 @@ void HMDT::GUI::MainWindow::exportProject() {
                                       true, Gtk::MESSAGE_INFO);
             dialog.run();
         }
+
+        // Make sure we reset before checking for errors
+        opt_project->get().resetPromptCallback();
     }
 }
 
