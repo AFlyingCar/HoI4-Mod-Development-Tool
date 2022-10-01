@@ -145,6 +145,12 @@ namespace HMDT::Project {
             virtual ContinentSet& getContinents() = 0;
     };
 
+    struct IRiversProject: public IMapProject {
+        virtual ~IRiversProject() = default;
+
+        virtual MaybeVoid loadFile(const std::filesystem::path&) noexcept = 0;
+    };
+
 ////////////////////////////////////////////////////////////////////////////////
 // History Projects
     struct IHistoryProject: public IProject {
