@@ -643,7 +643,8 @@ auto HMDT::writeBMP(const std::filesystem::path& path, const BitMap2& bmp) noexc
 
 auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
                      uint32_t width, uint32_t height, uint16_t depth,
-                     bool is_greyscale, BMPHeaderToUse hdr_version_to_use) noexcept
+                     bool is_greyscale, BMPHeaderToUse hdr_version_to_use,
+                     MonadOptional<ColorTable> color_table) noexcept
     -> MaybeVoid
 {
     BitMap2 bmp{};
@@ -725,41 +726,58 @@ auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
     bmp.file_header.fileSize += info_header_size;
     bmp.file_header.bitmapOffset += info_header_size;
 
-    if(bmp.info_header.v1.bitsPerPixel <= 8) {
-        switch(bmp.info_header.v1.bitsPerPixel) {
-            case 8:
-                bmp.info_header.v1.colorsUsed = 256;
-                break;
-            case 4:
-                bmp.info_header.v1.colorsUsed = 16;
-                break;
-            case 1:
-                bmp.info_header.v1.colorsUsed = 2;
-                break;
-            default:
-                WRITE_ERROR("Invalid bitsPerPixel<=8! Must be 1, 4, or 8, not ",
-                            bmp.info_header.v1.bitsPerPixel);
-                RETURN_ERROR(STATUS_INVALID_BITS_PER_PIXEL);
+    auto res = asMaybe(color_table.andThen([&](ColorTable& color_table)
+        -> MaybeVoid
+    {
+        bmp.info_header.v1.colorsUsed = color_table.num_colors;
+
+        auto res = createColorTable(bmp, std::move(color_table), is_greyscale);
+        RETURN_IF_ERROR(res);
+
+        return STATUS_SUCCESS;
+    })).orElse<std::monostate>([&]() -> MaybeVoid {
+        if(bmp.info_header.v1.bitsPerPixel <= 8) {
+            switch(bmp.info_header.v1.bitsPerPixel) {
+                case 8:
+                    bmp.info_header.v1.colorsUsed = 256;
+                    break;
+                case 4:
+                    bmp.info_header.v1.colorsUsed = 16;
+                    break;
+                case 1:
+                    bmp.info_header.v1.colorsUsed = 2;
+                    break;
+                default:
+                    WRITE_ERROR("Invalid bitsPerPixel<=8! Must be 1, 4, or 8, not ",
+                                bmp.info_header.v1.bitsPerPixel);
+                    RETURN_ERROR(STATUS_INVALID_BITS_PER_PIXEL);
+            }
+
+            // colorsImportant will always match colorsUsed
+            bmp.info_header.v1.colorImportant = bmp.info_header.v1.colorsUsed;
+
+            WRITE_DEBUG("Generating color table with ", bmp.info_header.v1.colorsUsed,
+                        " values.");
+
+            auto res = createColorTable(bmp, is_greyscale);
+            RETURN_IF_ERROR(res);
         }
 
-        // colorsImportant will always match colorsUsed
-        bmp.info_header.v1.colorImportant = bmp.info_header.v1.colorsUsed;
-
-        WRITE_DEBUG("Generating color table with ", bmp.info_header.v1.colorsUsed,
-                    " values.");
-
-        auto res = createColorTable(bmp, is_greyscale);
-        RETURN_IF_ERROR(res);
-    }
+        return STATUS_SUCCESS;
+    });
+    RETURN_IF_ERROR(res);
 
     bmp.data.reset(data);
 
-    auto res = writeBMP(path, bmp);
+    res = writeBMP(path, bmp);
     RETURN_IF_ERROR(res);
 
     return STATUS_SUCCESS;
 }
 
+auto HMDT::createColorTable(BitMap2& bmp, bool is_greyscale) -> MaybeVoid {
+    return createColorTable(bmp, ColorTable { 0, nullptr }, is_greyscale);
+}
 
 /**
  * @brief Generates a color table for the given bitmap
@@ -769,7 +787,10 @@ auto HMDT::writeBMP2(const std::filesystem::path& path, unsigned char* data,
  *
  * @return 
  */
-auto HMDT::createColorTable(BitMap2& bmp, bool is_greyscale) -> MaybeVoid {
+auto HMDT::createColorTable(BitMap2& bmp, ColorTable&& custom_color_table,
+                            bool is_greyscale)
+    -> MaybeVoid
+{
     WRITE_DEBUG("Old File Header values:"
                 " fileSize=", bmp.file_header.fileSize,
                 ", bitmapOffset=", bmp.file_header.bitmapOffset,
@@ -799,31 +820,37 @@ auto HMDT::createColorTable(BitMap2& bmp, bool is_greyscale) -> MaybeVoid {
                 ", bitmapOffset=", bmp.file_header.bitmapOffset,
                 ", sizeOfBitmap=", bmp.info_header.v1.sizeOfBitmap);
 
-    std::unique_ptr<RGBQuad[]> color_table(new RGBQuad[bmp.info_header.v1.colorsUsed]{});
+    std::unique_ptr<RGBQuad[]> color_table;
 
-    // No need for a default block here, as we already checked that condition
-    //   up above
-    switch(bmp.info_header.v1.bitsPerPixel) {
-        case 8:
-        case 4:
-            if(is_greyscale) {
-                for(auto i = 0U; i < bmp.info_header.v1.colorsUsed; ++i) {
-                    uint8_t c = i * (0x100 / bmp.info_header.v1.colorsUsed);
-                    color_table[i] = { { c, c, c, 0x00 } };
+    if(custom_color_table.color_table != nullptr) {
+        color_table = std::move(custom_color_table.color_table);
+    } else {
+        color_table.reset(new RGBQuad[bmp.info_header.v1.colorsUsed]{});
+
+        // No need for a default block here, as we already checked that condition
+        //   up above
+        switch(bmp.info_header.v1.bitsPerPixel) {
+            case 8:
+            case 4:
+                if(is_greyscale) {
+                    for(auto i = 0U; i < bmp.info_header.v1.colorsUsed; ++i) {
+                        uint8_t c = i * (0x100 / bmp.info_header.v1.colorsUsed);
+                        color_table[i] = { { c, c, c, 0x00 } };
+                    }
+                } else {
+                    // TODO: Will we need to even support this case?
+                    RETURN_ERROR(STATUS_NOT_IMPLEMENTED);
                 }
-            } else {
-                // TODO: Will we need to even support this case?
+                break;
+            case 1:
+                color_table[0] = { { 0xFF, 0xFF, 0xFF, 0x00 } };
+                color_table[1] = { { 0x00, 0x00, 0x00, 0x00 } };
+                break;
+            default:
+                WRITE_ERROR("We do not yet support generating a color table for ", 
+                            bmp.info_header.v1.bitsPerPixel, "BPP images.");
                 RETURN_ERROR(STATUS_NOT_IMPLEMENTED);
-            }
-            break;
-        case 1:
-            color_table[0] = { { 0xFF, 0xFF, 0xFF, 0x00 } };
-            color_table[1] = { { 0x00, 0x00, 0x00, 0x00 } };
-            break;
-        default:
-            WRITE_ERROR("We do not yet support generating a color table for ", 
-                        bmp.info_header.v1.bitsPerPixel, "BPP images.");
-            RETURN_ERROR(STATUS_NOT_IMPLEMENTED);
+        }
     }
 
     bmp.color_table.swap(color_table);
