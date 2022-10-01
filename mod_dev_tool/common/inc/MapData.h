@@ -38,6 +38,7 @@ namespace HMDT {
             uint32_t getCitiesSize() const;
             uint32_t getMatrixSize() const;
             uint32_t getHeightMapSize() const;
+            uint32_t getRiversSize() const;
 
             bool isClosed() const;
 
@@ -69,6 +70,9 @@ namespace HMDT {
             MapType getHeightMap();
             ConstMapType getHeightMap() const;
 
+            MapType getRivers();
+            ConstMapType getRivers() const;
+
         private:
             using InternalMapType = std::shared_ptr<uint8_t[]>;
             using InternalMapType32 = std::shared_ptr<uint32_t[]>;
@@ -83,6 +87,7 @@ namespace HMDT {
             InternalMapType32 m_label_matrix;
             InternalMapType32 m_state_id_matrix;
             InternalMapType m_heightmap;
+            InternalMapType m_rivers;
             // More map representations as necessary
 
             bool m_closed;
