@@ -63,6 +63,11 @@ namespace HMDT {
     template<typename T>
     class Maybe: public MonadOptional<T> {
         public:
+            // Make sure we don't hide the base class overloads
+            using MonadOptional<T>::andThen;
+            using MonadOptional<T>::orElse;
+            using MonadOptional<T>::getWrapped;
+
             Maybe() noexcept: MonadOptional<T>(), m_ec() { }
 
             /**
@@ -121,6 +126,35 @@ namespace HMDT {
                 m_ec = maybe.m_ec;
 
                 return *this;
+            }
+
+            ////////////////////////////////////////////////////////////////////
+
+            /**
+             * @brief Returns this optional if a value is held, otherwise it
+             *        calls the given function.
+             *
+             * @tparam R The type returned by the given function. Must be
+             *           convertible to a T.
+             * @param func A function to call if this object does not hold a
+             *             value
+             *
+             * @return If no value is held, then either the return value of func
+             *         will be returned, or std::nullopt if R is void
+             */
+            template<typename R,
+                     typename = std::enable_if_t<std::is_convertible_v<R, T> ||
+                                                 std::is_void_v<R>>>
+            Maybe<T> orElse(std::function<Maybe<R>()> func) {
+                if(getWrapped()) {
+                    return getWrapped();
+                }
+
+                if constexpr(std::is_same_v<R, void>) {
+                    return std::nullopt;
+                } else {
+                    return func();
+                }
             }
 
             ////////////////////////////////////////////////////////////////////
@@ -270,6 +304,16 @@ namespace HMDT {
      * @brief Utility Maybe for void functions
      */
     using MaybeVoid = Maybe<std::monostate>;
+
+    template<typename T>
+    Maybe<T> asMaybe(const MonadOptional<T>& opt) {
+        return Maybe<T>(opt);
+    }
+
+    template<typename T>
+    Maybe<T> asMaybe(MonadOptional<T>&& opt) {
+        return Maybe<T>(std::move(opt));
+    }
 }
 
 /**
