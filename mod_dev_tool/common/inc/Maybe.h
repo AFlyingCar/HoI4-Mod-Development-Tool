@@ -300,52 +300,52 @@ namespace HMDT {
     // Compare with std::error_code
     template<typename T>
     constexpr bool operator==(const Maybe<T>& lhs, const std::error_code& rhs) {
-        return lhs.getWrapped() == rhs;
+        return lhs.error() == rhs;
     }
     template<typename T>
     constexpr bool operator!=(const Maybe<T>& lhs, const std::error_code& rhs) {
-        return lhs.getWrapped() != rhs;
+        return lhs.error() != rhs;
     }
     template<typename T>
     constexpr bool operator<(const Maybe<T>& lhs, const std::error_code& rhs) {
-        return lhs.getWrapped() < rhs;
+        return lhs.error() < rhs;
     }
     template<typename T>
     constexpr bool operator<=(const Maybe<T>& lhs, const std::error_code& rhs) {
-        return lhs.getWrapped() <= rhs;
+        return lhs.error() <= rhs;
     }
     template<typename T>
     constexpr bool operator>(const Maybe<T>& lhs, const std::error_code& rhs) {
-        return lhs.getWrapped() > rhs;
+        return lhs.error() > rhs;
     }
     template<typename T>
     constexpr bool operator>=(const Maybe<T>& lhs, const std::error_code& rhs) {
-        return lhs.getWrapped() >= rhs;
+        return lhs.error() >= rhs;
     }
 
     template<typename T>
     constexpr bool operator==(const std::error_code& lhs, const Maybe<T>& rhs) {
-        return lhs == rhs.getWrapped();
+        return lhs == rhs.error();
     }
     template<typename T>
     constexpr bool operator!=(const std::error_code& lhs, const Maybe<T>& rhs) {
-        return lhs != rhs.getWrapped();
+        return lhs != rhs.error();
     }
     template<typename T>
     constexpr bool operator<(const std::error_code& lhs, const Maybe<T>& rhs) {
-        return lhs < rhs.getWrapped();
+        return lhs < rhs.error();
     }
     template<typename T>
     constexpr bool operator<=(const std::error_code& lhs, const Maybe<T>& rhs) {
-        return lhs <= rhs.getWrapped();
+        return lhs <= rhs.error();
     }
     template<typename T>
     constexpr bool operator>(const std::error_code& lhs, const Maybe<T>& rhs) {
-        return lhs > rhs.getWrapped();
+        return lhs > rhs.error();
     }
     template<typename T>
     constexpr bool operator>=(const std::error_code& lhs, const Maybe<T>& rhs) {
-        return lhs >= rhs.getWrapped();
+        return lhs >= rhs.error();
     }
 
     /**
