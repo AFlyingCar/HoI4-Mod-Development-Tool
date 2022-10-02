@@ -149,6 +149,7 @@ namespace HMDT::Project {
         virtual ~IRiversProject() = default;
 
         virtual MaybeVoid loadFile(const std::filesystem::path&) noexcept = 0;
+        virtual MaybeVoid writeTemplate(const std::filesystem::path&) const noexcept = 0;
     };
 
 ////////////////////////////////////////////////////////////////////////////////

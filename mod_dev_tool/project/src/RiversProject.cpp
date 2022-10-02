@@ -90,24 +90,12 @@ auto HMDT::Project::RiversProject::export_(const std::filesystem::path& root) co
 
         auto response = prompt(prompt_ss.str(), {"Yes", "No"});
 
-        std::unique_ptr<unsigned char[]> rivers_data;
-
-        res = response.andThen<std::monostate>([this, &res, &rivers_data, &root](const uint32_t& r)
+        res = response.andThen<std::monostate>([this, &res, &root](const uint32_t& r)
             -> MaybeVoid
         {
             switch(r) {
                 case 0:
-                    res = generateTemplate(rivers_data);
-                    RETURN_IF_ERROR(res);
-
-                    res = writeBMP2(root / RIVERS_FILENAME,
-                                    rivers_data.get(),
-                                    getMapData()->getWidth(),
-                                    getMapData()->getHeight(),
-                                    1 /* depth */,
-                                    false /* is_greyscale */,
-                                    BMPHeaderToUse::V4 /* version */,
-                                    generateColorTable());
+                    res = writeTemplate(root / RIVERS_FILENAME);
                     RETURN_IF_ERROR(res);
                     break;
                 case 1:
@@ -218,6 +206,27 @@ auto HMDT::Project::RiversProject::getBitMap() const
     } else {
         return std::nullopt;
     }
+}
+
+auto HMDT::Project::RiversProject::writeTemplate(const std::filesystem::path& path) const noexcept
+    -> MaybeVoid
+{
+    std::unique_ptr<unsigned char[]> rivers_data;
+
+    auto res = generateTemplate(rivers_data);
+    RETURN_IF_ERROR(res);
+
+    res = writeBMP2(path,
+                    rivers_data.get(),
+                    getMapData()->getWidth(),
+                    getMapData()->getHeight(),
+                    1 /* depth */,
+                    false /* is_greyscale */,
+                    BMPHeaderToUse::V4 /* version */,
+                    generateColorTable());
+    RETURN_IF_ERROR(res);
+
+    return STATUS_SUCCESS;
 }
 
 auto HMDT::Project::RiversProject::generateTemplate(std::unique_ptr<uint8_t[]>& data) const noexcept
