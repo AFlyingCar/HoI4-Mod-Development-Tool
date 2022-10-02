@@ -34,6 +34,7 @@ jobs:
 
     # Commit and push the new version number
     - uses: EndBug/add-and-commit@v7
+      if: steps.check-patch.outputs.nover != 'true'
       with:
         add: '.config/version.txt'
         branch: master
