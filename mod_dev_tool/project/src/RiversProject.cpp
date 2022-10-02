@@ -20,7 +20,7 @@ HMDT::Project::RiversProject::RiversProject(IRootMapProject& parent):
 { }
 
 /**
- * @brief Writes all continent data to root/$HEIGHTMAP_FILENAME
+ * @brief Writes all continent data to root/$RIVERS_FILENAME
  *
  * @param root The root where the rivers should go
  * @param ec The error code
@@ -35,7 +35,7 @@ auto HMDT::Project::RiversProject::save(const std::filesystem::path& root)
         RETURN_ERROR(STATUS_NO_DATA_LOADED);
     }
 
-    auto path = root / HEIGHTMAP_FILENAME;
+    auto path = root / RIVERS_FILENAME;
 
     // Write the rivers to a file
     auto res = writeBMP(path, m_rivers_bmp);
@@ -55,7 +55,7 @@ auto HMDT::Project::RiversProject::save(const std::filesystem::path& root)
 auto HMDT::Project::RiversProject::load(const std::filesystem::path& root)
     -> MaybeVoid
 {
-    auto path = root / HEIGHTMAP_FILENAME;
+    auto path = root / RIVERS_FILENAME;
 
     // If the file doesn't exist, then return false (we didn't actually load it
     //  after all), but don't set the error code as it is expected that the
@@ -77,10 +77,10 @@ auto HMDT::Project::RiversProject::export_(const std::filesystem::path& root) co
 
     if(m_rivers_bmp != nullptr) {
         res = writeBMP2(root / RIVERS_FILENAME,
-                             getMapData()->getRivers().lock().get(),
-                             getMapData()->getWidth(), getMapData()->getHeight(),
-                             1 /* depth */,
-                             true /* is_greyscale */);
+                        getMapData()->getRivers().lock().get(),
+                        getMapData()->getWidth(), getMapData()->getHeight(),
+                        1 /* depth */,
+                        true /* is_greyscale */);
         RETURN_IF_ERROR(res);
     } else {
         WRITE_WARN("No imported rivers file exists.");
@@ -183,7 +183,7 @@ auto HMDT::Project::RiversProject::loadFile(const std::filesystem::path& path) n
             d.first != m_rivers_bmp->info_header.v1.width ||
             d.second != m_rivers_bmp->info_header.v1.height)
     {
-        WRITE_ERROR("Heightmap dimensions (",
+        WRITE_ERROR("Rivers dimensions (",
                     m_rivers_bmp->info_header.v1.width, ", ",
                     m_rivers_bmp->info_header.v1.height, ") do not match the"
                     " previously loaded dimensions (", d.first, ", ", d.second,
@@ -194,35 +194,8 @@ auto HMDT::Project::RiversProject::loadFile(const std::filesystem::path& path) n
     // Just in case the input image is not actually an 8-bit images
     uint8_t* rivers_data;
     if(auto bpp = m_rivers_bmp->info_header.v1.bitsPerPixel; bpp != 8) {
-        WRITE_WARN("Heightmaps must be 8-bit greyscale images, not ", bpp, ". "
-                   "Checking if the user is okay with converting it.");
-
-        std::stringstream prompt_ss;
-        prompt_ss << "Heightmaps must be an 8-bit greyscale image (loaded "
-                     "image has BPP=" << bpp << "). Convert to 8-bit image?";
-
-        auto response = prompt(prompt_ss.str(), {"Yes", "No"});
-        if(response.error() == STATUS_CALLBACK_NOT_REGISTERED) {
-            WRITE_WARN("No prompt callback registered, not going to convert the"
-                       " input just to be safe.");
-            response = 1U; // Do not convert unless the user explicitly says
-                           //  that's okay.
-        }
-        RETURN_IF_ERROR(response);
-
-        switch(*response) {
-            case 0:
-                res = convertBitMapTo8BPPGreyscale(*m_rivers_bmp);
-                RETURN_IF_ERROR(res);
-                break;
-            case 1:
-                WRITE_ERROR("Not converting input image. Cannot continue loading.");
-                RETURN_ERROR(STATUS_INVALID_BIT_DEPTH);
-                break;
-            default:
-                WRITE_ERROR("Unexpected response from prompt ", *response);
-                RETURN_ERROR(STATUS_UNEXPECTED_RESPONSE);
-        }
+        WRITE_ERROR("Rivers must be 8-bit images, not ", bpp, ".");
+        RETURN_ERROR(STATUS_INVALID_BIT_DEPTH);
     }
 
     rivers_data = m_rivers_bmp->data.get();
