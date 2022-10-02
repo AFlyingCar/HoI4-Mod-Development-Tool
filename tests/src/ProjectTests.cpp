@@ -272,3 +272,81 @@ TEST(ProjectTests, HeightMapProjectLoadWithNon8BPPImage) {
     HMDT::Log::Logger::getInstance().reset();
 }
 
+TEST(ProjectTests, RiversProjectExportTemplateTest) {
+    // We also want to see log outputs in the test output
+    HMDT::UnitTests::registerTestLogOutputFunction(true, true, true, true);
+
+    auto bin_path = HMDT::UnitTests::getTestProgramPath() / "bin";
+    auto root_path = bin_path.parent_path();
+    auto projmeta_path = root_path / HMDT::PROJ_META_FOLDER;
+
+    auto write_base_path = HMDT::UnitTests::getTestProgramPath() / "tmp";
+    auto save_path = write_base_path / "rivers_save";
+    auto export_path = write_base_path / "rivers_export";
+
+    if(!std::filesystem::exists(save_path)) {
+        TEST_COUT << "Directory " << save_path
+                  << " does not exist, creating." << std::endl;
+        ASSERT_TRUE(std::filesystem::create_directories(save_path));
+    }
+
+    if(!std::filesystem::exists(export_path)) {
+        TEST_COUT << "Directory " << export_path
+                  << " does not exist, creating." << std::endl;
+        ASSERT_TRUE(std::filesystem::create_directories(export_path));
+    }
+
+    // Set up root project without a path, as we aren't going to test it
+    //   directly, but all projects still need a parent
+    HMDT::Project::Project hproject;
+
+    // Note that we have to set up the MapData's width+height ourselves, since
+    //   we are not loading via the MapProject, and that would handle this part
+    //   for us during its 'load' function.
+    {
+        // We are just hardcoding the values here, since the bitmap hasn't been
+        //   loaded yet
+        uint32_t width = 1024;
+        uint32_t height = 1024;
+
+        WRITE_INFO("Setting up MapData with width=", width, ", height=", height);
+
+        auto map_data_ptr = hproject.getMapProject().getMapData();
+
+        map_data_ptr->~MapData();
+        new (map_data_ptr.get()) HMDT::MapData(width, height);
+    }
+
+    auto& rivers_project = hproject.getMapProject().getRiversProject();
+
+    // Test each response to whether to output a template
+    rivers_project.setPromptCallback(
+        [](const std::string& message,
+           const std::vector<std::string>& opts,
+           const HMDT::Project::IProject::PromptType&)
+            -> uint32_t
+        {
+            WRITE_INFO("Mocking prompt asking: '", message, "': Response=1");
+            return 1;
+        });
+
+    auto res = rivers_project.export_(export_path);
+    ASSERT_STATUS(res, HMDT::STATUS_NO_DATA_LOADED);
+
+    // Now test the export of a template image
+    rivers_project.setPromptCallback(
+        [](const std::string& message,
+           const std::vector<std::string>& opts,
+           const HMDT::Project::IProject::PromptType&)
+            -> uint32_t
+        {
+            WRITE_INFO("Mocking prompt asking: '", message, "': Response=0");
+            return 0;
+        });
+
+    res = rivers_project.export_(export_path);
+    ASSERT_SUCCEEDED(res);
+
+    HMDT::Log::Logger::getInstance().reset();
+}
+
