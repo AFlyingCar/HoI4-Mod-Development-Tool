@@ -7,8 +7,10 @@
 #include "Constants.h"
 #include "StatusCodes.h"
 #include "Logger.h"
+#include "ShapeFinder2.h"
 
 #include "TestUtils.h"
+#include "TestMocks.h"
 
 TEST(ProjectTests, SimpleHoI4ProjectTest) {
     HMDT::Project::Project hproject;
@@ -279,6 +281,7 @@ TEST(ProjectTests, RiversProjectExportTemplateTest) {
     auto bin_path = HMDT::UnitTests::getTestProgramPath() / "bin";
     auto root_path = bin_path.parent_path();
     auto projmeta_path = root_path / HMDT::PROJ_META_FOLDER;
+    auto input_provinces_path = root_path / "complex.bmp";
 
     auto write_base_path = HMDT::UnitTests::getTestProgramPath() / "tmp";
     auto save_path = write_base_path / "rivers_save";
@@ -300,6 +303,9 @@ TEST(ProjectTests, RiversProjectExportTemplateTest) {
     //   directly, but all projects still need a parent
     HMDT::Project::Project hproject;
 
+    // Note that for this code to work, it expects a ProvinceProject to exist
+    //   and be loaded in so make sure to load one in now
+
     // Note that we have to set up the MapData's width+height ourselves, since
     //   we are not loading via the MapProject, and that would handle this part
     //   for us during its 'load' function.
@@ -315,6 +321,15 @@ TEST(ProjectTests, RiversProjectExportTemplateTest) {
 
         map_data_ptr->~MapData();
         new (map_data_ptr.get()) HMDT::MapData(width, height);
+
+        // TODO: ShapeFinder hasn't been switched over to the new BitMap2 object
+        //   yet, so we need to still use the deprecated one for now
+        HMDT::BitMap* complex_bmp = HMDT::readBMP(input_provinces_path);
+
+        HMDT::ShapeFinder sf2(complex_bmp, HMDT::UnitTests::GraphicsWorkerMock::getInstance(), map_data_ptr);
+        sf2.findAllShapes();
+
+        hproject.getMapProject().getProvinceProject().import(sf2, map_data_ptr);
     }
 
     auto& rivers_project = hproject.getMapProject().getRiversProject();
