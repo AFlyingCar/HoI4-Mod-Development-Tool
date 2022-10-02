@@ -347,3 +347,46 @@ auto HMDT::GUI::addHeightMap(Window& window,
     return STATUS_SUCCESS;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+auto HMDT::GUI::addRivers(Window& window,
+                          const std::vector<std::filesystem::path>& paths)
+    -> Maybe<std::any>
+{
+    if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+        auto& project = opt_project->get();
+
+        project.getMapProject().getRiversProject().setPromptCallback(
+            [&window](const std::string& message,
+                      const std::vector<std::string>& opts,
+                      const Project::IProject::PromptType& /*type*/)
+                -> uint32_t
+            {
+                // TODO: We should make use of the PromptType here
+
+                // Create a dialog with no buttons, as we will just add the ones
+                //   specified in opts.
+                Gtk::MessageDialog dialog(window,
+                                          message,
+                                          true /* use_markup */,
+                                          Gtk::MESSAGE_QUESTION /* type */,
+                                          Gtk::BUTTONS_NONE /* buttons */);
+                for(uint32_t i = 0; i < opts.size(); ++i) {
+                    dialog.add_button(opts.at(i), i);
+                }
+
+                return dialog.run();
+            });
+
+        WRITE_DEBUG("Loading new rivers map into RiversProject.");
+        auto res = project.getMapProject().getRiversProject().loadFile(paths.front());
+
+        // Make sure we reset before checking for errors
+        project.getMapProject().getRiversProject().resetPromptCallback();
+
+        RETURN_IF_ERROR(res);
+    }
+
+    return STATUS_SUCCESS;
+}
+

@@ -79,3 +79,34 @@ DEFINE_ITEM_TYPE(
     } /* on_remove_callback */
 );
 
+DEFINE_ITEM_TYPE(
+    "River Map" /* name */,
+    "Rivers is an 8-bit indexed bitmap file which determines the positioning "
+    "of rivers. The dimensions of this bitmap <i>must</i> match the dimensions "
+    "of the provinces image.\n\n"
+    "Rivers <i>must</i> be exactly one pixel thick and only go in orthogonal "
+    "directions (they cannot connect diagonally). To render correctly, each "
+    "river must have exactly <i>one</i> start marker (green by default), where "
+    "each river is defined as a single contiguous block of river pixels. "
+    "Pixels connected with flow-in (red by default) or flow-out (yellow by "
+    "default) sources are counted as the same river as the main flow. Only the "
+    "main branch of the river should have a start marker.\n\n"
+    "For the specific indices + color values, see the HoI4 modding wiki." /* description */,
+    "/com/aflyingcar/HoI4ModDevelopmentTool/textures/rivermap.png" /* icon */,
+    {{
+        { { "River Map Image Files", "bmp" } } /* filters */,
+        false /* allow_multiselect */,
+    }} /* file_info */,
+    {
+        "map/*",
+        "history/states/*"
+    } /* extra_overrides */,
+    HMDT::GUI::addRivers /* init_add_callback */,
+    HMDT::GUI::ItemType::DEFAULT_POSTINIT_CALLBACK /* add_worker_callback */,
+    HMDT::GUI::ItemType::DEFAULT_POSTINIT_CALLBACK /* post_start_add_callback */,
+    HMDT::GUI::ItemType::DEFAULT_POSTINIT_CALLBACK /* end_add_callback  */,
+    [](HMDT::GUI::Window& parent_window) -> HMDT::MaybeVoid {
+        return HMDT::STATUS_NOT_IMPLEMENTED;
+    } /* on_remove_callback */
+);
+
