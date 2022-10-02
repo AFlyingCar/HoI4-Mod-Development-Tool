@@ -37,8 +37,7 @@ namespace HMDT::Project {
             MonadOptionalRef<const BitMap2> getBitMap() const;
 
         protected:
-            static MaybeVoid generateTemplate(std::unique_ptr<unsigned char[]>&,
-                                              std::shared_ptr<const MapData>) noexcept;
+            MaybeVoid generateTemplate(std::unique_ptr<unsigned char[]>&) const noexcept;
             static ColorTable generateColorTable() noexcept;
 
         private:

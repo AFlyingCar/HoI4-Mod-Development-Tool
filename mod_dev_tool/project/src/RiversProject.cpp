@@ -97,7 +97,7 @@ auto HMDT::Project::RiversProject::export_(const std::filesystem::path& root) co
         {
             switch(r) {
                 case 0:
-                    res = generateTemplate(rivers_data, getMapData());
+                    res = generateTemplate(rivers_data);
                     RETURN_IF_ERROR(res);
 
                     res = writeBMP2(root / RIVERS_FILENAME,
@@ -247,29 +247,72 @@ auto HMDT::Project::RiversProject::getBitMap() const
     }
 }
 
-auto HMDT::Project::RiversProject::generateTemplate(std::unique_ptr<uint8_t[]>& data,
-                                                    std::shared_ptr<const MapData> map_data) noexcept
+auto HMDT::Project::RiversProject::generateTemplate(std::unique_ptr<uint8_t[]>& data) const noexcept
     -> MaybeVoid
 {
     try {
-        data.reset(new uint8_t[map_data->getRiversSize()]);
+        data.reset(new uint8_t[getMapData()->getRiversSize()]);
     } catch(const std::bad_alloc& e) {
         WRITE_ERROR(e.what());
         RETURN_ERROR(STATUS_BADALLOC);
     }
 
-    for(auto i = 0U; i < map_data->getRiversSize(); ++i) {
+    for(auto i = 0U; i < getMapData()->getRiversSize(); ++i) {
+        auto province_label = getMapData()->getLabelMatrix().lock()[i];
+
+        auto prov_type = getRootMapParent().getProvinceProject().getProvinceForLabel(province_label).type;
+
+        switch(prov_type) {
+            case ProvinceType::LAND:
+                data[i] = 12;
+                break;
+            case ProvinceType::LAKE:
+            case ProvinceType::SEA:
+                data[i] = 13;
+                break;
+            case ProvinceType::UNKNOWN:
+                data[i] = 14;
+                break;
+        }
     }
 
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Generates a color table for rivers.
+ * @details See https://hoi4.paradoxwikis.com/Map_modding#Rivers for a
+ *          description on what the individual values mean.
+ *          Note that we also add in a few extra colors which are ignored by the
+ *          base game for comments
+ *
+ * @return A ColorTable object
+ */
 auto HMDT::Project::RiversProject::generateColorTable() noexcept
     -> ColorTable
 {
+    // NOTE: Color values will differ slightly from the above link, since those
+    //   are listed in RGB format, but BitMap requires BGR
     return ColorTable {
-        0 /* num_colors */,
-        nullptr /* color_table */
+        15 /* num_colors */,
+        std::unique_ptr<RGBQuad[]>(new RGBQuad[15]{
+            { { 0, 0xFF, 0, 0 } },    // 0 The source of a river
+            { { 0, 0, 0xFF, 0 } },    // 1 Flow-in source. Used to join multiple 'source' paths into one river.
+            { { 0xFF, 0xFC, 0, 0 } }, // 2 Flow-out source. Used to branch outwards from one river.
+            { { 0xFF, 0xE1, 0, 0 } }, // 3 River with narrowest texture.
+            { { 0xFF, 0xC8, 0, 0 } }, // 4
+            { { 0xFF, 0x96, 0, 0 } }, // 5
+            { { 0xFF, 0x64, 0, 0 } }, // 6 River with wide texture.
+            { { 0xFF, 0, 0, 0 } },    // 7
+            { { 0xE1, 0, 0, 0 } },    // 8
+            { { 0xC8, 0, 0, 0 } },    // 9
+            { { 0x96, 0, 0, 0 } },    // 10
+            { { 0x64, 0, 0, 0 } },    // 11 River with widest texture.
+
+            { { 0xFF, 0xFF, 0xFF, 0 } }, // LAND COMMENT
+            { { 0x7A, 0x7A, 0x7A, 0 } }, // SEA + LAKE COMMENT
+            { { 0, 0, 0, 0 } }, // UNKNOWN COMMENT
+        }) /* color_table */
     };
 }
 
