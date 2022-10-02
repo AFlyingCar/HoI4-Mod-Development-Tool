@@ -223,6 +223,9 @@ namespace HMDT::Project {
 
         virtual IContinentProject& getContinentProject() noexcept = 0;
         virtual const IContinentProject& getContinentProject() const noexcept = 0;
+
+        virtual IRiversProject& getRiversProject() noexcept = 0;
+        virtual const IRiversProject& getRiversProject() const noexcept = 0;
     };
 
     struct IRootHistoryProject: public IHistoryProject {

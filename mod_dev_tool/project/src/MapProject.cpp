@@ -19,6 +19,7 @@ HMDT::Project::MapProject::MapProject(IProject& parent_project):
     m_provinces_project(*this),
     m_continent_project(*this),
     m_heightmap_project(*this),
+    m_rivers_project(*this),
     m_map_data(new MapData),
     m_terrains(getDefaultTerrains()),
     m_parent_project(parent_project)
@@ -405,6 +406,18 @@ auto HMDT::Project::MapProject::getContinentProject() const noexcept
     -> const ContinentProject&
 {
     return m_continent_project;
+}
+
+auto HMDT::Project::MapProject::getRiversProject() noexcept
+    -> RiversProject&
+{
+    return m_rivers_project;
+}
+
+auto HMDT::Project::MapProject::getRiversProject() const noexcept
+    -> const RiversProject&
+{
+    return m_rivers_project;
 }
 
 auto HMDT::Project::MapProject::getMapData() -> std::shared_ptr<MapData> {
