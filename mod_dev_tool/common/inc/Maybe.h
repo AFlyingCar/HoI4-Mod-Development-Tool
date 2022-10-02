@@ -64,7 +64,6 @@ namespace HMDT {
     class Maybe: public MonadOptional<T> {
         public:
             // Make sure we don't hide the base class overloads
-            using MonadOptional<T>::andThen;
             using MonadOptional<T>::orElse;
             using MonadOptional<T>::getWrapped;
 
@@ -129,6 +128,63 @@ namespace HMDT {
             }
 
             ////////////////////////////////////////////////////////////////////
+
+            /**
+             * @brief Performs an additional operation if this function holds
+             *        a value, and returns a std::monostate.
+             *
+             * @param func A function which returns nothing.
+             *
+             * @return A std::monostate, or std::nullopt if this object does not
+             *         hold a value.
+             */
+            MonadOptional<std::monostate> andThen(std::function<void(T&)> func)
+            {
+                if(getWrapped()) {
+                    func(*getWrapped());
+                    return std::monostate{};
+                }
+
+                return std::nullopt;
+            }
+
+            /**
+             * @brief Performs an additional operation if this function holds
+             *        a value, and returns the result.
+             *
+             * @tparam R The type returned by the given function
+             * @param func A function which returns a Maybe
+             *
+             * @return The return value of func, or std::nullopt if this object
+             *         does not hold a value.
+             */
+            template<typename R>
+            Maybe<R> andThen(std::function<Maybe<R>(T&)> func) {
+                if(getWrapped()) {
+                    return func(*getWrapped());
+                }
+
+                return std::nullopt;
+            }
+
+            /**
+             * @brief Performs an additional operation if this function holds
+             *        a value, and returns the result.
+             *
+             * @tparam R The type returned by the given function
+             * @param func A function which returns a Maybe
+             *
+             * @return The return value of func, or std::nullopt if this object
+             *         does not hold a value.
+             */
+            template<typename R>
+            Maybe<R> andThen(std::function<Maybe<R>(const T&)> func) const {
+                if(getWrapped()) {
+                    return func(*getWrapped());
+                }
+
+                return std::nullopt;
+            }
 
             /**
              * @brief Returns this optional if a value is held, otherwise it
