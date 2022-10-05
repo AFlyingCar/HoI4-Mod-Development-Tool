@@ -20,7 +20,7 @@ jobs:
           shopt -s nocasematch
           if [[ "${{ github.event.head_commit.message }}" =~ ^\[(bugfix|patch|fix|refactor|perf)\] ]]; then
             echo ::set-output name=match::true
-          elif [[ "${{ github.event.head_commit.message }}" =~ ^\[(noversion|no_version|no version)\] ]]; then
+          elif [[ "${{ github.event.head_commit.message }}" =~ ^\[(noversion|no_version|no version|nover)\] ]]; then
             echo ::set-output name=nover::true
           fi
 
