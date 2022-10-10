@@ -281,7 +281,7 @@ TEST(ProjectTests, RiversProjectExportTemplateTest) {
     auto bin_path = HMDT::UnitTests::getTestProgramPath() / "bin";
     auto root_path = bin_path.parent_path();
     auto projmeta_path = root_path / HMDT::PROJ_META_FOLDER;
-    auto input_provinces_path = root_path / "complex.bmp";
+    auto input_provinces_path = bin_path / "complex.bmp";
 
     auto write_base_path = HMDT::UnitTests::getTestProgramPath() / "tmp";
     auto save_path = write_base_path / "rivers_save";
@@ -324,6 +324,7 @@ TEST(ProjectTests, RiversProjectExportTemplateTest) {
 
         // TODO: ShapeFinder hasn't been switched over to the new BitMap2 object
         //   yet, so we need to still use the deprecated one for now
+        WRITE_INFO("Loading ", input_provinces_path);
         HMDT::BitMap* complex_bmp = HMDT::readBMP(input_provinces_path);
         ASSERT_NE(complex_bmp, nullptr);
 
