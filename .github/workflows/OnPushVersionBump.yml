@@ -20,18 +20,21 @@ jobs:
           shopt -s nocasematch
           if [[ "${{ github.event.head_commit.message }}" =~ ^\[(bugfix|patch|fix|refactor|perf)\] ]]; then
             echo ::set-output name=match::true
+          elif [[ "${{ github.event.head_commit.message }}" =~ ^\[(noversion|no_version|no version|nover)\] ]]; then
+            echo ::set-output name=nover::true
           fi
 
     - name: Bump the Minor version number
-      if: steps.check-patch.outputs.match != 'true'
+      if: steps.check-patch.outputs.match != 'true' && steps.check-patch.outputs.nover != 'true'
       run: sh "$GITHUB_WORKSPACE/tools/versionbump.sh" "$GITHUB_WORKSPACE" 0.1.0
 
     - name: Bump the Patch version number
-      if: steps.check-patch.outputs.match == 'true'
+      if: steps.check-patch.outputs.match == 'true' && steps.check-patch.outputs.nover != 'true'
       run: sh "$GITHUB_WORKSPACE/tools/versionbump.sh" "$GITHUB_WORKSPACE" 0.0.1
 
     # Commit and push the new version number
     - uses: EndBug/add-and-commit@v7
+      if: steps.check-patch.outputs.nover != 'true'
       with:
         add: '.config/version.txt'
         branch: master
