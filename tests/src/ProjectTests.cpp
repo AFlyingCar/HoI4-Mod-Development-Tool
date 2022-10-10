@@ -279,19 +279,10 @@ TEST(ProjectTests, RiversProjectExportTemplateTest) {
     HMDT::UnitTests::registerTestLogOutputFunction(true, true, true, true);
 
     auto bin_path = HMDT::UnitTests::getTestProgramPath() / "bin";
-    auto root_path = bin_path.parent_path();
-    auto projmeta_path = root_path / HMDT::PROJ_META_FOLDER;
     auto input_provinces_path = bin_path / "complex.bmp";
 
     auto write_base_path = HMDT::UnitTests::getTestProgramPath() / "tmp";
-    auto save_path = write_base_path / "rivers_save";
     auto export_path = write_base_path / "rivers_export";
-
-    if(!std::filesystem::exists(save_path)) {
-        TEST_COUT << "Directory " << save_path
-                  << " does not exist, creating." << std::endl;
-        ASSERT_TRUE(std::filesystem::create_directories(save_path));
-    }
 
     if(!std::filesystem::exists(export_path)) {
         TEST_COUT << "Directory " << export_path
