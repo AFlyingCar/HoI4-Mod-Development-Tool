@@ -325,6 +325,7 @@ TEST(ProjectTests, RiversProjectExportTemplateTest) {
         // TODO: ShapeFinder hasn't been switched over to the new BitMap2 object
         //   yet, so we need to still use the deprecated one for now
         HMDT::BitMap* complex_bmp = HMDT::readBMP(input_provinces_path);
+        ASSERT_NE(complex_bmp, nullptr);
 
         HMDT::ShapeFinder sf2(complex_bmp, HMDT::UnitTests::GraphicsWorkerMock::getInstance(), map_data_ptr);
         sf2.findAllShapes();
