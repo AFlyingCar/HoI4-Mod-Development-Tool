@@ -5,6 +5,7 @@
         <file>textures/logo.png</file>
         <file>textures/provinces.png</file>
         <file>textures/heightmap.png</file>
+        <file>textures/rivermap.png</file>
     </gresource>
 </gresources>
 

@@ -166,6 +166,14 @@ namespace HMDT {
      */
     enum class BMPHeaderToUse { V1, V4, V5 };
 
+    /**
+     * @brief A structure abstracting a color table
+     */
+    struct ColorTable {
+        uint32_t num_colors;
+        std::unique_ptr<RGBQuad[]> color_table;
+    };
+
     MaybeRef<BitMap2> readBMP(const std::filesystem::path&,
                               std::shared_ptr<BitMap2>) noexcept;
     MaybeRef<BitMap2> readBMP(std::istream&, std::shared_ptr<BitMap2>) noexcept;
@@ -179,8 +187,10 @@ namespace HMDT {
     MaybeVoid writeBMP(const std::filesystem::path&, const BitMap2&) noexcept;
     MaybeVoid writeBMP2(const std::filesystem::path&, unsigned char*,
                         uint32_t, uint32_t, uint16_t = 3, bool = false,
-                        BMPHeaderToUse = BMPHeaderToUse::V4) noexcept;
+                        BMPHeaderToUse = BMPHeaderToUse::V4,
+                        MonadOptional<ColorTable> = std::nullopt) noexcept;
 
+    MaybeVoid createColorTable(BitMap2&, ColorTable&&, bool = false);
     MaybeVoid createColorTable(BitMap2&, bool = false);
 
     MaybeVoid convertBitMapTo8BPPGreyscale(BitMap2&) noexcept;

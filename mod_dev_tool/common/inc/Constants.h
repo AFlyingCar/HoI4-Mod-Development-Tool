@@ -83,6 +83,9 @@ namespace HMDT {
     //! The filename for storing the heightmap
     const std::string HEIGHTMAP_FILENAME = "heightmap.bmp";
 
+    //! The filename for storing the rivers
+    const std::string RIVERS_FILENAME = "rivers.bmp";
+
     //! The filename for storing the normalmap
     const std::string NORMALMAP_FILENAME = "world_normal.bmp";
 

@@ -739,3 +739,154 @@ TEST(BitMapTests, Convert24BPPTo8BPPTest) {
 
     HMDT::Log::Logger::getInstance().reset();
 }
+
+TEST(BitMapTests, Test8BPPCustomColorTable) {
+    // We also want to see log outputs in the test output
+    HMDT::UnitTests::registerTestLogOutputFunction(true, true, true, true);
+
+    auto bmp1_path = HMDT::UnitTests::getTestProgramPath() / "bin" / "8bpp_greyscale_no_color_management.bmp";
+    auto write_base_path = HMDT::UnitTests::getTestProgramPath() / "tmp";
+    auto bmp2_path = write_base_path / "8bpp_custom_color_table_out.bmp";
+
+    if(!std::filesystem::exists(write_base_path)) {
+        TEST_COUT << "Directory " << write_base_path
+                  << " does not exist, creating." << std::endl;
+        ASSERT_TRUE(std::filesystem::create_directory(write_base_path));
+    }
+
+    WRITE_INFO("Reading BitMap from ", bmp1_path);
+    HMDT::BitMap2 bmp1;
+    auto res = HMDT::readBMP(bmp1_path, bmp1);
+    ASSERT_SUCCEEDED(res);
+
+    WRITE_DEBUG(bmp1);
+
+    HMDT::ColorTable color_table {
+        256 /* num_colors */,
+        std::unique_ptr<HMDT::RGBQuad[]>(new HMDT::RGBQuad[256]) /* color_table */
+    };
+
+    // Build the new custom color table with 256 reds
+    for(uint32_t i = 0; i < color_table.num_colors; ++i) {
+        uint8_t r = static_cast<uint8_t>(i);
+        color_table.color_table[i] = { { 0x00, 0x00, r, 0x00 } };
+    }
+
+    // We will lose control of the custom color table, so make a copy of it so
+    //   we can later check it
+    std::unique_ptr<HMDT::RGBQuad[]> backup_color_table(new HMDT::RGBQuad[256]);
+    std::copy(color_table.color_table.get(),
+              color_table.color_table.get() + 256,
+              backup_color_table.get());
+
+    // Now write that BitMap back to the disk, using a custom color table
+    WRITE_INFO("Writing BitMap to ", bmp2_path);
+    res = HMDT::writeBMP2(bmp2_path, bmp1.data.get(),
+                          bmp1.info_header.v1.width, bmp1.info_header.v1.height,
+                          1 /* depth */, false /* is_greyscale */,
+                          HMDT::BMPHeaderToUse::V1 /* hdr_version_to_use */,
+                          std::move(color_table));
+    ASSERT_SUCCEEDED(res);
+
+    // Move the backup color_table into the color_table structure
+    color_table.color_table.swap(backup_color_table);
+
+    // Read the data from the BitMap back into memory
+    WRITE_INFO("Reading BitMap from ", bmp2_path);
+    HMDT::BitMap2 bmp2;
+    res = HMDT::readBMP(bmp2_path, bmp2);
+    ASSERT_SUCCEEDED(res);
+
+    // And now verify that the file on the disk exactly matches the data we
+    //   initially wrote
+
+    // Check the file header
+    ASSERT_EQ(bmp1.file_header.filetype, bmp2.file_header.filetype);
+    ASSERT_EQ(bmp1.file_header.fileSize, bmp2.file_header.fileSize);
+    ASSERT_EQ(bmp1.file_header.reserved1, bmp2.file_header.reserved1);
+    ASSERT_EQ(bmp1.file_header.reserved2, bmp2.file_header.reserved2);
+    ASSERT_EQ(bmp1.file_header.bitmapOffset, bmp2.file_header.bitmapOffset);
+
+    // Check the info header
+    ASSERT_EQ(bmp1.info_header.v1.headerSize, bmp2.info_header.v1.headerSize);
+    ASSERT_EQ(bmp1.info_header.v1.width, bmp2.info_header.v1.width);
+    ASSERT_EQ(bmp1.info_header.v1.height, bmp2.info_header.v1.height);
+    ASSERT_EQ(bmp1.info_header.v1.bitPlanes, bmp2.info_header.v1.bitPlanes);
+    ASSERT_EQ(bmp1.info_header.v1.bitsPerPixel, bmp2.info_header.v1.bitsPerPixel);
+    ASSERT_EQ(bmp1.info_header.v1.compression, bmp2.info_header.v1.compression);
+    ASSERT_EQ(bmp1.info_header.v1.sizeOfBitmap, bmp2.info_header.v1.sizeOfBitmap);
+    // ASSERT_EQ(bmp1.info_header.v1.horzResolution, bmp2.info_header.v1.horzResolution);
+    // ASSERT_EQ(bmp1.info_header.v1.vertResolution, bmp2.info_header.v1.vertResolution);
+    ASSERT_EQ(bmp1.info_header.v1.colorsUsed, bmp2.info_header.v1.colorsUsed);
+    // ASSERT_EQ(bmp1.info_header.v1.colorImportant, bmp2.info_header.v1.colorImportant);
+
+    // Now verify the V4 part of the header
+    if(bmp1.info_header.v1.headerSize == HMDT::V4_INFO_HEADER_LENGTH) {
+        ASSERT_EQ(bmp1.info_header.v4.redMask, bmp2.info_header.v4.redMask);
+        ASSERT_EQ(bmp1.info_header.v4.greenMask, bmp2.info_header.v4.greenMask);
+        ASSERT_EQ(bmp1.info_header.v4.blueMask,bmp2.info_header.v4.blueMask);
+        ASSERT_EQ(bmp1.info_header.v4.alphaMask, bmp2.info_header.v4.alphaMask);
+        ASSERT_EQ(bmp1.info_header.v4.CSType, bmp2.info_header.v4.CSType);
+
+        ASSERT_EQ(bmp1.info_header.v4.redX, bmp2.info_header.v4.redX);
+        ASSERT_EQ(bmp1.info_header.v4.redY, bmp2.info_header.v4.redY);
+        ASSERT_EQ(bmp1.info_header.v4.redZ, bmp2.info_header.v4.redZ);
+        ASSERT_EQ(bmp1.info_header.v4.greenX, bmp2.info_header.v4.greenX);
+        ASSERT_EQ(bmp1.info_header.v4.greenY, bmp2.info_header.v4.greenY);
+        ASSERT_EQ(bmp1.info_header.v4.greenZ, bmp2.info_header.v4.greenZ);
+        ASSERT_EQ(bmp1.info_header.v4.blueX, bmp2.info_header.v4.blueX);
+        ASSERT_EQ(bmp1.info_header.v4.blueY, bmp2.info_header.v4.blueY);
+        ASSERT_EQ(bmp1.info_header.v4.blueZ, bmp2.info_header.v4.blueZ);
+
+        ASSERT_EQ(bmp1.info_header.v4.gammaRed, bmp2.info_header.v4.gammaRed);
+        ASSERT_EQ(bmp1.info_header.v4.gammaGreen, bmp2.info_header.v4.gammaGreen);
+        ASSERT_EQ(bmp1.info_header.v4.gammaBlue,bmp2.info_header.v4.gammaBlue);
+    }
+
+    // Do not verify the V5 header part, as the size is only 108
+
+    // Verify that there is a color table, as it is required for <=8BPP
+    ASSERT_NE(bmp1.color_table, nullptr);
+    ASSERT_NE(bmp2.color_table, nullptr);
+
+    // Verify the length of the color table
+    ASSERT_EQ(bmp2.info_header.v1.colorsUsed, color_table.num_colors);
+
+    // Now verify that the contents are equal
+    auto sizeof_color_table = bmp2.info_header.v1.colorsUsed;
+    int i = 0;
+    ASSERT_TRUE(std::equal(bmp2.color_table.get(),
+                           bmp2.color_table.get() + sizeof_color_table,
+                           color_table.color_table.get(),
+                           [i](auto&& l, auto&& r) mutable {
+                               if(l.rgb_quad != r.rgb_quad) {
+                                   WRITE_ERROR("#", i, ": ",
+                                               l.rgb_quad, " != ",  r.rgb_quad);
+                               }
+                               ++i;
+                               return l.rgb_quad == r.rgb_quad;
+                           }));
+
+    // Not really easy to test the whole data-set, so as long as it is non-null
+    //   then we're probably fine (can't really verify the length easily)
+    ASSERT_NE(bmp2.data, nullptr);
+
+    // Now verify that the contents are equal
+    i = 0;
+    ASSERT_TRUE(std::equal(bmp1.data.get(),
+                           bmp1.data.get() + bmp1.info_header.v1.sizeOfBitmap,
+                           bmp2.data.get(),
+                           [i](auto&& l, auto&& r) mutable {
+                               if(l != r) {
+                                   WRITE_ERROR("#", i, ": ",
+                                               static_cast<uint32_t>(l),
+                                               " != ",
+                                               static_cast<uint32_t>(r));
+                               }
+                               ++i;
+                               return l == r;
+                           }));
+
+    HMDT::Log::Logger::getInstance().reset();
+}
+

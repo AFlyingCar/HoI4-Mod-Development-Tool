@@ -145,6 +145,13 @@ namespace HMDT::Project {
             virtual ContinentSet& getContinents() = 0;
     };
 
+    struct IRiversProject: public IMapProject {
+        virtual ~IRiversProject() = default;
+
+        virtual MaybeVoid loadFile(const std::filesystem::path&) noexcept = 0;
+        virtual MaybeVoid writeTemplate(const std::filesystem::path&) const noexcept = 0;
+    };
+
 ////////////////////////////////////////////////////////////////////////////////
 // History Projects
     struct IHistoryProject: public IProject {
@@ -217,6 +224,9 @@ namespace HMDT::Project {
 
         virtual IContinentProject& getContinentProject() noexcept = 0;
         virtual const IContinentProject& getContinentProject() const noexcept = 0;
+
+        virtual IRiversProject& getRiversProject() noexcept = 0;
+        virtual const IRiversProject& getRiversProject() const noexcept = 0;
     };
 
     struct IRootHistoryProject: public IHistoryProject {

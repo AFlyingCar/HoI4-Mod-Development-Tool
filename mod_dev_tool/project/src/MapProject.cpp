@@ -19,6 +19,7 @@ HMDT::Project::MapProject::MapProject(IProject& parent_project):
     m_provinces_project(*this),
     m_continent_project(*this),
     m_heightmap_project(*this),
+    m_rivers_project(*this),
     m_map_data(new MapData),
     m_terrains(getDefaultTerrains()),
     m_parent_project(parent_project)
@@ -43,16 +44,33 @@ auto HMDT::Project::MapProject::save(const std::filesystem::path& path)
         std::filesystem::create_directory(path);
     }
 
-    auto provinces_result = m_provinces_project.save(path);
-    RETURN_IF_ERROR(provinces_result);
+    MaybeVoid result = STATUS_SUCCESS;
 
-    auto continents_result = m_continent_project.save(path);
-    RETURN_IF_ERROR(continents_result);
+    result = m_provinces_project.save(path);
+    if(result == STATUS_NO_DATA_LOADED) {
+        result = STATUS_SUCCESS;
+    }
+    RETURN_IF_ERROR(result);
 
-    auto heightmap_result = m_heightmap_project.save(path);
-    RETURN_IF_ERROR(heightmap_result);
+    result = m_continent_project.save(path);
+    if(result == STATUS_NO_DATA_LOADED) {
+        result = STATUS_SUCCESS;
+    }
+    RETURN_IF_ERROR(result);
 
-    return STATUS_SUCCESS;
+    result = m_heightmap_project.save(path);
+    if(result == STATUS_NO_DATA_LOADED) {
+        result = STATUS_SUCCESS;
+    }
+    RETURN_IF_ERROR(result);
+
+    result = m_rivers_project.save(path);
+    if(result == STATUS_NO_DATA_LOADED) {
+        result = STATUS_SUCCESS;
+    }
+    RETURN_IF_ERROR(result);
+
+    return result;
 }
 
 /**
@@ -127,6 +145,12 @@ auto HMDT::Project::MapProject::load(const std::filesystem::path& path)
         RETURN_IF_ERROR(result);
     }
 
+    if(auto result = m_rivers_project.load(path);
+            result.error() != std::errc::no_such_file_or_directory)
+    {
+        RETURN_IF_ERROR(result);
+    }
+
     return STATUS_SUCCESS;
 }
 
@@ -155,6 +179,9 @@ auto HMDT::Project::MapProject::export_(const std::filesystem::path& root) const
     RETURN_IF_ERROR(result);
 
     result = m_heightmap_project.export_(root);
+    RETURN_IF_ERROR(result);
+
+    result = m_rivers_project.export_(root);
     RETURN_IF_ERROR(result);
 
     ////////////////////////////////////////////////////////////////////////////
@@ -405,6 +432,18 @@ auto HMDT::Project::MapProject::getContinentProject() const noexcept
     -> const ContinentProject&
 {
     return m_continent_project;
+}
+
+auto HMDT::Project::MapProject::getRiversProject() noexcept
+    -> RiversProject&
+{
+    return m_rivers_project;
+}
+
+auto HMDT::Project::MapProject::getRiversProject() const noexcept
+    -> const RiversProject&
+{
+    return m_rivers_project;
 }
 
 auto HMDT::Project::MapProject::getMapData() -> std::shared_ptr<MapData> {

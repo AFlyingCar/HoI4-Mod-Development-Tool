@@ -63,6 +63,10 @@ namespace HMDT {
     template<typename T>
     class Maybe: public MonadOptional<T> {
         public:
+            // Make sure we don't hide the base class overloads
+            using MonadOptional<T>::orElse;
+            using MonadOptional<T>::getWrapped;
+
             Maybe() noexcept: MonadOptional<T>(), m_ec() { }
 
             /**
@@ -121,6 +125,92 @@ namespace HMDT {
                 m_ec = maybe.m_ec;
 
                 return *this;
+            }
+
+            ////////////////////////////////////////////////////////////////////
+
+            /**
+             * @brief Performs an additional operation if this function holds
+             *        a value, and returns a std::monostate.
+             *
+             * @param func A function which returns nothing.
+             *
+             * @return A std::monostate, or std::nullopt if this object does not
+             *         hold a value.
+             */
+            MonadOptional<std::monostate> andThen(std::function<void(T&)> func)
+            {
+                if(getWrapped()) {
+                    func(*getWrapped());
+                    return std::monostate{};
+                }
+
+                return std::nullopt;
+            }
+
+            /**
+             * @brief Performs an additional operation if this function holds
+             *        a value, and returns the result.
+             *
+             * @tparam R The type returned by the given function
+             * @param func A function which returns a Maybe
+             *
+             * @return The return value of func, or std::nullopt if this object
+             *         does not hold a value.
+             */
+            template<typename R>
+            Maybe<R> andThen(std::function<Maybe<R>(T&)> func) {
+                if(getWrapped()) {
+                    return func(*getWrapped());
+                }
+
+                return std::nullopt;
+            }
+
+            /**
+             * @brief Performs an additional operation if this function holds
+             *        a value, and returns the result.
+             *
+             * @tparam R The type returned by the given function
+             * @param func A function which returns a Maybe
+             *
+             * @return The return value of func, or std::nullopt if this object
+             *         does not hold a value.
+             */
+            template<typename R>
+            Maybe<R> andThen(std::function<Maybe<R>(const T&)> func) const {
+                if(getWrapped()) {
+                    return func(*getWrapped());
+                }
+
+                return std::nullopt;
+            }
+
+            /**
+             * @brief Returns this optional if a value is held, otherwise it
+             *        calls the given function.
+             *
+             * @tparam R The type returned by the given function. Must be
+             *           convertible to a T.
+             * @param func A function to call if this object does not hold a
+             *             value
+             *
+             * @return If no value is held, then either the return value of func
+             *         will be returned, or std::nullopt if R is void
+             */
+            template<typename R,
+                     typename = std::enable_if_t<std::is_convertible_v<R, T> ||
+                                                 std::is_void_v<R>>>
+            Maybe<T> orElse(std::function<Maybe<R>()> func) {
+                if(getWrapped()) {
+                    return getWrapped();
+                }
+
+                if constexpr(std::is_same_v<R, void>) {
+                    return std::nullopt;
+                } else {
+                    return func();
+                }
             }
 
             ////////////////////////////////////////////////////////////////////
@@ -210,52 +300,52 @@ namespace HMDT {
     // Compare with std::error_code
     template<typename T>
     constexpr bool operator==(const Maybe<T>& lhs, const std::error_code& rhs) {
-        return lhs.getWrapped() == rhs;
+        return lhs.error() == rhs;
     }
     template<typename T>
     constexpr bool operator!=(const Maybe<T>& lhs, const std::error_code& rhs) {
-        return lhs.getWrapped() != rhs;
+        return lhs.error() != rhs;
     }
     template<typename T>
     constexpr bool operator<(const Maybe<T>& lhs, const std::error_code& rhs) {
-        return lhs.getWrapped() < rhs;
+        return lhs.error() < rhs;
     }
     template<typename T>
     constexpr bool operator<=(const Maybe<T>& lhs, const std::error_code& rhs) {
-        return lhs.getWrapped() <= rhs;
+        return lhs.error() <= rhs;
     }
     template<typename T>
     constexpr bool operator>(const Maybe<T>& lhs, const std::error_code& rhs) {
-        return lhs.getWrapped() > rhs;
+        return lhs.error() > rhs;
     }
     template<typename T>
     constexpr bool operator>=(const Maybe<T>& lhs, const std::error_code& rhs) {
-        return lhs.getWrapped() >= rhs;
+        return lhs.error() >= rhs;
     }
 
     template<typename T>
     constexpr bool operator==(const std::error_code& lhs, const Maybe<T>& rhs) {
-        return lhs == rhs.getWrapped();
+        return lhs == rhs.error();
     }
     template<typename T>
     constexpr bool operator!=(const std::error_code& lhs, const Maybe<T>& rhs) {
-        return lhs != rhs.getWrapped();
+        return lhs != rhs.error();
     }
     template<typename T>
     constexpr bool operator<(const std::error_code& lhs, const Maybe<T>& rhs) {
-        return lhs < rhs.getWrapped();
+        return lhs < rhs.error();
     }
     template<typename T>
     constexpr bool operator<=(const std::error_code& lhs, const Maybe<T>& rhs) {
-        return lhs <= rhs.getWrapped();
+        return lhs <= rhs.error();
     }
     template<typename T>
     constexpr bool operator>(const std::error_code& lhs, const Maybe<T>& rhs) {
-        return lhs > rhs.getWrapped();
+        return lhs > rhs.error();
     }
     template<typename T>
     constexpr bool operator>=(const std::error_code& lhs, const Maybe<T>& rhs) {
-        return lhs >= rhs.getWrapped();
+        return lhs >= rhs.error();
     }
 
     /**
@@ -270,6 +360,16 @@ namespace HMDT {
      * @brief Utility Maybe for void functions
      */
     using MaybeVoid = Maybe<std::monostate>;
+
+    template<typename T>
+    Maybe<T> asMaybe(const MonadOptional<T>& opt) {
+        return Maybe<T>(opt);
+    }
+
+    template<typename T>
+    Maybe<T> asMaybe(MonadOptional<T>&& opt) {
+        return Maybe<T>(std::move(opt));
+    }
 }
 
 /**

@@ -8,3 +8,4 @@ tests/bin/8bpp_greyscale_no_color_management.bmp filter=lfs diff=lfs merge=lfs -
 tests/bin/8bpp_greyscale.bmp filter=lfs diff=lfs merge=lfs -text
 tests/bin/complex_heightmap.bmp filter=lfs diff=lfs merge=lfs -text
 resources/textures/heightmap.png filter=lfs diff=lfs merge=lfs -text
+resources/textures/rivermap.png filter=lfs diff=lfs merge=lfs -text

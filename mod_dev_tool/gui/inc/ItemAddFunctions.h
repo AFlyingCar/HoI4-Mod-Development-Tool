@@ -19,6 +19,10 @@ namespace HMDT::GUI {
     ////////////////////////////////////////////////////////////////////////////
     Maybe<std::any> addHeightMap(Window&,
                                  const std::vector<std::filesystem::path>&);
+
+    ////////////////////////////////////////////////////////////////////////////
+    Maybe<std::any> addRivers(Window&,
+                              const std::vector<std::filesystem::path>&);
 }
 
 #endif

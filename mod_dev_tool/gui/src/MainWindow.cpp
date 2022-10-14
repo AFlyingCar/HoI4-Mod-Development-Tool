@@ -311,6 +311,43 @@ void HMDT::GUI::MainWindow::initializeProjectActions() {
         });
         export_project_as_action->set_enabled(false);
     }
+
+    {
+        auto generate_template_rivers_action = add_action("generate_template_rivers",
+        [this]()
+        {
+            if(auto opt_project = Driver::getInstance().getProject(); opt_project)
+            {
+                auto input_path = opt_project->get().getInputsRoot();
+                auto river_path = input_path / RIVERS_FILENAME;
+
+                auto& rivers_project = opt_project->get().getMapProject().getRiversProject();
+
+                // Generate a template "input" image, write it to the input/
+                //   folder
+                WRITE_DEBUG("Writing template Rivers map to ", input_path);
+                auto res = rivers_project.writeTemplate(river_path);
+                WRITE_IF_ERROR(res);
+
+                // Load that image back into the RiversProject
+                WRITE_DEBUG("Loading template Rivers map back into memory.");
+                res = rivers_project.loadFile(river_path);
+                WRITE_IF_ERROR(res);
+
+                {
+                    std::stringstream ss;
+                    ss << "<b>Successfully generated template river map.</b>\n\n"
+                       << river_path.generic_string();
+                    Gtk::MessageDialog dialog(*this, ss.str(), true,
+                                              Gtk::MESSAGE_INFO);
+                    dialog.run();
+                }
+            } else {
+                WRITE_ERROR("No project is loaded, unable to generate template river map.");
+            }
+        });
+        generate_template_rivers_action->set_enabled(false);
+    }
 }
 
 /**
@@ -716,6 +753,7 @@ void HMDT::GUI::MainWindow::onProjectOpened() {
     getAction("recalc_coasts")->set_enabled(true);
     getAction("export_project")->set_enabled(true);
     getAction("export_project_as")->set_enabled(true);
+    getAction("generate_template_rivers")->set_enabled(true);
     getAction("add_item")->set_enabled(true);
 
     // Issue callback to the properties pane to inform it that a project has
@@ -739,6 +777,7 @@ void HMDT::GUI::MainWindow::onProjectClosed() {
     getAction("recalc_coasts")->set_enabled(false);
     getAction("export_project")->set_enabled(false);
     getAction("export_project_as")->set_enabled(false);
+    getAction("generate_template_rivers")->set_enabled(false);
     getAction("add_item")->set_enabled(false);
 
     {

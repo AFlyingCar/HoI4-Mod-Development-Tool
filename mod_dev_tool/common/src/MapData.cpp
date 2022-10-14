@@ -12,6 +12,7 @@ HMDT::MapData::MapData():
     m_label_matrix(nullptr),
     m_state_id_matrix(nullptr),
     m_heightmap(nullptr),
+    m_rivers(nullptr),
     m_closed(false),
     m_state_id_matrix_updated_tag(0)
 {
@@ -27,6 +28,7 @@ HMDT::MapData::MapData(uint32_t width, uint32_t height):
     m_label_matrix(new uint32_t[getMatrixSize()]{ 0 }),
     m_state_id_matrix(new uint32_t[getMatrixSize()]{ 0 }),
     m_heightmap(new uint8_t[getHeightMapSize()]{ 0 }),
+    m_rivers(new uint8_t[getRiversSize()]{ 0 }),
     m_closed(false),
     m_state_id_matrix_updated_tag(0)
 {
@@ -42,6 +44,7 @@ HMDT::MapData::MapData(const MapData* other):
     m_label_matrix(other->m_label_matrix),
     m_state_id_matrix(other->m_state_id_matrix),
     m_heightmap(other->m_heightmap),
+    m_rivers(other->m_rivers),
     m_closed(other->m_closed),
     m_state_id_matrix_updated_tag(other->m_state_id_matrix_updated_tag)
 {
@@ -84,6 +87,10 @@ uint32_t HMDT::MapData::getMatrixSize() const {
 }
 
 uint32_t HMDT::MapData::getHeightMapSize() const {
+    return m_width * m_height;
+}
+
+uint32_t HMDT::MapData::getRiversSize() const {
     return m_width * m_height;
 }
 
@@ -169,5 +176,13 @@ HMDT::MapData::MapType HMDT::MapData::getHeightMap() {
 
 HMDT::MapData::ConstMapType HMDT::MapData::getHeightMap() const {
     return m_heightmap;
+}
+
+HMDT::MapData::MapType HMDT::MapData::getRivers() {
+    return m_rivers;
+}
+
+HMDT::MapData::ConstMapType HMDT::MapData::getRivers() const {
+    return m_rivers;
 }
 
