@@ -44,7 +44,7 @@ namespace HMDT::Project {
             virtual const StateMap& getStates() const override;
 
             virtual StateID addNewState(const std::vector<uint32_t>&) override;
-            virtual void removeState(StateID) override;
+            virtual MaybeVoid removeState(StateID) noexcept override;
 
             virtual State& getStateForIterator(StateMap::const_iterator) override;
             virtual const State& getStateForIterator(StateMap::const_iterator) const override;
