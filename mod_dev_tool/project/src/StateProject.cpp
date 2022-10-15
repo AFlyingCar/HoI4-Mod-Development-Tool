@@ -463,6 +463,13 @@ auto HMDT::Project::StateProject::addNewState(const std::vector<uint32_t>& provi
  * @param id The ID of the state to delete
  */
 void HMDT::Project::StateProject::removeState(StateID id) {
+    const auto& state = m_states.at(id);
+
+    // Disconnect each province from this state first
+    for(auto&& prov_id : state.provinces) {
+        getRootParent().getMapProject().getProvinceProject().getProvinceForLabel(prov_id).state = -1;
+    }
+
     m_available_state_ids.push(id);
     m_states.erase(id);
 
