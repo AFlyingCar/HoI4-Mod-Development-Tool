@@ -261,7 +261,24 @@ void HMDT::GUI::StatePropertiesPane::buildDeleteStateButton() {
                 m_state != nullptr && opt_project)
         {
             auto& history_project = opt_project->get().getHistoryProject();
-            history_project.getStateProject().removeState(m_state->id);
+            auto result = history_project.getStateProject().removeState(m_state->id);
+
+            if(IS_FAILURE(result)) {
+                std::stringstream ss;
+                ss << "Failed to delete state #" << m_state->id << ".";
+
+                std::stringstream ss2;
+                ss2 << "Reason: 0x"
+                   << std::hex << result.error().value() << std::dec
+                   << " '" << result.error().message() << "'";
+
+                Gtk::MessageDialog dialog(*this, ss.str(),
+                                          false, Gtk::MESSAGE_ERROR);
+                dialog.set_secondary_text(ss2.str());
+                dialog.run();
+
+                return;
+            }
 
             SelectionManager::getInstance().removeStateSelection(m_state->id);
         }
