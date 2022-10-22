@@ -53,6 +53,8 @@ namespace HMDT::Project {
             virtual IRootHistoryProject& getHistoryProject() noexcept override;
             virtual const IRootHistoryProject& getHistoryProject() const noexcept override;
 
+            virtual Maybe<std::shared_ptr<Hierarchy::INode>> visit(const std::function<MaybeVoid(Hierarchy::INode&)>&) const noexcept override;
+
             MaybeVoid load();
             MaybeVoid save(bool = true);
             MaybeVoid export_() const noexcept;

@@ -18,6 +18,9 @@
 
 #include "HoI4Project.h"
 
+#include "ProjectNode.h"
+#include "ProvinceNode.h"
+
 HMDT::Project::ProvinceProject::ProvinceProject(IRootMapProject& parent_project):
     m_parent_project(parent_project),
     m_provinces()
@@ -997,6 +1000,7 @@ auto HMDT::Project::ProvinceProject::getPreviewData(const Province* province_ptr
     return data;
 }
 
+<<<<<<< HEAD
 auto HMDT::Project::ProvinceProject::getOldIDToUUIDMap() const noexcept
     -> const std::unordered_map<uint32_t, UUID>&
 {
@@ -1020,5 +1024,78 @@ void HMDT::Project::ProvinceProject::rebuildUUIDToIDMap() noexcept {
     for(auto&& [id, _] : m_provinces) {
         m_uuid_to_oldid[id] = ++i;
     }
+}
+
+auto HMDT::Project::ProvinceProject::visit(const std::function<MaybeVoid(Hierarchy::INode&)>& visitor) const noexcept
+    -> Maybe<std::shared_ptr<Hierarchy::INode>>
+{
+    auto province_project_node = std::make_shared<Hierarchy::ProjectNode>("Provinces");
+
+    auto result = visitor(*province_project_node);
+    RETURN_IF_ERROR(result);
+
+    result = visitProvinces(visitor)
+        .andThen([&province_project_node](auto provinces_group_node) -> MaybeVoid {
+            auto result = province_project_node->addChild(provinces_group_node);
+            RETURN_IF_ERROR(result);
+
+            return STATUS_SUCCESS;
+        });
+    RETURN_IF_ERROR(result);
+
+    return province_project_node;
+}
+
+auto HMDT::Project::ProvinceProject::visitProvinces(const std::function<MaybeVoid(Hierarchy::INode&)>& visitor) const noexcept
+    -> Maybe<std::shared_ptr<Hierarchy::IGroupNode>>
+{
+    // This should be a static group since the number of provinces will not
+    //   change unless a new province map is loaded
+    auto provinces_group_node = std::make_shared<Hierarchy::GroupNode>("Provinces");
+
+    auto result = visitor(*provinces_group_node);
+    RETURN_IF_ERROR(result);
+
+    for(auto&& province : m_provinces) {
+        auto name = std::to_string(province.id);
+
+        auto province_node = std::make_shared<Hierarchy::ProvinceNode>(name);
+
+        result = visitor(*province_node);
+        RETURN_IF_ERROR(result);
+
+        result = province_node->setID(const_cast<ProvinceID&>(province.id));
+        RETURN_IF_ERROR(result);
+
+        result = province_node->setColor(const_cast<const Color&>(province.unique_color));
+        RETURN_IF_ERROR(result);
+
+        result = province_node->setProvinceType(const_cast<ProvinceType&>(province.type));
+        RETURN_IF_ERROR(result);
+
+        result = province_node->setCoastal(const_cast<bool&>(province.coastal));
+        RETURN_IF_ERROR(result);
+
+        result = province_node->setTerrain(const_cast<TerrainID&>(province.terrain));
+        RETURN_IF_ERROR(result);
+
+        result = province_node->setContinent(const_cast<Continent&>(province.continent));
+        RETURN_IF_ERROR(result);
+
+#if 0
+        // TODO
+        {
+            result = province_node->setState(const_cast<State&>(province.state));
+            RETURN_IF_ERROR(result);
+        }
+#endif
+
+        result = province_node->setAdjacentProvinces(province.adjacent_provinces);
+        RETURN_IF_ERROR(result);
+
+        provinces_group_node->addChild(name, province_node);
+    }
+
+    return provinces_group_node;
 }
 

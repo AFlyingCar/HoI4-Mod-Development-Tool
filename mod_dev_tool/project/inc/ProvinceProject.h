@@ -39,6 +39,10 @@ namespace HMDT::Project {
 
             virtual uint32_t getIDForProvinceID(const ProvinceID&) const noexcept override;
 
+            virtual Maybe<std::shared_ptr<Hierarchy::INode>> visit(const std::function<MaybeVoid(Hierarchy::INode&)>&) const noexcept override;
+
+            Maybe<std::shared_ptr<Hierarchy::IGroupNode>> visitProvinces(const std::function<MaybeVoid(Hierarchy::INode&)>&) const noexcept;
+
             void buildProvinceOutlines();
         protected:
             MaybeVoid saveShapeLabels(const std::filesystem::path&);

@@ -8,6 +8,10 @@
 #include "Constants.h"
 #include "StatusCodes.h"
 
+#include "GroupNode.h"
+#include "ProjectNode.h"
+#include "PropertyNode.h"
+
 HMDT::Project::ContinentProject::ContinentProject(IRootMapProject& parent):
     m_parent_project(parent),
     m_continents()
@@ -154,3 +158,32 @@ auto HMDT::Project::ContinentProject::getRootMapParent() const
 auto HMDT::Project::ContinentProject::getContinents() -> ContinentSet& {
     return m_continents;
 }
+
+auto HMDT::Project::ContinentProject::visit(const std::function<MaybeVoid(Hierarchy::INode&)>& visitor) const noexcept
+    -> Maybe<std::shared_ptr<Hierarchy::INode>>
+{
+    auto continent_project_node = std::make_shared<Hierarchy::ProjectNode>("Continent");
+
+    auto result = visitor(*continent_project_node);
+    RETURN_IF_ERROR(result);
+
+    auto continents_node = std::make_shared<Hierarchy::DynamicGroupNode>("Continents",
+        [this](const Hierarchy::DynamicGroupNode& node)
+            -> Hierarchy::IGroupNode::Children
+        {
+            Hierarchy::IGroupNode::Children children;
+            for(const auto& continent : m_continents) {
+                auto property = std::make_shared<Hierarchy::ConstPropertyNode<std::string>>(continent, continent);
+                children[continent] = property;
+            }
+            return children;
+        });
+
+    result = visitor(*continents_node);
+    RETURN_IF_ERROR(result);
+
+    continent_project_node->addChild(continents_node);
+
+    return continent_project_node;
+}
+

@@ -14,6 +14,9 @@
 
 #include "WorldNormalBuilder.h"
 
+#include "ProjectNode.h"
+#include "PropertyNode.h"
+
 HMDT::Project::HeightMapProject::HeightMapProject(IRootMapProject& parent):
     m_parent_project(parent),
     m_heightmap_bmp(nullptr)
@@ -224,5 +227,27 @@ auto HMDT::Project::HeightMapProject::getBitMap() const
     } else {
         return std::nullopt;
     }
+}
+
+auto HMDT::Project::HeightMapProject::visit(const std::function<MaybeVoid(Hierarchy::INode&)>& visitor) const noexcept
+    -> Maybe<std::shared_ptr<Hierarchy::INode>>
+{
+    auto heightmap_project_node = std::make_shared<Hierarchy::ProjectNode>("HeightMap");
+
+    auto result = visitor(*heightmap_project_node);
+    RETURN_IF_ERROR(result);
+
+    // Heightmap only has a single property under it, the heightmap itself which
+    //   cannot be easily manipulated as a primitive, so we simply expose a
+    //   single constant string view
+    // TODO: Should we instead actually not expose anything?
+    auto heightmap_node = std::make_shared<Hierarchy::ConstPropertyNode<std::string>>("HeightMap");
+
+    result = visitor(*heightmap_node);
+    RETURN_IF_ERROR(result);
+
+    heightmap_project_node->addChild(heightmap_node);
+
+    return heightmap_project_node;
 }
 

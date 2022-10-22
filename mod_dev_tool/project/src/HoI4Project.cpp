@@ -12,6 +12,10 @@
 #include "Constants.h"
 #include "StatusCodes.h"
 
+#include "GroupNode.h"
+#include "ProjectNode.h"
+#include "PropertyNode.h"
+
 HMDT::Project::HoI4Project::HoI4Project():
     m_path(),
     m_root(),
@@ -433,5 +437,62 @@ void HMDT::Project::HoI4Project::setHoI4Version(const Version& version) {
 bool HMDT::Project::HoI4Project::validateData() {
     return m_map_project.validateData() &&
            m_history_project.validateData();
+}
+
+auto HMDT::Project::HoI4Project::visit(const std::function<MaybeVoid(Hierarchy::INode&)>& visitor) const noexcept
+    -> Maybe<std::shared_ptr<Hierarchy::INode>>
+{
+    auto hoi4_project_node = std::make_shared<Hierarchy::ProjectNode>("Root");
+
+    auto result = visitor(*hoi4_project_node);
+    RETURN_IF_ERROR(result);
+
+    auto name_node = std::make_shared<Hierarchy::PropertyNode<std::string>>("Name", const_cast<std::string&>(m_name));
+    result = visitor(*name_node);
+    RETURN_IF_ERROR(result);
+    hoi4_project_node->addChild(name_node);
+
+    auto hoi4_version_node = std::make_shared<Hierarchy::PropertyNode<Version>>("HoI4 Version", const_cast<Version&>(m_hoi4_version));
+    result = visitor(*hoi4_version_node);
+    RETURN_IF_ERROR(result);
+    hoi4_project_node->addChild(hoi4_version_node);
+
+    auto tags_node = std::make_shared<Hierarchy::GroupNode>("Tags");
+    result = visitor(*tags_node);
+    RETURN_IF_ERROR(result);
+
+    for(auto&& tag : m_tags) {
+        auto tag_node = std::make_shared<Hierarchy::ConstPropertyNode<std::string>>(tag);
+
+        result = visitor(*tag_node);
+        RETURN_IF_ERROR(result);
+
+        result = tags_node->addChild(tag_node);
+        RETURN_IF_ERROR(result);
+    }
+
+    hoi4_project_node->addChild(tags_node);
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    result = getMapProject().visit(visitor)
+        .andThen([&hoi4_project_node](auto map_project_node) -> MaybeVoid {
+            auto result = hoi4_project_node->addChild(map_project_node);
+            RETURN_IF_ERROR(result);
+
+            return STATUS_SUCCESS;
+        });
+    RETURN_IF_ERROR(result);
+
+    result = getHistoryProject().visit(visitor)
+        .andThen([&hoi4_project_node](auto history_project_node) -> MaybeVoid {
+            auto result = hoi4_project_node->addChild(history_project_node);
+            RETURN_IF_ERROR(result);
+
+            return STATUS_SUCCESS;
+        });
+    RETURN_IF_ERROR(result);
+
+    return hoi4_project_node;
 }
 

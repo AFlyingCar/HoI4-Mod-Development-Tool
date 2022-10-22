@@ -14,6 +14,9 @@
 
 #include "WorldNormalBuilder.h"
 
+#include "ProjectNode.h"
+#include "PropertyNode.h"
+
 HMDT::Project::RiversProject::RiversProject(IRootMapProject& parent):
     m_parent_project(parent),
     m_rivers_bmp(nullptr)
@@ -303,5 +306,27 @@ auto HMDT::Project::RiversProject::generateColorTable() noexcept
             { { 0, 0, 0, 0 } }, // UNKNOWN COMMENT
         }) /* color_table */
     };
+}
+
+auto HMDT::Project::RiversProject::visit(const std::function<MaybeVoid(Hierarchy::INode&)>& visitor) const noexcept
+    -> Maybe<std::shared_ptr<Hierarchy::INode>>
+{
+    auto rivers_project_node = std::make_shared<Hierarchy::ProjectNode>("Rivers");
+
+    auto result = visitor(*rivers_project_node);
+    RETURN_IF_ERROR(result);
+
+    // Heightmap only has a single property under it, the heightmap itself which
+    //   cannot be easily manipulated as a primitive, so we simply expose a
+    //   single constant string view
+    // TODO: Should we instead actually not expose anything?
+    auto rivers_node = std::make_shared<Hierarchy::ConstPropertyNode<std::string>>("Rivers");
+
+    result = visitor(*rivers_node);
+    RETURN_IF_ERROR(result);
+
+    rivers_project_node->addChild(rivers_node);
+
+    return rivers_project_node;
 }
 

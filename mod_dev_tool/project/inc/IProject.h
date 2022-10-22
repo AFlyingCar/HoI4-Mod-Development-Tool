@@ -16,6 +16,8 @@
 
 # include "Terrain.h"
 
+# include "INode.h"
+
 // Forward declarations
 namespace HMDT {
     class MapData;
@@ -45,7 +47,6 @@ namespace HMDT::Project {
         using PromptCallback = std::function<Maybe<uint32_t>(const std::string&,
                                                              const std::vector<std::string>&,
                                                              const PromptType&)>;
-
         IProject();
         virtual ~IProject() = default;
 
@@ -58,6 +59,8 @@ namespace HMDT::Project {
         virtual const IRootProject& getRootParent() const = 0;
 
         virtual bool validateData() = 0;
+
+        virtual Maybe<std::shared_ptr<Hierarchy::INode>> visit(const std::function<MaybeVoid(Hierarchy::INode&)>&) const noexcept = 0;
 
         void setPromptCallback(const PromptCallback&);
         void resetPromptCallback();

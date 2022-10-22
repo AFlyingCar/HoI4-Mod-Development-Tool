@@ -15,6 +15,10 @@
 
 #include "HoI4Project.h"
 
+#include "ProjectNode.h"
+#include "GroupNode.h"
+#include "StateNode.h"
+
 HMDT::Project::StateProject::StateProject(IRootHistoryProject& parent_project):
     m_parent_project(parent_project),
     m_available_state_ids(),
@@ -540,5 +544,69 @@ auto HMDT::Project::StateProject::removeProvinceFromState(StateID state_id,
             }
         }
     });
+}
+
+auto HMDT::Project::StateProject::visit(const std::function<MaybeVoid(Hierarchy::INode&)>& visitor) const noexcept
+    -> Maybe<std::shared_ptr<Hierarchy::INode>>
+{
+    auto state_project_node = std::make_shared<Hierarchy::ProjectNode>("States");
+
+    auto result = visitor(*state_project_node);
+    RETURN_IF_ERROR(result);
+
+    result = visitStates(visitor)
+        .andThen([&state_project_node](auto states_group_node) -> MaybeVoid {
+            auto result = state_project_node->addChild(states_group_node);
+            RETURN_IF_ERROR(result);
+
+            return STATUS_SUCCESS;
+        });
+    RETURN_IF_ERROR(result);
+
+    return state_project_node;
+}
+
+auto HMDT::Project::StateProject::visitStates(const std::function<MaybeVoid(Hierarchy::INode&)>& visitor) const noexcept
+    -> Maybe<std::shared_ptr<Hierarchy::IGroupNode>>
+{
+    auto states_group_node = std::make_shared<Hierarchy::DynamicGroupNode>("States",
+        [this](const Hierarchy::DynamicGroupNode& node)
+            -> Hierarchy::IGroupNode::Children
+        {
+            Hierarchy::IGroupNode::Children children;
+
+            for(auto&& [id, state] : m_states) {
+                auto state_node = std::make_shared<Hierarchy::StateNode>(state.name);
+
+                state_node->setID(const_cast<StateID&>(state.id));
+                state_node->setManpower(const_cast<size_t&>(state.manpower));
+                state_node->setCategory(const_cast<std::string&>(state.category));
+                state_node->setBuildingsMaxLevelFactor(const_cast<float&>(state.buildings_max_level_factor));
+                state_node->setImpassable(const_cast<bool&>(state.impassable));
+
+                // Since this is a DynamicGroup for States, setting the
+                //   provinces statically should be fine, but we may want to
+                //   change this to somehow produce a DynamicGroup instead?
+                state_node->setProvinces(state.provinces);
+
+                // Find out how many children share the same name as this state
+                uint32_t count = 0;
+                for(; children.count(state.name + "-" + std::to_string(count)) != 0;
+                      ++count);
+
+                if(count == 0) {
+                    children[state.name] = state_node;
+                } else {
+                    children[state.name + "-" + std::to_string(count)] = state_node;
+                }
+            }
+
+            return children;
+        });
+
+    auto result = visitor(*states_group_node);
+    RETURN_IF_ERROR(result);
+
+    return states_group_node;
 }
 
