@@ -17,6 +17,15 @@
 # include <variant> // std::monostate
 
 namespace HMDT {
+    template<typename T>
+    struct IsOptional: public std::false_type{};
+
+    template<typename T>
+    struct IsOptional<std::optional<T>>: public std::true_type{};
+
+    template<typename T>
+    constexpr bool IsOptional_v = IsOptional<T>::value;
+
     /**
      * @brief A light-weight wrapper around a std::optional, with support for
      *        monadic functions/operations
@@ -51,7 +60,8 @@ namespace HMDT {
             { }
 
             template<typename U = T,
-                     typename = std::enable_if_t<!std::is_same_v<U, MonadOptional<T>>>
+                     typename = std::enable_if_t<!std::is_base_of_v<MonadOptional<T>, U> &&
+                                                 !IsOptional_v<U>>
                     >
             constexpr MonadOptional(U&& value): m_opt(std::forward<U>(value))
             { }

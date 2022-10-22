@@ -229,7 +229,8 @@ namespace HMDT {
             //   than just specialization due to a GCC bug that prevents
             //   specialization in non-namespace scopes
 
-            template<typename U = T>
+            template<typename U = T,
+                     typename = std::enable_if_t<std::is_constructible_v<T, U>>>
             Maybe(const Maybe<U>& maybe, Identity_t<U>):
                 MonadOptional<T>(maybe.getWrapped()),
                 m_ec(maybe.error())
@@ -239,7 +240,8 @@ namespace HMDT {
                 MonadOptional<T>(std::nullopt), m_ec(maybe.error())
             { }
 
-            template<typename U = T>
+            template<typename U = T,
+                     typename = std::enable_if_t<std::is_constructible_v<T, U&&>>>
             Maybe(Maybe<U>&& maybe, Identity_t<U>):
                 MonadOptional<T>(std::move(maybe)),
                 m_ec(std::move(maybe.error()))
