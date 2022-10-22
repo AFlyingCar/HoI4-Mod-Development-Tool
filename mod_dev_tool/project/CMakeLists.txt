@@ -21,6 +21,8 @@ target_link_libraries(project PRIVATE nlohmann_json::nlohmann_json)
 
 target_link_libraries(project PUBLIC fifo_map)
 
+add_subdirectory(hierarchy)
+
 # Link against local libraries
-target_link_libraries(project PUBLIC common province_utils)
+target_link_libraries(project PUBLIC common province_utils project_hierarchy)
 
