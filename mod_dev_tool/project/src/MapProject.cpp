@@ -291,7 +291,7 @@ auto HMDT::Project::MapProject::validateProvinceStateID(StateID province_state_i
         const auto& state_project = getRootParent().getHistoryProject().getStateProject();
 
         if(!state_project.isValidStateID(province_state_id)) {
-            WRITE_WARN("Province has state ID of ", province_state_id, " which is invalid!");
+            WRITE_WARN("Province ", province_id, " has state ID of ", province_state_id, " which is invalid!");
             return STATUS_PROVINCE_INVALID_STATE_ID;
         }
 

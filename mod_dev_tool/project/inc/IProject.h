@@ -179,7 +179,7 @@ namespace HMDT::Project {
         virtual const StateMap& getStates() const = 0;
 
         virtual StateID addNewState(const std::vector<uint32_t>&) = 0;
-        virtual void removeState(StateID) = 0;
+        virtual MaybeVoid removeState(StateID) noexcept = 0;
 
         virtual State& getStateForIterator(StateMap::const_iterator) = 0;
         virtual const State& getStateForIterator(StateMap::const_iterator) const = 0;

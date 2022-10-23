@@ -462,11 +462,24 @@ auto HMDT::Project::StateProject::addNewState(const std::vector<uint32_t>& provi
  *
  * @param id The ID of the state to delete
  */
-void HMDT::Project::StateProject::removeState(StateID id) {
+auto HMDT::Project::StateProject::removeState(StateID id) noexcept -> MaybeVoid
+{
+    MaybeRef<State> state = getStateForID(id);
+    RETURN_IF_ERROR(state);
+
+    state.andThen([this](const State& state) {
+        // Disconnect each province from this state first
+        for(auto&& prov_id : state.provinces) {
+            getRootParent().getMapProject().getProvinceProject().getProvinceForLabel(prov_id).state = -1;
+        }
+    });
+
     m_available_state_ids.push(id);
     m_states.erase(id);
 
     updateStateIDMatrix();
+
+    return STATUS_SUCCESS;
 }
 
 auto HMDT::Project::StateProject::getStateForIterator(StateMap::const_iterator cit)
