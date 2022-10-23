@@ -272,7 +272,7 @@ void HMDT::GUI::StatePropertiesPane::buildDeleteStateButton() {
                    << std::hex << result.error().value() << std::dec
                    << " '" << result.error().message() << "'";
 
-                Gtk::MessageDialog dialog(*this, ss.str(),
+                Gtk::MessageDialog dialog(ss.str(),
                                           false, Gtk::MESSAGE_ERROR);
                 dialog.set_secondary_text(ss2.str());
                 dialog.run();
