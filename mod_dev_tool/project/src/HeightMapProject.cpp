@@ -229,12 +229,12 @@ auto HMDT::Project::HeightMapProject::getBitMap() const
     }
 }
 
-auto HMDT::Project::HeightMapProject::visit(const std::function<MaybeVoid(Hierarchy::INode&)>& visitor) const noexcept
+auto HMDT::Project::HeightMapProject::visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
     -> Maybe<std::shared_ptr<Hierarchy::INode>>
 {
     auto heightmap_project_node = std::make_shared<Hierarchy::ProjectNode>("HeightMap");
 
-    auto result = visitor(*heightmap_project_node);
+    auto result = visitor(heightmap_project_node);
     RETURN_IF_ERROR(result);
 
     // Heightmap only has a single property under it, the heightmap itself which
@@ -243,7 +243,7 @@ auto HMDT::Project::HeightMapProject::visit(const std::function<MaybeVoid(Hierar
     // TODO: Should we instead actually not expose anything?
     auto heightmap_node = std::make_shared<Hierarchy::ConstPropertyNode<std::string>>("HeightMap");
 
-    result = visitor(*heightmap_node);
+    result = visitor(heightmap_node);
     RETURN_IF_ERROR(result);
 
     heightmap_project_node->addChild(heightmap_node);

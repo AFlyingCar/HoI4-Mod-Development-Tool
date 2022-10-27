@@ -159,12 +159,12 @@ auto HMDT::Project::ContinentProject::getContinents() -> ContinentSet& {
     return m_continents;
 }
 
-auto HMDT::Project::ContinentProject::visit(const std::function<MaybeVoid(Hierarchy::INode&)>& visitor) const noexcept
+auto HMDT::Project::ContinentProject::visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
     -> Maybe<std::shared_ptr<Hierarchy::INode>>
 {
     auto continent_project_node = std::make_shared<Hierarchy::ProjectNode>("Continent");
 
-    auto result = visitor(*continent_project_node);
+    auto result = visitor(continent_project_node);
     RETURN_IF_ERROR(result);
 
     auto continents_node = std::make_shared<Hierarchy::DynamicGroupNode>("Continents",
@@ -179,7 +179,7 @@ auto HMDT::Project::ContinentProject::visit(const std::function<MaybeVoid(Hierar
             return children;
         });
 
-    result = visitor(*continents_node);
+    result = visitor(continents_node);
     RETURN_IF_ERROR(result);
 
     continent_project_node->addChild(continents_node);

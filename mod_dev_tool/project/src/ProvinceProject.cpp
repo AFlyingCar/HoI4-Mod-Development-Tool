@@ -1000,7 +1000,6 @@ auto HMDT::Project::ProvinceProject::getPreviewData(const Province* province_ptr
     return data;
 }
 
-<<<<<<< HEAD
 auto HMDT::Project::ProvinceProject::getOldIDToUUIDMap() const noexcept
     -> const std::unordered_map<uint32_t, UUID>&
 {
@@ -1026,12 +1025,12 @@ void HMDT::Project::ProvinceProject::rebuildUUIDToIDMap() noexcept {
     }
 }
 
-auto HMDT::Project::ProvinceProject::visit(const std::function<MaybeVoid(Hierarchy::INode&)>& visitor) const noexcept
+auto HMDT::Project::ProvinceProject::visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
     -> Maybe<std::shared_ptr<Hierarchy::INode>>
 {
     auto province_project_node = std::make_shared<Hierarchy::ProjectNode>("Provinces");
 
-    auto result = visitor(*province_project_node);
+    auto result = visitor(province_project_node);
     RETURN_IF_ERROR(result);
 
     result = visitProvinces(visitor)
@@ -1046,14 +1045,14 @@ auto HMDT::Project::ProvinceProject::visit(const std::function<MaybeVoid(Hierarc
     return province_project_node;
 }
 
-auto HMDT::Project::ProvinceProject::visitProvinces(const std::function<MaybeVoid(Hierarchy::INode&)>& visitor) const noexcept
+auto HMDT::Project::ProvinceProject::visitProvinces(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
     -> Maybe<std::shared_ptr<Hierarchy::IGroupNode>>
 {
     // This should be a static group since the number of provinces will not
     //   change unless a new province map is loaded
     auto provinces_group_node = std::make_shared<Hierarchy::GroupNode>("Provinces");
 
-    auto result = visitor(*provinces_group_node);
+    auto result = visitor(provinces_group_node);
     RETURN_IF_ERROR(result);
 
     for(auto&& province : m_provinces) {
@@ -1061,7 +1060,7 @@ auto HMDT::Project::ProvinceProject::visitProvinces(const std::function<MaybeVoi
 
         auto province_node = std::make_shared<Hierarchy::ProvinceNode>(name);
 
-        result = visitor(*province_node);
+        result = visitor(province_node);
         RETURN_IF_ERROR(result);
 
         result = province_node->setID(const_cast<ProvinceID&>(province.id));

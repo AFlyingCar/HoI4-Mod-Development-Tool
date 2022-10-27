@@ -60,7 +60,7 @@ namespace HMDT::Project {
 
         virtual bool validateData() = 0;
 
-        virtual Maybe<std::shared_ptr<Hierarchy::INode>> visit(const std::function<MaybeVoid(Hierarchy::INode&)>&) const noexcept = 0;
+        virtual Maybe<std::shared_ptr<Hierarchy::INode>> visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>&) const noexcept = 0;
 
         void setPromptCallback(const PromptCallback&);
         void resetPromptCallback();

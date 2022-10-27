@@ -34,7 +34,7 @@ namespace HMDT::Project {
 
             virtual MaybeVoid loadFile(const std::filesystem::path&) noexcept override;
 
-            virtual Maybe<std::shared_ptr<Hierarchy::INode>> visit(const std::function<MaybeVoid(Hierarchy::INode&)>&) const noexcept override;
+            virtual Maybe<std::shared_ptr<Hierarchy::INode>> visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>&) const noexcept override;
 
             MonadOptionalRef<const BitMap2> getBitMap() const;
 

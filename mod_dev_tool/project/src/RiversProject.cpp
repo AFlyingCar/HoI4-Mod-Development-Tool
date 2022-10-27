@@ -308,12 +308,12 @@ auto HMDT::Project::RiversProject::generateColorTable() noexcept
     };
 }
 
-auto HMDT::Project::RiversProject::visit(const std::function<MaybeVoid(Hierarchy::INode&)>& visitor) const noexcept
+auto HMDT::Project::RiversProject::visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
     -> Maybe<std::shared_ptr<Hierarchy::INode>>
 {
     auto rivers_project_node = std::make_shared<Hierarchy::ProjectNode>("Rivers");
 
-    auto result = visitor(*rivers_project_node);
+    auto result = visitor(rivers_project_node);
     RETURN_IF_ERROR(result);
 
     // Heightmap only has a single property under it, the heightmap itself which
@@ -322,7 +322,7 @@ auto HMDT::Project::RiversProject::visit(const std::function<MaybeVoid(Hierarchy
     // TODO: Should we instead actually not expose anything?
     auto rivers_node = std::make_shared<Hierarchy::ConstPropertyNode<std::string>>("Rivers");
 
-    result = visitor(*rivers_node);
+    result = visitor(rivers_node);
     RETURN_IF_ERROR(result);
 
     rivers_project_node->addChild(rivers_node);

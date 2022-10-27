@@ -39,9 +39,9 @@ namespace HMDT::Project {
 
             virtual uint32_t getIDForProvinceID(const ProvinceID&) const noexcept override;
 
-            virtual Maybe<std::shared_ptr<Hierarchy::INode>> visit(const std::function<MaybeVoid(Hierarchy::INode&)>&) const noexcept override;
+            virtual Maybe<std::shared_ptr<Hierarchy::INode>> visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>&) const noexcept override;
 
-            Maybe<std::shared_ptr<Hierarchy::IGroupNode>> visitProvinces(const std::function<MaybeVoid(Hierarchy::INode&)>&) const noexcept;
+            Maybe<std::shared_ptr<Hierarchy::IGroupNode>> visitProvinces(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>&) const noexcept;
 
             void buildProvinceOutlines();
         protected:

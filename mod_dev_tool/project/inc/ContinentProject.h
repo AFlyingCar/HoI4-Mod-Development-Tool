@@ -32,7 +32,7 @@ namespace HMDT::Project {
             virtual IRootMapProject& getRootMapParent() override;
             virtual const IRootMapProject& getRootMapParent() const override;
 
-            virtual Maybe<std::shared_ptr<Hierarchy::INode>> visit(const std::function<MaybeVoid(Hierarchy::INode&)>&) const noexcept override;
+            virtual Maybe<std::shared_ptr<Hierarchy::INode>> visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>&) const noexcept override;
 
         private:
             virtual ContinentSet& getContinents() override;

@@ -54,9 +54,9 @@ namespace HMDT::Project {
             virtual MaybeVoid addProvinceToState(StateID, ProvinceID) override;
             virtual MaybeVoid removeProvinceFromState(StateID, ProvinceID) override;
 
-            virtual Maybe<std::shared_ptr<Hierarchy::INode>> visit(const std::function<MaybeVoid(Hierarchy::INode&)>&) const noexcept override;
+            virtual Maybe<std::shared_ptr<Hierarchy::INode>> visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>&) const noexcept override;
 
-            Maybe<std::shared_ptr<Hierarchy::IGroupNode>> visitStates(const std::function<MaybeVoid(Hierarchy::INode&)>&) const noexcept;
+            Maybe<std::shared_ptr<Hierarchy::IGroupNode>> visitStates(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>&) const noexcept;
 
             StateMap& getStateMap(Token) { return getStateMap(); };
         protected:

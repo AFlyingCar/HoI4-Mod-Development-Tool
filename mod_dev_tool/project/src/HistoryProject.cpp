@@ -87,12 +87,12 @@ bool HMDT::Project::HistoryProject::validateData() {
     return true;
 }
 
-auto HMDT::Project::HistoryProject::visit(const std::function<MaybeVoid(Hierarchy::INode&)>& visitor) const noexcept
+auto HMDT::Project::HistoryProject::visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
     -> Maybe<std::shared_ptr<Hierarchy::INode>>
 {
     auto history_project_node = std::make_shared<Hierarchy::ProjectNode>("History");
 
-    auto result = visitor(*history_project_node);
+    auto result = visitor(history_project_node);
     RETURN_IF_ERROR(result);
 
     result = getStateProject().visit(visitor)
