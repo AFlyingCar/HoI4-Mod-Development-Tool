@@ -5,6 +5,8 @@
 #include <filesystem>
 #include <cstring>
 #include <fstream>
+#include <stack>
+#include <vector>
 
 #include "HoI4Project.h"
 #include "Constants.h"
@@ -12,6 +14,7 @@
 #include "Logger.h"
 #include "ShapeFinder2.h"
 #include "Util.h"
+#include "ProjectNode.h"
 
 #include "TestUtils.h"
 #include "TestMocks.h"
@@ -725,5 +728,180 @@ TEST(ProjectTests, MergeProvinceTests) {
     ASSERT_TRUE(!prov1.children.empty() != !prov4.children.empty());
 
     HMDT::Log::Logger::getInstance().reset();
+}
+
+TEST(ProjectTests, SimpleHierarchyTest) {
+    // We also want to see log outputs in the test output
+    HMDT::UnitTests::registerTestLogOutputFunction(true, true, true, true);
+
+    auto project_path = HMDT::UnitTests::getTestProgramPath() / "bin" / "simple.hoi4proj";
+    auto root_path = project_path.parent_path();
+    auto projmeta_path = root_path / HMDT::PROJ_META_FOLDER;
+
+    HMDT::Project::Project hproject(project_path);
+    ASSERT_STATUS(hproject.load(), HMDT::STATUS_SUCCESS);
+
+    auto maybe_root_node = hproject.visit([](auto&&...){ return HMDT::STATUS_SUCCESS; });
+    ASSERT_SUCCEEDED(maybe_root_node);
+
+    auto root_node = *maybe_root_node;
+
+    ASSERT_EQ(root_node->getType(), HMDT::Project::Hierarchy::Node::Type::PROJECT);
+
+    auto project_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::ProjectNode>(root_node);
+    ASSERT_NE(project_node, nullptr);
+
+    ASSERT_EQ(project_node->getChildren().size(), 5);
+
+    // Check the various non-project nodes
+
+    auto maybe_name_node = (*project_node)["Name"];
+    ASSERT_SUCCEEDED(maybe_name_node);
+    ASSERT_EQ((*maybe_name_node)->getType(), HMDT::Project::Hierarchy::Node::Type::PROPERTY);
+    auto name_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::IPropertyNode>(*maybe_name_node);
+    ASSERT_NE(name_node, nullptr);
+    ASSERT_EQ(*name_node, hproject.getName());
+
+    auto maybe_version_node = (*project_node)["HoI4 Version"];
+    ASSERT_SUCCEEDED(maybe_version_node);
+    ASSERT_EQ((*maybe_version_node)->getType(), HMDT::Project::Hierarchy::Node::Type::PROPERTY);
+    auto version_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::IPropertyNode>(*maybe_version_node);
+    ASSERT_NE(version_node, nullptr);
+    ASSERT_EQ(*version_node, hproject.getHoI4Version());
+
+    auto maybe_tags_node = (*project_node)["Tags"];
+    ASSERT_SUCCEEDED(maybe_tags_node);
+    ASSERT_EQ((*maybe_tags_node)->getType(), HMDT::Project::Hierarchy::Node::Type::GROUP);
+    auto tags_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::IGroupNode>(*maybe_tags_node);
+    ASSERT_NE(tags_node, nullptr);
+    ASSERT_EQ(tags_node->getChildren().size(), 0);
+}
+
+TEST(ProjectTests, SimpleHierarchyIterationTest) {
+    // We also want to see log outputs in the test output
+    HMDT::UnitTests::registerTestLogOutputFunction(true, true, true, true);
+
+    auto project_path = HMDT::UnitTests::getTestProgramPath() / "bin" / "simple.hoi4proj";
+    auto root_path = project_path.parent_path();
+    auto projmeta_path = root_path / HMDT::PROJ_META_FOLDER;
+
+    HMDT::Project::Project hproject(project_path);
+    ASSERT_STATUS(hproject.load(), HMDT::STATUS_SUCCESS);
+
+    std::vector<std::shared_ptr<HMDT::Project::Hierarchy::ILinkNode>> link_nodes;
+    auto maybe_root_node = hproject.visit([&link_nodes](std::shared_ptr<HMDT::Project::Hierarchy::INode> node)
+        -> HMDT::MaybeVoid
+        {
+            if(node->getType() == HMDT::Project::Hierarchy::Node::Type::LINK) {
+                auto link = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::ILinkNode>(node);
+                RETURN_ERROR_IF(link == nullptr, HMDT::STATUS_PARAM_CANNOT_BE_NULL);
+
+                link_nodes.push_back(link);
+            }
+
+            return HMDT::STATUS_SUCCESS;
+        });
+    ASSERT_SUCCEEDED(maybe_root_node);
+
+    // Visit again to build all of the link nodes
+    hproject.visit([&link_nodes](std::shared_ptr<HMDT::Project::Hierarchy::INode> node)
+        -> HMDT::MaybeVoid
+        {
+            link_nodes.erase(std::remove_if(link_nodes.begin(), link_nodes.end(),
+                        [&node](auto link_node) {
+                            return link_node->resolveLink(node);
+                        }), link_nodes.end());
+
+            return HMDT::STATUS_SUCCESS;
+        });
+
+    auto root_node = *maybe_root_node;
+
+    ASSERT_EQ(root_node->getType(), HMDT::Project::Hierarchy::Node::Type::PROJECT);
+
+    auto project_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::ProjectNode>(root_node);
+    ASSERT_NE(project_node, nullptr);
+
+    // Depth-first iteration over the entire tree structure
+    std::stack<std::shared_ptr<HMDT::Project::Hierarchy::IGroupNode>> next_groups;
+    next_groups.push(project_node);
+
+    uint32_t last_indent = 0;
+    std::stack<uint32_t> next_indents;
+    next_indents.push(0);
+    while(!next_groups.empty()) {
+        auto next_group = next_groups.top();
+        next_groups.pop();
+
+        // Formatting
+        uint32_t indent_level = next_indents.top();
+        next_indents.pop();
+        std::string indent1(2 * indent_level, ' ');
+        std::string indent2(2 * (indent_level + 1), ' ');
+
+        WRITE_INFO(indent1, std::to_string(*next_group), "={");
+        for(auto&& [name, child_node] : next_group->getChildren()) {
+            switch(child_node->getType()) {
+                // If it is a group or group-like, make sure to add it to the
+                //   back of the groups queue
+                case HMDT::Project::Hierarchy::Node::Type::GROUP:
+                case HMDT::Project::Hierarchy::Node::Type::PROJECT:
+                case HMDT::Project::Hierarchy::Node::Type::STATE:
+                case HMDT::Project::Hierarchy::Node::Type::PROVINCE:
+                {
+                    next_indents.push(indent_level + 1);
+                    auto group_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::IGroupNode>(child_node);
+                    ASSERT_NE(group_node, nullptr);
+                    next_groups.push(group_node);
+                    break;
+                }
+                case HMDT::Project::Hierarchy::Node::Type::PROPERTY:
+                case HMDT::Project::Hierarchy::Node::Type::CONST_PROPERTY:
+                {
+                    auto prop_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::IPropertyNode>(child_node);
+                    ASSERT_NE(prop_node, nullptr);
+
+                    // TODO: Verification?
+                    std::string value_string = "<";
+                    if(prop_node->hasValue()) {
+                        value_string.append("data> [type=");
+                        value_string.append(prop_node->getTypeInfo()->name());
+                        value_string.append("]");
+                    } else {
+                        value_string += "null>";
+                    }
+                    WRITE_INFO(indent2, std::to_string(*prop_node), "=", value_string);
+
+                    break;
+                }
+                case HMDT::Project::Hierarchy::Node::Type::LINK:
+                {
+                    auto link_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::ILinkNode>(child_node);
+                    ASSERT_NE(link_node, nullptr);
+
+                    ASSERT_TRUE(link_node->isLinkValid());
+
+                    // TODO: Verification?
+                    WRITE_INFO(indent2, std::to_string(*link_node), "->", link_node->getLinkedNode());
+
+                    break;
+                }
+            }
+        }
+        if(next_indents.empty()               ||
+           next_indents.top() == indent_level ||
+           next_indents.top() == indent_level - 1)
+        {
+            WRITE_INFO(indent1, "}");
+        }
+        last_indent = indent_level;
+    }
+
+    for(uint32_t i = 0, m=last_indent; i < m; ++i) {
+        std::string indent(2 * (last_indent - 1), ' ');
+        --last_indent;
+
+        WRITE_INFO(indent, "}");
+    }
 }
 
