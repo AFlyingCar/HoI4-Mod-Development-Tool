@@ -16,12 +16,10 @@ namespace HMDT::Project::Hierarchy {
             virtual ~DynamicGroupNode() = default;
 
             virtual const Children& getChildren() const noexcept override;
+            virtual Children getChildren() noexcept override;
 
             virtual const std::string& getName() const noexcept override;
             virtual Type getType() const noexcept override;
-
-        protected:
-            virtual Children getChildren() noexcept override;
 
         private:
             //! The name of this group
@@ -41,15 +39,13 @@ namespace HMDT::Project::Hierarchy {
             virtual ~GroupNode() = default;
 
             virtual const Children& getChildren() const noexcept override;
+            virtual Children getChildren() noexcept override;
 
             virtual const std::string& getName() const noexcept override;
             virtual Type getType() const noexcept override;
 
             MaybeVoid addChild(const std::string&, ChildNode) noexcept;
             MaybeVoid addChild(ChildNode) noexcept;
-
-        protected:
-            virtual Children getChildren() noexcept override;
 
         private:
             //! The name of this group
