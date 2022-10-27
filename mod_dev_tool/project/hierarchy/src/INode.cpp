@@ -21,4 +21,26 @@ auto HMDT::Project::Hierarchy::IGroupNode::operator[](const std::string& name) n
     }
 }
 
+std::string std::to_string(const HMDT::Project::Hierarchy::Node::Type& type) {
+    switch(type) {
+        case HMDT::Project::Hierarchy::Node::Type::GROUP:
+            return "Group";
+        case HMDT::Project::Hierarchy::Node::Type::PROJECT:
+            return "Project";
+        case HMDT::Project::Hierarchy::Node::Type::PROPERTY:
+            return "Property";
+        case HMDT::Project::Hierarchy::Node::Type::CONST_PROPERTY:
+            return "ConstProperty";
+        case HMDT::Project::Hierarchy::Node::Type::PROVINCE:
+            return "Province";
+        case HMDT::Project::Hierarchy::Node::Type::STATE:
+            return "State";
+        case HMDT::Project::Hierarchy::Node::Type::LINK:
+            return "Link";
+    }
+}
+
+std::string std::to_string(const HMDT::Project::Hierarchy::INode& node) {
+    return node.getName() + " [" + std::to_string(node.getType()) + "]";
+}
 

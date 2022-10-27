@@ -10,6 +10,7 @@
 # include <map>
 # include <string>
 # include <memory>
+# include <typeindex>
 
 # include "Maybe.h"
 # include "StatusCodes.h"
@@ -57,12 +58,10 @@ namespace HMDT::Project::Hierarchy {
             virtual ~IGroupNode() = default;
 
             virtual const Children& getChildren() const noexcept = 0;
+            virtual Children getChildren() noexcept = 0;
 
             Maybe<ConstChildNode> operator[](const std::string&) const noexcept;
             Maybe<ChildNode> operator[](const std::string&) noexcept;
-
-        protected:
-            virtual Children getChildren() noexcept = 0;
     };
 
     class IPropertyNode: public INode {
@@ -125,11 +124,21 @@ namespace HMDT::Project::Hierarchy {
 
             virtual Maybe<std::any> getAnyValue() const noexcept = 0;
             virtual Maybe<std::any> getAnyValue() noexcept = 0;
+            virtual Maybe<std::type_index> getTypeInfo() const noexcept = 0;
 
             virtual MaybeVoid setValue(const std::any&) noexcept = 0;
 
             virtual bool canSetValue() const noexcept = 0;
+
+            virtual bool hasValue() const noexcept {
+                return getAnyValue().has_value();
+            }
     };
+}
+
+namespace std {
+    string to_string(const HMDT::Project::Hierarchy::Node::Type&);
+    string to_string(const HMDT::Project::Hierarchy::INode&);
 }
 
 #endif

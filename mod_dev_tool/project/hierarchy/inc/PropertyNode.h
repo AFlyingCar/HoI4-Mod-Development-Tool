@@ -20,7 +20,8 @@ namespace HMDT::Project::Hierarchy {
              */
             PropertyNode(const std::string& name, T& value):
                 m_name(name),
-                m_value(value)
+                m_value(value),
+                m_type_index(typeid(T))
             { }
 
             virtual ~PropertyNode() = default;
@@ -39,6 +40,11 @@ namespace HMDT::Project::Hierarchy {
 
             virtual Maybe<std::any> getAnyValue() noexcept override {
                 return m_value;
+            }
+
+            virtual Maybe<std::type_index> getTypeInfo() const noexcept override
+            {
+                return m_type_index;
             }
 
             /**
@@ -65,12 +71,19 @@ namespace HMDT::Project::Hierarchy {
                 return true;
             }
 
+            virtual bool hasValue() const noexcept override {
+                return true;
+            }
+
         protected:
             //! The name of this property
             std::string m_name;
 
             //! A reference to the value this node represents
             T& m_value;
+
+            //! Information about the type stored in this node
+            std::type_index m_type_index;
     };
 
     /**
