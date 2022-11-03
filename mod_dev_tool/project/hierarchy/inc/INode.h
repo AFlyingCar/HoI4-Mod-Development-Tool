@@ -25,6 +25,9 @@ namespace HMDT::Project::Hierarchy {
         };
     }
 
+    class INode;
+    using INodeVisitor = std::function<MaybeVoid(std::shared_ptr<INode>)>;
+
     class INode {
         protected:
             using Type = Node::Type;
