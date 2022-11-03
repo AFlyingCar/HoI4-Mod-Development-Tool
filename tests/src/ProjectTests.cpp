@@ -788,6 +788,30 @@ TEST(ProjectTests, SimpleHierarchyIterationTest) {
     HMDT::Project::Project hproject(project_path);
     ASSERT_STATUS(hproject.load(), HMDT::STATUS_SUCCESS);
 
+    // Load in some province data and create a few states
+    {
+        // Load in province data
+        auto path = HMDT::UnitTests::getTestProgramPath() / "bin" / "simple.bmp";
+
+        std::shared_ptr<HMDT::BitMap> image(new HMDT::BitMap);
+
+        ASSERT_NE(HMDT::readBMP(path, image.get()), nullptr);
+
+        std::shared_ptr<HMDT::MapData> map_data(new HMDT::MapData(image->info_header.width,
+                                                                  image->info_header.height));
+
+        HMDT::ShapeFinder finder(image.get(),
+                                 HMDT::UnitTests::GraphicsWorkerMock::getInstance(),
+                                 map_data);
+        finder.findAllShapes();
+
+        hproject.getMapProject().import(finder, map_data);
+
+        // Generate a few states
+        hproject.getHistoryProject().getStateProject().addNewState({ 1, 2, 3, 4, 5 });
+        hproject.getHistoryProject().getStateProject().addNewState({ 6, 7, 8, 9, 10 });
+    }
+
     std::vector<std::shared_ptr<HMDT::Project::Hierarchy::ILinkNode>> link_nodes;
     auto maybe_root_node = hproject.visit([&link_nodes](std::shared_ptr<HMDT::Project::Hierarchy::INode> node)
         -> HMDT::MaybeVoid
@@ -795,6 +819,8 @@ TEST(ProjectTests, SimpleHierarchyIterationTest) {
             if(node->getType() == HMDT::Project::Hierarchy::Node::Type::LINK) {
                 auto link = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::ILinkNode>(node);
                 RETURN_ERROR_IF(link == nullptr, HMDT::STATUS_PARAM_CANNOT_BE_NULL);
+
+                WRITE_INFO("Found Link Node");
 
                 link_nodes.push_back(link);
             }
@@ -809,11 +835,17 @@ TEST(ProjectTests, SimpleHierarchyIterationTest) {
         {
             link_nodes.erase(std::remove_if(link_nodes.begin(), link_nodes.end(),
                         [&node](auto link_node) {
-                            return link_node->resolveLink(node);
+                            auto result = link_node->resolveLink(node);
+                            if(result) {
+                                WRITE_INFO("Resolving link node");
+                            }
+
+                            return result;
                         }), link_nodes.end());
 
             return HMDT::STATUS_SUCCESS;
         });
+    ASSERT_TRUE(link_nodes.empty());
 
     auto root_node = *maybe_root_node;
 
@@ -879,10 +911,13 @@ TEST(ProjectTests, SimpleHierarchyIterationTest) {
                     auto link_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::ILinkNode>(child_node);
                     ASSERT_NE(link_node, nullptr);
 
-                    ASSERT_TRUE(link_node->isLinkValid());
+                    EXPECT_TRUE(link_node->isLinkValid());
 
                     // TODO: Verification?
-                    WRITE_INFO(indent2, std::to_string(*link_node), "->", link_node->getLinkedNode());
+                    std::string linked_node_string = link_node->isLinkValid() ?
+                                                     std::to_string(*link_node->getLinkedNode()) :
+                                                     std::string("<UNKNOWN>");
+                    WRITE_INFO(indent2, std::to_string(*link_node), "->", linked_node_string);
 
                     break;
                 }
