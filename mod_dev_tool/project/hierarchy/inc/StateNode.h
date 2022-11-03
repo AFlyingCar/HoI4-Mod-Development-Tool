@@ -23,12 +23,12 @@ namespace HMDT::Project::Hierarchy {
 
             virtual Type getType() const noexcept override;
 
-            MaybeVoid setID(uint32_t&) noexcept;
-            MaybeVoid setManpower(size_t&) noexcept;
-            MaybeVoid setCategory(std::string&) noexcept;
-            MaybeVoid setBuildingsMaxLevelFactor(float&) noexcept;
-            MaybeVoid setImpassable(bool&) noexcept;
-            MaybeVoid setProvinces(const std::vector<ProvinceID>&) noexcept;
+            MaybeVoid setID(uint32_t&, const INodeVisitor&) noexcept;
+            MaybeVoid setManpower(size_t&, const INodeVisitor&) noexcept;
+            MaybeVoid setCategory(std::string&, const INodeVisitor&) noexcept;
+            MaybeVoid setBuildingsMaxLevelFactor(float&, const INodeVisitor&) noexcept;
+            MaybeVoid setImpassable(bool&, const INodeVisitor&) noexcept;
+            MaybeVoid setProvinces(const std::vector<ProvinceID>&, const INodeVisitor&) noexcept;
 
             Maybe<std::shared_ptr<const IPropertyNode>> getIDProperty() const noexcept;
             Maybe<std::shared_ptr<const IPropertyNode>> getManpowerProperty() const noexcept;

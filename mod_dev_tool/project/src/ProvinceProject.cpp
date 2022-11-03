@@ -1063,34 +1063,31 @@ auto HMDT::Project::ProvinceProject::visitProvinces(const std::function<MaybeVoi
         result = visitor(province_node);
         RETURN_IF_ERROR(result);
 
-        result = province_node->setID(const_cast<ProvinceID&>(province.id));
+        result = province_node->setID(const_cast<ProvinceID&>(province.id), visitor);
         RETURN_IF_ERROR(result);
 
-        result = province_node->setColor(const_cast<const Color&>(province.unique_color));
+        result = province_node->setColor(const_cast<const Color&>(province.unique_color), visitor);
         RETURN_IF_ERROR(result);
 
-        result = province_node->setProvinceType(const_cast<ProvinceType&>(province.type));
+        result = province_node->setProvinceType(const_cast<ProvinceType&>(province.type), visitor);
         RETURN_IF_ERROR(result);
 
-        result = province_node->setCoastal(const_cast<bool&>(province.coastal));
+        result = province_node->setCoastal(const_cast<bool&>(province.coastal), visitor);
         RETURN_IF_ERROR(result);
 
-        result = province_node->setTerrain(const_cast<TerrainID&>(province.terrain));
+        result = province_node->setTerrain(const_cast<TerrainID&>(province.terrain), visitor);
         RETURN_IF_ERROR(result);
 
-        result = province_node->setContinent(const_cast<Continent&>(province.continent));
+        result = province_node->setContinent(const_cast<Continent&>(province.continent), visitor);
         RETURN_IF_ERROR(result);
 
 #if 0
-        // TODO
-        {
-            result = province_node->setState(const_cast<State&>(province.state));
-            RETURN_IF_ERROR(result);
-        }
-#endif
-
-        result = province_node->setAdjacentProvinces(province.adjacent_provinces);
+        result = province_node->setState(const_cast<State&>(province.state), visitor);
         RETURN_IF_ERROR(result);
+
+        result = province_node->setAdjacentProvinces(province.adjacent_provinces, visitor);
+        RETURN_IF_ERROR(result);
+#endif
 
         provinces_group_node->addChild(name, province_node);
     }

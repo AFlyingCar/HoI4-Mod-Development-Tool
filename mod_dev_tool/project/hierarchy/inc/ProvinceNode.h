@@ -25,14 +25,14 @@ namespace HMDT::Project::Hierarchy {
 
             virtual Type getType() const noexcept override;
 
-            MaybeVoid setID(ProvinceID&) noexcept;
-            MaybeVoid setColor(const Color&) noexcept;
-            MaybeVoid setProvinceType(ProvinceType&) noexcept;
-            MaybeVoid setCoastal(bool&) noexcept;
-            MaybeVoid setTerrain(TerrainID&) noexcept;
-            MaybeVoid setContinent(Continent&) noexcept;
-            MaybeVoid setState(State&) noexcept;
-            MaybeVoid setAdjacentProvinces(const std::set<ProvinceID>&) noexcept;
+            MaybeVoid setID(ProvinceID&, const INodeVisitor&) noexcept;
+            MaybeVoid setColor(const Color&, const INodeVisitor&) noexcept;
+            MaybeVoid setProvinceType(ProvinceType&, const INodeVisitor&) noexcept;
+            MaybeVoid setCoastal(bool&, const INodeVisitor&) noexcept;
+            MaybeVoid setTerrain(TerrainID&, const INodeVisitor&) noexcept;
+            MaybeVoid setContinent(Continent&, const INodeVisitor&) noexcept;
+            MaybeVoid setState(State&, const INodeVisitor&) noexcept;
+            MaybeVoid setAdjacentProvinces(const std::set<ProvinceID>&, const INodeVisitor&) noexcept;
 
             Maybe<std::shared_ptr<const IPropertyNode>> getIDProperty() const noexcept;
             Maybe<std::shared_ptr<const IPropertyNode>> getColorProperty() const noexcept;

@@ -11,10 +11,12 @@ auto HMDT::Project::Hierarchy::StateNode::getType() const noexcept -> Type {
     return Node::Type::STATE;
 }
 
-auto HMDT::Project::Hierarchy::StateNode::setID(uint32_t& id) noexcept
+auto HMDT::Project::Hierarchy::StateNode::setID(uint32_t& id,
+                                                const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     auto id_node = std::make_shared<PropertyNode<uint32_t>>(ID, id);
+    visitor(id_node);
 
     auto result = addChild(id_node);
     RETURN_IF_ERROR(result);
@@ -22,11 +24,13 @@ auto HMDT::Project::Hierarchy::StateNode::setID(uint32_t& id) noexcept
     return STATUS_SUCCESS;
 }
 
-auto HMDT::Project::Hierarchy::StateNode::setManpower(size_t& manpower) noexcept
+auto HMDT::Project::Hierarchy::StateNode::setManpower(size_t& manpower,
+                                                      const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     auto manpower_node = std::make_shared<PropertyNode<size_t>>(MANPOWER,
                                                                 manpower);
+    visitor(manpower_node);
 
     auto result = addChild(manpower_node);
     RETURN_IF_ERROR(result);
@@ -34,11 +38,13 @@ auto HMDT::Project::Hierarchy::StateNode::setManpower(size_t& manpower) noexcept
     return STATUS_SUCCESS;
 }
 
-auto HMDT::Project::Hierarchy::StateNode::setCategory(std::string& category) noexcept
+auto HMDT::Project::Hierarchy::StateNode::setCategory(std::string& category,
+                                                      const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     auto category_node = std::make_shared<PropertyNode<std::string>>(CATEGORY,
                                                                      category);
+    visitor(category_node);
 
     auto result = addChild(category_node);
     RETURN_IF_ERROR(result);
@@ -46,11 +52,13 @@ auto HMDT::Project::Hierarchy::StateNode::setCategory(std::string& category) noe
     return STATUS_SUCCESS;
 }
 
-auto HMDT::Project::Hierarchy::StateNode::setBuildingsMaxLevelFactor(float& buildings_max_level_factor) noexcept
+auto HMDT::Project::Hierarchy::StateNode::setBuildingsMaxLevelFactor(float& buildings_max_level_factor,
+                                                                     const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     auto bmlf_node = std::make_shared<PropertyNode<float>>(BUILDINGS_MAX_LEVEL_FACTOR,
                                                            buildings_max_level_factor);
+    visitor(bmlf_node);
 
     auto result = addChild(bmlf_node);
     RETURN_IF_ERROR(result);
@@ -58,11 +66,13 @@ auto HMDT::Project::Hierarchy::StateNode::setBuildingsMaxLevelFactor(float& buil
     return STATUS_SUCCESS;
 }
 
-auto HMDT::Project::Hierarchy::StateNode::setImpassable(bool& impassable) noexcept
+auto HMDT::Project::Hierarchy::StateNode::setImpassable(bool& impassable,
+                                                        const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     auto impassable_node = std::make_shared<PropertyNode<bool>>(IMPASSABLE,
                                                                 impassable);
+    visitor(impassable_node);
 
     auto result = addChild(impassable_node);
     RETURN_IF_ERROR(result);
@@ -70,12 +80,14 @@ auto HMDT::Project::Hierarchy::StateNode::setImpassable(bool& impassable) noexce
     return STATUS_SUCCESS;
 }
 
-auto HMDT::Project::Hierarchy::StateNode::setProvinces(const std::vector<ProvinceID>& provinces) noexcept
+auto HMDT::Project::Hierarchy::StateNode::setProvinces(const std::vector<ProvinceID>& provinces,
+                                                       const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     MaybeVoid result = STATUS_SUCCESS;
 
     auto provinces_group_node = std::make_shared<GroupNode>(PROVINCES);
+    visitor(provinces_group_node);
 
     for(auto&& province_id : provinces) {
         // Create a link node which will resolve on ProvinceNodes where
@@ -92,6 +104,7 @@ auto HMDT::Project::Hierarchy::StateNode::setProvinces(const std::vector<Provinc
 
                 return false;
             });
+        visitor(province_link_node);
 
         result = provinces_group_node->addChild(province_link_node);
         RETURN_IF_ERROR(result);

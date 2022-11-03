@@ -11,10 +11,12 @@ auto HMDT::Project::Hierarchy::ProvinceNode::getType() const noexcept -> Type {
     return Type::PROVINCE;
 }
 
-auto HMDT::Project::Hierarchy::ProvinceNode::setID(ProvinceID& id) noexcept
+auto HMDT::Project::Hierarchy::ProvinceNode::setID(ProvinceID& id,
+                                                   const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     auto id_node = std::make_shared<PropertyNode<uint32_t>>(ID, id);
+    visitor(id_node);
 
     auto result = addChild(id_node);
     RETURN_IF_ERROR(result);
@@ -22,10 +24,12 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setID(ProvinceID& id) noexcept
     return STATUS_SUCCESS;
 }
 
-auto HMDT::Project::Hierarchy::ProvinceNode::setColor(const Color& color) noexcept
+auto HMDT::Project::Hierarchy::ProvinceNode::setColor(const Color& color,
+                                                   const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     auto color_node = std::make_shared<ConstPropertyNode<Color>>(COLOR, color);
+    visitor(color_node);
 
     auto result = addChild(color_node);
     RETURN_IF_ERROR(result);
@@ -33,10 +37,12 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setColor(const Color& color) noexce
     return STATUS_SUCCESS;
 }
 
-auto HMDT::Project::Hierarchy::ProvinceNode::setProvinceType(ProvinceType& province_type) noexcept
+auto HMDT::Project::Hierarchy::ProvinceNode::setProvinceType(ProvinceType& province_type,
+                                                             const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     auto prov_type_node = std::make_shared<PropertyNode<ProvinceType>>(TYPE, province_type);
+    visitor(prov_type_node);
 
     auto result = addChild(prov_type_node);
     RETURN_IF_ERROR(result);
@@ -44,10 +50,12 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setProvinceType(ProvinceType& provi
     return STATUS_SUCCESS;
 }
 
-auto HMDT::Project::Hierarchy::ProvinceNode::setCoastal(bool& coastal) noexcept
+auto HMDT::Project::Hierarchy::ProvinceNode::setCoastal(bool& coastal,
+                                                        const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     auto coastal_node = std::make_shared<PropertyNode<bool>>(COASTAL, coastal);
+    visitor(coastal_node);
 
     auto result = addChild(coastal_node);
     RETURN_IF_ERROR(result);
@@ -55,11 +63,13 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setCoastal(bool& coastal) noexcept
     return STATUS_SUCCESS;
 }
 
-auto HMDT::Project::Hierarchy::ProvinceNode::setTerrain(TerrainID& terrain_id) noexcept
+auto HMDT::Project::Hierarchy::ProvinceNode::setTerrain(TerrainID& terrain_id,
+                                                        const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     auto terrain_node = std::make_shared<PropertyNode<TerrainID>>(TERRAIN,
                                                                   terrain_id);
+    visitor(terrain_node);
 
     auto result = addChild(terrain_node);
     RETURN_IF_ERROR(result);
@@ -67,11 +77,13 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setTerrain(TerrainID& terrain_id) n
     return STATUS_SUCCESS;
 }
 
-auto HMDT::Project::Hierarchy::ProvinceNode::setContinent(Continent& continent) noexcept
+auto HMDT::Project::Hierarchy::ProvinceNode::setContinent(Continent& continent,
+                                                          const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     auto continent_node = std::make_shared<PropertyNode<Continent>>(CONTINENT,
                                                                     continent);
+    visitor(continent_node);
 
     auto result = addChild(continent_node);
     RETURN_IF_ERROR(result);
@@ -79,12 +91,13 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setContinent(Continent& continent) 
     return STATUS_SUCCESS;
 }
 
-auto HMDT::Project::Hierarchy::ProvinceNode::setState(State& state) noexcept
+auto HMDT::Project::Hierarchy::ProvinceNode::setState(State& state,
+                                                      const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     auto state_id = state.id;
 
-    auto province_link_node = std::make_shared<LinkNode>(
+    auto state_link_node = std::make_shared<LinkNode>(
         state.name,
         [state_id](ILinkNode::LinkedNode node) -> bool {
             if(node->getType() == Node::Type::STATE) {
@@ -96,11 +109,13 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setState(State& state) noexcept
 
             return false;
         });
+    visitor(state_link_node);
 
     return STATUS_SUCCESS;
 }
 
-auto HMDT::Project::Hierarchy::ProvinceNode::setAdjacentProvinces(const std::set<ProvinceID>& adj_provinces) noexcept
+auto HMDT::Project::Hierarchy::ProvinceNode::setAdjacentProvinces(const std::set<ProvinceID>& adj_provinces,
+                                                                  const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     return STATUS_NOT_IMPLEMENTED;
