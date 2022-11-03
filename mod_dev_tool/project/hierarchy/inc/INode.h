@@ -26,9 +26,15 @@ namespace HMDT::Project::Hierarchy {
     }
 
     class INode;
-    using INodeVisitor = std::function<MaybeVoid(std::shared_ptr<INode>)>;
 
-    class INode {
+    using INodePtr = std::shared_ptr<INode>;
+
+    template<typename T = void>
+    using NodeVisitor = std::function<Maybe<T>(INodePtr)>;
+
+    using INodeVisitor = NodeVisitor<void>;
+
+    class INode: public std::enable_shared_from_this<INode> {
         protected:
             using Type = Node::Type;
 
@@ -37,6 +43,8 @@ namespace HMDT::Project::Hierarchy {
 
             virtual Type getType() const noexcept = 0;
             virtual const std::string& getName() const noexcept = 0;
+
+            virtual MaybeVoid visit(INodeVisitor) noexcept;
     };
 
     class ILinkNode: public INode {
@@ -59,6 +67,8 @@ namespace HMDT::Project::Hierarchy {
             using Children = std::unordered_map<std::string, ChildNode>;
 
             virtual ~IGroupNode() = default;
+
+            virtual MaybeVoid visit(INodeVisitor) noexcept override;
 
             virtual const Children& getChildren() const noexcept = 0;
             virtual Children getChildren() noexcept = 0;

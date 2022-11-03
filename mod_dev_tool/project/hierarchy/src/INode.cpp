@@ -1,6 +1,30 @@
 
 #include "INode.h"
 
+auto HMDT::Project::Hierarchy::INode::visit(INodeVisitor visitor) noexcept
+    -> MaybeVoid
+{
+    auto result = visitor(shared_from_this());
+    RETURN_IF_ERROR(result);
+
+    return STATUS_SUCCESS;
+}
+
+auto HMDT::Project::Hierarchy::IGroupNode::visit(INodeVisitor visitor) noexcept
+    -> MaybeVoid
+{
+    auto result = INode::visit(visitor);
+    RETURN_IF_ERROR(result);
+
+    const Children& children = getChildren();
+    for(auto&& [_, child] : children) {
+        result = child->visit(visitor);
+        RETURN_IF_ERROR(result);
+    }
+
+    return STATUS_SUCCESS;
+}
+
 auto HMDT::Project::Hierarchy::IGroupNode::operator[](const std::string& name) const noexcept
     -> Maybe<ConstChildNode>
 {
