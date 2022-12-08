@@ -180,6 +180,9 @@ namespace HMDT {
     bool operator==(const Color&, const Color&);
     bool operator!=(const Color&, const Color&);
 
+    template<typename T>
+    using Ref = std::reference_wrapper<T>;
+
     /**
      * @brief A helper alias
      */
