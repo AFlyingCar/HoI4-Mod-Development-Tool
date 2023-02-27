@@ -62,7 +62,7 @@ void HMDT::GUI::ProvincePropertiesPane::init() {
 }
 
 void HMDT::GUI::ProvincePropertiesPane::buildIsCoastalField() {
-    m_is_coastal_button = addWidget<Gtk::CheckButton>("Is Coastal");
+    m_is_coastal_button = addWidget<Gtk::CheckButton>(gettext("Is Coastal"));
 
     m_is_coastal_button->signal_toggled().connect([this]() {
         if(m_is_updating_properties) return;
@@ -77,14 +77,14 @@ void HMDT::GUI::ProvincePropertiesPane::buildIsCoastalField() {
 }
 
 void HMDT::GUI::ProvincePropertiesPane::buildProvinceTypeField() {
-    addWidget<Gtk::Label>("Province Type");
+    addWidget<Gtk::Label>(gettext("Province Type"));
 
     m_provtype_menu = addWidget<Gtk::ComboBoxText>();
 
     // You can only choose one of these 3 province types
-    m_provtype_menu->append("Land");
-    m_provtype_menu->append("Sea");
-    m_provtype_menu->append("Lake");
+    m_provtype_menu->append(gettext("Land"));
+    m_provtype_menu->append(gettext("Sea"));
+    m_provtype_menu->append(gettext("Lake"));
 
     m_provtype_menu->set_active(0);
     m_provtype_menu->signal_changed().connect([this]() {
