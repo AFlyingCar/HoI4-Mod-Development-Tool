@@ -12,6 +12,7 @@
 # include <variant>
 # include <filesystem>
 
+# include "Maybe.h"
 # include "Monad.h"
 # include "Logger.h"
 # include "Util.h"
@@ -36,6 +37,11 @@ namespace HMDT {
              * @brief All possible value types
              */
             using ValueVariant = std::variant<int64_t, uint64_t, double, bool, std::string>;
+
+            /**
+             * @brief The callback to be called when a preference value is changed
+             */
+            using OnPreferenceChangeCallback = std::function<bool(const ValueVariant&, const ValueVariant&)>;
 
             /**
              * @brief Helper function which constructs a ValueVariant from a T
@@ -147,12 +153,15 @@ namespace HMDT {
             //  as getPreferenceValue
             bool setPreferenceValue(const std::string& value_path, ValueVariant);
 
+            MaybeVoid setCallbackOnPreferenceChange(const std::string&,
+                                                    OnPreferenceChangeCallback) noexcept;
+
             void resetToDefaults();
 
-            bool validateLoadedPreferenceTypes();
+            MaybeVoid validateLoadedPreferenceTypes();
 
             void writeToJson(std::ostream&, bool = false) const;
-            bool writeToFile(bool = false) const;
+            MaybeVoid writeToFile(bool = false) const;
             void writeToLog() const;
 
             bool isInitialized() const;
@@ -274,6 +283,9 @@ namespace HMDT {
 
             //! All defined config environment variables
             std::map<std::string, ValueVariant> m_env_vars;
+
+            //! All registered callbacks to be called when a preference value changes
+            std::map<std::string, OnPreferenceChangeCallback> m_on_pref_change_callbacks;
 
             //! Used to specify if initialize() has been called and succeeded
             bool m_initialized;
