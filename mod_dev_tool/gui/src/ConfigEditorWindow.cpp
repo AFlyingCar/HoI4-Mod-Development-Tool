@@ -213,7 +213,8 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
             // m_save_button.set_relief(Gtk::RELIEF_NONE);
             m_save_button.get_style_context()->add_class(StyleClasses::SUGGESTED_ACTION.data());
             m_save_button.signal_clicked().connect([]() {
-                if(!Preferences::getInstance().writeToFile(true /* pretty */)) {
+                auto result = Preferences::getInstance().writeToFile(true /* pretty */);
+                if(IS_FAILURE(result)) {
                     WRITE_ERROR("Failed to write config options to file.");
                 }
             });
