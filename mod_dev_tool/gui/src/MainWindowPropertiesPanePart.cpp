@@ -47,7 +47,7 @@ Gtk::Frame* HMDT::GUI::MainWindowPropertiesPanePart::buildPropertiesPane(Gtk::Pa
     {
         m_province_properties_pane.reset(new ProvincePropertiesPane);
         m_province_properties_pane->init();
-        properties_tab->append_page(m_province_properties_pane->getParent(), "Province");
+        properties_tab->append_page(m_province_properties_pane->getParent(), gettext("Province"));
     }
 
     // State Tab
@@ -55,7 +55,7 @@ Gtk::Frame* HMDT::GUI::MainWindowPropertiesPanePart::buildPropertiesPane(Gtk::Pa
         m_state_properties_pane.reset(new StatePropertiesPane);
         m_state_properties_pane->init();
 
-        properties_tab->append_page(m_state_properties_pane->getParent(), "State");
+        properties_tab->append_page(m_state_properties_pane->getParent(), gettext("State"));
     }
 
     pane->property_position().signal_changed().connect([this]() {

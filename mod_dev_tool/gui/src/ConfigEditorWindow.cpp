@@ -42,13 +42,13 @@ const std::string& HMDT::GUI::ConfigEditorWindow::SectionListRow::getName() cons
 HMDT::GUI::ConfigEditorWindow::ConfigEditorWindow():
     m_box(Gtk::ORIENTATION_HORIZONTAL),
     m_left(Gtk::ORIENTATION_VERTICAL),
-    m_search_label("Search:"),
+    m_search_label(gettext("Search:")),
     m_result_box(Gtk::ORIENTATION_VERTICAL),
     m_save_reset_box(Gtk::ORIENTATION_HORIZONTAL),
-    m_save_button("Save Preferences"),
-    m_reset_button("Reset to Defaults")
+    m_save_button(gettext("Save Preferences")),
+    m_reset_button(gettext("Reset to Defaults"))
 {
-    set_title("Config Editor Window");
+    set_title(gettext("Config Editor Window"));
     set_default_size(662, 440);
 
     initWidgets();
@@ -136,7 +136,10 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
         // Build a label to mark the Sections section
         {
             // 16-point font. size is in terms of 1024-th of a point
-            m_sections_label.set_markup("<span size=\"16384\"><b>Sections</b></span>");
+            std::string markup = "<span size=\"16384\"><b>";
+            markup += gettext("Sections");
+            markup += "</b></span>";
+            m_sections_label.set_markup(markup);
         }
 
         // Now list all of the sections
@@ -188,10 +191,10 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
             m_reset_button.get_style_context()->add_class(StyleClasses::DESTRUCTIVE_ACTION.data());
             m_reset_button.signal_clicked().connect([this]() {
                 Gtk::MessageDialog dialog(*this,
-                                          "This will override all settings.",
+                                          gettext("This will override all settings."),
                                           false, Gtk::MESSAGE_WARNING);
 
-                dialog.add_button("Cancel", Gtk::RESPONSE_CANCEL);
+                dialog.add_button(gettext("Cancel"), Gtk::RESPONSE_CANCEL);
 
                 const int result = dialog.run();
                 switch(result) {
@@ -418,7 +421,7 @@ void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
             // Floating numbers are controlled with a constrained text-entry
             ConstrainedEntry* float_entry = new ConstrainedEntry;
             float_entry->setAllowedChars("0123456789.");
-            float_entry->set_placeholder_text("default: " + std::to_string(value));
+            float_entry->set_placeholder_text(gettext("default: ") + std::to_string(value));
 
             auto converter  = [](const std::string& text) {
                 if constexpr(std::is_same_v<T, double>) {
@@ -467,7 +470,7 @@ void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
         } else if constexpr(std::is_same_v<T, std::string>) {
             // Normal text is just controlled with a regular text-entry.
             Gtk::Entry* text_entry = new Gtk::Entry();
-            text_entry->set_placeholder_text("default: " + value);
+            text_entry->set_placeholder_text(gettext("default: ") + value);
 
             text_entry->signal_activate().connect([text_entry, path]() {
                 if(!Preferences::getInstance().setPreferenceValue(path,
