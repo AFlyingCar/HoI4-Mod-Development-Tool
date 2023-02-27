@@ -1,0 +1,601 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-02-26 21:02-0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:19
+msgid "Success"
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:20
+msgid "Memory allocation failed."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:21
+msgid "Feature is not implemented yet."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:22
+msgid "Given parameter may not be null."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:23
+msgid "The requested value could not be found."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:24
+msgid "The value has not been initialized or set yet."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:25
+msgid "Validation failed."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:28
+msgid "Project Validation Failed."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:29
+msgid "No project is currently loaded."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:30
+msgid "No data is currently loaded."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:31
+msgid ""
+"The loaded map image has dimensions which do not match previously loaded maps."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:32
+msgid "No prompt callback was registered with this project."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:35
+msgid "The Province's StateID is invalid."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:36
+msgid "The Province is not in the state it says it's in."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:39
+msgid "The state does not exist."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:42
+msgid "The provided dispatcher id does not exist."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:43
+#: mod_dev_tool/gui/src/AddFileWindow.cpp:193
+msgid "Failed to add item."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:44
+msgid "Failed to read bitmap when adding item."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:45
+msgid "No such item type of the given name exists."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:46
+msgid "The path list for adding an item is empty."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:47
+msgid "The response returned from the user prompt was unexpected."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:50
+msgid "Shape Finder was stopped early."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:53
+msgid "Unable to read from the given stream."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:54
+msgid "Too few bytes were read from the given stream."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:57
+msgid "String is unable to be converted to a level enum."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:60
+msgid "Validation using the BitMap's offset failed."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:61
+msgid "Invalid Bits Per Pixel."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:62
+msgid "A color table is required to be provided."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:63
+msgid "The bit-depth of the image is invalid."
+msgstr ""
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:66
+msgid "An unexpected error has occurred."
+msgstr ""
+
+#: mod_dev_tool/gui/src/AddFileWindow.cpp:70
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:197
+#: mod_dev_tool/gui/src/NewProjectDialog.cpp:28
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:185
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:241
+msgid "Cancel"
+msgstr ""
+
+#: mod_dev_tool/gui/src/AddFileWindow.cpp:71
+msgid "Add"
+msgstr ""
+
+#: mod_dev_tool/gui/src/AddFileWindow.cpp:73
+msgid "Add File"
+msgstr ""
+
+#: mod_dev_tool/gui/src/AddFileWindow.cpp:164
+msgid "Choose an input file"
+msgstr ""
+
+#: mod_dev_tool/gui/src/AddFileWindow.cpp:173
+#: mod_dev_tool/gui/src/MainWindow.cpp:705
+#: mod_dev_tool/gui/src/MainWindow.cpp:826
+msgid "All files"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:58
+msgid "File"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:59
+msgid "_New Project"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:60
+msgid "_Open Project"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:61
+msgid "_Save Project"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:62
+msgid "_Close Project"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:63 mod_dev_tool/gui/src/Toolbar.cpp:33
+msgid "_Add"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:64
+msgid "_Quit"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:67
+msgid "Edit"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:68 mod_dev_tool/gui/src/Toolbar.cpp:42
+msgid "_Undo"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:69 mod_dev_tool/gui/src/Toolbar.cpp:57
+msgid "_Redo"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:72
+msgid "View"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:73
+msgid "_Log Window"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:74
+msgid "_Switch Renderers"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:75
+msgid "_Use OpenGL"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:76
+msgid "_Use Cairo (DEPRECATED)"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:78
+msgid "_Switch Views"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:79
+msgid "_Province View"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:80
+msgid "_State View"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:82
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:87
+msgid "Debug"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:83
+msgid "Render Adjacencies"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:87
+msgid "Project"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:88
+msgid "Recalculate Coastal Provinces"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:89
+msgid "Export Project"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:90
+msgid "Export Project To"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:91
+msgid "Generate Template River Map"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:94
+msgid "Help"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:95
+msgid "Toggle Debug Mode"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:96
+msgid "_About"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:97
+msgid "_Wiki"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Application.cpp:98
+msgid "_Preferences"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:45
+msgid "Search:"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:48
+msgid "Save Preferences"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:49
+msgid "Reset to Defaults"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:51
+msgid "Config Editor Window"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:140
+msgid "Sections"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:194
+msgid "This will override all settings."
+msgstr ""
+
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:424
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:473
+msgid "default: "
+msgstr ""
+
+#: mod_dev_tool/gui/src/ItemAddFunctions.cpp:91
+msgid "Loading..."
+msgstr ""
+
+#: mod_dev_tool/gui/src/ItemTypes.inl:17
+msgid "Province Map Input"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ItemTypes.inl:36
+msgid "Province Image Files"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ItemTypes.inl:53
+msgid "Height Map"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ItemTypes.inl:66
+msgid "Height Map Image Files"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ItemTypes.inl:83
+msgid "River Map"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ItemTypes.inl:97
+msgid "River Map Image Files"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:86
+msgid "Info"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:88
+msgid "Error"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:89
+msgid "Warning"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:90
+msgid "From:"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:91
+msgid "Until:"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:92
+msgid "Module search:"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:93
+msgid "Filename search:"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:94
+msgid "Text search:"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:95
+msgid "Reset Filters"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:96
+msgid "Colorize Cells"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:100
+msgid "Log Viewer"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:176
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:211
+msgid "Now"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:177
+msgid "-1min"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:178
+msgid "-5min"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:212
+msgid "+1min"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:213
+msgid "+5min"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:373
+msgid "Timestamp"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:375
+msgid "Module"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:376
+msgid "Filename:Line"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:377
+msgid "Function"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:380
+msgid "Message"
+msgstr ""
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:391
+msgid "Level"
+msgstr ""
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:340
+msgid "Successfully generated template river map."
+msgstr ""
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:382
+msgid "Libraries Used:"
+msgstr ""
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:397
+msgid "Source code"
+msgstr ""
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:675
+msgid "Failed to save project."
+msgstr ""
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:701
+msgid "Choose a project file."
+msgstr ""
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:704
+#: mod_dev_tool/gui/src/MainWindow.cpp:825
+msgid "Project Files"
+msgstr ""
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:715
+msgid "Failed to open file."
+msgstr ""
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:724
+msgid "This project was built with a different tool version: '"
+msgstr ""
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:726
+msgid ""
+"'\n"
+"Color data may be generated differently."
+msgstr ""
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:803
+msgid "Failed to save file."
+msgstr ""
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:880
+msgid "Reason: "
+msgstr ""
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:884
+msgid "Failed to export project."
+msgstr ""
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:890
+msgid "Successfully exported project."
+msgstr ""
+
+#: mod_dev_tool/gui/src/MainWindowPropertiesPanePart.cpp:50
+msgid "Province"
+msgstr ""
+
+#: mod_dev_tool/gui/src/MainWindowPropertiesPanePart.cpp:58
+msgid "State"
+msgstr ""
+
+#: mod_dev_tool/gui/src/NewProjectDialog.cpp:11
+msgid "New Project"
+msgstr ""
+
+#: mod_dev_tool/gui/src/NewProjectDialog.cpp:27
+msgid "Create Project"
+msgstr ""
+
+#: mod_dev_tool/gui/src/NewProjectDialog.cpp:58
+msgid "Name: "
+msgstr ""
+
+#: mod_dev_tool/gui/src/NewProjectDialog.cpp:76
+msgid "Path: "
+msgstr ""
+
+#: mod_dev_tool/gui/src/NewProjectDialog.cpp:95
+msgid "Path to project"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:65
+msgid "Is Coastal"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:80
+msgid "Province Type"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:85
+msgid "Land"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:86
+msgid "Sea"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:87
+msgid "Lake"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:110
+msgid "Terrain Type"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:137
+msgid "Continent"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:173
+msgid "Add a continent"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:175
+msgid "Name of the new continent:"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:182
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:238
+msgid "Confirm"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:232
+msgid "Remove a Continent"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:289
+msgid "Create State"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Toolbar.cpp:35
+msgid "Add Item"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Toolbar.cpp:51
+msgid "Undo"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Toolbar.cpp:66
+msgid "Redo"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Toolbar.cpp:73
+msgid "_Paint"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Toolbar.cpp:75
+msgid "Property Paint Tool"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Toolbar.cpp:85
+msgid "_PlayHoI"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Toolbar.cpp:87
+msgid "Play"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Toolbar.cpp:95
+msgid "_SwitchView"
+msgstr ""
+
+#: mod_dev_tool/gui/src/Toolbar.cpp:117 mod_dev_tool/gui/src/Toolbar.cpp:122
+msgid "Switch View: "
+msgstr ""
