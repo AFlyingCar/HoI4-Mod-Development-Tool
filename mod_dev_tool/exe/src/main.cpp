@@ -11,7 +11,11 @@
 #include <cerrno> // errno
 #include <cstring> // strerror
 
+#include <libintl.h>
+
 #ifdef WIN32
+# define WIN32_LEAN_AND_MEAN
+# include <Windows.h>
 # include <shlwapi.h>
 # include "shlobj.h"
 # ifdef ERROR
@@ -125,9 +129,52 @@ std::filesystem::path getPreferencesPath() {
  *
  * @return True on success, false otherwise
  */
-bool initializePreferences() {
+auto initializePreferences() -> HMDT::MaybeVoid {
     // First, lets initialize the Preferences with the default values
     HMDT::Preferences::getInstance(false).setDefaultValues(HMDT::config_defaults);
+
+    // We have to make sure we also call this here so that the values exist so
+    //   the callbacks can be registered
+    HMDT::Preferences::getInstance(false).resetToDefaults();
+
+    // Set up all preference change callbacks
+
+    // If the language gets changed, make sure that we update the locale
+    //   internally as well
+    auto result = HMDT::Preferences::getInstance(false)
+        .setCallbackOnPreferenceChange("General.Interface.language",
+            [](const auto& old_value, const auto& new_value) -> bool {
+                // new_value should always hold a std::string
+                auto locale = std::get<std::string>(new_value);
+
+                // TODO: Validate that the locale is a valid one that we support
+
+                // Code adapted from: https://erri120.github.io/posts/2022-05-05/
+                WRITE_DEBUG("Updating locale from ",
+                            std::get<std::string>(old_value), " to ", locale);
+#if WIN32
+                // LocaleNameToLCID requires a LPCWSTR so we need to convert from char to wchar_t
+                const auto wStringSize = MultiByteToWideChar(CP_UTF8, 0, locale.c_str(), static_cast<int>(locale.length()), nullptr, 0);
+                std::wstring localeName;
+                localeName.reserve(wStringSize);
+                MultiByteToWideChar(CP_UTF8, 0, locale.c_str(), static_cast<int>(locale.length()), localeName.data(), wStringSize);
+
+                _configthreadlocale(_DISABLE_PER_THREAD_LOCALE);
+                const auto localeId = LocaleNameToLCID(localeName.c_str(), LOCALE_ALLOW_NEUTRAL_NAMES);
+                SetThreadLocale(localeId);
+#else
+                setlocale(LC_MESSAGES, locale.c_str());
+
+                // Make sure the LANGUAGE envvar is set
+                setenv("LANGUAGE", locale.c_str(), 1 /* overwrite */);
+#endif
+
+                return true;
+            });
+    RETURN_IF_ERROR(result);
+
+    // Do this again after all callbacks have been registered so that we can
+    //   make sure that they all get called at least once
     HMDT::Preferences::getInstance(false).resetToDefaults();
 
     // TODO: Allow overwriting by cmd argument
@@ -149,16 +196,20 @@ bool initializePreferences() {
             WRITE_ERROR("Cannot write preferences to ", pref_path,
                         ": Directory '", pref_path.parent_path(),
                         "' does not exist.");
-            return false;
+            RETURN_ERROR(std::make_error_code(std::errc::no_such_file_or_directory));
         }
 
         // Write the preferences to a file, and from here we will use the
         //   default values
-        return HMDT::Preferences::getInstance().writeToFile(true /* pretty */);
+        result = HMDT::Preferences::getInstance().writeToFile(true /* pretty */);
+        RETURN_IF_ERROR(result);
     } else {
         // If it does exist on the disk, load and validate it
-        return HMDT::Preferences::getInstance().validateLoadedPreferenceTypes();
+        result = HMDT::Preferences::getInstance().validateLoadedPreferenceTypes();
+        RETURN_IF_ERROR(result);
     }
+
+    return HMDT::STATUS_SUCCESS;
 }
 
 /**
@@ -170,6 +221,11 @@ bool initializePreferences() {
  * @return 1 upon failure, 0 upon success.
  */
 int main(int argc, char** argv) {
+    // Set up text domains
+    bindtextdomain(HMDT_TOOL_NAME, (HMDT::getExecutablePath() / "locale").c_str());
+    bind_textdomain_codeset(HMDT_TOOL_NAME, "UTF-8");
+    textdomain(HMDT_TOOL_NAME);
+
     std::ios_base::sync_with_stdio(false);
     std::cout.setf(std::ios::unitbuf);
 
@@ -241,10 +297,14 @@ int main(int argc, char** argv) {
         }, file_ud
     );
 
+    WRITE_DEBUG("Searching for localization files in ",
+                HMDT::getExecutablePath() / "locale");
+
     // Parse the command-line arguments
     HMDT::prog_opts = HMDT::parseArgs(argc, argv);
 
-    if(!initializePreferences()) {
+    auto result = initializePreferences();
+    if(IS_FAILURE(result)) {
         WRITE_ERROR("Failed to initialize preferences! Exiting...");
         return 1;
     }
