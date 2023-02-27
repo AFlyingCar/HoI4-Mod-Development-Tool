@@ -166,6 +166,6 @@ add_custom_target(locale_resources
     COMMAND echo "Copying ${LOCALIZATION_RESOURCE_DIR}/* to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/locale/"
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/locale/
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${LOCALIZATION_RESOURCE_DIR}/ ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/locale/
-    DEPENDS po-compile
+    DEPENDS po-compile pot-update
 )
 
