@@ -82,7 +82,7 @@ endif()
 # Following code adapted from https://p-o.co.uk/tech-articles/using-cmake-to-update-gettext-pot-po-and-mo-files/
 if(GETTEXT_XGETTEXT_EXECUTABLE)
     # We want to extract translation prefixes from every source file
-    file(GLOB_RECURSE CPP_FILES RELATIVE ${CMAKE_SOURCE_DIR} ${PROJECT_ROOT}/*.cpp)
+    file(GLOB_RECURSE CPP_FILES RELATIVE ${CMAKE_SOURCE_DIR} ${PROJECT_ROOT}/*.cpp ${PROJECT_ROOT}/*.inl ${PROJECT_ROOT}/*.h)
 
     message(DEBUG "CPP_FILES=${CPP_FILES}")
 
@@ -126,6 +126,7 @@ if(GETTEXT_MSGMERGE_EXECUTABLE)
             COMMAND
                 ${GETTEXT_MSGMERGE_EXECUTABLE} ${PO_FILE}
                 ${RESOURCE_DIR}/locale/${HMDT_TOOL_NAME}.pot
+                --output-file=${PO_FILE}
             COMMENT "pot-merge: ${PO_FILE}"
         )
     endforeach()
