@@ -21,6 +21,8 @@
     X(NOT_IMPLEMENTED, "Feature is not implemented yet.") \
     X(PARAM_CANNOT_BE_NULL, "Given parameter may not be null.") \
     X(VALUE_NOT_FOUND, "The requested value could not be found.") \
+    X(UNINITIALIZED, "The value has not been initialized or set yet.") \
+    X(VALIDATION_FAILED, "Validation failed.") \
     /* Project Error Codes */ \
     Y(PROJECT, 0x100) \
     X(PROJECT_VALIDATION_FAILED, "Project Validation Failed.") \
@@ -59,6 +61,9 @@
     X(INVALID_BITS_PER_PIXEL, "Invalid Bits Per Pixel.") \
     X(COLOR_TABLE_REQUIRED, "A color table is required to be provided.") \
     X(INVALID_BIT_DEPTH, "The bit-depth of the image is invalid.") \
+    /* Unexpected/Miscellaneous Error Codes */ \
+    Y(MISCELLANEOUS, 0x7fffff9c) /* give us at least 100 before the end of the value space */ \
+    X(UNEXPECTED, "An unexpected error has occurred.") \
 
 #endif
 
