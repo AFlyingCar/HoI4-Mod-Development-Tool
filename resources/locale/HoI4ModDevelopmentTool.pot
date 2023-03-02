@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-26 21:02-0800\n"
+"POT-Creation-Date: 2023-03-02 00:43-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -139,8 +139,114 @@ msgstr ""
 msgid "An unexpected error has occurred."
 msgstr ""
 
+#: mod_dev_tool/exe/src/main.cpp:47
+msgid "General"
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:47
+msgid "General program related settings."
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:50
+msgid "Interface"
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:50
+msgid "Settings that control the interface of the program."
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:51
+msgid "language"
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:51
+msgid "The language to be used."
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:56
+msgid "Gui"
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:56
+msgid "Gui related settings."
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:60
+msgid "darkMode"
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:60
+msgid "Whether the program should use dark-mode."
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:65
+msgid "HoI4"
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:65
+msgid "Settings related to interacting with Hearts of Iron 4."
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:69
+msgid "installPath"
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:69
+msgid "The path of where Hearts of Iron 4 is installed."
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:74 mod_dev_tool/gui/src/Application.cpp:82
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:87
+msgid "Debug"
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:74
+msgid "Debug related settings."
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:77
+msgid "Logging"
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:77
+msgid "Logging settings."
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:78
+msgid "logPath"
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:78
+msgid "Overrides where the log files are written to."
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:79
+msgid "openLogWindowOnLaunch"
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:79
+msgid "Whether the log window should be opened on launch."
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:82
+msgid "Graphics"
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:82
+msgid "Graphical debug settings."
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:83
+msgid "renderAdjacenciesByDefault"
+msgstr ""
+
+#: mod_dev_tool/exe/src/main.cpp:83
+msgid "Whether adjacent provinces should be rendered by default."
+msgstr ""
+
 #: mod_dev_tool/gui/src/AddFileWindow.cpp:70
-#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:197
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:199
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:537
 #: mod_dev_tool/gui/src/NewProjectDialog.cpp:28
 #: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:185
 #: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:241
@@ -237,11 +343,6 @@ msgstr ""
 msgid "_State View"
 msgstr ""
 
-#: mod_dev_tool/gui/src/Application.cpp:82
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:87
-msgid "Debug"
-msgstr ""
-
 #: mod_dev_tool/gui/src/Application.cpp:83
 msgid "Render Adjacencies"
 msgstr ""
@@ -286,33 +387,37 @@ msgstr ""
 msgid "_Preferences"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:45
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:47
 msgid "Search:"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:48
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:50
 msgid "Save Preferences"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:49
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:51
 msgid "Reset to Defaults"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:51
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:53
 msgid "Config Editor Window"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:140
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:142
 msgid "Sections"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:194
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:196
 msgid "This will override all settings."
 msgstr ""
 
-#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:424
-#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:473
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:432
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:484
 msgid "default: "
+msgstr ""
+
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:534
+msgid "This option will not take effect until the program is restarted."
 msgstr ""
 
 #: mod_dev_tool/gui/src/ItemAddFunctions.cpp:91
@@ -323,6 +428,28 @@ msgstr ""
 msgid "Province Map Input"
 msgstr ""
 
+#: mod_dev_tool/gui/src/ItemTypes.inl:18
+msgid ""
+"Province maps are 24-bit RGB bitmaps which describe the positions of every "
+"province in a custom map. It is recommended that the dimensions be a multiple "
+"of 256 each, as while this tool can load files which do not match those "
+"dimensions, the HoI4 engine cannot. Additionally, HoI4 does not allow "
+"province maps with a pixel area exceeding 13'107'200.\n"
+"\n"
+"When loading these maps in this tool, we will detect each province in the "
+"input image, and only require that they be all separated by a boundary of "
+"pixels made of the RGB color value (0,0,0). Additionally, for automated "
+"detection of province types (LAND, SEA, LAKE), you can color in the provinces "
+"with a solid color to denote which one is which. This will allow the tool to "
+"fill in this information about each province automatically, choose unique "
+"random colors from appropriate color pools (all automatically chosen SEA "
+"tiles will get blue-ish colors, for example), as well as determine other "
+"information automatically, such as whether a given province is a coastal tile "
+"or not.\n"
+"\n"
+"For additional information, see the example project on the github."
+msgstr ""
+
 #: mod_dev_tool/gui/src/ItemTypes.inl:36
 msgid "Province Image Files"
 msgstr ""
@@ -331,12 +458,45 @@ msgstr ""
 msgid "Height Map"
 msgstr ""
 
+#: mod_dev_tool/gui/src/ItemTypes.inl:54
+msgid ""
+"Heightmaps are 8-bit greyscale bitmaps which determine the height of the "
+"positions on the map. The dimensions of this bitmap <i>must</i> match the "
+"dimensions of the provinces image.\n"
+"\n"
+"A minimum value of 0 (pure black) will translate to a height of 0 on the Y-"
+"axis, while a maximum value of 255 (pure white) will translate to a height of "
+"25.5 on the Y-axis. HoI4 renders the ocean at a height of 9.5 by default "
+"(this can be modified however, see the HoI4 wiki about heightmaps for more "
+"information).\n"
+"\n"
+"Finally, note that this item will also automatically generate a world normal "
+"map when exporting the project."
+msgstr ""
+
 #: mod_dev_tool/gui/src/ItemTypes.inl:66
 msgid "Height Map Image Files"
 msgstr ""
 
 #: mod_dev_tool/gui/src/ItemTypes.inl:83
 msgid "River Map"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ItemTypes.inl:84
+msgid ""
+"Rivers is an 8-bit indexed bitmap file which determines the positioning of "
+"rivers. The dimensions of this bitmap <i>must</i> match the dimensions of the "
+"provinces image.\n"
+"\n"
+"Rivers <i>must</i> be exactly one pixel thick and only go in orthogonal "
+"directions (they cannot connect diagonally). To render correctly, each river "
+"must have exactly <i>one</i> start marker (green by default), where each "
+"river is defined as a single contiguous block of river pixels. Pixels "
+"connected with flow-in (red by default) or flow-out (yellow by default) "
+"sources are counted as the same river as the main flow. Only the main branch "
+"of the river should have a start marker.\n"
+"\n"
+"For the specific indices + color values, see the HoI4 modding wiki."
 msgstr ""
 
 #: mod_dev_tool/gui/src/ItemTypes.inl:97
