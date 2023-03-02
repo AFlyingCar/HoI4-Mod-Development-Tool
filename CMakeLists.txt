@@ -67,6 +67,10 @@ endif()
 add_subdirectory(resources)
 add_definitions(-DHMDT_GLIB_RESOURCES="${RESOURCE_C_SRC_NAME}")
 
+# Note: We are adding the 'gettext_' alias so that we can localize without
+#   getting picked up by xgettext
+add_definitions(-Dgettext_=gettext)
+
 add_subdirectory(mod_dev_tool)
 
 add_subdirectory(tests)

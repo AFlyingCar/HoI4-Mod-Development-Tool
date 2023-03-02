@@ -30,6 +30,7 @@
 #include "Options.h"
 #include "Constants.h"
 #include "Preferences.h"
+#include "PreprocessorUtils.h"
 
 #include "Logger.h"
 #include "ConsoleOutputFunctions.h"
@@ -43,43 +44,43 @@ namespace HMDT {
     Preferences::SectionMap config_defaults =
 PREF_BEGIN_DEF()
     // General program related settings
-    PREF_BEGIN_DEFINE_SECTION("General", "General program related settings.")
+    PREF_BEGIN_DEFINE_SECTION(HMDT_LOCALIZE("General"), HMDT_LOCALIZE("General program related settings."))
         PREF_SECTION_DEFINE_PROPERTY(showTitles, true)
 
-        PREF_BEGIN_DEFINE_GROUP("Interface", "Settings that control the interface of the program.")
-            PREF_DEFINE_CONFIG("language", "en_US", "The language to be used.")
+        PREF_BEGIN_DEFINE_GROUP(HMDT_LOCALIZE("Interface"), HMDT_LOCALIZE("Settings that control the interface of the program."))
+            PREF_DEFINE_CONFIG(HMDT_LOCALIZE("language"), "en_US", HMDT_LOCALIZE("The language to be used."), true)
         PREF_END_DEFINE_GROUP()
     PREF_END_DEFINE_SECTION(),
 
     // Gui related settings
-    PREF_BEGIN_DEFINE_SECTION("Gui", "Gui related settings.")
+    PREF_BEGIN_DEFINE_SECTION(HMDT_LOCALIZE("Gui"), HMDT_LOCALIZE("Gui related settings."))
         PREF_SECTION_DEFINE_PROPERTY(showTitles, false)
 
         PREF_BEGIN_DEFINE_GROUP("_",)
-            PREF_DEFINE_CONFIG("darkMode", false, "Whether the program should use dark-mode.")
+            PREF_DEFINE_CONFIG(HMDT_LOCALIZE("darkMode"), false, HMDT_LOCALIZE("Whether the program should use dark-mode."), false)
         PREF_END_DEFINE_GROUP()
     PREF_END_DEFINE_SECTION(),
 
     // HoI4-info related settings
-    PREF_BEGIN_DEFINE_SECTION("HoI4", "Settings related to interacting with Hearts of Iron 4.")
+    PREF_BEGIN_DEFINE_SECTION(HMDT_LOCALIZE("HoI4"), HMDT_LOCALIZE("Settings related to interacting with Hearts of Iron 4."))
         PREF_SECTION_DEFINE_PROPERTY(showTitles, false)
 
         PREF_BEGIN_DEFINE_GROUP("_",)
-            PREF_DEFINE_CONFIG("installPath", "", "The path of where Hearts of Iron 4 is installed.")
+            PREF_DEFINE_CONFIG(HMDT_LOCALIZE("installPath"), "", HMDT_LOCALIZE("The path of where Hearts of Iron 4 is installed."), false)
         PREF_END_DEFINE_GROUP()
     PREF_END_DEFINE_SECTION(),
 
     // Debug related settings
-    PREF_BEGIN_DEFINE_SECTION("Debug", "Debug related settings.")
+    PREF_BEGIN_DEFINE_SECTION(HMDT_LOCALIZE("Debug"), HMDT_LOCALIZE("Debug related settings."))
         PREF_SECTION_DEFINE_PROPERTY(showTitles, true)
 
-        PREF_BEGIN_DEFINE_GROUP("Logging", "Logging settings.")
-            PREF_DEFINE_CONFIG("logPath", "", "Overrides where the log files are written to.")
-            PREF_DEFINE_CONFIG("openLogWindowOnLaunch", false, "Whether the log window should be opened on launch.")
+        PREF_BEGIN_DEFINE_GROUP(HMDT_LOCALIZE("Logging"), HMDT_LOCALIZE("Logging settings."))
+            PREF_DEFINE_CONFIG(HMDT_LOCALIZE("logPath"), "", HMDT_LOCALIZE("Overrides where the log files are written to."), true)
+            PREF_DEFINE_CONFIG(HMDT_LOCALIZE("openLogWindowOnLaunch"), false, HMDT_LOCALIZE("Whether the log window should be opened on launch."), false)
         PREF_END_DEFINE_GROUP()
 
-        PREF_BEGIN_DEFINE_GROUP("Graphics", "Graphical debug settings.")
-            PREF_DEFINE_CONFIG("renderAdjacenciesByDefault", false, "Whether adjacent provinces should be rendered by default.")
+        PREF_BEGIN_DEFINE_GROUP(HMDT_LOCALIZE("Graphics"), HMDT_LOCALIZE("Graphical debug settings."))
+            PREF_DEFINE_CONFIG(HMDT_LOCALIZE("renderAdjacenciesByDefault"), false, HMDT_LOCALIZE("Whether adjacent provinces should be rendered by default."), false)
         PREF_END_DEFINE_GROUP()
     PREF_END_DEFINE_SECTION()
 PREF_END_DEF();
