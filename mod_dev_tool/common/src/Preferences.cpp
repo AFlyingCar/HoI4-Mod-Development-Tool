@@ -200,6 +200,32 @@ bool HMDT::Preferences::setPreferenceValue(const std::string& value_path,
         }).orElse(false);
 }
 
+auto HMDT::Preferences::doesPathRequireRestart(const std::string& value_path) const noexcept
+    -> MonadOptional<bool>
+{
+    // There should be exactly 2 separators for SECTION.GROUP.CONFIG
+    if(std::count(value_path.begin(), value_path.end(), '.') != 2) {
+        WRITE_ERROR("Invalid config-value path '", value_path, "'");
+        return false;
+    }
+
+    // Parse out the section+group name and the config name
+    auto last_sep = value_path.rfind('.');
+    std::string section_group_name = value_path.substr(0, last_sep);
+    std::string config_name = value_path.substr(last_sep + 1);
+
+    // Now look up the config in the group (assuming the group exists)
+    return getGroup(section_group_name, m_sections)
+        .andThen<bool>([&config_name](Ref<const Group> group)
+        {
+            if(group.get().configs.count(config_name) != 0) {
+                return group.get().configs.at(config_name).requires_restart;
+            }
+
+            return false;
+        });
+}
+
 auto HMDT::Preferences::setCallbackOnPreferenceChange(const std::string& value_path,
                                                       OnPreferenceChangeCallback callback) noexcept
     -> MaybeVoid 
@@ -390,7 +416,7 @@ auto HMDT::Preferences::getValueVariantForPathInSectionMap(const std::string& va
             -> MonadOptionalRef<const ValueVariant>
         {
             if(group.get().configs.count(config_name) != 0) {
-                return group.get().configs.at(config_name).second;
+                return group.get().configs.at(config_name).value;
             }
 
             return std::nullopt;
@@ -427,7 +453,7 @@ auto HMDT::Preferences::getValueVariantForPathInSectionMap(const std::string& va
             -> MonadOptionalRef<ValueVariant>
         {
             if(group.get().configs.count(config_name) != 0) {
-                return group.get().configs.at(config_name).second;
+                return group.get().configs.at(config_name).value;
             }
 
             return std::nullopt;
@@ -503,7 +529,7 @@ void HMDT::Preferences::initialize() noexcept {
                     for(auto&& [config_name, jconfig] : jobj.items()) {
                         WRITE_DEBUG("Parsing config value '", config_name, '\'');
 
-                        ValueVariant& value = group.configs[config_name].second;
+                        ValueVariant& value = group.configs[config_name].value;
 
                         if(jconfig.is_boolean()) {
                             value = jconfig.get<bool>();
@@ -615,7 +641,7 @@ auto HMDT::Preferences::validateLoadedPreferenceTypes() -> MaybeVoid {
             const auto& def_group = def_section.groups.at(group_name);
 
             for(auto&& [config_name, config_pair] : group.configs) {
-                auto&& [_, config] = config_pair;
+                auto&& [_, config, __] = config_pair;
 
                 // Warn and skip each additional section that is not tracked
                 if(def_group.configs.count(config_name) == 0) {
@@ -636,7 +662,7 @@ auto HMDT::Preferences::validateLoadedPreferenceTypes() -> MaybeVoid {
                     }
                 }
 
-                const auto& def_config = def_group.configs.at(config_name).second;
+                const auto& def_config = def_group.configs.at(config_name).value;
 
                 // Now we verify that the types are valid.
                 if(def_config.index() != config.index()) {
@@ -723,7 +749,7 @@ void HMDT::Preferences::writeToJson(std::ostream& out, bool pretty) const {
 
             uint32_t config_count = 0;
             for(auto&& [config_name, comment_config] : group.configs) {
-                auto&& [comment, config] = comment_config;
+                auto&& [comment, config, _] = comment_config;
 
                 ++config_count;
 
@@ -851,5 +877,12 @@ void HMDT::Preferences::_reset() noexcept {
     m_env_vars.clear();
     m_initialized = false;
     m_dirty = false;
+}
+
+bool HMDT::operator==(const Preferences::Config& left,
+                      const Preferences::Config& right) noexcept
+{
+    return left.comment == right.comment &&
+           left.value == right.value;
 }
 
