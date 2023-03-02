@@ -15,7 +15,7 @@
 
 DEFINE_ITEM_TYPE(
     gettext("Province Map Input") /* name */,
-    "Province maps are 24-bit RGB bitmaps which describe the positions of every"
+    gettext("Province maps are 24-bit RGB bitmaps which describe the positions of every"
     " province in a custom map. It is recommended that the dimensions be a "
     "multiple of 256 each, as while this tool can load files which do not match"
     " those dimensions, the HoI4 engine cannot. Additionally, HoI4 does not "
@@ -30,7 +30,7 @@ DEFINE_ITEM_TYPE(
     "automatically chosen SEA tiles will get blue-ish colors, for example), "
     "as well as determine other information automatically, such as whether a "
     "given province is a coastal tile or not.\n\n"
-    "For additional information, see the example project on the github." /* description */,
+    "For additional information, see the example project on the github.") /* description */,
     "/com/aflyingcar/HoI4ModDevelopmentTool/textures/provinces.png" /* icon */,
     {{
         { { gettext("Province Image Files"), "bmp" } } /* filters */,
@@ -51,7 +51,7 @@ DEFINE_ITEM_TYPE(
 
 DEFINE_ITEM_TYPE(
     gettext("Height Map") /* name */,
-    "Heightmaps are 8-bit greyscale bitmaps which determine the height of the "
+    gettext("Heightmaps are 8-bit greyscale bitmaps which determine the height of the "
     "positions on the map. The dimensions of this bitmap <i>must</i> match the "
     "dimensions of the provinces image.\n\n"
     "A minimum value of 0 (pure black) will translate to a height of 0 on the "
@@ -60,7 +60,7 @@ DEFINE_ITEM_TYPE(
     "by default (this can be modified however, see the HoI4 wiki about "
     "heightmaps for more information).\n\n"
     "Finally, note that this item will also automatically generate a world "
-    "normal map when exporting the project."/* description */,
+    "normal map when exporting the project.") /* description */,
     "/com/aflyingcar/HoI4ModDevelopmentTool/textures/heightmap.png" /* icon */,
     {{
         { { gettext("Height Map Image Files"), "bmp" } } /* filters */,
@@ -81,7 +81,7 @@ DEFINE_ITEM_TYPE(
 
 DEFINE_ITEM_TYPE(
     gettext("River Map") /* name */,
-    "Rivers is an 8-bit indexed bitmap file which determines the positioning "
+    gettext("Rivers is an 8-bit indexed bitmap file which determines the positioning "
     "of rivers. The dimensions of this bitmap <i>must</i> match the dimensions "
     "of the provinces image.\n\n"
     "Rivers <i>must</i> be exactly one pixel thick and only go in orthogonal "
@@ -91,7 +91,7 @@ DEFINE_ITEM_TYPE(
     "Pixels connected with flow-in (red by default) or flow-out (yellow by "
     "default) sources are counted as the same river as the main flow. Only the "
     "main branch of the river should have a start marker.\n\n"
-    "For the specific indices + color values, see the HoI4 modding wiki." /* description */,
+    "For the specific indices + color values, see the HoI4 modding wiki.") /* description */,
     "/com/aflyingcar/HoI4ModDevelopmentTool/textures/rivermap.png" /* icon */,
     {{
         { { gettext("River Map Image Files"), "bmp" } } /* filters */,
