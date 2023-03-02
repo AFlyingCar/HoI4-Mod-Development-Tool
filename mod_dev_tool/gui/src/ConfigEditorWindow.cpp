@@ -3,6 +3,8 @@
 
 #include <cstdlib>
 
+#include <libintl.h>
+
 #include "gtkmm/checkbutton.h"
 #include "gtkmm/messagedialog.h"
 
@@ -282,7 +284,7 @@ void HMDT::GUI::ConfigEditorWindow::initWidgets() {
                 for(auto&& [config_name, comment_config] : group.configs) {
                     WRITE_DEBUG("Building config \"", config_name, '"');
 
-                    auto& [comment, config] = comment_config;
+                    auto& [comment, config, _] = comment_config;
 
                     auto path = Preferences::buildValuePath(sec_name, grp_name, config_name);
 
@@ -334,11 +336,11 @@ void HMDT::GUI::ConfigEditorWindow::buildEditorWidget(Gtk::Box& box,
         Gtk::Box* config_box = new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL);
 
         // Add an extra space before the name to add a bit of padding
-        Gtk::Label* lbl_value = new Gtk::Label(" "s + name + " ");
+        Gtk::Label* lbl_value = new Gtk::Label(" "s + gettext_(name.c_str()) + " ");
         lbl_value->set_xalign(0.0);
 
         if(!comment.empty()) {
-            lbl_value->set_tooltip_text(comment);
+            lbl_value->set_tooltip_text(gettext_(comment.c_str()));
         }
 
         config_box->add(*lbl_value);
