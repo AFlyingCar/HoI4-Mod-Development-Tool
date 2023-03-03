@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-02 00:43-0800\n"
+"POT-Creation-Date: 2023-03-02 18:55-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -246,7 +246,7 @@ msgstr ""
 
 #: mod_dev_tool/gui/src/AddFileWindow.cpp:70
 #: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:199
-#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:537
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:539
 #: mod_dev_tool/gui/src/NewProjectDialog.cpp:28
 #: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:185
 #: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:241
@@ -267,7 +267,7 @@ msgstr ""
 
 #: mod_dev_tool/gui/src/AddFileWindow.cpp:173
 #: mod_dev_tool/gui/src/MainWindow.cpp:705
-#: mod_dev_tool/gui/src/MainWindow.cpp:826
+#: mod_dev_tool/gui/src/MainWindow.cpp:827
 msgid "All files"
 msgstr ""
 
@@ -416,7 +416,7 @@ msgstr ""
 msgid "default: "
 msgstr ""
 
-#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:534
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:536
 msgid "This option will not take effect until the program is restarted."
 msgstr ""
 
@@ -613,7 +613,7 @@ msgid "Choose a project file."
 msgstr ""
 
 #: mod_dev_tool/gui/src/MainWindow.cpp:704
-#: mod_dev_tool/gui/src/MainWindow.cpp:825
+#: mod_dev_tool/gui/src/MainWindow.cpp:826
 msgid "Project Files"
 msgstr ""
 
@@ -625,25 +625,23 @@ msgstr ""
 msgid "This project was built with a different tool version: '"
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:726
-msgid ""
-"'\n"
-"Color data may be generated differently."
+#: mod_dev_tool/gui/src/MainWindow.cpp:727
+msgid "Color data may be generated differently."
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:803
+#: mod_dev_tool/gui/src/MainWindow.cpp:804
 msgid "Failed to save file."
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:880
+#: mod_dev_tool/gui/src/MainWindow.cpp:881
 msgid "Reason: "
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:884
+#: mod_dev_tool/gui/src/MainWindow.cpp:885
 msgid "Failed to export project."
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:890
+#: mod_dev_tool/gui/src/MainWindow.cpp:891
 msgid "Successfully exported project."
 msgstr ""
 

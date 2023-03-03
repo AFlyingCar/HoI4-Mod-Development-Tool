@@ -723,7 +723,8 @@ void HMDT::GUI::MainWindow::openProject() {
         std::stringstream message_ss;
         message_ss << gettext("This project was built with a different tool version: '")
                    << project->getToolVersion() << "' != '" << TOOL_VERSION
-                   << gettext("\'\nColor data may be generated differently.");
+                   << "\'\n"
+                   << gettext("Color data may be generated differently.");
 
         Gtk::MessageDialog dialog(message_ss.str(), false, Gtk::MESSAGE_WARNING);
 
