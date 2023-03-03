@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-02 18:55-0800\n"
+"POT-Creation-Date: 2023-03-02 20:51-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -246,7 +246,6 @@ msgstr ""
 
 #: mod_dev_tool/gui/src/AddFileWindow.cpp:70
 #: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:199
-#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:539
 #: mod_dev_tool/gui/src/NewProjectDialog.cpp:28
 #: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:185
 #: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:241
@@ -411,13 +410,9 @@ msgstr ""
 msgid "This will override all settings."
 msgstr ""
 
-#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:432
-#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:484
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:426
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:475
 msgid "default: "
-msgstr ""
-
-#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:536
-msgid "This option will not take effect until the program is restarted."
 msgstr ""
 
 #: mod_dev_tool/gui/src/ItemAddFunctions.cpp:91
