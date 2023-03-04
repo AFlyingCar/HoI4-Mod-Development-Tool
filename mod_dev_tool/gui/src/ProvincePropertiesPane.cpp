@@ -1,6 +1,8 @@
 
 #include "ProvincePropertiesPane.h"
 
+#include <libintl.h>
+
 #include "gtkmm/messagedialog.h"
 #include "gtkmm/label.h"
 #include "gtkmm/frame.h"

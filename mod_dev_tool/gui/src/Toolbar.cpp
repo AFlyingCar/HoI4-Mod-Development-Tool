@@ -1,6 +1,8 @@
 
 #include "Toolbar.h"
 
+#include <libintl.h>
+
 #include "gtkmm/separatortoolitem.h"
 
 #include "StockIcons.h"

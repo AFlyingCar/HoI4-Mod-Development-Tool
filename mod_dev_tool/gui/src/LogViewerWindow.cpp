@@ -3,6 +3,8 @@
 
 #include <chrono>
 
+#include <libintl.h>
+
 #include "Logger.h"
 #include "Maybe.h"
 #include "StatusCodes.h"

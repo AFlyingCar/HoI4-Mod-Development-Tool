@@ -4,6 +4,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Include all headers necessary for ItemTypes.inl
 
+#include <libintl.h>
+
 #include "StatusCodes.h"
 
 #include "Logger.h"

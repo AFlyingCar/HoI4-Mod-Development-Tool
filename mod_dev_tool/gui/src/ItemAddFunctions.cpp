@@ -1,6 +1,8 @@
 
 #include "ItemAddFunctions.h"
 
+#include <libintl.h>
+
 #include "gtkmm.h"
 
 #include "Constants.h"

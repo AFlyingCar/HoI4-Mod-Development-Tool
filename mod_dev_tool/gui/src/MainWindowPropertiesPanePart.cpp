@@ -1,6 +1,8 @@
 
 #include "MainWindowPropertiesPanePart.h"
 
+#include <libintl.h>
+
 #include "Driver.h"
 #include "SelectionManager.h"
 

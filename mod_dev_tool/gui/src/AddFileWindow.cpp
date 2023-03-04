@@ -1,6 +1,8 @@
 
 #include "AddFileWindow.h"
 
+#include <libintl.h>
+
 #include "gtkmm/messagedialog.h"
 
 #include "NativeDialog.h"
