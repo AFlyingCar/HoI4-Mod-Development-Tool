@@ -3,6 +3,8 @@
 #include <thread>
 #include <sstream>
 
+#include <libintl.h>
+
 #include "gtkmm.h"
 
 #include "NativeDialog.h"
