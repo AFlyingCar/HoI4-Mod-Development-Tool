@@ -24,11 +24,11 @@
 #include "Texture.h"
 
 HMDT::GUI::GL::Program::LinkException::LinkException(const std::string& reason):
-    m_reason(reason)
+    m_reason(std::string("Program Link Failure: ") + reason)
 { }
 
 const char* HMDT::GUI::GL::Program::LinkException::what() const noexcept {
-    return (std::string("Program Link Failure: ") + m_reason).c_str();
+    return m_reason.c_str();
 }
 
 HMDT::GUI::GL::Program::Program(): m_ref_count(nullptr), m_program_id(-1) { }
