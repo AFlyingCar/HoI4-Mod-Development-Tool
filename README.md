@@ -60,7 +60,7 @@ Replacing `C:\\msys64` with the MSYS prefix for your system, such that
 ### Linux
 
 ```
-$ apt install -y python3.6 libgtkmm-3.0-dev libglew-dev libopengl0 libglm-dev
+$ apt install -y python3.6 libgtkmm-3.0-dev libglew-dev libopengl0 libglm-dev gettext
 $ mkdir Binaries
 $ cd Binaries
 $ cmake ..
