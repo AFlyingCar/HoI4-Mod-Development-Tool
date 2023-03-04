@@ -1,6 +1,8 @@
 
 #include "StatusCategory.h"
 
+#include <libintl.h>
+
 #include "StatusCodes.h"
 #include "Constants.h"
 #include "PreprocessorUtils.h"
