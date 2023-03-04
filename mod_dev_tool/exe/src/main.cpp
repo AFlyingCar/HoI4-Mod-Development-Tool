@@ -223,7 +223,7 @@ auto initializePreferences() -> HMDT::MaybeVoid {
  */
 int main(int argc, char** argv) {
     // Set up text domains
-    bindtextdomain(HMDT_TOOL_NAME, (HMDT::getExecutablePath() / "locale").c_str());
+    bindtextdomain(HMDT_TOOL_NAME, (HMDT::getExecutablePath() / "locale").generic_string().c_str());
     bind_textdomain_codeset(HMDT_TOOL_NAME, "UTF-8");
     textdomain(HMDT_TOOL_NAME);
 
