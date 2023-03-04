@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.16)
 
 find_program(GLIB_COMPILE_RESOURCES NAMES glib-compile-resources REQUIRED)
 
-find_program(GETTEXT_XGETTEXT_EXECUTABLE xgettext)
-find_program(GETTEXT_MSGMERGE_EXECUTABLE msgmerge)
-find_program(GETTEXT_MSGFMT_EXECUTABLE msgfmt)
+find_program(GETTEXT_XGETTEXT_EXECUTABLE xgettext REQUIRED)
+find_program(GETTEXT_MSGMERGE_EXECUTABLE msgmerge REQUIRED)
+find_program(GETTEXT_MSGFMT_EXECUTABLE msgfmt REQUIRED)
 
 set(RESOURCE_PREFIX "/com/aflyingcar/${PROJECT_NAME}")
 
