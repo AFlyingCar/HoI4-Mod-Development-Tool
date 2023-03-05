@@ -3,6 +3,8 @@
 
 #include <random>
 
+#include <libintl.h>
+
 #include "Util.h"
 #include "Monad.h"
 #include "Maybe.h"
