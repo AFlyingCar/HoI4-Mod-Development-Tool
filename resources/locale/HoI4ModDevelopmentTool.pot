@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-02 20:51-0800\n"
+"POT-Creation-Date: 2023-03-07 23:52-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -83,7 +83,7 @@ msgid "The provided dispatcher id does not exist."
 msgstr ""
 
 #: mod_dev_tool/common/inc/StatusCodesDef.h:43
-#: mod_dev_tool/gui/src/AddFileWindow.cpp:193
+#: mod_dev_tool/gui/src/AddFileWindow.cpp:195
 msgid "Failed to add item."
 msgstr ""
 
@@ -196,7 +196,7 @@ msgid "The path of where Hearts of Iron 4 is installed."
 msgstr ""
 
 #: mod_dev_tool/exe/src/main.cpp:74 mod_dev_tool/gui/src/Application.cpp:82
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:87
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:89
 msgid "Debug"
 msgstr ""
 
@@ -244,29 +244,29 @@ msgstr ""
 msgid "Whether adjacent provinces should be rendered by default."
 msgstr ""
 
-#: mod_dev_tool/gui/src/AddFileWindow.cpp:70
+#: mod_dev_tool/gui/src/AddFileWindow.cpp:72
 #: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:199
 #: mod_dev_tool/gui/src/NewProjectDialog.cpp:28
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:185
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:241
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:187
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:243
 msgid "Cancel"
 msgstr ""
 
-#: mod_dev_tool/gui/src/AddFileWindow.cpp:71
+#: mod_dev_tool/gui/src/AddFileWindow.cpp:73
 msgid "Add"
 msgstr ""
 
-#: mod_dev_tool/gui/src/AddFileWindow.cpp:73
+#: mod_dev_tool/gui/src/AddFileWindow.cpp:75
 msgid "Add File"
 msgstr ""
 
-#: mod_dev_tool/gui/src/AddFileWindow.cpp:164
+#: mod_dev_tool/gui/src/AddFileWindow.cpp:166
 msgid "Choose an input file"
 msgstr ""
 
-#: mod_dev_tool/gui/src/AddFileWindow.cpp:173
-#: mod_dev_tool/gui/src/MainWindow.cpp:705
-#: mod_dev_tool/gui/src/MainWindow.cpp:827
+#: mod_dev_tool/gui/src/AddFileWindow.cpp:175
+#: mod_dev_tool/gui/src/MainWindow.cpp:707
+#: mod_dev_tool/gui/src/MainWindow.cpp:829
 msgid "All files"
 msgstr ""
 
@@ -290,7 +290,7 @@ msgstr ""
 msgid "_Close Project"
 msgstr ""
 
-#: mod_dev_tool/gui/src/Application.cpp:63 mod_dev_tool/gui/src/Toolbar.cpp:33
+#: mod_dev_tool/gui/src/Application.cpp:63 mod_dev_tool/gui/src/Toolbar.cpp:35
 msgid "_Add"
 msgstr ""
 
@@ -302,11 +302,11 @@ msgstr ""
 msgid "Edit"
 msgstr ""
 
-#: mod_dev_tool/gui/src/Application.cpp:68 mod_dev_tool/gui/src/Toolbar.cpp:42
+#: mod_dev_tool/gui/src/Application.cpp:68 mod_dev_tool/gui/src/Toolbar.cpp:44
 msgid "_Undo"
 msgstr ""
 
-#: mod_dev_tool/gui/src/Application.cpp:69 mod_dev_tool/gui/src/Toolbar.cpp:57
+#: mod_dev_tool/gui/src/Application.cpp:69 mod_dev_tool/gui/src/Toolbar.cpp:59
 msgid "_Redo"
 msgstr ""
 
@@ -415,7 +415,7 @@ msgstr ""
 msgid "default: "
 msgstr ""
 
-#: mod_dev_tool/gui/src/ItemAddFunctions.cpp:91
+#: mod_dev_tool/gui/src/ItemAddFunctions.cpp:93
 msgid "Loading..."
 msgstr ""
 
@@ -498,153 +498,153 @@ msgstr ""
 msgid "River Map Image Files"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:86
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:88
 msgid "Info"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:88
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:90
 msgid "Error"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:89
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:91
 msgid "Warning"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:90
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:92
 msgid "From:"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:91
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:93
 msgid "Until:"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:92
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:94
 msgid "Module search:"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:93
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:95
 msgid "Filename search:"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:94
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:96
 msgid "Text search:"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:95
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:97
 msgid "Reset Filters"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:96
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:98
 msgid "Colorize Cells"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:100
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:102
 msgid "Log Viewer"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:176
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:211
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:178
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:213
 msgid "Now"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:177
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:179
 msgid "-1min"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:178
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:180
 msgid "-5min"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:212
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:214
 msgid "+1min"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:213
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:215
 msgid "+5min"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:373
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:375
 msgid "Timestamp"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:375
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:377
 msgid "Module"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:376
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:378
 msgid "Filename:Line"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:377
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:379
 msgid "Function"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:380
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:382
 msgid "Message"
 msgstr ""
 
-#: mod_dev_tool/gui/src/LogViewerWindow.cpp:391
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:393
 msgid "Level"
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:340
+#: mod_dev_tool/gui/src/MainWindow.cpp:342
 msgid "Successfully generated template river map."
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:382
+#: mod_dev_tool/gui/src/MainWindow.cpp:384
 msgid "Libraries Used:"
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:397
+#: mod_dev_tool/gui/src/MainWindow.cpp:399
 msgid "Source code"
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:675
+#: mod_dev_tool/gui/src/MainWindow.cpp:677
 msgid "Failed to save project."
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:701
+#: mod_dev_tool/gui/src/MainWindow.cpp:703
 msgid "Choose a project file."
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:704
-#: mod_dev_tool/gui/src/MainWindow.cpp:826
+#: mod_dev_tool/gui/src/MainWindow.cpp:706
+#: mod_dev_tool/gui/src/MainWindow.cpp:828
 msgid "Project Files"
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:715
+#: mod_dev_tool/gui/src/MainWindow.cpp:717
 msgid "Failed to open file."
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:724
+#: mod_dev_tool/gui/src/MainWindow.cpp:726
 msgid "This project was built with a different tool version: '"
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:727
+#: mod_dev_tool/gui/src/MainWindow.cpp:729
 msgid "Color data may be generated differently."
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:804
+#: mod_dev_tool/gui/src/MainWindow.cpp:806
 msgid "Failed to save file."
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:881
+#: mod_dev_tool/gui/src/MainWindow.cpp:883
 msgid "Reason: "
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:885
+#: mod_dev_tool/gui/src/MainWindow.cpp:887
 msgid "Failed to export project."
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:891
+#: mod_dev_tool/gui/src/MainWindow.cpp:893
 msgid "Successfully exported project."
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindowPropertiesPanePart.cpp:50
+#: mod_dev_tool/gui/src/MainWindowPropertiesPanePart.cpp:52
 msgid "Province"
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindowPropertiesPanePart.cpp:58
+#: mod_dev_tool/gui/src/MainWindowPropertiesPanePart.cpp:60
 msgid "State"
 msgstr ""
 
@@ -668,87 +668,87 @@ msgstr ""
 msgid "Path to project"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:65
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:67
 msgid "Is Coastal"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:80
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:82
 msgid "Province Type"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:85
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:87
 msgid "Land"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:86
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:88
 msgid "Sea"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:87
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:89
 msgid "Lake"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:110
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:112
 msgid "Terrain Type"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:137
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:139
 msgid "Continent"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:173
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:175
 msgid "Add a continent"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:175
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:177
 msgid "Name of the new continent:"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:182
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:238
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:184
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:240
 msgid "Confirm"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:232
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:234
 msgid "Remove a Continent"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:289
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:291
 msgid "Create State"
 msgstr ""
 
-#: mod_dev_tool/gui/src/Toolbar.cpp:35
+#: mod_dev_tool/gui/src/Toolbar.cpp:37
 msgid "Add Item"
 msgstr ""
 
-#: mod_dev_tool/gui/src/Toolbar.cpp:51
+#: mod_dev_tool/gui/src/Toolbar.cpp:53
 msgid "Undo"
 msgstr ""
 
-#: mod_dev_tool/gui/src/Toolbar.cpp:66
+#: mod_dev_tool/gui/src/Toolbar.cpp:68
 msgid "Redo"
 msgstr ""
 
-#: mod_dev_tool/gui/src/Toolbar.cpp:73
+#: mod_dev_tool/gui/src/Toolbar.cpp:75
 msgid "_Paint"
 msgstr ""
 
-#: mod_dev_tool/gui/src/Toolbar.cpp:75
+#: mod_dev_tool/gui/src/Toolbar.cpp:77
 msgid "Property Paint Tool"
 msgstr ""
 
-#: mod_dev_tool/gui/src/Toolbar.cpp:85
+#: mod_dev_tool/gui/src/Toolbar.cpp:87
 msgid "_PlayHoI"
 msgstr ""
 
-#: mod_dev_tool/gui/src/Toolbar.cpp:87
+#: mod_dev_tool/gui/src/Toolbar.cpp:89
 msgid "Play"
 msgstr ""
 
-#: mod_dev_tool/gui/src/Toolbar.cpp:95
+#: mod_dev_tool/gui/src/Toolbar.cpp:97
 msgid "_SwitchView"
 msgstr ""
 
-#: mod_dev_tool/gui/src/Toolbar.cpp:117 mod_dev_tool/gui/src/Toolbar.cpp:122
+#: mod_dev_tool/gui/src/Toolbar.cpp:119 mod_dev_tool/gui/src/Toolbar.cpp:124
 msgid "Switch View: "
 msgstr ""
