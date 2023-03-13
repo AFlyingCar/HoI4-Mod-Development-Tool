@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 project(HoI4ModDevelopmentTool CXX ASM)
 
 set(MSYS_PREFIX "C:/msys64" CACHE PATH "Prefix for where packages are installed to with MSYS. Only applies to WIN32.")
-set(DEBUG_BUILD CACHE BOOL OFF "Specifies if builds should be built with debugging information.")
+set(DEBUG_BUILD OFF CACHE BOOL "Specifies if builds should be built with debugging information.")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
