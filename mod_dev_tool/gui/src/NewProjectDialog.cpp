@@ -1,12 +1,14 @@
 
 #include "NewProjectDialog.h"
 
+#include <libintl.h>
+
 #include "gtkmm/widget.h"
 
 #include "NativeDialog.h"
 
 HMDT::GUI::NewProjectDialog::NewProjectDialog(Gtk::Window& window, bool modal):
-    Gtk::Dialog("New Project", window, modal),
+    Gtk::Dialog(gettext("New Project"), window, modal),
     m_row(1),
     m_name_field()
 {
@@ -22,8 +24,8 @@ HMDT::GUI::NewProjectDialog::NewProjectDialog(Gtk::Window& window, bool modal):
 
     buildPathField();
 
-    m_confirm_button = add_button("Create Project", Gtk::RESPONSE_ACCEPT);
-    add_button("Cancel", Gtk::RESPONSE_CANCEL);
+    m_confirm_button = add_button(gettext("Create Project"), Gtk::RESPONSE_ACCEPT);
+    add_button(gettext("Cancel"), Gtk::RESPONSE_CANCEL);
 
     m_confirm_button->set_sensitive(false);
 
@@ -53,7 +55,7 @@ std::string HMDT::GUI::NewProjectDialog::getProjectPath() {
  */
 void HMDT::GUI::NewProjectDialog::buildNameField() {
     {
-        m_grid.attach(*manage(new Gtk::Label("Name: ")), 0, m_row, 1, 1);
+        m_grid.attach(*manage(new Gtk::Label(gettext("Name: "))), 0, m_row, 1, 1);
         m_grid.attach(m_name_field, 1, m_row, 2, 1);
 
         // Make sure we update the confirm button if it can be enabled now
@@ -71,7 +73,7 @@ void HMDT::GUI::NewProjectDialog::buildNameField() {
  */
 void HMDT::GUI::NewProjectDialog::buildPathField() {
     {
-        m_grid.attach(*manage(new Gtk::Label("Path: ")), 0, m_row, 1, 1);
+        m_grid.attach(*manage(new Gtk::Label(gettext("Path: "))), 0, m_row, 1, 1);
         m_grid.attach(m_path_field, 1, m_row, 1, 1);
         // TODO: add a default path?
 
@@ -90,7 +92,7 @@ void HMDT::GUI::NewProjectDialog::buildPathField() {
             // Allocate this on the stack so that it gets automatically cleaned up
             //  when we finish
             std::string path;
-            NativeDialog::FileDialog dialog("Path to project",
+            NativeDialog::FileDialog dialog(gettext("Path to project"),
                                             NativeDialog::FileDialog::SELECT_DIR);
             dialog.setAllowsMultipleSelection(false)
                   .setDecideHandler([&path](const NativeDialog::Dialog& dialog) {

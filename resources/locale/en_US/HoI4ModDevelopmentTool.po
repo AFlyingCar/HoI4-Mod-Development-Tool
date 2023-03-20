@@ -1,0 +1,781 @@
+# English translations for HoI4ModTool package.
+# Copyright (C) 2023 THE HoI4ModTool'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the HoI4ModTool package.
+# AFlyingCar <>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: HoI4-Mod-Development-Tool\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-03-02 18:53-0800\n"
+"PO-Revision-Date: 2023-03-02 00:07-0800\n"
+"Last-Translator: AFlyingCar <>\n"
+"Language-Team: English\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ASCII\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:19
+msgid "Success"
+msgstr "Success"
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:20
+msgid "Memory allocation failed."
+msgstr "Memory allocation failed."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:21
+msgid "Feature is not implemented yet."
+msgstr "Feature is not implemented yet."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:22
+msgid "Given parameter may not be null."
+msgstr "Given parameter may not be null."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:23
+msgid "The requested value could not be found."
+msgstr "The requested value could not be found."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:24
+msgid "The value has not been initialized or set yet."
+msgstr "The value has not been initialized or set yet."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:25
+msgid "Validation failed."
+msgstr "Validation failed."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:28
+msgid "Project Validation Failed."
+msgstr "Project Validation Failed."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:29
+msgid "No project is currently loaded."
+msgstr "No project is currently loaded."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:30
+msgid "No data is currently loaded."
+msgstr "No data is currently loaded."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:31
+msgid ""
+"The loaded map image has dimensions which do not match previously loaded "
+"maps."
+msgstr ""
+"The loaded map image has dimensions which do not match previously loaded "
+"maps."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:32
+msgid "No prompt callback was registered with this project."
+msgstr "No prompt callback was registered with this project."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:35
+msgid "The Province's StateID is invalid."
+msgstr "The Province's StateID is invalid."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:36
+msgid "The Province is not in the state it says it's in."
+msgstr "The Province is not in the state it says it's in."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:39
+msgid "The state does not exist."
+msgstr "The state does not exist."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:42
+msgid "The provided dispatcher id does not exist."
+msgstr "The provided dispatcher id does not exist."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:43
+#: mod_dev_tool/gui/src/AddFileWindow.cpp:193
+msgid "Failed to add item."
+msgstr "Failed to add item."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:44
+msgid "Failed to read bitmap when adding item."
+msgstr "Failed to read bitmap when adding item."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:45
+msgid "No such item type of the given name exists."
+msgstr "No such item type of the given name exists."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:46
+msgid "The path list for adding an item is empty."
+msgstr "The path list for adding an item is empty."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:47
+msgid "The response returned from the user prompt was unexpected."
+msgstr "The response returned from the user prompt was unexpected."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:50
+msgid "Shape Finder was stopped early."
+msgstr "Shape Finder was stopped early."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:53
+msgid "Unable to read from the given stream."
+msgstr "Unable to read from the given stream."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:54
+msgid "Too few bytes were read from the given stream."
+msgstr "Too few bytes were read from the given stream."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:57
+msgid "String is unable to be converted to a level enum."
+msgstr "String is unable to be converted to a level enum."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:60
+msgid "Validation using the BitMap's offset failed."
+msgstr "Validation using the BitMap's offset failed."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:61
+msgid "Invalid Bits Per Pixel."
+msgstr "Invalid Bits Per Pixel."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:62
+msgid "A color table is required to be provided."
+msgstr "A color table is required to be provided."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:63
+msgid "The bit-depth of the image is invalid."
+msgstr "The bit-depth of the image is invalid."
+
+#: mod_dev_tool/common/inc/StatusCodesDef.h:66
+msgid "An unexpected error has occurred."
+msgstr "An unexpected error has occurred."
+
+#: mod_dev_tool/exe/src/main.cpp:47
+msgid "General"
+msgstr "General"
+
+#: mod_dev_tool/exe/src/main.cpp:47
+msgid "General program related settings."
+msgstr "General program related settings."
+
+#: mod_dev_tool/exe/src/main.cpp:50
+msgid "Interface"
+msgstr "Interface"
+
+#: mod_dev_tool/exe/src/main.cpp:50
+msgid "Settings that control the interface of the program."
+msgstr "Settings that control the interface of the program."
+
+#: mod_dev_tool/exe/src/main.cpp:51
+msgid "language"
+msgstr "Language"
+
+#: mod_dev_tool/exe/src/main.cpp:51
+msgid "The language to be used."
+msgstr "The language to be used."
+
+#: mod_dev_tool/exe/src/main.cpp:56
+msgid "Gui"
+msgstr "Gui"
+
+#: mod_dev_tool/exe/src/main.cpp:56
+msgid "Gui related settings."
+msgstr "Gui related settings."
+
+#: mod_dev_tool/exe/src/main.cpp:60
+msgid "darkMode"
+msgstr "Dark Mode"
+
+#: mod_dev_tool/exe/src/main.cpp:60
+msgid "Whether the program should use dark-mode."
+msgstr "Whether the program should use dark-mode."
+
+#: mod_dev_tool/exe/src/main.cpp:65
+msgid "HoI4"
+msgstr "HoI4"
+
+#: mod_dev_tool/exe/src/main.cpp:65
+msgid "Settings related to interacting with Hearts of Iron 4."
+msgstr "Settings related to interacting with Hearts of Iron 4."
+
+#: mod_dev_tool/exe/src/main.cpp:69
+msgid "installPath"
+msgstr "Install Path"
+
+#: mod_dev_tool/exe/src/main.cpp:69
+msgid "The path of where Hearts of Iron 4 is installed."
+msgstr "The path of where Hearts of Iron 4 is installed."
+
+#: mod_dev_tool/exe/src/main.cpp:74 mod_dev_tool/gui/src/Application.cpp:82
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:87
+msgid "Debug"
+msgstr "Debug"
+
+#: mod_dev_tool/exe/src/main.cpp:74
+msgid "Debug related settings."
+msgstr "Debug related settings."
+
+#: mod_dev_tool/exe/src/main.cpp:77
+msgid "Logging"
+msgstr "Logging"
+
+#: mod_dev_tool/exe/src/main.cpp:77
+msgid "Logging settings."
+msgstr "Logging settings."
+
+#: mod_dev_tool/exe/src/main.cpp:78
+msgid "logPath"
+msgstr "Log Path"
+
+#: mod_dev_tool/exe/src/main.cpp:78
+msgid "Overrides where the log files are written to."
+msgstr "Overrides where the log files are written to."
+
+#: mod_dev_tool/exe/src/main.cpp:79
+msgid "openLogWindowOnLaunch"
+msgstr "Open Log Window On Launch"
+
+#: mod_dev_tool/exe/src/main.cpp:79
+msgid "Whether the log window should be opened on launch."
+msgstr "Whether the log window should be opened on launch."
+
+#: mod_dev_tool/exe/src/main.cpp:82
+msgid "Graphics"
+msgstr "Graphics"
+
+#: mod_dev_tool/exe/src/main.cpp:82
+msgid "Graphical debug settings."
+msgstr "Graphical debug settings."
+
+#: mod_dev_tool/exe/src/main.cpp:83
+msgid "renderAdjacenciesByDefault"
+msgstr "Render Adjacencies By Default"
+
+#: mod_dev_tool/exe/src/main.cpp:83
+msgid "Whether adjacent provinces should be rendered by default."
+msgstr "Whether adjacent provinces should be rendered by default."
+
+#: mod_dev_tool/gui/src/AddFileWindow.cpp:70
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:199
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:539
+#: mod_dev_tool/gui/src/NewProjectDialog.cpp:28
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:185
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:241
+msgid "Cancel"
+msgstr "Cancel"
+
+#: mod_dev_tool/gui/src/AddFileWindow.cpp:71
+msgid "Add"
+msgstr "Add"
+
+#: mod_dev_tool/gui/src/AddFileWindow.cpp:73
+msgid "Add File"
+msgstr "Add File"
+
+#: mod_dev_tool/gui/src/AddFileWindow.cpp:164
+msgid "Choose an input file"
+msgstr "Choose an input file"
+
+#: mod_dev_tool/gui/src/AddFileWindow.cpp:173
+#: mod_dev_tool/gui/src/MainWindow.cpp:705
+#: mod_dev_tool/gui/src/MainWindow.cpp:827
+msgid "All files"
+msgstr "All files"
+
+#: mod_dev_tool/gui/src/Application.cpp:58
+msgid "File"
+msgstr "File"
+
+#: mod_dev_tool/gui/src/Application.cpp:59
+msgid "_New Project"
+msgstr "_New Project"
+
+#: mod_dev_tool/gui/src/Application.cpp:60
+msgid "_Open Project"
+msgstr "_Open Project"
+
+#: mod_dev_tool/gui/src/Application.cpp:61
+msgid "_Save Project"
+msgstr "_Save Project"
+
+#: mod_dev_tool/gui/src/Application.cpp:62
+msgid "_Close Project"
+msgstr "_Close Project"
+
+#: mod_dev_tool/gui/src/Application.cpp:63 mod_dev_tool/gui/src/Toolbar.cpp:33
+msgid "_Add"
+msgstr "_Add"
+
+#: mod_dev_tool/gui/src/Application.cpp:64
+msgid "_Quit"
+msgstr "_Quit"
+
+#: mod_dev_tool/gui/src/Application.cpp:67
+msgid "Edit"
+msgstr "Edit"
+
+#: mod_dev_tool/gui/src/Application.cpp:68 mod_dev_tool/gui/src/Toolbar.cpp:42
+msgid "_Undo"
+msgstr "_Undo"
+
+#: mod_dev_tool/gui/src/Application.cpp:69 mod_dev_tool/gui/src/Toolbar.cpp:57
+msgid "_Redo"
+msgstr "_Redo"
+
+#: mod_dev_tool/gui/src/Application.cpp:72
+msgid "View"
+msgstr "View"
+
+#: mod_dev_tool/gui/src/Application.cpp:73
+msgid "_Log Window"
+msgstr "_Log Window"
+
+#: mod_dev_tool/gui/src/Application.cpp:74
+msgid "_Switch Renderers"
+msgstr "_Switch Renderers"
+
+#: mod_dev_tool/gui/src/Application.cpp:75
+msgid "_Use OpenGL"
+msgstr "_Use OpenGL"
+
+#: mod_dev_tool/gui/src/Application.cpp:76
+msgid "_Use Cairo (DEPRECATED)"
+msgstr "_Use Cairo (DEPRECATED)"
+
+#: mod_dev_tool/gui/src/Application.cpp:78
+msgid "_Switch Views"
+msgstr "_Switch Views"
+
+#: mod_dev_tool/gui/src/Application.cpp:79
+msgid "_Province View"
+msgstr "_Province View"
+
+#: mod_dev_tool/gui/src/Application.cpp:80
+msgid "_State View"
+msgstr "_State View"
+
+#: mod_dev_tool/gui/src/Application.cpp:83
+msgid "Render Adjacencies"
+msgstr "Render Adjacencies"
+
+#: mod_dev_tool/gui/src/Application.cpp:87
+msgid "Project"
+msgstr "Project"
+
+#: mod_dev_tool/gui/src/Application.cpp:88
+msgid "Recalculate Coastal Provinces"
+msgstr "Recalculate Coastal Provinces"
+
+#: mod_dev_tool/gui/src/Application.cpp:89
+msgid "Export Project"
+msgstr "Export Project"
+
+#: mod_dev_tool/gui/src/Application.cpp:90
+msgid "Export Project To"
+msgstr "Export Project To"
+
+#: mod_dev_tool/gui/src/Application.cpp:91
+msgid "Generate Template River Map"
+msgstr "Generate Template River Map"
+
+#: mod_dev_tool/gui/src/Application.cpp:94
+msgid "Help"
+msgstr "Help"
+
+#: mod_dev_tool/gui/src/Application.cpp:95
+msgid "Toggle Debug Mode"
+msgstr "Toggle Debug Mode"
+
+#: mod_dev_tool/gui/src/Application.cpp:96
+msgid "_About"
+msgstr "_About"
+
+#: mod_dev_tool/gui/src/Application.cpp:97
+msgid "_Wiki"
+msgstr "_Wiki"
+
+#: mod_dev_tool/gui/src/Application.cpp:98
+msgid "_Preferences"
+msgstr "_Preferences"
+
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:47
+msgid "Search:"
+msgstr "Search:"
+
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:50
+msgid "Save Preferences"
+msgstr "Save Preferences"
+
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:51
+msgid "Reset to Defaults"
+msgstr "Reset to Defaults"
+
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:53
+msgid "Config Editor Window"
+msgstr "Config Editor Window"
+
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:142
+msgid "Sections"
+msgstr "Sections"
+
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:196
+msgid "This will override all settings."
+msgstr "This will override all settings."
+
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:432
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:484
+msgid "default: "
+msgstr "default: "
+
+#: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:536
+msgid "This option will not take effect until the program is restarted."
+msgstr "This option will not take effect until the program is restarted."
+
+#: mod_dev_tool/gui/src/ItemAddFunctions.cpp:91
+msgid "Loading..."
+msgstr "Loading..."
+
+#: mod_dev_tool/gui/src/ItemTypes.inl:17
+msgid "Province Map Input"
+msgstr "Province Map Input"
+
+#: mod_dev_tool/gui/src/ItemTypes.inl:18
+msgid ""
+"Province maps are 24-bit RGB bitmaps which describe the positions of every "
+"province in a custom map. It is recommended that the dimensions be a "
+"multiple of 256 each, as while this tool can load files which do not match "
+"those dimensions, the HoI4 engine cannot. Additionally, HoI4 does not allow "
+"province maps with a pixel area exceeding 13'107'200.\n"
+"\n"
+"When loading these maps in this tool, we will detect each province in the "
+"input image, and only require that they be all separated by a boundary of "
+"pixels made of the RGB color value (0,0,0). Additionally, for automated "
+"detection of province types (LAND, SEA, LAKE), you can color in the "
+"provinces with a solid color to denote which one is which. This will allow "
+"the tool to fill in this information about each province automatically, "
+"choose unique random colors from appropriate color pools (all automatically "
+"chosen SEA tiles will get blue-ish colors, for example), as well as "
+"determine other information automatically, such as whether a given province "
+"is a coastal tile or not.\n"
+"\n"
+"For additional information, see the example project on the github."
+msgstr ""
+"Province maps are 24-bit RGB bitmaps which describe the positions of every "
+"province in a custom map. It is recommended that the dimensions be a "
+"multiple of 256 each, as while this tool can load files which do not match "
+"those dimensions, the HoI4 engine cannot. Additionally, HoI4 does not allow "
+"province maps with a pixel area exceeding 13'107'200.\n"
+"\n"
+"When loading these maps in this tool, we will detect each province in the "
+"input image, and only require that they be all separated by a boundary of "
+"pixels made of the RGB color value (0,0,0). Additionally, for automated "
+"detection of province types (LAND, SEA, LAKE), you can color in the "
+"provinces with a solid color to denote which one is which. This will allow "
+"the tool to fill in this information about each province automatically, "
+"choose unique random colors from appropriate color pools (all automatically "
+"chosen SEA tiles will get blue-ish colors, for example), as well as "
+"determine other information automatically, such as whether a given province "
+"is a coastal tile or not.\n"
+"\n"
+"For additional information, see the example project on the github."
+
+#: mod_dev_tool/gui/src/ItemTypes.inl:36
+msgid "Province Image Files"
+msgstr "Province Image Files"
+
+#: mod_dev_tool/gui/src/ItemTypes.inl:53
+msgid "Height Map"
+msgstr "Height Map"
+
+#: mod_dev_tool/gui/src/ItemTypes.inl:54
+msgid ""
+"Heightmaps are 8-bit greyscale bitmaps which determine the height of the "
+"positions on the map. The dimensions of this bitmap <i>must</i> match the "
+"dimensions of the provinces image.\n"
+"\n"
+"A minimum value of 0 (pure black) will translate to a height of 0 on the Y-"
+"axis, while a maximum value of 255 (pure white) will translate to a height "
+"of 25.5 on the Y-axis. HoI4 renders the ocean at a height of 9.5 by default "
+"(this can be modified however, see the HoI4 wiki about heightmaps for more "
+"information).\n"
+"\n"
+"Finally, note that this item will also automatically generate a world normal "
+"map when exporting the project."
+msgstr ""
+
+#: mod_dev_tool/gui/src/ItemTypes.inl:66
+msgid "Height Map Image Files"
+msgstr "Height Map Image Files"
+
+#: mod_dev_tool/gui/src/ItemTypes.inl:83
+msgid "River Map"
+msgstr "River Map"
+
+#: mod_dev_tool/gui/src/ItemTypes.inl:84
+msgid ""
+"Rivers is an 8-bit indexed bitmap file which determines the positioning of "
+"rivers. The dimensions of this bitmap <i>must</i> match the dimensions of "
+"the provinces image.\n"
+"\n"
+"Rivers <i>must</i> be exactly one pixel thick and only go in orthogonal "
+"directions (they cannot connect diagonally). To render correctly, each river "
+"must have exactly <i>one</i> start marker (green by default), where each "
+"river is defined as a single contiguous block of river pixels. Pixels "
+"connected with flow-in (red by default) or flow-out (yellow by default) "
+"sources are counted as the same river as the main flow. Only the main branch "
+"of the river should have a start marker.\n"
+"\n"
+"For the specific indices + color values, see the HoI4 modding wiki."
+msgstr ""
+
+#: mod_dev_tool/gui/src/ItemTypes.inl:97
+msgid "River Map Image Files"
+msgstr "River Map Image Files"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:86
+msgid "Info"
+msgstr "Info"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:88
+msgid "Error"
+msgstr "Error"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:89
+msgid "Warning"
+msgstr "Warning"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:90
+msgid "From:"
+msgstr "From:"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:91
+msgid "Until:"
+msgstr "Until:"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:92
+msgid "Module search:"
+msgstr "Module search:"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:93
+msgid "Filename search:"
+msgstr "Filename search:"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:94
+msgid "Text search:"
+msgstr "Text search:"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:95
+msgid "Reset Filters"
+msgstr "Reset Filters"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:96
+msgid "Colorize Cells"
+msgstr "Colorize Cells"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:100
+msgid "Log Viewer"
+msgstr "Log Viewer"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:176
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:211
+msgid "Now"
+msgstr "Now"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:177
+msgid "-1min"
+msgstr "-1min"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:178
+msgid "-5min"
+msgstr "-5min"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:212
+msgid "+1min"
+msgstr "+1min"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:213
+msgid "+5min"
+msgstr "+5min"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:373
+msgid "Timestamp"
+msgstr "Timestamp"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:375
+msgid "Module"
+msgstr "Module"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:376
+msgid "Filename:Line"
+msgstr "Filename:Line"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:377
+msgid "Function"
+msgstr "Function"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:380
+msgid "Message"
+msgstr "Message"
+
+#: mod_dev_tool/gui/src/LogViewerWindow.cpp:391
+msgid "Level"
+msgstr "Level"
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:340
+msgid "Successfully generated template river map."
+msgstr "Successfully generated template river map."
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:382
+msgid "Libraries Used:"
+msgstr "Libraries Used:"
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:397
+msgid "Source code"
+msgstr "Source code"
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:675
+msgid "Failed to save project."
+msgstr "Failed to save project."
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:701
+msgid "Choose a project file."
+msgstr "Choose a project file."
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:704
+#: mod_dev_tool/gui/src/MainWindow.cpp:826
+msgid "Project Files"
+msgstr "Project Files"
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:715
+msgid "Failed to open file."
+msgstr "Failed to open file."
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:724
+msgid "This project was built with a different tool version: '"
+msgstr "This project was built with a different tool version: '"
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:727
+#, fuzzy
+msgid "Color data may be generated differently."
+msgstr "Color data may be generated differently."
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:804
+msgid "Failed to save file."
+msgstr "Failed to save file."
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:881
+msgid "Reason: "
+msgstr "Reason: "
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:885
+msgid "Failed to export project."
+msgstr "Failed to export project."
+
+#: mod_dev_tool/gui/src/MainWindow.cpp:891
+msgid "Successfully exported project."
+msgstr "Successfully exported project."
+
+#: mod_dev_tool/gui/src/MainWindowPropertiesPanePart.cpp:50
+msgid "Province"
+msgstr "Province"
+
+#: mod_dev_tool/gui/src/MainWindowPropertiesPanePart.cpp:58
+msgid "State"
+msgstr "State"
+
+#: mod_dev_tool/gui/src/NewProjectDialog.cpp:11
+msgid "New Project"
+msgstr "New Project"
+
+#: mod_dev_tool/gui/src/NewProjectDialog.cpp:27
+msgid "Create Project"
+msgstr "Create Project"
+
+#: mod_dev_tool/gui/src/NewProjectDialog.cpp:58
+msgid "Name: "
+msgstr "Name: "
+
+#: mod_dev_tool/gui/src/NewProjectDialog.cpp:76
+msgid "Path: "
+msgstr "Path: "
+
+#: mod_dev_tool/gui/src/NewProjectDialog.cpp:95
+msgid "Path to project"
+msgstr "Path to project"
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:65
+msgid "Is Coastal"
+msgstr "Is Coastal"
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:80
+msgid "Province Type"
+msgstr "Province Type"
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:85
+msgid "Land"
+msgstr "Land"
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:86
+msgid "Sea"
+msgstr "Sea"
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:87
+msgid "Lake"
+msgstr "Lake"
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:110
+msgid "Terrain Type"
+msgstr "Terrain Type"
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:137
+msgid "Continent"
+msgstr "Continent"
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:173
+msgid "Add a continent"
+msgstr "Add a continent"
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:175
+msgid "Name of the new continent:"
+msgstr "Name of the new continent:"
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:182
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:238
+msgid "Confirm"
+msgstr "Confirm"
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:232
+msgid "Remove a Continent"
+msgstr "Remove a Continent"
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:289
+msgid "Create State"
+msgstr "Create State"
+
+#: mod_dev_tool/gui/src/Toolbar.cpp:35
+msgid "Add Item"
+msgstr "Add Item"
+
+#: mod_dev_tool/gui/src/Toolbar.cpp:51
+msgid "Undo"
+msgstr "Undo"
+
+#: mod_dev_tool/gui/src/Toolbar.cpp:66
+msgid "Redo"
+msgstr "Redo"
+
+#: mod_dev_tool/gui/src/Toolbar.cpp:73
+msgid "_Paint"
+msgstr "_Paint"
+
+#: mod_dev_tool/gui/src/Toolbar.cpp:75
+msgid "Property Paint Tool"
+msgstr "Property Paint Tool"
+
+#: mod_dev_tool/gui/src/Toolbar.cpp:85
+msgid "_PlayHoI"
+msgstr "_PlayHoI"
+
+#: mod_dev_tool/gui/src/Toolbar.cpp:87
+msgid "Play"
+msgstr "Play"
+
+#: mod_dev_tool/gui/src/Toolbar.cpp:95
+msgid "_SwitchView"
+msgstr "_SwitchView"
+
+#: mod_dev_tool/gui/src/Toolbar.cpp:117 mod_dev_tool/gui/src/Toolbar.cpp:122
+msgid "Switch View: "
+msgstr "Switch View: "

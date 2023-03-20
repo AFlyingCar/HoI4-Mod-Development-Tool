@@ -3,6 +3,8 @@
 
 #include "gtkmm.h"
 
+#include <libintl.h>
+
 #include "Constants.h"
 #include "Logger.h"
 
@@ -53,47 +55,47 @@ void HMDT::GUI::Application::on_startup() {
     Gtk::Application::on_startup();
 
     createMenu("Root", {});
-    createMenu("Root", "File", {
-        { "_New Project", "win.new", {} },
-        { "_Open Project", "win.open", {} }, // TODO: We should probably have a subsubmenu for this: different input types (province-map, heightmap, etc...)
-        { "_Save Project", "win.save", {} },
-        { "_Close Project", "win.close", {} },
-        { "_Add", "win.add_item", {} },
-        { "_Quit", "win.quit", {} }
+    createMenu("Root", gettext("File"), {
+        { gettext("_New Project"), "win.new", {} },
+        { gettext("_Open Project"), "win.open", {} }, // TODO: We should probably have a subsubmenu for this: different input types (province-map, heightmap, etc...)
+        { gettext("_Save Project"), "win.save", {} },
+        { gettext("_Close Project"), "win.close", {} },
+        { gettext("_Add"), "win.add_item", {} },
+        { gettext("_Quit"), "win.quit", {} }
     });
 
-    createMenu("Root", "Edit", {
-        { "_Undo", "win.undo", {} },
-        { "_Redo", "win.redo", {} }
+    createMenu("Root", gettext("Edit"), {
+        { gettext("_Undo"), "win.undo", {} },
+        { gettext("_Redo"), "win.redo", {} }
     });
 
-    createMenu("Root", "View", {
-        { "_Log Window", "win.log_window", {} },
-        { "_Switch Renderers", "win.switch_renderers", {
-            { "_Use OpenGL", "win.switch_renderers.usegl" },
-            { "_Use Cairo (DEPRECATED)", "win.switch_renderers.usecairo" },
+    createMenu("Root", gettext("View"), {
+        { gettext("_Log Window"), "win.log_window", {} },
+        { gettext("_Switch Renderers"), "win.switch_renderers", {
+            { gettext("_Use OpenGL"), "win.switch_renderers.usegl" },
+            { gettext("_Use Cairo (DEPRECATED)"), "win.switch_renderers.usecairo" },
         } },
-        { "_Switch Views", "win.switch_views", {
-            { "_Province View", "win.switch_views.province" },
-            { "_State View", "win.switch_views.state" },
+        { gettext("_Switch Views"), "win.switch_views", {
+            { gettext("_Province View"), "win.switch_views.province" },
+            { gettext("_State View"), "win.switch_views.state" },
         } },
-        { "Debug", "win.debug", {
-            { "Render Adjacencies", "win.debug.render_adjacencies" },
+        { gettext("Debug"), "win.debug", {
+            { gettext("Render Adjacencies"), "win.debug.render_adjacencies" },
         } },
     });
 
-    createMenu("Root", "Project", {
-        { "Recalculate Coastal Provinces", "win.recalc_coasts", {} },
-        { "Export Project", "win.export_project", {} },
-        { "Export Project To", "win.export_project_as", {} },
-        { "Generate Template River Map", "win.generate_template_rivers", {} },
+    createMenu("Root", gettext("Project"), {
+        { gettext("Recalculate Coastal Provinces"), "win.recalc_coasts", {} },
+        { gettext("Export Project"), "win.export_project", {} },
+        { gettext("Export Project To"), "win.export_project_as", {} },
+        { gettext("Generate Template River Map"), "win.generate_template_rivers", {} },
     });
 
-    createMenu("Root", "Help", {
-        { "Toggle Debug Mode", "win.toggle_debug", {} },
-        { "_About", "win.about", {} },
-        { "_Wiki", "win.wiki", {} },
-        { "_Preferences", "win.config_editor", {} }
+    createMenu("Root", gettext("Help"), {
+        { gettext("Toggle Debug Mode"), "win.toggle_debug", {} },
+        { gettext("_About"), "win.about", {} },
+        { gettext("_Wiki"), "win.wiki", {} },
+        { gettext("_Preferences"), "win.config_editor", {} }
     });
 
     // Debug dump the menus

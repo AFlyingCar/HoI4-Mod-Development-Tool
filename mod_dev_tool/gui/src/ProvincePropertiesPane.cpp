@@ -1,6 +1,8 @@
 
 #include "ProvincePropertiesPane.h"
 
+#include <libintl.h>
+
 #include "gtkmm/messagedialog.h"
 #include "gtkmm/label.h"
 #include "gtkmm/frame.h"
@@ -62,7 +64,7 @@ void HMDT::GUI::ProvincePropertiesPane::init() {
 }
 
 void HMDT::GUI::ProvincePropertiesPane::buildIsCoastalField() {
-    m_is_coastal_button = addWidget<Gtk::CheckButton>("Is Coastal");
+    m_is_coastal_button = addWidget<Gtk::CheckButton>(gettext("Is Coastal"));
 
     m_is_coastal_button->signal_toggled().connect([this]() {
         if(m_is_updating_properties) return;
@@ -77,14 +79,14 @@ void HMDT::GUI::ProvincePropertiesPane::buildIsCoastalField() {
 }
 
 void HMDT::GUI::ProvincePropertiesPane::buildProvinceTypeField() {
-    addWidget<Gtk::Label>("Province Type");
+    addWidget<Gtk::Label>(gettext("Province Type"));
 
     m_provtype_menu = addWidget<Gtk::ComboBoxText>();
 
     // You can only choose one of these 3 province types
-    m_provtype_menu->append("Land");
-    m_provtype_menu->append("Sea");
-    m_provtype_menu->append("Lake");
+    m_provtype_menu->append(gettext("Land"));
+    m_provtype_menu->append(gettext("Sea"));
+    m_provtype_menu->append(gettext("Lake"));
 
     m_provtype_menu->set_active(0);
     m_provtype_menu->signal_changed().connect([this]() {
@@ -107,7 +109,7 @@ void HMDT::GUI::ProvincePropertiesPane::buildProvinceTypeField() {
 }
 
 void HMDT::GUI::ProvincePropertiesPane::buildTerrainTypeField() {
-    addWidget<Gtk::Label>("Terrain Type");
+    addWidget<Gtk::Label>(gettext("Terrain Type"));
     m_terrain_menu = addWidget<Gtk::ComboBoxText>();
 
     // TODO: Add options, how do we know which terrain types are valid?
@@ -134,7 +136,7 @@ void HMDT::GUI::ProvincePropertiesPane::buildTerrainTypeField() {
 }
 
 void HMDT::GUI::ProvincePropertiesPane::buildContinentField() {
-    addWidget<Gtk::Label>("Continent");
+    addWidget<Gtk::Label>(gettext("Continent"));
 
     m_continent_menu = addWidget<Gtk::ComboBoxText>();
     m_continent_menu->append("None");
@@ -170,19 +172,19 @@ void HMDT::GUI::ProvincePropertiesPane::buildContinentField() {
                 auto& map_project = opt_project->get().getMapProject();
                 const auto& continents = map_project.getContinentProject().getContinentList();
 
-                Gtk::Dialog add_dialog("Add a continent");
+                Gtk::Dialog add_dialog(gettext("Add a continent"));
                 Gtk::Entry continent_name_entry;
-                Gtk::Label entry_label("Name of the new continent:");
+                Gtk::Label entry_label(gettext("Name of the new continent:"));
 
                 Gtk::Bin* bin = reinterpret_cast<Gtk::Bin*>(add_dialog.get_child());
 
                 bin->add(entry_label);
                 bin->add(continent_name_entry);
 
-                auto confirm_button = add_dialog.add_button("Confirm", Gtk::RESPONSE_ACCEPT);
+                auto confirm_button = add_dialog.add_button(gettext("Confirm"), Gtk::RESPONSE_ACCEPT);
                 confirm_button->set_sensitive(false);
 
-                add_dialog.add_button("Cancel", Gtk::RESPONSE_CANCEL);
+                add_dialog.add_button(gettext("Cancel"), Gtk::RESPONSE_CANCEL);
 
                 // Set up a signal so that we can update if the confirm button
                 //  should be activated
@@ -229,16 +231,16 @@ void HMDT::GUI::ProvincePropertiesPane::buildContinentField() {
                 auto& map_project = opt_project->get().getMapProject();
                 const auto& continents = map_project.getContinentProject().getContinentList();
 
-                Gtk::Dialog rem_dialog("Remove a Continent");
+                Gtk::Dialog rem_dialog(gettext("Remove a Continent"));
                 Gtk::Entry continent_name_entry;
                 Gtk::Bin* bin = reinterpret_cast<Gtk::Bin*>(rem_dialog.get_child());
 
                 // Add the Confirm and Cancel buttons to the dialog
                 bin->add(continent_name_entry);
-                auto confirm_button = rem_dialog.add_button("Confirm", Gtk::RESPONSE_ACCEPT);
+                auto confirm_button = rem_dialog.add_button(gettext("Confirm"), Gtk::RESPONSE_ACCEPT);
                 confirm_button->set_sensitive(false);
 
-                rem_dialog.add_button("Cancel", Gtk::RESPONSE_CANCEL);
+                rem_dialog.add_button(gettext("Cancel"), Gtk::RESPONSE_CANCEL);
 
                 // Set up a signal so that we can update if the confirm button
                 //  should be activated
@@ -286,7 +288,7 @@ void HMDT::GUI::ProvincePropertiesPane::buildContinentField() {
 }
 
 void HMDT::GUI::ProvincePropertiesPane::buildStateCreationButton() {
-    m_create_state_button = addWidget<Gtk::Button>("Create State");
+    m_create_state_button = addWidget<Gtk::Button>(gettext("Create State"));
 
     m_create_state_button->signal_clicked().connect([]() {
         if(auto opt_project = Driver::getInstance().getProject(); opt_project) {

@@ -1,6 +1,8 @@
 
 #include "AddFileWindow.h"
 
+#include <libintl.h>
+
 #include "gtkmm/messagedialog.h"
 
 #include "NativeDialog.h"
@@ -67,10 +69,10 @@ HMDT::GUI::AddFileWindow::AddFileWindow(HMDT::GUI::Window& parent):
     m_item_types_list(),
     m_description_area(),
     m_buttons_box(Gtk::ORIENTATION_HORIZONTAL),
-    m_cancel_button("Cancel"),
-    m_continue_button("Add")
+    m_cancel_button(gettext("Cancel")),
+    m_continue_button(gettext("Add"))
 {
-    set_title("Add File");
+    set_title(gettext("Add File"));
     set_default_size(662, 440); // TODO
 
     initWidgets();
@@ -161,7 +163,7 @@ void HMDT::GUI::AddFileWindow::initWidgets() {
             {
                 // Allocate this on the stack so that it gets automatically cleaned up
                 //  when we finish
-                NativeDialog::FileDialog dialog("Choose an input file",
+                NativeDialog::FileDialog dialog(gettext("Choose an input file"),
                                                 NativeDialog::FileDialog::SELECT_FILE);
                 // dialog.setDefaultPath() // TODO: Start in the installation directory/Documents
 
@@ -170,7 +172,7 @@ void HMDT::GUI::AddFileWindow::initWidgets() {
                     dialog.addFilter(label, filters);
                 }
 
-                dialog.addFilter("All files", "")
+                dialog.addFilter(gettext("All files"), "")
                       .setAllowsMultipleSelection(file_info.allow_multiselect)
                       .setDecideHandler([&paths](const NativeDialog::Dialog& dialog) {
                             auto& fdlg = dynamic_cast<const NativeDialog::FileDialog&>(dialog);
@@ -190,7 +192,7 @@ void HMDT::GUI::AddFileWindow::initWidgets() {
             }
 
             if(IS_FAILURE(addItem(item_type.name, m_parent, paths))) {
-                Gtk::MessageDialog err_diag("Failed to add item.",
+                Gtk::MessageDialog err_diag(gettext("Failed to add item."),
                                             false, Gtk::MESSAGE_ERROR);
                 err_diag.run();
             }

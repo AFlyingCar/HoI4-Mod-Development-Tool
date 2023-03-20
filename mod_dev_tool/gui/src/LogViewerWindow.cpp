@@ -3,6 +3,8 @@
 
 #include <chrono>
 
+#include <libintl.h>
+
 #include "Logger.h"
 #include "Maybe.h"
 #include "StatusCodes.h"
@@ -83,21 +85,21 @@ HMDT::GUI::LogViewerWindow::LogRowColumns::LogRowColumns() {
 HMDT::GUI::LogViewerWindow::LogViewerWindow():
     m_filtering_box(Gtk::ORIENTATION_HORIZONTAL),
     m_box(Gtk::ORIENTATION_VERTICAL),
-    m_info_enabled("Info"),
-    m_debug_enabled("Debug"),
-    m_error_enabled("Error"),
-    m_warn_enabled("Warning"),
-    m_from_label("From:"),
-    m_until_label("Until:"),
-    m_module_search_label("Module search:"),
-    m_filename_search_label("Filename search:"),
-    m_message_search_label("Text search:"),
-    m_filter_reset("Reset Filters"),
-    m_cell_colorize_enabled("Colorize Cells"),
+    m_info_enabled(gettext("Info")),
+    m_debug_enabled(gettext("Debug")),
+    m_error_enabled(gettext("Error")),
+    m_warn_enabled(gettext("Warning")),
+    m_from_label(gettext("From:")),
+    m_until_label(gettext("Until:")),
+    m_module_search_label(gettext("Module search:")),
+    m_filename_search_label(gettext("Filename search:")),
+    m_message_search_label(gettext("Text search:")),
+    m_filter_reset(gettext("Reset Filters")),
+    m_cell_colorize_enabled(gettext("Colorize Cells")),
     m_dispatcher(),
     m_dispatcher_ptr(nullptr)
 {
-    set_title("Log Viewer");
+    set_title(gettext("Log Viewer"));
     set_default_size(1124, 640);
 
     initWidgets();
@@ -173,9 +175,9 @@ void HMDT::GUI::LogViewerWindow::initWidgets() {
         // Time search fields
         {
             m_from_time_select.append("");
-            m_from_time_select.append("Now");
-            m_from_time_select.append("-1min");
-            m_from_time_select.append("-5min");
+            m_from_time_select.append(gettext("Now"));
+            m_from_time_select.append(gettext("-1min"));
+            m_from_time_select.append(gettext("-5min"));
             m_from_time_select.signal_changed().connect([this]() {
                 auto current = m_from_time_select.get_active_row_number();
                 auto field_time = m_from_time_search.get_text();
@@ -208,9 +210,9 @@ void HMDT::GUI::LogViewerWindow::initWidgets() {
             });
 
             m_until_time_select.append("");
-            m_until_time_select.append("Now");
-            m_until_time_select.append("+1min");
-            m_until_time_select.append("+5min");
+            m_until_time_select.append(gettext("Now"));
+            m_until_time_select.append(gettext("+1min"));
+            m_until_time_select.append(gettext("+5min"));
             m_until_time_select.signal_changed().connect([this]() {
                 auto current = m_until_time_select.get_active_row_number();
                 auto field_time = m_until_time_search.get_text();
@@ -370,14 +372,14 @@ void HMDT::GUI::LogViewerWindow::initWidgets() {
 
     // Add all of the columns to the view
     m_log_view.append_column(m_level);
-    m_log_view.append_column("Timestamp", m_columns.m_timestamp);
+    m_log_view.append_column(gettext("Timestamp"), m_columns.m_timestamp);
 
-    m_log_view.append_column("Module", m_columns.m_module);
-    m_log_view.append_column("Filename:Line", m_columns.m_filename_line);
-    m_log_view.append_column("Function", m_columns.m_function);
+    m_log_view.append_column(gettext("Module"), m_columns.m_module);
+    m_log_view.append_column(gettext("Filename:Line"), m_columns.m_filename_line);
+    m_log_view.append_column(gettext("Function"), m_columns.m_function);
 
     // TODO: We may want to make this a special type of cell instead, so we can control formatting on it
-    m_log_view.append_column("Message", m_columns.m_message);
+    m_log_view.append_column(gettext("Message"), m_columns.m_message);
 
     // Set properties of the columns
     for(Gtk::TreeViewColumn* column : m_log_view.get_columns()) {
@@ -388,7 +390,7 @@ void HMDT::GUI::LogViewerWindow::initWidgets() {
     // Set special CellRenderers per column
     {
         m_level.pack_start(m_cell_renderer_text);
-        m_level.set_title("Level");
+        m_level.set_title(gettext("Level"));
 
         // Level cell renderer
         // https://stackoverflow.com/questions/62124020/color-property-reverted-when-selecting-a-cell-in-gtk3

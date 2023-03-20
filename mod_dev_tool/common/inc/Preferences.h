@@ -12,6 +12,7 @@
 # include <variant>
 # include <filesystem>
 
+# include "Maybe.h"
 # include "Monad.h"
 # include "Logger.h"
 # include "Util.h"
@@ -38,6 +39,11 @@ namespace HMDT {
             using ValueVariant = std::variant<int64_t, uint64_t, double, bool, std::string>;
 
             /**
+             * @brief The callback to be called when a preference value is changed
+             */
+            using OnPreferenceChangeCallback = std::function<bool(const ValueVariant&, const ValueVariant&)>;
+
+            /**
              * @brief Helper function which constructs a ValueVariant from a T
              * @details This should be used instead of constructing in-place, as
              *          it will take care of certain types of implicit
@@ -59,6 +65,17 @@ namespace HMDT {
                 }
             }
 
+            struct Config {
+                //! The comment for this config
+                std::string comment;
+
+                //! The value for this config
+                ValueVariant value;
+
+                //! Whether this config requires the program to be restarted to take effect
+                bool requires_restart;
+            };
+
             /**
              * @brief A Group of config values
              */
@@ -66,8 +83,8 @@ namespace HMDT {
                 //! The comment for this group
                 std::string comment;
 
-                //! The configs for this group name -> (comment, config)
-                std::map<std::string, std::pair<std::string, ValueVariant>> configs;
+                //! The configs for this group name -> config
+                std::map<std::string, Config> configs;
             };
 
             /**
@@ -147,12 +164,17 @@ namespace HMDT {
             //  as getPreferenceValue
             bool setPreferenceValue(const std::string& value_path, ValueVariant);
 
+            MonadOptional<bool> doesPathRequireRestart(const std::string&) const noexcept;
+
+            MaybeVoid setCallbackOnPreferenceChange(const std::string&,
+                                                    OnPreferenceChangeCallback) noexcept;
+
             void resetToDefaults();
 
-            bool validateLoadedPreferenceTypes();
+            MaybeVoid validateLoadedPreferenceTypes();
 
             void writeToJson(std::ostream&, bool = false) const;
-            bool writeToFile(bool = false) const;
+            MaybeVoid writeToFile(bool = false) const;
             void writeToLog() const;
 
             bool isInitialized() const;
@@ -275,6 +297,9 @@ namespace HMDT {
             //! All defined config environment variables
             std::map<std::string, ValueVariant> m_env_vars;
 
+            //! All registered callbacks to be called when a preference value changes
+            std::map<std::string, OnPreferenceChangeCallback> m_on_pref_change_callbacks;
+
             //! Used to specify if initialize() has been called and succeeded
             bool m_initialized;
 
@@ -285,21 +310,26 @@ namespace HMDT {
             bool m_dirty;
     };
 
+    bool operator==(const Preferences::Config&, const Preferences::Config&) noexcept;
+
 /// @cond
 # define PREF_BEGIN_DEF() {
 
 # define PREF_BEGIN_DEFINE_SECTION(SEC_NAME, COMMENT) \
-    { SEC_NAME, []() { HMDT::Preferences::Section _section; _section.comment = "" COMMENT;
+    { SEC_NAME, []() { HMDT::Preferences::Section _section; _section.comment = std::string("" COMMENT);
 
 # define PREF_SECTION_DEFINE_PROPERTY(PROP_NAME, PROP_VAL) \
     _section. PROP_NAME = PROP_VAL ;
 
 # define PREF_BEGIN_DEFINE_GROUP(GROUP_NAME, COMMENT) \
-    _section.groups[ GROUP_NAME ] = HMDT::Preferences::Group { "" COMMENT, {
+    _section.groups[ GROUP_NAME ] = HMDT::Preferences::Group { std::string(COMMENT), {
 
-# define PREF_DEFINE_CONFIG(CONF_NAME, VALUE, COMMENT)    \
-    { CONF_NAME, std::make_pair(std::string("" COMMENT ), \
-                                HMDT::Preferences::buildValueVariant( VALUE )) },
+# define PREF_DEFINE_CONFIG(CONF_NAME, VALUE, COMMENT, REQRESTART) \
+    { CONF_NAME, HMDT::Preferences::Config{            \
+        std::string(COMMENT),                          \
+        HMDT::Preferences::buildValueVariant( VALUE ), \
+        REQRESTART }                                   \
+    },
 
 # define PREF_END_DEFINE_GROUP(GROUP_NAME) } };
 

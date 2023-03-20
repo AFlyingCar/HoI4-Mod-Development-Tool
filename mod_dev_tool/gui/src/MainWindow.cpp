@@ -3,6 +3,8 @@
 #include <thread>
 #include <sstream>
 
+#include <libintl.h>
+
 #include "gtkmm.h"
 
 #include "NativeDialog.h"
@@ -336,7 +338,9 @@ void HMDT::GUI::MainWindow::initializeProjectActions() {
 
                 {
                     std::stringstream ss;
-                    ss << "<b>Successfully generated template river map.</b>\n\n"
+                    ss << "<b>"
+                       << gettext("Successfully generated template river map.")
+                       << "</b>\n\n"
                        << river_path.generic_string();
                     Gtk::MessageDialog dialog(*this, ss.str(), true,
                                               Gtk::MESSAGE_INFO);
@@ -377,7 +381,7 @@ void HMDT::GUI::MainWindow::initializeHelpActions() {
 
         // Credits
         dialog.set_authors({ "Tyler Robbins" });
-        dialog.add_credit_section("Libraries Used:", {
+        dialog.add_credit_section(gettext("Libraries Used:"), {
             "gtkmm", "nlohmann::json", "nlohmann::fifo_map", "GLEW", "OpenGL",
             "GLM", "Native Dialogs", "gtest"
         });
@@ -392,7 +396,7 @@ void HMDT::GUI::MainWindow::initializeHelpActions() {
         dialog.set_license(TOOL_LICENSE);
         dialog.set_wrap_license(true);
 
-        dialog.set_website_label("Source code");
+        dialog.set_website_label(gettext("Source code"));
         dialog.set_website(SOURCE_LOCATION);
 
         dialog.set_logo(Gdk::Pixbuf::create_from_resource("/com/aflyingcar/HoI4ModDevelopmentTool/textures/logo.png"));
@@ -670,7 +674,7 @@ void HMDT::GUI::MainWindow::newProject() {
             // Attempt to save just the root project (this will set up the
             //  initial metadata we will need for later)
             if(IS_FAILURE(project->save(false))) {
-                Gtk::MessageDialog dialog(*this, "Failed to save project.", false,
+                Gtk::MessageDialog dialog(*this, gettext("Failed to save project."), false,
                                           Gtk::MESSAGE_ERROR);
                 dialog.run();
                 return;
@@ -696,11 +700,11 @@ void HMDT::GUI::MainWindow::openProject() {
     //  when we finish
     std::string path;
 
-    NativeDialog::FileDialog dialog("Choose a project file.",
+    NativeDialog::FileDialog dialog(gettext("Choose a project file."),
                                     NativeDialog::FileDialog::SELECT_FILE);
     // dialog.setDefaultPath() // TODO: Start in the installation directory/Documents
-    dialog.addFilter("Project Files", "hoi4proj")
-          .addFilter("All files", "*")
+    dialog.addFilter(gettext("Project Files"), "hoi4proj")
+          .addFilter(gettext("All files"), "*")
           .setAllowsMultipleSelection(false)
           .setDecideHandler([&path](const NativeDialog::Dialog& dialog) {
                 auto& fdlg = dynamic_cast<const NativeDialog::FileDialog&>(dialog);
@@ -710,7 +714,7 @@ void HMDT::GUI::MainWindow::openProject() {
     if(!path.empty()) {
         project->setPath(path);
         if(IS_FAILURE(project->load())) {
-            Gtk::MessageDialog err_diag("Failed to open file.", false,
+            Gtk::MessageDialog err_diag(gettext("Failed to open file."), false,
                                         Gtk::MESSAGE_ERROR);
             err_diag.run();
             return;
@@ -719,9 +723,10 @@ void HMDT::GUI::MainWindow::openProject() {
 
     if(project->getToolVersion() != TOOL_VERSION) {
         std::stringstream message_ss;
-        message_ss << "This project was built with a different tool version: '"
+        message_ss << gettext("This project was built with a different tool version: '")
                    << project->getToolVersion() << "' != '" << TOOL_VERSION
-                   << "\'\nColor data may be generated differently.";
+                   << "\'\n"
+                   << gettext("Color data may be generated differently.");
 
         Gtk::MessageDialog dialog(message_ss.str(), false, Gtk::MESSAGE_WARNING);
 
@@ -798,7 +803,7 @@ void HMDT::GUI::MainWindow::saveProject() {
 
         // Make sure the user is notified if we failed to save the project
         if(IS_FAILURE(project.save())) {
-            Gtk::MessageDialog dialog(*this, "Failed to save file.", false,
+            Gtk::MessageDialog dialog(*this, gettext("Failed to save file."), false,
                                       Gtk::MESSAGE_ERROR);
             dialog.run();
             return;
@@ -820,8 +825,8 @@ void HMDT::GUI::MainWindow::saveProjectAs(const std::string& dtitle) {
                                         NativeDialog::FileDialog::SELECT_FILE |
                                         NativeDialog::FileDialog::SELECT_TO_SAVE);
         // dialog.setDefaultPath() // TODO: Start in the installation directory/Documents
-        dialog.addFilter("Project Files", "hoi4proj")
-              .addFilter("All files", "*")
+        dialog.addFilter(gettext("Project Files"), "hoi4proj")
+              .addFilter(gettext("All files"), "*")
               .setAllowsMultipleSelection(false)
               .setDecideHandler([this, &project](const NativeDialog::Dialog& dialog)
               {
@@ -875,18 +880,18 @@ void HMDT::GUI::MainWindow::exportProject() {
 
         if(auto res = opt_project->get().export_(); IS_FAILURE(res)) {
             std::stringstream ss;
-            ss << "Reason: 0x"
+            ss << gettext("Reason: ") << "0x"
                << std::hex << res.error().value() << std::dec
                << " '" << res.error().message() << "'";
 
-            Gtk::MessageDialog dialog(*this, "Failed to export project.",
+            Gtk::MessageDialog dialog(*this, gettext("Failed to export project."),
                                       false, Gtk::MESSAGE_ERROR);
             dialog.set_secondary_text(ss.str());
             dialog.run();
         } else {
-            Gtk::MessageDialog dialog(*this,
-                                      "<b>Successfully exported project.</b>",
-                                      true, Gtk::MESSAGE_INFO);
+            std::stringstream ss;
+            ss << "<b>" << gettext("Successfully exported project.") << "</b>";
+            Gtk::MessageDialog dialog(*this, ss.str(), true, Gtk::MESSAGE_INFO);
             dialog.run();
         }
 

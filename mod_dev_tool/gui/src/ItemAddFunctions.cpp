@@ -1,6 +1,8 @@
 
 #include "ItemAddFunctions.h"
 
+#include <libintl.h>
+
 #include "gtkmm.h"
 
 #include "Constants.h"
@@ -88,7 +90,7 @@ auto HMDT::GUI::initAddProvinceMap(Window& window,
         main_window.getDrawingArea() /* drawing_area */,
         map_data /* map_data */,
         std::make_shared<ShapeFinder>(image, GraphicsWorker::getInstance(), map_data) /* shape_finder */,
-        std::make_shared<ProgressBarDialog>(window, "Loading...", "", true) /* progress_dialog */,
+        std::make_shared<ProgressBarDialog>(window, gettext("Loading..."), "", true) /* progress_dialog */,
         std::shared_ptr<Rectangle>(new Rectangle{0, 0, static_cast<uint32_t>(image->info_header.width),
                                                        static_cast<uint32_t>(image->info_header.height)}) /* rectangle */,
         std::make_shared<bool>(false) /* did_estop */,

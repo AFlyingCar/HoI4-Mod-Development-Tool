@@ -5,6 +5,7 @@
 # define PRIM_CAT(X, Y) X ## Y
 # define CONCAT(X, Y) PRIM_CAT(X, Y)
 # define EXPAND(...) __VA_ARGS__
+# define HMDT_LOCALIZE(...) __VA_ARGS__
 
 # define HMDT_UNIQUE_NAME(PREFIX) CONCAT(CONCAT(CONCAT(PREFIX, _L),__LINE__), \
                                   CONCAT(_C,__COUNTER__))

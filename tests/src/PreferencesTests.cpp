@@ -17,14 +17,14 @@ PREF_BEGIN_DEF()
         PREF_SECTION_DEFINE_PROPERTY(showTitles, true)
 
         PREF_BEGIN_DEFINE_GROUP("SimpleGroup",)
-            PREF_DEFINE_CONFIG("val1", false,)
-            PREF_DEFINE_CONFIG("val2", 5L,)
-            PREF_DEFINE_CONFIG("val3", "a fun string",)
-            PREF_DEFINE_CONFIG("val4", 3.1415,)
+            PREF_DEFINE_CONFIG("val1", false, , false)
+            PREF_DEFINE_CONFIG("val2", 5L, , false)
+            PREF_DEFINE_CONFIG("val3", "a fun string", , false)
+            PREF_DEFINE_CONFIG("val4", 3.1415, , false)
         PREF_END_DEFINE_GROUP()
 
         PREF_BEGIN_DEFINE_GROUP("SimpleGroup2",)
-            PREF_DEFINE_CONFIG("val2", 23L,)
+            PREF_DEFINE_CONFIG("val2", 23L, , false)
         PREF_END_DEFINE_GROUP()
     PREF_END_DEFINE_SECTION()
 PREF_END_DEF();
@@ -160,7 +160,7 @@ PREF_END_DEF();
         Preferences::getInstance(false).setConfigLocation(simple_conf_path);
 
         // Initialize and validate
-        ASSERT_TRUE(Preferences::getInstance().validateLoadedPreferenceTypes());
+        ASSERT_SUCCEEDED(Preferences::getInstance().validateLoadedPreferenceTypes());
     }
 
     TEST_F(PreferencesTests, ValidateEmptyConfigHasDefaultsTest) {
@@ -175,7 +175,7 @@ PREF_END_DEF();
         Preferences::getInstance(false).setConfigLocation(simple_conf_path);
 
         // Initialize and validate
-        ASSERT_TRUE(Preferences::getInstance().validateLoadedPreferenceTypes());
+        ASSERT_SUCCEEDED(Preferences::getInstance().validateLoadedPreferenceTypes());
 
         // Next compare the two config mappings to verify that they are equal
         ASSERT_TRUE(std::equal(Preferences::getInstance().getSections().begin(),
@@ -199,7 +199,7 @@ PREF_END_DEF();
         Preferences::getInstance(false).setConfigLocation(simple_conf_path);
 
         // Initialize and validate
-        ASSERT_TRUE(Preferences::getInstance().validateLoadedPreferenceTypes());
+        ASSERT_SUCCEEDED(Preferences::getInstance().validateLoadedPreferenceTypes());
 
         const auto& loaded_sections = Preferences::getInstance().getSections();
 
@@ -245,12 +245,12 @@ PREF_END_DEF();
         auto conf_out_path = base_path / "sample_out.conf";
         Preferences::getInstance(false).setConfigLocation(conf_out_path);
 
-        ASSERT_TRUE(Preferences::getInstance().writeToFile());
+        ASSERT_SUCCEEDED(Preferences::getInstance().writeToFile());
 
         ASSERT_TRUE(std::filesystem::exists(conf_out_path));
 
         // Reload the config into memory now
-        ASSERT_TRUE(Preferences::getInstance().validateLoadedPreferenceTypes());
+        ASSERT_SUCCEEDED(Preferences::getInstance().validateLoadedPreferenceTypes());
 
         // Next compare the two config mappings to verify that they are equal
         ASSERT_TRUE(std::equal(Preferences::getInstance().getSections().begin(),
@@ -273,7 +273,7 @@ PREF_END_DEF();
         Preferences::getInstance(false).setConfigLocation(simple_conf_path);
 
         // Load the config into memory now
-        ASSERT_TRUE(Preferences::getInstance().validateLoadedPreferenceTypes());
+        ASSERT_SUCCEEDED(Preferences::getInstance().validateLoadedPreferenceTypes());
 
         // Next compare the two config mappings to verify that they are equal
         auto result = Preferences::getInstance().getPreferenceValue<int64_t>("SimpleSection.SimpleGroup.val2");

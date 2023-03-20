@@ -1,6 +1,8 @@
 
 #include "Toolbar.h"
 
+#include <libintl.h>
+
 #include "gtkmm/separatortoolitem.h"
 
 #include "StockIcons.h"
@@ -30,16 +32,16 @@ void HMDT::GUI::Toolbar::init() {
 
     // Build new item button
     {
-        auto* new_item = createNewToolbarItem<Gtk::ToolButton>("_Add");
+        auto* new_item = createNewToolbarItem<Gtk::ToolButton>(gettext("_Add"));
         new_item->set_icon_name(StockIcons::NEW.data());
-        new_item->set_tooltip_text("Add Item");
+        new_item->set_tooltip_text(gettext("Add Item"));
         new_item->set_sensitive(false);
     }
 
     {
         // Build undo button
         {
-            m_undo_item = createNewToolbarItem<Gtk::ToolButton>("_Undo");
+            m_undo_item = createNewToolbarItem<Gtk::ToolButton>(gettext("_Undo"));
             m_undo_item->set_icon_name(StockIcons::UNDO.data());
             m_undo_item->signal_clicked().connect([this]() {
                 if(!Action::ActionManager::getInstance().undoAction()) {
@@ -48,13 +50,13 @@ void HMDT::GUI::Toolbar::init() {
 
                 updateUndoRedoButtons();
             });
-            m_undo_item->set_tooltip_text("Undo");
+            m_undo_item->set_tooltip_text(gettext("Undo"));
             m_undo_item->set_sensitive(false);
         }
 
         // Build redo button
         {
-            m_redo_item = createNewToolbarItem<Gtk::ToolButton>("_Redo");
+            m_redo_item = createNewToolbarItem<Gtk::ToolButton>(gettext("_Redo"));
             m_redo_item->set_icon_name(StockIcons::REDO.data());
             m_redo_item->signal_clicked().connect([this]() {
                 if(!Action::ActionManager::getInstance().redoAction()) {
@@ -63,16 +65,16 @@ void HMDT::GUI::Toolbar::init() {
 
                 updateUndoRedoButtons();
             });
-            m_redo_item->set_tooltip_text("Redo");
+            m_redo_item->set_tooltip_text(gettext("Redo"));
             m_redo_item->set_sensitive(false);
         }
     }
 
     // Build Property Painting Tool button
     {
-        auto* property_paint_tool_item = createNewToolbarItem<Gtk::ToolButton>("_Paint");
+        auto* property_paint_tool_item = createNewToolbarItem<Gtk::ToolButton>(gettext("_Paint"));
         property_paint_tool_item->set_icon_name("edit-paste-style"); // TODO: Placeholder icon
-        property_paint_tool_item->set_tooltip_text("Property Paint Tool");
+        property_paint_tool_item->set_tooltip_text(gettext("Property Paint Tool"));
         property_paint_tool_item->set_sensitive(false);
     }
 
@@ -82,9 +84,9 @@ void HMDT::GUI::Toolbar::init() {
 
     // Build Play button
     {
-        auto* play_item = createNewToolbarItem<Gtk::ToolButton>("_PlayHoI");
+        auto* play_item = createNewToolbarItem<Gtk::ToolButton>(gettext("_PlayHoI"));
         play_item->set_icon_name(StockIcons::MEDIA_PLAY.data());
-        play_item->set_tooltip_text("Play");
+        play_item->set_tooltip_text(gettext("Play"));
         play_item->set_sensitive(false);
     }
 
@@ -92,7 +94,7 @@ void HMDT::GUI::Toolbar::init() {
     {
         using namespace std::string_literals;
 
-        auto* view_switch_item = createNewToolbarItem<Gtk::ToolButton>("_SwitchView");
+        auto* view_switch_item = createNewToolbarItem<Gtk::ToolButton>(gettext("_SwitchView"));
         view_switch_item->set_icon_name(VIEW_SWITCH_ICON.data());
         view_switch_item->signal_clicked().connect([this, view_switch_item]() {
             auto current_mode = m_window.getDrawingArea()->getViewingMode();
@@ -114,12 +116,13 @@ void HMDT::GUI::Toolbar::init() {
 
             // TODO: We also need to update the MenuBar's "View>Switch Views" menu
             m_window.getDrawingArea()->setViewingMode(newMode);
-            view_switch_item->set_tooltip_text("Switch View: "s + std::to_string(newMode));
+            view_switch_item->set_tooltip_text(std::string(gettext("Switch View: ")) + std::to_string(newMode));
         });
 
         // TODO: We're just hardcoding that this is the default, can we come up
         //   with a betterr way of organizing this?
-        view_switch_item->set_tooltip_text("Switch View: "s + std::to_string(IMapDrawingAreaBase::ViewingMode::PROVINCE_VIEW));
+        view_switch_item->set_tooltip_text(std::string(gettext("Switch View: ")) +
+                                           std::to_string(IMapDrawingAreaBase::ViewingMode::PROVINCE_VIEW));
     }
 
     for(auto* item : m_toolbar_items) {

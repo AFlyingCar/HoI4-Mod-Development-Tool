@@ -16,6 +16,8 @@ set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/third_party
     ${CMAKE_PREFIX_PATH}
 )
 
+set(PROJECT_ROOT "${CMAKE_SOURCE_DIR}/mod_dev_tool")
+
 # Set up install destinations
 if(WIN32)
     set(INSTALL_DESTINATION .)
@@ -44,10 +46,12 @@ list(POP_BACK CMAKE_MESSAGE_INDENT)
 # TODO: What other MSVC options should we pass?
 if(MSVC)
     add_compile_options(/W4 /WX /WX-:C4996)
-    add_definitions(/DHMDT_PROJECT_ROOT="${CMAKE_SOURCE_DIR}/mod_dev_tool")
+    add_definitions(/DHMDT_PROJECT_ROOT="${PROJECT_ROOT}")
+    add_definitions(/DHMDT_TOOL_NAME="${HMDT_TOOL_NAME}")
 else()
     add_compile_options(-Wall -Werror -Wextra -Wno-sign-compare -Wno-unused-label -Wno-unused-const-variable -Wno-unused-parameter -Wno-unused-function -Wno-error=deprecated -Wno-error=deprecated-declarations)
-    add_definitions(-DHMDT_PROJECT_ROOT="${CMAKE_SOURCE_DIR}/mod_dev_tool")
+    add_definitions(-DHMDT_PROJECT_ROOT="${PROJECT_ROOT}")
+    add_definitions(-DHMDT_TOOL_NAME="${HMDT_TOOL_NAME}")
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -63,11 +67,15 @@ endif()
 add_subdirectory(resources)
 add_definitions(-DHMDT_GLIB_RESOURCES="${RESOURCE_C_SRC_NAME}")
 
+# Note: We are adding the 'gettext_' alias so that we can localize without
+#   getting picked up by xgettext
+add_definitions(-Dgettext_=gettext)
+
 add_subdirectory(mod_dev_tool)
 
 add_subdirectory(tests)
 
-add_dependencies(mod_dev_tool glib_resources)
+add_dependencies(mod_dev_tool glib_resources locale_resources)
 
 ################################################################################
 
@@ -145,6 +153,8 @@ install(FILES README.md
         DESTINATION ${INSTALL_DESTINATION}/share/doc/)
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/StatusCodesList.csv
         DESTINATION ${INSTALL_DESTINATION}/share/doc)
+install(DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/locale/
+        DESTINATION ${INSTALL_DESTINATION}/bin/locale)
 # TODO: Install the license as well to /share/licenses/, once we have one
 
 # Code taken from here: https://stackoverflow.com/questions/62884439/how-to-use-cmake-file-get-runtime-dependencies-in-an-install-statement

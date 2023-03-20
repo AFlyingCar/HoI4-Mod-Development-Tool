@@ -179,8 +179,18 @@ bool HMDT::Preferences::setPreferenceValue(const std::string& value_path,
     }
 
     return getValueVariantForPath(value_path)
-        .andThen<bool>([this, &value_var](Ref<ValueVariant> ref_val) {
+        .andThen<bool>([this, &value_path, &value_var](Ref<ValueVariant> ref_val)
+        {
             auto& val = ref_val.get();
+
+            // Look up a callback for this value if one exists
+            // If the callback returns false, then do not change the value
+            if(m_on_pref_change_callbacks.count(value_path) != 0 &&
+               !m_on_pref_change_callbacks.at(value_path)(val, value_var))
+            {
+                WRITE_DEBUG("Callback for '", value_path, "' returned false. Not updating config value.");
+                return false;
+            }
 
             val = value_var;
 
@@ -188,6 +198,46 @@ bool HMDT::Preferences::setPreferenceValue(const std::string& value_path,
 
             return true;
         }).orElse(false);
+}
+
+auto HMDT::Preferences::doesPathRequireRestart(const std::string& value_path) const noexcept
+    -> MonadOptional<bool>
+{
+    // There should be exactly 2 separators for SECTION.GROUP.CONFIG
+    if(std::count(value_path.begin(), value_path.end(), '.') != 2) {
+        WRITE_ERROR("Invalid config-value path '", value_path, "'");
+        return false;
+    }
+
+    // Parse out the section+group name and the config name
+    auto last_sep = value_path.rfind('.');
+    std::string section_group_name = value_path.substr(0, last_sep);
+    std::string config_name = value_path.substr(last_sep + 1);
+
+    // Now look up the config in the group (assuming the group exists)
+    return getGroup(section_group_name, m_sections)
+        .andThen<bool>([&config_name](Ref<const Group> group)
+        {
+            if(group.get().configs.count(config_name) != 0) {
+                return group.get().configs.at(config_name).requires_restart;
+            }
+
+            return false;
+        });
+}
+
+auto HMDT::Preferences::setCallbackOnPreferenceChange(const std::string& value_path,
+                                                      OnPreferenceChangeCallback callback) noexcept
+    -> MaybeVoid 
+{
+    // Check to make sure we only ever register callbacks for preferences that
+    //   exist 
+    if(getValueVariantForPath(value_path).has_value()) {
+        m_on_pref_change_callbacks[value_path] = callback; 
+        return STATUS_SUCCESS;
+    } else {
+        RETURN_ERROR(STATUS_VALUE_NOT_FOUND);
+    }
 }
 
 /**
@@ -366,7 +416,7 @@ auto HMDT::Preferences::getValueVariantForPathInSectionMap(const std::string& va
             -> MonadOptionalRef<const ValueVariant>
         {
             if(group.get().configs.count(config_name) != 0) {
-                return group.get().configs.at(config_name).second;
+                return group.get().configs.at(config_name).value;
             }
 
             return std::nullopt;
@@ -403,7 +453,7 @@ auto HMDT::Preferences::getValueVariantForPathInSectionMap(const std::string& va
             -> MonadOptionalRef<ValueVariant>
         {
             if(group.get().configs.count(config_name) != 0) {
-                return group.get().configs.at(config_name).second;
+                return group.get().configs.at(config_name).value;
             }
 
             return std::nullopt;
@@ -479,7 +529,7 @@ void HMDT::Preferences::initialize() noexcept {
                     for(auto&& [config_name, jconfig] : jobj.items()) {
                         WRITE_DEBUG("Parsing config value '", config_name, '\'');
 
-                        ValueVariant& value = group.configs[config_name].second;
+                        ValueVariant& value = group.configs[config_name].value;
 
                         if(jconfig.is_boolean()) {
                             value = jconfig.get<bool>();
@@ -497,6 +547,20 @@ void HMDT::Preferences::initialize() noexcept {
                         } else if(jconfig.is_object() || jconfig.is_null()) {
                             WRITE_ERROR("Config values cannot be OBJECT or NULL.");
                             return;
+                        }
+
+                        auto path = buildValuePath(sec_name, grp_prop_name, config_name);
+
+                        // If a callback exists for this, then call it
+                        if(m_on_pref_change_callbacks.count(path) != 0) {
+                            // Default values should always exist for every path,
+                            //   so this should never fail to find it
+                            getValueVariantForPathInSectionMap(path, m_default_sections)
+                                .andThen([this, &value, &path](Ref<ValueVariant> ref_val)
+                                {
+                                    auto& def_value = ref_val.get();
+                                    m_on_pref_change_callbacks.at(path)(def_value, value);
+                                });
                         }
                     }
                 }
@@ -516,6 +580,31 @@ void HMDT::Preferences::initialize() noexcept {
 void HMDT::Preferences::resetToDefaults() {
     WRITE_INFO("Resetting preferences to the defaults.");
 
+    // Make sure we invoke every callback
+    for(auto&& [pref_path, callback] : m_on_pref_change_callbacks) {
+        const auto& local_pref_path = pref_path;
+        const auto& local_callback = callback;
+
+        getValueVariantForPath(pref_path)
+            .andThen([this, &local_pref_path, &local_callback](Ref<ValueVariant> ref_val)
+            {
+                auto& val = ref_val.get();
+
+                // It should not be possible for the defaults to be missing
+                //   the preference path, so we should always expect this to
+                //   succeed
+                getValueVariantForPathInSectionMap(local_pref_path, m_default_sections)
+                    .andThen([&val, &local_callback](Ref<ValueVariant> ref_val)
+                    {
+                        auto& def_val = ref_val.get();
+
+                        // Do not bother checking the return code, as we will always
+                        //   reset all values regardless of what the callbacks want
+                        local_callback(val, def_val);
+                    });
+            });
+    }
+
     m_sections = m_default_sections;
     m_dirty = false;
 }
@@ -526,7 +615,7 @@ void HMDT::Preferences::resetToDefaults() {
  * @return True if the loaded preference types correctly match the default
  *         preference types, false otherwise.
  */
-bool HMDT::Preferences::validateLoadedPreferenceTypes() {
+auto HMDT::Preferences::validateLoadedPreferenceTypes() -> MaybeVoid {
     uint32_t errors_found = 0;
 
     for(auto&& [sec_name, section] : m_sections) {
@@ -552,7 +641,7 @@ bool HMDT::Preferences::validateLoadedPreferenceTypes() {
             const auto& def_group = def_section.groups.at(group_name);
 
             for(auto&& [config_name, config_pair] : group.configs) {
-                auto&& [_, config] = config_pair;
+                auto&& [_, config, __] = config_pair;
 
                 // Warn and skip each additional section that is not tracked
                 if(def_group.configs.count(config_name) == 0) {
@@ -573,7 +662,7 @@ bool HMDT::Preferences::validateLoadedPreferenceTypes() {
                     }
                 }
 
-                const auto& def_config = def_group.configs.at(config_name).second;
+                const auto& def_config = def_group.configs.at(config_name).value;
 
                 // Now we verify that the types are valid.
                 if(def_config.index() != config.index()) {
@@ -590,7 +679,9 @@ bool HMDT::Preferences::validateLoadedPreferenceTypes() {
 
     WRITE_INFO("Finished validating log file and found ", errors_found, " errors.");
 
-    return errors_found == 0;
+    RETURN_ERROR_IF(errors_found != 0, STATUS_VALIDATION_FAILED);
+
+    return STATUS_SUCCESS;
 }
 
 /**
@@ -658,7 +749,7 @@ void HMDT::Preferences::writeToJson(std::ostream& out, bool pretty) const {
 
             uint32_t config_count = 0;
             for(auto&& [config_name, comment_config] : group.configs) {
-                auto&& [comment, config] = comment_config;
+                auto&& [comment, config, _] = comment_config;
 
                 ++config_count;
 
@@ -728,25 +819,25 @@ void HMDT::Preferences::writeToJson(std::ostream& out, bool pretty) const {
  *
  * @return True if the serialization to a file succeeded, false otherwise.
  */
-bool HMDT::Preferences::writeToFile(bool pretty) const {
+auto HMDT::Preferences::writeToFile(bool pretty) const -> MaybeVoid {
     if(m_config_path.empty()) {
         WRITE_ERROR("Cannot write preferences to config file as the path has "
                     "not been set yet.");
-        return false;
+        RETURN_ERROR(STATUS_UNINITIALIZED);
     }
 
     if(!std::filesystem::exists(m_config_path.parent_path())) {
         WRITE_ERROR("Cannot write preferences to non-existant directory ",
                     m_config_path.parent_path());
-        return false;
+        RETURN_ERROR(std::make_error_code(std::errc::no_such_file_or_directory));
     }
 
     if(std::ofstream out(m_config_path); out) {
         writeToJson(out, pretty);
 
-        return true;
+        return STATUS_SUCCESS;
     } else {
-        return false;
+        RETURN_ERROR(STATUS_UNEXPECTED);
     }
 }
 
@@ -786,5 +877,12 @@ void HMDT::Preferences::_reset() noexcept {
     m_env_vars.clear();
     m_initialized = false;
     m_dirty = false;
+}
+
+bool HMDT::operator==(const Preferences::Config& left,
+                      const Preferences::Config& right) noexcept
+{
+    return left.comment == right.comment &&
+           left.value == right.value;
 }
 
