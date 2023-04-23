@@ -32,9 +32,9 @@ HMDT::GUI::StatePropertiesPane::ProvinceRow::ProvinceRow(Gtk::ListBox* owning_bo
 
             // Only bother actually removing the province from the state if the
             //  ID is valid (if it is invalid, then how did we even add it?)
-            if(map_project.getProvinceProject().isValidProvinceLabel(m_province_id))
+            if(map_project.getProvinceProject().isValidProvinceID(m_province_id))
             {
-                auto& province = map_project.getProvinceProject().getProvinceForLabel(m_province_id);
+                auto& province = map_project.getProvinceProject().getProvinceForID(m_province_id);
 
                 // Deselect the province
                 SelectionManager::getInstance().removeProvinceSelection(m_province_id);
