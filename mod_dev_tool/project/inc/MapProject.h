@@ -57,7 +57,7 @@ namespace HMDT::Project {
             virtual HeightMapProject& getHeightMapProject() noexcept override;
             virtual const HeightMapProject& getHeightMapProject() const noexcept override;
 
-            virtual void moveProvinceToState(uint32_t, StateID) override;
+            virtual void moveProvinceToState(ProvinceID, StateID) override;
             virtual void moveProvinceToState(Province&, StateID) override;
             virtual void removeProvinceFromState(Province&, bool = true) override;
 
