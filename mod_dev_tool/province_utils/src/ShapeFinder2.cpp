@@ -77,11 +77,12 @@ uint32_t HMDT::ShapeFinder::pass1() {
     uint32_t width = m_image->info_header.width;
     uint32_t height = m_image->info_header.height;
 
-    uint32_t next_label = 1;
+    UUID next_label;
 
     uint32_t num_border_pixels = 0;
 
     auto label_matrix = m_map_data->getLabelMatrix().lock();
+    auto prov_matrix = m_map_data->getProvinces().lock();
 
     WRITE_INFO("Performing Pass #1 of CCL.");
 
@@ -94,7 +95,9 @@ uint32_t HMDT::ShapeFinder::pass1() {
 
             Color color = getColorAt(m_image, x, y);
             uint32_t index = xyToIndex(m_image, x, y);
-            uint32_t& label = label_matrix[index] = next_label;
+
+            UUID& label = prov_matrix[index] = next_label;
+            label_matrix[index] = label.hash();
 
             // Skip this pixel if it is part of a border
             if(color == BORDER_COLOR) {
@@ -109,8 +112,8 @@ uint32_t HMDT::ShapeFinder::pass1() {
             MonadOptional<Point2D> up = getAdjacentPoint(Point2D{x, y},
                                                          Direction::UP);
 
-            uint32_t label_left = 0;
-            uint32_t label_up = 0;
+            UUID label_left = EMPTY_UUID;
+            UUID label_up = EMPTY_UUID;
 
             Color color_left = BORDER_COLOR;
             Color color_up = BORDER_COLOR;
@@ -139,13 +142,21 @@ uint32_t HMDT::ShapeFinder::pass1() {
                     // If the adjacent label does not match, then pick the
                     //   smaller one and mark the larger one as a child
                     if(label != label_up) {
-                        uint32_t smaller = std::min(label, label_up);
-                        uint32_t larger = std::max(label, label_up);
+                        // NOTE! We have to make copies here rather than
+                        //  references because otherwise smaller_uuid can become
+                        //  equal to larger_uuid (due to the fact that we
+                        //  overwrite and re-use 'label' further down), which
+                        //  means we can get into a situation where
+                        //  label_parents ends up mapping a label to itself,
+                        //  resulting in an infinite loop in getRootLabel.
+                        UUID smaller_uuid = std::min(label, label_up);
+                        UUID larger_uuid = std::max(label, label_up);
 
-                        label = getRootLabel(smaller);
+                        label = getRootLabel(smaller_uuid);
+
                         // Mark who the parent of the label is
                         // TODO: Do we have to worry about if the label already has a parent?
-                        m_label_parents[larger] = smaller;
+                        m_label_parents[larger_uuid] = smaller_uuid;
                     }
                 } else {
                     label = label_up;
@@ -154,7 +165,7 @@ uint32_t HMDT::ShapeFinder::pass1() {
 
             // Only increment to the next label if we actually used this one
             if(label == next_label) {
-                ++next_label;
+                next_label = UUID();
             }
 
             if(m_label_to_color.count(label) == 0)
@@ -184,6 +195,7 @@ auto HMDT::ShapeFinder::pass2(LabelShapeIdxMap& label_to_shapeidx)
     uint32_t height = m_image->info_header.height;
 
     auto label_matrix = m_map_data->getLabelMatrix().lock();
+    auto prov_matrix = m_map_data->getProvinces().lock();
 
     m_shapes.clear();
 
@@ -197,7 +209,7 @@ auto HMDT::ShapeFinder::pass2(LabelShapeIdxMap& label_to_shapeidx)
             }
 
             uint32_t index = xyToIndex(m_image, x, y);
-            uint32_t& label = label_matrix[index];
+            UUID& label = prov_matrix[index];
             Color color = getColorAt(m_image, x, y);
             Point2D point{x, y};
 
@@ -240,6 +252,7 @@ bool HMDT::ShapeFinder::mergeBorders(PolygonList& shapes,
     uint32_t height = m_image->info_header.height;
 
     auto label_matrix = m_map_data->getLabelMatrix().lock();
+    auto prov_matrix = m_map_data->getProvinces().lock();
 
     if(!prog_opts.quiet)
         WRITE_INFO("Performing Pass #3 of CCL.");
@@ -304,13 +317,14 @@ bool HMDT::ShapeFinder::mergeBorders(PolygonList& shapes,
         }
 
         uint32_t index = xyToIndex(m_image, merge_with.x, merge_with.y);
-        uint32_t label = label_matrix[index];
+        const UUID& label = prov_matrix[index];
 
         Polygon& shape = shapes[label_to_shapeidx.at(label)];
 
         addPixelToShape(shape, pixel);
 
-        label_matrix[xyToIndex(m_image, x, y)] = label;
+        prov_matrix[xyToIndex(m_image, x, y)] = label;
+        label_matrix[xyToIndex(m_image, x, y)] = label.hash();
 
         m_worker.writeDebugColor(x, y, shape.unique_color);
     }
@@ -345,7 +359,7 @@ const HMDT::PolygonList& HMDT::ShapeFinder::findAllShapes() {
     m_stage = Stage::OUTPUT_PASS1;
 
     if(prog_opts.output_stages) {
-        m_label_to_color[0] = BORDER_COLOR;
+        m_label_to_color[EMPTY_UUID] = BORDER_COLOR;
         m_worker.updateCallback({0, 0, 0, 0});
         outputStage("labels1.bmp");
         if(m_do_estop) {
@@ -502,9 +516,10 @@ void HMDT::ShapeFinder::outputStage(const std::filesystem::path& filename) {
     unsigned char* label_data = new unsigned char[m_map_data->getMatrixSize() * 3];
 
     auto label_matrix = m_map_data->getLabelMatrix().lock();
+    auto prov_matrix = m_map_data->getProvinces().lock();
 
     for(uint32_t i = 0; i < m_map_data->getMatrixSize(); ++i) {
-        uint32_t label = label_matrix[i];
+        const UUID& label = prov_matrix[i];
         const HMDT::Color& c = m_label_to_color[label];
         label_data[i * 3] = c.b;
         label_data[(i * 3) + 1] = c.g;
@@ -527,16 +542,16 @@ void HMDT::ShapeFinder::outputStage(const std::filesystem::path& filename) {
  */
 auto HMDT::ShapeFinder::getLabelAndColor(const Point2D& point,
                                          const Color& color)
-    -> std::pair<uint32_t, Color>
+    -> std::pair<UUID, Color>
 {
-    uint32_t label = m_map_data->getLabelMatrix().lock()[xyToIndex(m_image, point.x, point.y)];
+    UUID label = m_map_data->getProvinces().lock()[xyToIndex(m_image, point.x, point.y)];
     Color color_at = getColorAt(m_image, point.x, point.y);
 
     if(color_at != BORDER_COLOR && color_at != color) {
         WRITE_WARN("Multiple colors found in shape! See pixel at ", point);
 
         // Set to the default values
-        label = 0;
+        label = EMPTY_UUID;
         color_at = BORDER_COLOR;
     }
 
@@ -550,8 +565,8 @@ auto HMDT::ShapeFinder::getLabelAndColor(const Point2D& point,
  *
  * @return The root of label
  */
-uint32_t HMDT::ShapeFinder::getRootLabel(uint32_t label) {
-    uint32_t root = label;
+HMDT::UUID HMDT::ShapeFinder::getRootLabel(const UUID& label) const noexcept {
+    UUID root = label;
 
     while(m_label_parents.count(root) != 0) {
         root = m_label_parents.at(root);
@@ -668,7 +683,7 @@ auto HMDT::ShapeFinder::getAdjacentPixel(const Dimensions& dimensions,
  * @param shapes The list of shapes
  * @param label_to_shapeidx The mapping of labels to their corresponding shapes
  */
-void HMDT::ShapeFinder::buildShape(uint32_t label, const Pixel& pixel,
+void HMDT::ShapeFinder::buildShape(const UUID& label, const Pixel& pixel,
                                    PolygonList& shapes,
                                    LabelShapeIdxMap& label_to_shapeidx)
 {
@@ -683,6 +698,7 @@ void HMDT::ShapeFinder::buildShape(uint32_t label, const Pixel& pixel,
         auto unique_color = generateUniqueColor(prov_type);
 
         shapes.push_back(Polygon{
+            label,
             { },
             pixel.color,
             unique_color,
@@ -707,8 +723,8 @@ void HMDT::ShapeFinder::buildShape(uint32_t label, const Pixel& pixel,
  * @return True if the point is adjacent to any other point, false otherwise
  */
 bool HMDT::ShapeFinder::calculateAdjacency(const BitMap* image,
-                                           const uint32_t* label_matrix,
-                                           std::set<uint32_t>& adjacency_list,
+                                           const ProvinceID* label_matrix,
+                                           std::set<ProvinceID>& adjacency_list,
                                            const Point2D& point)
 {
     return calculateAdjacency({static_cast<uint32_t>(image->info_header.width),
@@ -728,8 +744,8 @@ bool HMDT::ShapeFinder::calculateAdjacency(const BitMap* image,
  */
 bool HMDT::ShapeFinder::calculateAdjacency(const Dimensions& dimensions,
                                            const uint8_t* data,
-                                           const uint32_t* label_matrix,
-                                           std::set<uint32_t>& adjacency_list,
+                                           const ProvinceID* label_matrix,
+                                           std::set<ProvinceID>& adjacency_list,
                                            const Point2D& point)
 {
     bool is_adjacent = false;
@@ -790,7 +806,7 @@ auto HMDT::ShapeFinder::getBorderPixels()
 }
 
 auto HMDT::ShapeFinder::getLabelToColorMap() 
-    -> std::map<uint32_t, Color>&
+    -> LabelToColorMap&
 {
     return m_label_to_color;
 }
@@ -810,7 +826,7 @@ auto HMDT::ShapeFinder::getBorderPixels() const
 }
 
 auto HMDT::ShapeFinder::getLabelToColorMap() const
-    -> const std::map<uint32_t, Color>&
+    -> const LabelToColorMap&
 {
     return m_label_to_color;
 }
@@ -820,11 +836,11 @@ auto HMDT::ShapeFinder::getShapes() const -> const PolygonList& {
 }
 
 void HMDT::ShapeFinder::calculateAdjacencies(PolygonList& shapes) const {
-    auto label_matrix = m_map_data->getLabelMatrix().lock();
+    auto prov_matrix = m_map_data->getProvinces().lock();
 
     for(Polygon& shape : shapes) {
         for(auto&& pixel : shape.pixels) {
-            calculateAdjacency(m_image, label_matrix.get(), shape.adjacent_labels,
+            calculateAdjacency(m_image, prov_matrix.get(), shape.adjacent_labels,
                                pixel.point);
         }
     }
