@@ -22,7 +22,8 @@ HMDT::MapData::MapData(uint32_t width, uint32_t height):
     m_width(width),
     m_height(height),
     m_input(new uint8_t[getInputSize()]{ 0 }),
-    m_provinces(new uint8_t[getProvincesSize()]{ 0 }),
+    m_provinces(new UUID[getProvincesSize()]{ EMPTY_UUID }),
+    m_province_colors(new uint8_t[getProvinceColorsSize()]{ 0 }),
     m_province_outlines(new uint8_t[getProvinceOutlinesSize()]{ 0 }),
     m_cities(new uint8_t[getCitiesSize()]{ 0 }),
     m_label_matrix(new uint32_t[getMatrixSize()]{ 0 }),
@@ -39,6 +40,7 @@ HMDT::MapData::MapData(const MapData* other):
     m_height(other->m_height),
     m_input(other->m_input),
     m_provinces(other->m_provinces),
+    m_province_colors(other->m_province_colors),
     m_province_outlines(other->m_province_outlines),
     m_cities(other->m_cities),
     m_label_matrix(other->m_label_matrix),
@@ -71,6 +73,10 @@ uint32_t HMDT::MapData::getInputSize() const {
 }
 
 uint32_t HMDT::MapData::getProvincesSize() const {
+    return m_width * m_height;
+}
+
+uint32_t HMDT::MapData::getProvinceColorsSize() const {
     return m_width * m_height * 3;
 }
 
@@ -126,12 +132,20 @@ auto HMDT::MapData::getInput() const -> ConstMapType {
     return m_input;
 }
 
-auto HMDT::MapData::getProvinces() -> MapType {
+auto HMDT::MapData::getProvinces() -> MapTypeUUID {
     return m_provinces;
 }
 
-auto HMDT::MapData::getProvinces() const -> ConstMapType {
+auto HMDT::MapData::getProvinces() const -> ConstMapTypeUUID {
     return m_provinces;
+}
+
+auto HMDT::MapData::getProvinceColors() -> MapType {
+    return m_province_colors;
+}
+
+auto HMDT::MapData::getProvinceColors() const -> ConstMapType {
+    return m_province_colors;
 }
 
 auto HMDT::MapData::getProvinceOutlines() -> MapType {

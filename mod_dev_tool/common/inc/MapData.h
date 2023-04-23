@@ -4,6 +4,8 @@
 # include <memory>
 # include <utility>
 
+# include "Types.h"
+
 namespace HMDT {
     /**
      * @brief Holds all representations of the map. Note that this object cannot
@@ -16,6 +18,9 @@ namespace HMDT {
 
             using MapType32 = std::weak_ptr<uint32_t[]>;
             using ConstMapType32 = std::weak_ptr<const uint32_t[]>;
+
+            using MapTypeUUID = std::weak_ptr<UUID[]>;
+            using ConstMapTypeUUID = std::weak_ptr<const UUID[]>;
 
             MapData();
             MapData(uint32_t, uint32_t);
@@ -34,6 +39,7 @@ namespace HMDT {
 
             uint32_t getInputSize() const;
             uint32_t getProvincesSize() const;
+            uint32_t getProvinceColorsSize() const;
             uint32_t getProvinceOutlinesSize() const;
             uint32_t getCitiesSize() const;
             uint32_t getMatrixSize() const;
@@ -50,8 +56,11 @@ namespace HMDT {
             MapType getInput();
             ConstMapType getInput() const;
 
-            MapType getProvinces();
-            ConstMapType getProvinces() const;
+            MapTypeUUID getProvinces();
+            ConstMapTypeUUID getProvinces() const;
+
+            MapType getProvinceColors();
+            ConstMapType getProvinceColors() const;
 
             MapType getProvinceOutlines();
             ConstMapType getProvinceOutlines() const;
@@ -76,12 +85,14 @@ namespace HMDT {
         private:
             using InternalMapType = std::shared_ptr<uint8_t[]>;
             using InternalMapType32 = std::shared_ptr<uint32_t[]>;
+            using InternalMapTypeUUID = std::shared_ptr<UUID[]>;
 
             uint32_t m_width;
             uint32_t m_height;
 
             InternalMapType m_input;
-            InternalMapType m_provinces;
+            InternalMapTypeUUID m_provinces;
+            InternalMapType m_province_colors;
             InternalMapType m_province_outlines;
             InternalMapType m_cities;
             InternalMapType32 m_label_matrix;
