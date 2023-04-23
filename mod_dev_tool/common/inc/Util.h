@@ -299,6 +299,15 @@ namespace HMDT {
             } else {
                 return ProvinceType::UNKNOWN;
             }
+        } else if constexpr(std::is_same_v<T, UUID>) {
+            auto res = UUID::parse(s);
+
+            if(IS_FAILURE(res)) {
+                WRITE_ERROR("Failed to convert '", s, "' to UUID");
+                return std::nullopt;
+            }
+
+            return *res;
         } else {
             static_assert("Unsupported type!");
 
@@ -329,6 +338,9 @@ namespace HMDT {
             if(auto opt_result = fromString<T>(s); opt_result) {
                 result = *opt_result;
                 return true;
+            } else {
+                WRITE_ERROR("Failed to parse value of type ", typeid(T).name(),
+                            " at position ", orig_pos);
             }
 
             stream.seekg(orig_pos);
@@ -343,6 +355,9 @@ namespace HMDT {
         if(auto opt_result = fromString<T>(""); opt_result) {
             result = *opt_result;
             return true;
+        } else {
+            WRITE_ERROR("Failed to parse value of type ", typeid(T).name(),
+                        " at position ", orig_pos);
         }
 
         stream.seekg(orig_pos);
@@ -359,6 +374,8 @@ namespace HMDT {
     bool parseValuesSkipMissing(std::istream&) noexcept {
         return true;
     }
+
+    static uint32_t _parse_values_depth = 0;
 
     /**
      * @brief Parses the next value out of a string, with a known delimiter. May
@@ -387,8 +404,14 @@ namespace HMDT {
     bool parseValuesSkipMissing(std::istream& stream, T* result1,
                                 bool skip_missing, Ts... results) noexcept
     {
-        return parseValue(stream, *result1, Delim, skip_missing) &&
+        ++_parse_values_depth;
+        auto res = parseValue(stream, *result1, Delim, skip_missing) &&
                parseValuesSkipMissing<Delim>(stream, results...);
+        if(!res) {
+            WRITE_ERROR("Parse Value at depth ", _parse_values_depth, " failed!");
+        }
+        --_parse_values_depth;
+        return res;
     }
 
     /**
@@ -414,8 +437,15 @@ namespace HMDT {
     template<char Delim = ' ', typename T, typename... Ts>
     bool parseValuesSkipMissing(std::istream& stream, T* result1, Ts... results) noexcept
     {
-        return parseValue(stream, *result1, Delim, false) &&
+        ++_parse_values_depth;
+        auto res = parseValue(stream, *result1, Delim, false) &&
                parseValuesSkipMissing<Delim>(stream, results...);
+        if(!res) {
+            WRITE_ERROR("Parse Value at depth ", _parse_values_depth, " failed!");
+        }
+
+        --_parse_values_depth;
+        return res;
     }
 
     /**
@@ -515,9 +545,21 @@ namespace HMDT {
 
             auto it_step = length / thread_count;
 
+            WRITE_DEBUG("length=", length,
+                        ", thread_count=", thread_count,
+                        ", it_step=", it_step);
+
+            // debugging feature
+            auto f1 = first;
+            auto d1 = d_first;
+
             // start transforming each section of the input range in parallel
             for(auto i = 0; i < thread_count; ++i) {
                 auto d_first2 = d_first;
+
+                WRITE_DEBUG("T", i, ": (", std::distance(f1, first), "->",
+                                           std::distance(f1, first + it_step), ") into ",
+                            std::distance(d1, d_first2));
 
                 futures.push_back(std::async(std::launch::async, func,
                                              first, first + it_step, d_first2));
@@ -525,6 +567,14 @@ namespace HMDT {
                 // Advance all 3 iterators to the next part
                 std::advance(first, it_step);
                 std::advance(d_first, it_step);
+            }
+
+            // Check if there's any data that was not accounted for by the above
+            //   threads, and if so then transform just that remaining data
+            if(first != last) {
+                WRITE_DEBUG("", std::distance(first, last), " elements are not "
+                            "covered by the earlier threads.");
+                std::transform(first, last, d_first, unary_op);
             }
 
             // Keep checking each future until they have completed
@@ -557,6 +607,20 @@ namespace HMDT {
         for(Iter it = begin; it != end; ++it) {
             if(it != begin) ss << glue;
             ss << *it;
+        }
+
+        return ss.str();
+    }
+
+    template<typename Iter>
+    std::string joinMap(Iter begin, Iter end, const std::string& glue = "",
+                        const std::string& glue2 = ":")
+    {
+        std::stringstream ss;
+
+        for(Iter it = begin; it != end; ++it) {
+            if(it != begin) ss << glue;
+            ss << '(' << it->first << glue2 << it->second << ')';
         }
 
         return ss.str();
