@@ -40,6 +40,8 @@ namespace HMDT {
     };
 
     std::ostream& operator<<(std::ostream&, const Version&);
+
+    Version operator""_V(const char*, size_t);
 }
 
 #endif
