@@ -451,7 +451,7 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
     // SelectionManager callbacks
     {
         SelectionManager::getInstance().setOnSelectProvinceCallback(
-            [this](uint32_t prov_id, SelectionManager::Action action)
+            [this](const UUID& prov_id, SelectionManager::Action action)
             {
                 auto& map_project = Driver::getInstance().getProject()->get().getMapProject();
 
@@ -460,9 +460,9 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                     case SelectionManager::Action::ADD:
                         // If the label is a valid province, then go ahead and mark it as
                         //  selected everywhere that needs it to be marked as such
-                        if(map_project.getProvinceProject().isValidProvinceLabel(prov_id)) {
+                        if(map_project.getProvinceProject().isValidProvinceID(prov_id)) {
                             // The selected province
-                            auto* province = &map_project.getProvinceProject().getProvinceForLabel(prov_id);
+                            auto* province = &map_project.getProvinceProject().getProvinceForID(prov_id);
                             auto preview_data = map_project.getProvinceProject().getPreviewData(province);
 
                             if(action == SelectionManager::Action::SET) {
