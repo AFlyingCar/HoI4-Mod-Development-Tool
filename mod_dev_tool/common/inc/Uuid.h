@@ -21,6 +21,8 @@ extern "C" {
 # endif
 }
 
+# include "Maybe.h"
+
 namespace HMDT {
     class UUID {
         public:
@@ -47,6 +49,12 @@ namespace HMDT {
                 BEST
             };
 
+            /**
+             * @brief The length every string representation of a UUID will have
+             *        "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+             */
+            constexpr static std::uint32_t STRING_REPR_LENGTH = 36;
+
             UUID(CreationParams = CreationParams::BEST);
             UUID(const UUID&);
             UUID(UUID&&);
@@ -72,17 +80,11 @@ namespace HMDT {
             const SystemUUIDType& getSystemType() const noexcept;
 
             std::size_t hash() const noexcept;
-            std::size_t hash() noexcept;
 
-            static UUID parse(const std::string&);
-
-        protected:
-            std::optional<std::size_t>& getCachedHash();
+            static Maybe<UUID> parse(const std::string&) noexcept;
 
         private:
             SystemUUIDType m_internal_uuid;
-
-            std::optional<std::size_t> m_hash;
 
             friend std::istream& operator>>(std::istream&, UUID&) noexcept;
     };
@@ -90,6 +92,11 @@ namespace HMDT {
     class HashOnlyUUID: public HMDT::UUID {
         public:
             HashOnlyUUID(std::size_t);
+
+        private:
+            std::size_t m_hash;
+
+            friend std::hash<HashOnlyUUID>;
     };
 
     extern const UUID EMPTY_UUID;
@@ -102,13 +109,20 @@ namespace std {
     template<>
     struct hash<HMDT::UUID> {
         std::size_t operator()(const HMDT::UUID& uuid) const noexcept {
-#ifdef WIN32
-            return UuidHash(&uuid.getSystemType());
-#else
+            // NOTE: Do not use the Win32 UuidHash function because we want to
+            //   ensure consistency of the calculated hash values on both Linux
+            //   and Windows
+
             // https://stackoverflow.com/a/37152984
             const uint64_t* halves = reinterpret_cast<const uint64_t*>(&uuid.getSystemType());
             return halves[0] ^ halves[1];
-#endif
+        }
+    };
+
+    template<>
+    struct hash<HMDT::HashOnlyUUID> {
+        std::size_t operator()(const HMDT::HashOnlyUUID& uuid) const noexcept {
+            return uuid.m_hash;
         }
     };
 
