@@ -9,6 +9,9 @@
 # include <variant>
 # include <optional>
 # include <utility>
+# include <unordered_map>
+
+# include "Uuid.h"
 
 namespace HMDT {
     /**
@@ -77,6 +80,9 @@ namespace HMDT {
      *        pixels which make it up
      */
     struct Polygon {
+        //! The ID of this polygon
+        UUID id;
+
         std::vector<Pixel> pixels;
         Color color; //!< Color of the shape as it was read in
         Color unique_color; //!< Unique color we have generated just for this shape
@@ -85,7 +91,7 @@ namespace HMDT {
         BoundingBox bounding_box;
 
         //! All adjacent shape labels
-        std::set<std::uint32_t> adjacent_labels;
+        std::set<UUID> adjacent_labels;
     };
 
     /**
@@ -98,7 +104,7 @@ namespace HMDT {
         LAKE
     };
 
-    using ProvinceID = std::uint32_t;
+    using ProvinceID = UUID;
     using TerrainID = std::string;
     using Continent = std::string;
     using StateID = std::uint32_t;
@@ -119,6 +125,8 @@ namespace HMDT {
         BoundingBox bounding_box;
 
         std::set<ProvinceID> adjacent_provinces;
+
+        ProvinceID parent_id;
     };
 
     /**
@@ -130,7 +138,7 @@ namespace HMDT {
     /**
      * @brief A list of all provinces
      */
-    using ProvinceList = std::vector<Province>;
+    using ProvinceList = std::unordered_map<ProvinceID, Province>;
 
     /**
      * @brief A state as HOI4 will recognize it.
