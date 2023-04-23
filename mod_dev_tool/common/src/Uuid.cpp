@@ -57,11 +57,11 @@ HMDT::UUID& HMDT::UUID::operator=(const UUID& other) noexcept {
 HMDT::UUID::~UUID() { }
 
 bool HMDT::UUID::operator!=(const UUID& right) const noexcept {
-    return compare(right) != 0;
+    return !(*this == right);
 }
 
 bool HMDT::UUID::operator==(const UUID& right) const noexcept {
-    return compare(right) == 0;
+    return hash() == right.hash();
 }
 
 bool HMDT::UUID::operator<(const UUID& right) const noexcept {
@@ -128,22 +128,10 @@ auto HMDT::UUID::getSystemType() const noexcept -> const SystemUUIDType&
 }
 
 std::size_t HMDT::UUID::hash() const noexcept {
-    if(m_hash.has_value()) {
-        return m_hash.value();
-    } else {
-        return std::hash<HMDT::UUID>()(*this);
-    }
+    return std::hash<HMDT::UUID>()(*this);
 }
 
-std::size_t HMDT::UUID::hash() noexcept {
-    if(!m_hash.has_value()) {
-        m_hash = std::hash<HMDT::UUID>()(*this);
-    }
-
-    return m_hash.value();
-}
-
-HMDT::UUID HMDT::UUID::parse(const std::string& str) {
+HMDT::Maybe<HMDT::UUID> HMDT::UUID::parse(const std::string& str) noexcept {
     UUID uuid(EMPTY_UUID);
 
     auto status = 
@@ -163,28 +151,52 @@ HMDT::UUID HMDT::UUID::parse(const std::string& str) {
     return uuid;
 }
 
-std::optional<std::size_t>& HMDT::UUID::getCachedHash() {
-    return m_hash;
-}
-
 std::ostream& HMDT::operator<<(std::ostream& out, const UUID& uuid) noexcept {
     return out << std::to_string(uuid);
 
     return out;
 }
 
+/**
+ * @brief Parses a UUID out of an istream. Will not modify 'uuid' if parsing
+ *        fails.
+ *
+ * @param in The input stream.
+ * @param uuid The uuid to parse the results into.
+ *
+ * @return in
+ */
 std::istream& HMDT::operator>>(std::istream& in, UUID& uuid) noexcept {
     std::string str;
-    // TODO: Read from in?
 
-    uuid = UUID::parse(str);
+    // Read the first token, it should be a full UUID.
+    // If the stream contains data like "{UUID}extradata", then it is not to be
+    //   considered a valid UUID
+    in >> str;
+
+    if(str.size() < UUID::STRING_REPR_LENGTH) {
+        WRITE_ERROR("Incorrect string length ", str.size(), ", expected ",
+                    UUID::STRING_REPR_LENGTH, ". Unable to parse '", str, '\'');
+        return in;
+    }
+
+    auto new_uuid = UUID::parse(str);
+
+    if(IS_FAILURE(new_uuid)) {
+        WRITE_ERROR("Failed to parse UUID of '", str, '\'');
+        return in;
+    }
+
+    // Write the data into 'uuid' now that we know it parsed successfully.
+    uuid = *new_uuid;
 
     return in;
 }
 
-HMDT::HashOnlyUUID::HashOnlyUUID(std::size_t hash): UUID() {
-    getCachedHash() = hash;
-}
+HMDT::HashOnlyUUID::HashOnlyUUID(std::size_t hash):
+    UUID(CreationParams::EMPTY),
+    m_hash(hash)
+{ }
 
 std::string std::to_string(const HMDT::UUID& uuid) {
 #ifdef WIN32
