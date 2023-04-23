@@ -157,10 +157,26 @@ auto HMDT::Project::StateProject::load(const std::filesystem::path& root)
             }
 
             // We need to parse the provinces seperately
+            bool err = false;
             state.provinces = splitAndTransform<ProvinceID>(prov_id_data, ',',
-                    [](const std::string& v) {
-                        return std::atoi(v.c_str());
+                    [this, &err](const std::string& v) {
+                        if(getRootParent().getToolVersion() <= "0.25.0"_V) {
+                            auto oldid = std::atoi(v.c_str());
+
+                            const auto& oldid_to_uuid_map = getRootParent().getMapProject().getProvinceProject().getOldIDToUUIDMap();
+
+                            if(oldid_to_uuid_map.count(oldid) == 0) {
+                                WRITE_ERROR("Could not find old id ", oldid, " in oldid to UUID mapping!");
+                                err = true;
+                                return EMPTY_UUID;
+                            }
+
+                            return oldid_to_uuid_map.at(oldid);
+                        } else {
+                            return UUID::parse(v).orElse(EMPTY_UUID);
+                        }
                     });
+            RETURN_ERROR_IF(err, STATUS_VALUE_NOT_FOUND);
 
             if(m_states.count(state.id) != 0) {
                 WRITE_ERROR("Found multiple states with the same ID of ", state.id, "! We will skip the second one '", state.name, "' and keep '", m_states.at(state.id).name, '\'');
@@ -361,16 +377,16 @@ auto HMDT::Project::StateProject::getStates() const -> const StateMap& {
 void HMDT::Project::StateProject::updateStateIDMatrix() {
     auto state_id_matrix = getMapData()->getStateIDMatrix().lock();
 
-    auto label_matrix = getMapData()->getLabelMatrix().lock();
+    auto label_matrix = getMapData()->getProvinces().lock();
 
     auto* label_matrix_start = label_matrix.get();
 
-    parallelTransform(label_matrix_start, label_matrix_start + getMapData()->getMatrixSize(),
+    parallelTransform(label_matrix_start, label_matrix_start + getMapData()->getProvincesSize(),
                       state_id_matrix.get(),
-                      [this](uint32_t prov_id) -> uint32_t {
-                          if(getRootParent().getMapProject().getProvinceProject().isValidProvinceLabel(prov_id))
+                      [this](ProvinceID prov_id) -> StateID {
+                          if(getRootParent().getMapProject().getProvinceProject().isValidProvinceID(prov_id))
                           {
-                              return getRootParent().getMapProject().getProvinceProject().getProvinceForLabel(prov_id).state;
+                              return getRootParent().getMapProject().getProvinceProject().getProvinceForID(prov_id).state;
                           } else {
                               WRITE_WARN("Invalid province ID ", prov_id,
                                          " detected when building state id matrix. Treating as though there's no state here.");
@@ -414,14 +430,16 @@ void HMDT::Project::StateProject::updateStateIDMatrix() {
  *
  * @return The ID of the new state
  */
-auto HMDT::Project::StateProject::addNewState(const std::vector<uint32_t>& province_ids)
+auto HMDT::Project::StateProject::addNewState(const std::vector<ProvinceID>& province_ids)
     -> StateID
 {
     RefVector<Province> provinces;
     std::transform(province_ids.begin(), province_ids.end(),
                    std::back_inserter(provinces),
-                   [this](uint32_t prov_id) -> std::reference_wrapper<Province> {
-                       return std::ref(getRootParent().getMapProject().getProvinceProject().getProvinceForLabel(prov_id));
+                   [this](const ProvinceID& prov_id)
+                       -> std::reference_wrapper<Province>
+                   {
+                       return std::ref(getRootParent().getMapProject().getProvinceProject().getProvinceForID(prov_id));
                    });
 
     // Increment by 1 because we do not want 0 to be a state ID
@@ -470,7 +488,7 @@ auto HMDT::Project::StateProject::removeState(StateID id) noexcept -> MaybeVoid
     state.andThen([this](const State& state) {
         // Disconnect each province from this state first
         for(auto&& prov_id : state.provinces) {
-            getRootParent().getMapProject().getProvinceProject().getProvinceForLabel(prov_id).state = -1;
+            getRootParent().getMapProject().getProvinceProject().getProvinceForID(prov_id).state = -1;
         }
     });
 
