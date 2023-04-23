@@ -105,8 +105,8 @@ void HMDT::GUI::GL::StateRenderingView::render() {
             std::transform(selections.begin(), selections.end(),
                            std::inserter(selection_ids, selection_ids.begin()),
                            [&map_project](const auto& s) {
-                               return map_project.getProvinceProject().isValidProvinceLabel(s.id) ?
-                                      map_project.getProvinceProject().getProvinceForLabel(s.id).state :
+                               return map_project.getProvinceProject().isValidProvinceID(s.id) ?
+                                      map_project.getProvinceProject().getProvinceForID(s.id).state :
                                       0;
                            });
 
