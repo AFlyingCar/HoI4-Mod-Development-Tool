@@ -10,6 +10,7 @@
 # include <cstdint>
 # include <string>
 
+# include "Uuid.h"
 # include "Types.h"
 # include "Version.h"
 
@@ -131,6 +132,9 @@ namespace HMDT {
 
     //! The default value of buildings_max_level_factor
     const float DEFAULT_BUILDINGS_MAX_LEVEL_FACTOR = 1.0f;
+
+    //! A completely impossible province ID that we will never support
+    const ProvinceID INVALID_PROVINCE = EMPTY_UUID;
 }
 
 #endif
