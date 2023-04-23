@@ -58,7 +58,7 @@ void HMDT::GraphicsWorker::resetDebugData() {
     if(m_debug_data != nullptr) {
         auto data_size = m_map_data->getWidth() * m_map_data->getHeight() * 3;
 
-        auto prov_ptr = m_map_data->getProvinces().lock();
+        auto prov_ptr = m_map_data->getProvinceColors().lock();
         std::copy(prov_ptr.get(), prov_ptr.get() + data_size, m_debug_data.get());
     }
 }
@@ -67,7 +67,7 @@ void HMDT::GraphicsWorker::resetDebugDataAt(const Point2D& point) {
     if(m_debug_data != nullptr) {
         uint32_t index = xyToIndex(m_map_data->getWidth(), point.x, point.y);
 
-        m_debug_data[index] = m_map_data->getProvinces().lock()[index];
+        m_debug_data[index] = m_map_data->getProvinceColors().lock()[index];
     }
 }
 
