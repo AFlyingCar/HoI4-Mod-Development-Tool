@@ -194,8 +194,8 @@ int HMDT::runHeadless() {
     WRITE_INFO("Writing province definition file...");
     std::ofstream output_csv(output_path / "definition.csv");
 
-    for(size_t i = 0; i < provinces.size(); ++i) {
-        output_csv << std::dec << provinces[i] << std::endl;
+    for(auto&& [id, province] : provinces) {
+        output_csv << std::dec << province << std::endl;
     }
 
     // Only produce each state definition file if there are actually states to
