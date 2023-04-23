@@ -24,7 +24,7 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
                 auto& history_project = project.getHistoryProject();
 
                 auto map_data = project.getMapProject().getMapData();
-                auto lmatrix = map_data->getLabelMatrix().lock();
+                auto lmatrix = map_data->getProvinces().lock();
 
                 // If the click happens outside of the bounds of the image, then
                 //   deselect the province
@@ -42,9 +42,9 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
 
                 // If this is a valid province, then select the state that it is
                 //  a part of (if it is a part of one at all, that is)
-                if(map_project.getProvinceProject().isValidProvinceLabel(label))
+                if(map_project.getProvinceProject().isValidProvinceID(label))
                 {
-                    auto& prov = map_project.getProvinceProject().getProvinceForLabel(label);
+                    auto& prov = map_project.getProvinceProject().getProvinceForID(label);
 
                     // Make sure we check for if the state ID is valid first so
                     //  that we deselect the state for provinces that aren't in
@@ -68,7 +68,7 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
                 auto& map_project = project.getMapProject();
 
                 auto map_data = map_project.getMapData();
-                auto lmatrix = map_data->getLabelMatrix().lock();
+                auto lmatrix = map_data->getProvinces().lock();
 
                 // Multiselect out of bounds will simply not add to the selections
                 if(x > map_data->getWidth() || y > map_data->getHeight()) {
@@ -100,14 +100,12 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
 
                 // If this is a valid province, then select the state that it is
                 //  a part of (if it is a part of one at all, that is)
-                if(map_project.getProvinceProject().isValidProvinceLabel(label)) {
-                    auto& prov = map_project.getProvinceProject().getProvinceForLabel(label -1);
+                if(map_project.getProvinceProject().isValidProvinceID(label)) {
+                    auto& prov = map_project.getProvinceProject().getProvinceForID(label);
 
                     // Don't bother checking for if it's valid or not, as
                     //  MapProject will do that for us
                     SelectionManager::getInstance().addStateSelection(prov.state);
-                } else {
-                    SelectionManager::getInstance().removeStateSelection(label);
                 }
             }
         });
