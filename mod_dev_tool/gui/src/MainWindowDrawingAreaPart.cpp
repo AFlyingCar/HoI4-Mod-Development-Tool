@@ -116,16 +116,9 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
     // Setup each drawing area type
     m_gl_drawing_area.reset(new GL::MapDrawingArea);
     setup_drawing_area(m_gl_drawing_area);
-    m_cairo_drawing_area.reset(new MapDrawingArea);
-    setup_drawing_area(m_cairo_drawing_area);
 
     // Setup initially enabled drawing area
-    auto drawing_area = m_drawing_area =
-#if HMDT_DEFAULT_RENDERING_TO_GL
-        m_gl_drawing_area;
-#else
-        m_cairo_drawing_area;
-#endif
+    auto drawing_area = m_drawing_area = m_gl_drawing_area;
 
     // Set up a signal callback to zoom in and out when performing CTRL+ScrollWhell
     drawing_window->signalOnScroll().connect([drawing_area](GdkEventScroll* event)
@@ -133,10 +126,10 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
         if(event->state & GDK_CONTROL_MASK) {
             switch(event->direction) {
                 case GDK_SCROLL_UP:
-                    drawing_area->zoom(MapDrawingArea::ZoomDirection::IN);
+                    drawing_area->zoom(GL::MapDrawingArea::ZoomDirection::IN);
                     break;
                 case GDK_SCROLL_DOWN:
-                    drawing_area->zoom(MapDrawingArea::ZoomDirection::OUT);
+                    drawing_area->zoom(GL::MapDrawingArea::ZoomDirection::OUT);
                     break;
                 case GDK_SCROLL_SMOOTH:
                     drawing_area->zoom(-event->delta_y * ZOOM_FACTOR);
@@ -157,14 +150,14 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
     {
         switch(event->keyval) {
             case GDK_KEY_KP_Add:
-                drawing_area->zoom(MapDrawingArea::ZoomDirection::IN);
+                drawing_area->zoom(GL::MapDrawingArea::ZoomDirection::IN);
                 break;
             case GDK_KEY_KP_Subtract:
-                drawing_area->zoom(MapDrawingArea::ZoomDirection::OUT);
+                drawing_area->zoom(GL::MapDrawingArea::ZoomDirection::OUT);
                 break;
             case GDK_KEY_r:
                 if(event->state & GDK_CONTROL_MASK) {
-                    drawing_area->zoom(MapDrawingArea::ZoomDirection::RESET);
+                    drawing_area->zoom(GL::MapDrawingArea::ZoomDirection::RESET);
                 }
                 break;
         }

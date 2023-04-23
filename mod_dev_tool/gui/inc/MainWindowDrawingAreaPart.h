@@ -7,7 +7,6 @@
 # include "IMapDrawingArea.h"
 
 # include "MapDrawingAreaGL.h"
-# include "MapDrawingArea.h"
 
 namespace HMDT::GUI {
     class MainWindowDrawingAreaPart: public virtual BaseMainWindow {
@@ -29,7 +28,6 @@ namespace HMDT::GUI {
             std::shared_ptr<Gtk::Box> m_drawing_box;
 
             std::shared_ptr<GL::MapDrawingArea> m_gl_drawing_area;
-            std::shared_ptr<MapDrawingArea> m_cairo_drawing_area;
     };
 }
 
