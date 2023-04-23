@@ -212,7 +212,7 @@ HMDT::MaybeVoid HMDT::GUI::addProvinceMapWorker(Window& window, std::any data) {
 
     auto* image = apd_data.shape_finder->getImage();
 
-    auto prov_ptr = apd_data.map_data->getProvinces().lock();
+    auto prov_ptr = apd_data.map_data->getProvinceColors().lock();
 
     // Redraw the new image so we can properly show how it should look in the
     //  final output
