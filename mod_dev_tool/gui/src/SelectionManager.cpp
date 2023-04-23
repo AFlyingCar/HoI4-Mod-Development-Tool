@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "Driver.h"
+#include "Constants.h"
 
 auto HMDT::GUI::SelectionManager::getInstance() -> SelectionManager& {
     static SelectionManager instance;
@@ -11,33 +12,33 @@ auto HMDT::GUI::SelectionManager::getInstance() -> SelectionManager& {
     return instance;
 }
 
-void HMDT::GUI::SelectionManager::selectProvince(uint32_t label) {
+void HMDT::GUI::SelectionManager::selectProvince(const ProvinceID& label) {
     // Do not select if the label isn't valid
     if(auto opt_mproj = getCurrentMapProject();
-            opt_mproj && opt_mproj->get().getProvinceProject().isValidProvinceLabel(label))
+            opt_mproj && opt_mproj->get().getProvinceProject().isValidProvinceID(label))
     {
         m_on_province_selected_callback(label, Action::SET);
         m_selected_provinces = {label};
     }
 }
 
-void HMDT::GUI::SelectionManager::addProvinceSelection(uint32_t label) {
+void HMDT::GUI::SelectionManager::addProvinceSelection(const ProvinceID& label) {
     // Do not select if the label isn't valid
     if(auto opt_mproj = getCurrentMapProject();
-            opt_mproj && opt_mproj->get().getProvinceProject().isValidProvinceLabel(label))
+            opt_mproj && opt_mproj->get().getProvinceProject().isValidProvinceID(label))
     {
         m_on_province_selected_callback(label, Action::ADD);
         m_selected_provinces.insert(label);
     }
 }
 
-void HMDT::GUI::SelectionManager::removeProvinceSelection(uint32_t label) {
+void HMDT::GUI::SelectionManager::removeProvinceSelection(const ProvinceID& label) {
     m_on_province_selected_callback(label, Action::REMOVE);
     m_selected_provinces.erase(label);
 }
 
 void HMDT::GUI::SelectionManager::clearProvinceSelection() {
-    m_on_province_selected_callback(INVALID_PROVINCE_ID, Action::CLEAR);
+    m_on_province_selected_callback(INVALID_PROVINCE, Action::CLEAR);
     m_selected_provinces.clear();
 }
 
@@ -71,7 +72,7 @@ void HMDT::GUI::SelectionManager::clearStateSelection() {
     m_selected_states.clear();
 }
 
-void HMDT::GUI::SelectionManager::setOnSelectProvinceCallback(const std::function<void(uint32_t, Action)>& on_province_selected_callback)
+void HMDT::GUI::SelectionManager::setOnSelectProvinceCallback(const std::function<void(const ProvinceID&, Action)>& on_province_selected_callback)
 {
     m_on_province_selected_callback = on_province_selected_callback;
 }
@@ -104,8 +105,8 @@ auto HMDT::GUI::SelectionManager::getSelectedProvinces() const
         auto& mproj = opt_mproj->get();
         std::transform(m_selected_provinces.begin(), m_selected_provinces.end(),
                        std::back_inserter(provinces),
-                       [&mproj](uint32_t prov_id) {
-                           return std::ref(mproj.getProvinceProject().getProvinceForLabel(prov_id));
+                       [&mproj](const ProvinceID& prov_id) {
+                           return std::ref(mproj.getProvinceProject().getProvinceForID(prov_id));
                        });
     }
 
@@ -125,15 +126,15 @@ auto HMDT::GUI::SelectionManager::getSelectedProvinces() -> RefVector<Province>
         auto& mproj = opt_mproj->get();
         std::transform(m_selected_provinces.begin(), m_selected_provinces.end(),
                        std::back_inserter(provinces),
-                       [&mproj](uint32_t prov_id) {
-                           return std::ref(mproj.getProvinceProject().getProvinceForLabel(prov_id));
+                       [&mproj](const ProvinceID& prov_id) {
+                           return std::ref(mproj.getProvinceProject().getProvinceForID(prov_id));
                        });
     }
     return provinces;
 }
 
 auto HMDT::GUI::SelectionManager::getSelectedProvinceLabels() const
-    -> const std::set<uint32_t>&
+    -> const std::set<ProvinceID>&
 {
     return m_selected_provinces;
 }

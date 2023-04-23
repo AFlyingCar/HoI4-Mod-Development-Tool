@@ -23,14 +23,13 @@ namespace HMDT::GUI {
                 CLEAR
             };
 
-            static constexpr uint32_t INVALID_PROVINCE_ID = -1;
             static constexpr StateID INVALID_STATE_ID = -1;
 
             static SelectionManager& getInstance();
 
-            void selectProvince(uint32_t);
-            void addProvinceSelection(uint32_t);
-            void removeProvinceSelection(uint32_t);
+            void selectProvince(const ProvinceID&);
+            void addProvinceSelection(const ProvinceID&);
+            void removeProvinceSelection(const ProvinceID&);
             void clearProvinceSelection();
 
             void selectState(StateID);
@@ -40,16 +39,16 @@ namespace HMDT::GUI {
 
             RefVector<const Province> getSelectedProvinces() const;
             RefVector<Province> getSelectedProvinces();
-            const std::set<uint32_t>& getSelectedProvinceLabels() const;
+            const std::set<ProvinceID>& getSelectedProvinceLabels() const;
 
             RefVector<const State> getSelectedStates() const;
             RefVector<State> getSelectedStates();
             const std::set<uint32_t>& getSelectedStateIDs() const;
 
-            bool isProvinceSelected(uint32_t) const;
-            bool isStateSelected(uint32_t) const;
+            bool isProvinceSelected(const ProvinceID&) const;
+            bool isStateSelected(const ProvinceID&) const;
 
-            void setOnSelectProvinceCallback(const std::function<void(uint32_t, Action)>&);
+            void setOnSelectProvinceCallback(const std::function<void(const ProvinceID&, Action)>&);
             void setOnSelectStateCallback(const std::function<void(StateID, Action)>&);
 
             size_t getSelectedProvinceCount() const;
@@ -67,13 +66,13 @@ namespace HMDT::GUI {
             OptionalReference<Project::IRootHistoryProject> getCurrentHistoryProject() const;
 
             //! The currently selected provinces
-            std::set<uint32_t> m_selected_provinces;
+            std::set<ProvinceID> m_selected_provinces;
 
             //! The currently selected states
             std::set<StateID> m_selected_states;
 
             //! Callback for when a province is selected
-            std::function<void(uint32_t, Action)> m_on_province_selected_callback;
+            std::function<void(const ProvinceID&, Action)> m_on_province_selected_callback;
 
             //! Callback for when a province is selected
             std::function<void(StateID, Action)> m_on_state_selected_callback;
