@@ -12,6 +12,7 @@
 
 # include "Maybe.h"
 # include "Types.h"
+# include "Version.h"
 
 # include "Terrain.h"
 
@@ -261,6 +262,9 @@ namespace HMDT::Project {
 
         virtual IRootHistoryProject& getHistoryProject() noexcept = 0;
         virtual const IRootHistoryProject& getHistoryProject() const noexcept = 0;
+
+        virtual const Version& getToolVersion() const = 0;
+        virtual const Version& getHoI4Version() const = 0;
     };
 }
 
