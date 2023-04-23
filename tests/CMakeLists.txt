@@ -26,7 +26,7 @@ target_link_libraries(unit_tests PRIVATE gtest gtest_main common province_utils 
 target_link_libraries(unit_tests PUBLIC stdc++fs pthread)
 target_include_directories(unit_tests PRIVATE inc)
 
-target_compile_options(unit_tests PRIVATE -g)
+target_compile_options(unit_tests PRIVATE -g -fno-limit-debug-info)
 
 if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(unit_tests PRIVATE -mno-ms-bitfields)
