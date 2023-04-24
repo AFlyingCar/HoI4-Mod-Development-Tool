@@ -687,8 +687,7 @@ void HMDT::GUI::MainWindow::openProject() {
         } catch(const std::exception& exc) {
             WRITE_ERROR("Caught unhandled exception during project load! what()=",
                         exc.what());
-            // TODO: Uncomment this once we rebase onto main
-            // result = STATUS_UNEXPECTED;
+            result = STATUS_UNEXPECTED;
         }
 
         if(IS_FAILURE(result)) {
