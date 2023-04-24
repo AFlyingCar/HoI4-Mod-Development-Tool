@@ -221,6 +221,8 @@ auto HMDT::Project::StateProject::export_(const std::filesystem::path& root) con
         RETURN_ERROR_IF(!result, fs_ec);
     }
 
+    const auto& prov_project = getRootParent().getMapProject().getProvinceProject();
+
     for(auto&& [id, state] : m_states) {
         auto filename = std::to_string(id) + "-" + state.name + ".txt";
         auto state_path = root / filename;
@@ -228,7 +230,7 @@ auto HMDT::Project::StateProject::export_(const std::filesystem::path& root) con
         if(std::ofstream out(state_path); out) {
             std::stringstream provinces_ss;
             for(auto&& id : state.provinces) {
-                provinces_ss << id << ' ';
+                provinces_ss << prov_project.getIDForProvinceID(id) << ' ';
             }
 
             out << "state={" << std::endl;
