@@ -123,6 +123,8 @@ namespace HMDT::Project {
         virtual const ProvinceList& getProvinces() const = 0;
 
         virtual const std::unordered_map<uint32_t, UUID>& getOldIDToUUIDMap() const noexcept = 0;
+
+        virtual uint32_t getIDForProvinceID(const ProvinceID&) const noexcept = 0;
     };
 
     /**

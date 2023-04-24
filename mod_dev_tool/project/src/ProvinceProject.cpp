@@ -83,6 +83,9 @@ auto HMDT::Project::ProvinceProject::load(const std::filesystem::path& path)
     buildGraphicsData();
     buildProvinceOutlines();
 
+    // Rebuild the uuid->id map last
+    rebuildUUIDToIDMap();
+
     return STATUS_SUCCESS;
 }
 
@@ -152,6 +155,9 @@ void HMDT::Project::ProvinceProject::import(const ShapeFinder& sf, std::shared_p
     m_data_cache.clear();
 
     buildProvinceOutlines();
+
+    // Rebuild the uuid->id map last
+    rebuildUUIDToIDMap();
 }
 
 bool HMDT::Project::ProvinceProject::validateData() {
@@ -247,9 +253,20 @@ auto HMDT::Project::ProvinceProject::saveProvinceData(const std::filesystem::pat
         bool assume_unknown_continents = false;
 
         // Write one line to the CSV for each province
-        for(auto&& [_, province] : m_provinces) {
-            out << province.id << ';'
-                << static_cast<int>(province.unique_color.r) << ';'
+        for(auto&& [id, province] : m_provinces) {
+            // If we are exporting, then we need to output a numeric ID number,
+            //   not the internal UUID we use
+            if(is_export) {
+                // Sanity check
+                RETURN_ERROR_IF(m_uuid_to_oldid.count(id) == 0,
+                                STATUS_VALUE_NOT_FOUND);
+
+                out << getIDForProvinceID(id) << ';';
+            } else {
+                out << province.id << ';';
+            }
+
+            out << static_cast<int>(province.unique_color.r) << ';'
                 << static_cast<int>(province.unique_color.g) << ';'
                 << static_cast<int>(province.unique_color.b) << ';'
                 << province.type << ';'
@@ -904,5 +921,24 @@ auto HMDT::Project::ProvinceProject::getOldIDToUUIDMap() const noexcept
     -> const std::unordered_map<uint32_t, UUID>&
 {
     return m_oldid_to_uuid;
+}
+
+uint32_t HMDT::Project::ProvinceProject::getIDForProvinceID(const ProvinceID& id) const noexcept
+{
+    return m_uuid_to_oldid.at(id);
+}
+
+/**
+ * @brief Rebuilds the mapping of UUID->ID.
+ * @details This should be called every time m_provinces changes/is updated.
+ */
+void HMDT::Project::ProvinceProject::rebuildUUIDToIDMap() noexcept {
+    // Clear the old map out first
+    m_uuid_to_oldid.clear();
+
+    uint32_t i = 0;
+    for(auto&& [id, _] : m_provinces) {
+        m_uuid_to_oldid[id] = ++i;
+    }
 }
 
