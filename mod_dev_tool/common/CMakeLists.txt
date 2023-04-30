@@ -52,6 +52,10 @@ target_include_directories(common PRIVATE "${CMAKE_BINARY_DIR}")
 
 target_link_libraries(common PRIVATE nlohmann_json::nlohmann_json uuid)
 
+if(WIN32)
+    target_link_libraries(common PRIVATE rpcrt4.lib)
+endif()
+
 target_link_libraries(common PUBLIC unique_colors logging)
 
 # Generate StatusCodes.csv after common is finished

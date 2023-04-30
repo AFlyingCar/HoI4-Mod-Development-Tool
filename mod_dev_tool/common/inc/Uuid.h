@@ -15,7 +15,18 @@
 
 extern "C" {
 # ifdef WIN32
+// Make sure that we define RPC_NO_WINDOWS_H to prevent Rpc.h from including
+//   Windows.h, which will cause all manner of pain due to all of the useless
+//   macros it defines.
+#  define RPC_NO_WINDOWS_H
 #  include <Rpc.h>
+
+// Make sure that we undef a bunch of things that Rpc.h uselessly defines
+#  undef IN
+#  undef OUT
+#  undef OPTIONAL
+#  undef FAR
+
 # else
 #  include <uuid/uuid.h>
 # endif

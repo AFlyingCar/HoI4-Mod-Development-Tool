@@ -122,7 +122,7 @@ bool HMDT::UUID::isEmpty() const noexcept {
     [[maybe_unused]] RPC_STATUS status;
     return UuidIsNil(
             const_cast<SystemUUIDType*>(&m_internal_uuid),
-            &status) == TRUE;
+            &status) == true;
 #else
     return uuid_is_null(m_internal_uuid) == 1;
 #endif
@@ -145,8 +145,11 @@ HMDT::Maybe<HMDT::UUID> HMDT::UUID::parse(const std::string& str) noexcept {
     UUID uuid(EMPTY_UUID);
 
 #ifdef WIN32
+    // Note: For some stupid reason, the Win32 API takes the Uuid types by
+    //   non-const pointer rather than by const pointer. So, make sure we cast
+    //   away the const-ness before calling this function.
     auto status = UuidFromStringA(
-            static_cast<RPC_CSTR>(str.c_str()),
+            reinterpret_cast<RPC_CSTR>(const_cast<char*>(str.c_str())),
             const_cast<SystemUUIDType*>(&uuid.m_internal_uuid));
     constexpr auto FAILURE_STATUS = RPC_S_INVALID_STRING_UUID;
 #else
