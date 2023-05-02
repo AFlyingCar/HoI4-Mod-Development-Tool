@@ -412,11 +412,11 @@ TEST(ProjectTests, ProvinceProjectSaveAndLoad) {
 
     auto bin_path = HMDT::UnitTests::getTestProgramPath() / "bin";
 
-    auto input_provinces_path = HMDT::UnitTests::getTestProgramPath() / "simple.bmp";
+    auto input_provinces_path = bin_path / "simple.bmp";
 
-    auto project_path = HMDT::UnitTests::getTestProgramPath() / "bin" / "simple2.hoi4proj";
-    auto prov_path = HMDT::UnitTests::getTestProgramPath() / "bin" / "map_province_saveandload";
-    auto debug_path = HMDT::UnitTests::getTestProgramPath() / "bin" / "test_debug";
+    auto project_path = bin_path / "simple2.hoi4proj";
+    auto prov_path = bin_path / "map_province_saveandload";
+    auto debug_path = bin_path / "test_debug";
 
     HMDT::UnitTests::HoI4ProjectMock hproject(project_path);
     hproject.setDebugRoot(debug_path);
