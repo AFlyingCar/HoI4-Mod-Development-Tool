@@ -26,10 +26,15 @@ target_link_libraries(unit_tests PRIVATE gtest gtest_main common province_utils 
 target_link_libraries(unit_tests PUBLIC stdc++fs pthread)
 target_include_directories(unit_tests PRIVATE inc)
 
-target_compile_options(unit_tests PRIVATE -g -fno-limit-debug-info)
+target_compile_options(unit_tests PRIVATE -g)
 
 if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(unit_tests PRIVATE -mno-ms-bitfields)
+endif()
+
+# Add all clang-specific compiler options here
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(unit_tests PRIVATE -fno-limit-debug-info)
 endif()
 
 add_custom_command(TARGET unit_tests
