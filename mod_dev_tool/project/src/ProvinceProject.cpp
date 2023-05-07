@@ -371,7 +371,7 @@ auto HMDT::Project::ProvinceProject::loadShapeLabels(const std::filesystem::path
         // Generate the Provinces matrix
         bool err = false;
         parallelTransform(label_matrix.get() /* first */,
-                          label_matrix.get() + (width * height) + 1 /* last */,
+                          label_matrix.get() + (width * height) /* last */,
                           prov_matrix.get() /* dest */,
                           [this, &err](uint32_t& oldid) -> ProvinceID
                           {
