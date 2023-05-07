@@ -378,6 +378,10 @@ TEST(ProjectTests, ConvertV1ProvinceIDsToUUIDTest) {
     HMDT::UnitTests::HoI4ProjectMock hproject(project_path);
     hproject.setDebugRoot(debug_path);
 
+    // Since we aren't actually loading the project file, we need to make sure
+    //   that the tool version is set to something <= 0.25.0
+    hproject.setToolVersion(HMDT::Version{"0.24.0"});
+
     auto& map_project = hproject.getMapProject();
     auto& prov_project = map_project.getProvinceProject();
 
