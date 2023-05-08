@@ -12,6 +12,7 @@
 
 # include "Maybe.h"
 # include "Types.h"
+# include "Version.h"
 
 # include "Terrain.h"
 
@@ -107,6 +108,10 @@ namespace HMDT::Project {
         using ProvinceDataPtr = std::shared_ptr<unsigned char[]>;
 
         bool isValidProvinceLabel(uint32_t) const;
+        bool isValidProvinceID(ProvinceID) const;
+
+        const Province& getProvinceForID(ProvinceID) const;
+        Province& getProvinceForID(ProvinceID);
 
         const Province& getProvinceForLabel(uint32_t) const;
         Province& getProvinceForLabel(uint32_t);
@@ -116,6 +121,10 @@ namespace HMDT::Project {
 
         virtual ProvinceList& getProvinces() = 0;
         virtual const ProvinceList& getProvinces() const = 0;
+
+        virtual const std::unordered_map<uint32_t, UUID>& getOldIDToUUIDMap() const noexcept = 0;
+
+        virtual uint32_t getIDForProvinceID(const ProvinceID&) const noexcept = 0;
     };
 
     /**
@@ -178,7 +187,7 @@ namespace HMDT::Project {
 
         virtual const StateMap& getStates() const = 0;
 
-        virtual StateID addNewState(const std::vector<uint32_t>&) = 0;
+        virtual StateID addNewState(const std::vector<ProvinceID>&) = 0;
         virtual MaybeVoid removeState(StateID) noexcept = 0;
 
         virtual State& getStateForIterator(StateMap::const_iterator) = 0;
@@ -205,7 +214,7 @@ namespace HMDT::Project {
         virtual std::shared_ptr<MapData> getMapData() = 0;
         virtual const std::shared_ptr<MapData> getMapData() const = 0;
 
-        virtual void moveProvinceToState(uint32_t, StateID) = 0;
+        virtual void moveProvinceToState(ProvinceID, StateID) = 0;
         virtual void moveProvinceToState(Province&, StateID) = 0;
         virtual void removeProvinceFromState(Province&, bool = true) = 0;
 
@@ -261,6 +270,9 @@ namespace HMDT::Project {
 
         virtual IRootHistoryProject& getHistoryProject() noexcept = 0;
         virtual const IRootHistoryProject& getHistoryProject() const noexcept = 0;
+
+        virtual const Version& getToolVersion() const = 0;
+        virtual const Version& getHoI4Version() const = 0;
     };
 }
 

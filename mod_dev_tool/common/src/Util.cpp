@@ -336,16 +336,20 @@ auto HMDT::createProvincesFromShapeList(const PolygonList& shapes)
 
         auto prov_type = getProvinceType(color);
 
-        provinces.push_back(Province{
-            i + 1, shape.unique_color,
+        UUID provinceID = shape.id;
+
+        provinces[provinceID] = Province {
+            provinceID,
+            shape.unique_color,
             prov_type,
             false,
             "unknown",
             "None",
             0,
             shape.bounding_box,
-            { }
-        });
+            { },
+            INVALID_PROVINCE  /* parent_id */
+        };
     }
 
     return provinces;

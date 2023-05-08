@@ -42,8 +42,8 @@ namespace HMDT::Project {
             void setExportRoot(const std::filesystem::path&);
 
             const std::string& getName() const;
-            const Version& getToolVersion() const;
-            const Version& getHoI4Version() const;
+            virtual const Version& getToolVersion() const override;
+            virtual const Version& getHoI4Version() const override;
             const std::vector<std::string>& getTags() const;
             const std::vector<std::filesystem::path>& getOverrides() const;
 

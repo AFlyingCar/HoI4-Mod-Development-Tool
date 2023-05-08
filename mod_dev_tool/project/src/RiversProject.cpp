@@ -240,9 +240,16 @@ auto HMDT::Project::RiversProject::generateTemplate(std::unique_ptr<uint8_t[]>& 
     }
 
     for(auto i = 0U; i < getMapData()->getRiversSize(); ++i) {
-        auto province_label = getMapData()->getLabelMatrix().lock()[i];
+        auto province_label = getMapData()->getProvinces().lock()[i];
 
-        auto prov_type = getRootMapParent().getProvinceProject().getProvinceForLabel(province_label).type;
+        if(!getRootMapParent().getProvinceProject().isValidProvinceID(province_label))
+        {
+            WRITE_ERROR("Province ID ", province_label, " at river index ", i,
+                        " is not valid.");
+            RETURN_ERROR(STATUS_VALUE_NOT_FOUND);
+        }
+
+        auto prov_type = getRootMapParent().getProvinceProject().getProvinceForID(province_label).type;
 
         switch(prov_type) {
             case ProvinceType::LAND:

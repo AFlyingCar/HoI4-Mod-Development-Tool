@@ -1,6 +1,8 @@
 #ifndef TEST_UTILS_H
 # define TEST_UTILS_H
 
+# include "gtest/gtest.h"
+
 # include <filesystem>
 # include <iostream>
 # include <functional>
@@ -52,6 +54,39 @@ namespace HMDT::UnitTests {
     std::filesystem::path getTestProgramPath();
 
     void registerTestLogOutputFunction(bool, bool, bool, bool);
+
+    // Taken from: https://stackoverflow.com/a/10062016
+    template<typename T, size_t S>
+    ::testing::AssertionResult arraysMatch(const T (&expected)[S],
+                                           const T (&actual)[S])
+    {
+        for (size_t i = 0; i < S; ++i) {
+            if (expected[i] != actual[i]) {
+                return ::testing::AssertionFailure() << "array[" << i
+                    << "] (" << actual[i] << ") != expected[" << i
+                    << "] (" << expected[i] << ")";
+            }
+        }
+
+        return ::testing::AssertionSuccess();
+    }
+
+    // Modified from: https://stackoverflow.com/a/10062016
+    template<typename T>
+    ::testing::AssertionResult dynamicArraysMatch(const T* expected,
+                                                  const T* actual,
+                                                  size_t length)
+    {
+        for (size_t i = 0; i < length; ++i) {
+            if (expected[i] != actual[i]) {
+                return ::testing::AssertionFailure() << "array[" << i
+                    << "] (" << actual[i] << ") != expected[" << i
+                    << "] (" << expected[i] << ")";
+            }
+        }
+
+        return ::testing::AssertionSuccess();
+    }
 }
 
 #endif

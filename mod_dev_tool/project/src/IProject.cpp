@@ -78,19 +78,36 @@ const HMDT::Project::IRootProject& HMDT::Project::IRootProject::getRootParent() 
 
 bool HMDT::Project::IProvinceProject::isValidProvinceLabel(uint32_t label) const
 {
-    return (label - 1) < getProvinces().size();
+    return getProvinces().count(HashOnlyUUID(label)) != 0;
+}
+
+bool HMDT::Project::IProvinceProject::isValidProvinceID(ProvinceID label) const
+{
+    return getProvinces().count(label) != 0;
+}
+
+auto HMDT::Project::IProvinceProject::getProvinceForID(ProvinceID id) const
+    -> const Province&
+{
+    return getProvinces().at(id);
+}
+
+auto HMDT::Project::IProvinceProject::getProvinceForID(ProvinceID id)
+    -> Province&
+{
+    return getProvinces().at(id);
 }
 
 auto HMDT::Project::IProvinceProject::getProvinceForLabel(uint32_t label) const
     -> const Province&
 {
-    return getProvinces().at(label - 1);
+    return getProvinces().at(HashOnlyUUID(label));
 }
 
 auto HMDT::Project::IProvinceProject::getProvinceForLabel(uint32_t label)
     -> Province&
 {
-    return getProvinces().at(label - 1);
+    return getProvinces().at(HashOnlyUUID(label));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

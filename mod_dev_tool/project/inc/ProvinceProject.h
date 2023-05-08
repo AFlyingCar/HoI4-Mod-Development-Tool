@@ -35,15 +35,23 @@ namespace HMDT::Project {
             virtual ProvinceDataPtr getPreviewData(ProvinceID) override;
             virtual ProvinceDataPtr getPreviewData(const Province*) override;
 
+            virtual const std::unordered_map<uint32_t, UUID>& getOldIDToUUIDMap() const noexcept override;
+
+            virtual uint32_t getIDForProvinceID(const ProvinceID&) const noexcept override;
+
             void buildProvinceOutlines();
         protected:
             MaybeVoid saveShapeLabels(const std::filesystem::path&);
             MaybeVoid saveProvinceData(const std::filesystem::path&, bool = false) const noexcept;
 
             MaybeVoid loadShapeLabels(const std::filesystem::path&);
+            MaybeVoid loadShapeLabels2(const std::filesystem::path&);
             MaybeVoid loadProvinceData(const std::filesystem::path&);
+            MaybeVoid loadProvinceData2(const std::filesystem::path&);
 
             void buildGraphicsData();
+
+            void rebuildUUIDToIDMap() noexcept;
 
         private:
             void buildProvinceCache(const Province*);
@@ -62,6 +70,12 @@ namespace HMDT::Project {
              *          garbage collected and cleaned out
              */
             nlohmann::fifo_map<ProvinceID, ProvinceDataPtr> m_data_cache;
+
+            //! Maps old IDs to UUIDs (only used when converting old projects)
+            std::unordered_map<uint32_t, UUID> m_oldid_to_uuid;
+
+            //! Maps UUIDs to old IDs (required for exporting)
+            std::unordered_map<UUID, uint32_t> m_uuid_to_oldid;
     };
 }
 

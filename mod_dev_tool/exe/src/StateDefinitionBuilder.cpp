@@ -66,7 +66,7 @@ csvParseFailure:
         }
     }
 
-    for(auto&& province : provinces) {
+    for(auto&& [id, province] : provinces) {
         auto state_id = province.state;
 
         // Ignore provinces which are apart of state 0, as those are ocean provinces

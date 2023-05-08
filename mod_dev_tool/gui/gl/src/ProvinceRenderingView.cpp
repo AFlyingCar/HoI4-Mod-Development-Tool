@@ -76,7 +76,7 @@ void HMDT::GUI::GL::ProvinceRenderingView::render() {
 
         // All other uniforms
         std::vector<uint32_t> selection_ids;
-        std::transform(selections.begin(), selections.end(), std::back_inserter(selection_ids), [](const auto& s) { return s.id; });
+        std::transform(selections.begin(), selections.end(), std::back_inserter(selection_ids), [](const auto& s) { return s.id.hash(); });
 
         m_selection_shader.uniform("province_labels", selection_ids);
         m_selection_shader.uniform("num_selected", static_cast<uint32_t>(selection_ids.size()));
@@ -107,16 +107,20 @@ void HMDT::GUI::GL::ProvinceRenderingView::render() {
                     // We only have one selection here, but do a loop anyway in case
                     //   I change my mind on doing that later
                     for(auto&& selection_info : selections) {
-                        if(!map_project.getProvinceProject().isValidProvinceLabel(selection_info.id))
+                        if(!map_project.getProvinceProject().isValidProvinceID(selection_info.id))
                         {
                             WRITE_WARN("Unable to render adjacency for invalid province ID ", selection_info.id);
                             continue;
                         }
 
-                        const auto& selection = map_project.getProvinceProject().getProvinceForLabel(selection_info.id);
+                        const auto& selection = map_project.getProvinceProject().getProvinceForID(selection_info.id);
 
-                        adjacent_ids.insert(selection.adjacent_provinces.begin(),
-                                            selection.adjacent_provinces.end());
+                        std::transform(selection.adjacent_provinces.begin(),
+                                       selection.adjacent_provinces.end(),
+                                       std::inserter(adjacent_ids, adjacent_ids.begin()),
+                                       [](auto& id) -> uint32_t {
+                                           return id.hash();
+                                       });
                     }
                 }
 
@@ -182,7 +186,8 @@ void HMDT::GUI::GL::ProvinceRenderingView::onMapDataChanged(std::shared_ptr<cons
             m_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::LINEAR);
 
             m_texture.setTextureData(Texture::Format::RGB,
-                                      iwidth, iheight, map_data->getProvinces().lock().get());
+                                     iwidth, iheight,
+                                     map_data->getProvinceColors().lock().get());
         }
         m_texture.bind(false);
 

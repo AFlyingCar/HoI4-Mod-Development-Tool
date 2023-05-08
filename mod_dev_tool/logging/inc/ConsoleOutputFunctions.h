@@ -9,6 +9,7 @@
 
 # include <functional>
 # include <ostream>
+# include <cstdint>
 
 namespace HMDT::Log {
     class Message;

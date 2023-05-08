@@ -31,6 +31,7 @@ set_source_files_properties(src/Constants.cpp
     )
 
 add_library(common STATIC
+    src/Uuid.cpp
     src/BitMap.cpp
     src/Types.cpp
     src/Util.cpp
@@ -49,7 +50,11 @@ add_library(common STATIC
 target_include_directories(common PUBLIC inc)
 target_include_directories(common PRIVATE "${CMAKE_BINARY_DIR}")
 
-target_link_libraries(common PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(common PRIVATE nlohmann_json::nlohmann_json uuid)
+
+if(WIN32)
+    target_link_libraries(common PRIVATE rpcrt4.lib)
+endif()
 
 target_link_libraries(common PUBLIC unique_colors logging)
 

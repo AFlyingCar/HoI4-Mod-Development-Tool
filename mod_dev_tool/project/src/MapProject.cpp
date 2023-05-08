@@ -319,7 +319,9 @@ bool HMDT::Project::MapProject::validateData() {
 
     success = success && m_provinces_project.validateData();
 
-    for(auto&& province : m_provinces_project.getProvinces()) {
+    for(auto&& [_, local_province] : m_provinces_project.getProvinces()) {
+        auto& province = local_province;
+
         auto result = validateProvinceStateID(province.state, province.id);
 
         if(IS_FAILURE(result)) {
@@ -480,10 +482,10 @@ auto HMDT::Project::MapProject::getTerrains() const
  * @param prov_id The ID of the province to move.
  * @param state_id The ID of the state to move the province to.
  */
-void HMDT::Project::MapProject::moveProvinceToState(uint32_t prov_id,
+void HMDT::Project::MapProject::moveProvinceToState(ProvinceID prov_id,
                                                     StateID state_id)
 {
-    moveProvinceToState(getProvinceProject().getProvinceForLabel(prov_id), state_id);
+    moveProvinceToState(getProvinceProject().getProvinceForID(prov_id), state_id);
 }
 
 /**
@@ -530,7 +532,7 @@ void HMDT::Project::MapProject::removeProvinceFromState(Province& province,
  */
 void HMDT::Project::MapProject::calculateCoastalProvinces(bool dry) {
     WRITE_INFO("Calculating coastal provinces...");
-    for(auto& province : getProvinceProject().getProvinces()) {
+    for(auto&& [_, province] : getProvinceProject().getProvinces()) {
         // Only allow LAND provinces to be auto-marked as coastal
         //   I'm not actually sure if the game will allow LAKE and SEA to be
         //   coasts, but the cases where we would want that should be rare
@@ -545,7 +547,7 @@ void HMDT::Project::MapProject::calculateCoastalProvinces(bool dry) {
         bool is_coastal = std::any_of(province.adjacent_provinces.begin(),
                                       province.adjacent_provinces.end(),
                                       [this](const auto& adj_prov_id) {
-                                          return m_provinces_project.getProvinceForLabel(adj_prov_id).type == ProvinceType::SEA;
+                                          return m_provinces_project.getProvinceForID(adj_prov_id).type == ProvinceType::SEA;
                                       });
 
         WRITE_DEBUG("Calculated that province '", province.id, "' is ",

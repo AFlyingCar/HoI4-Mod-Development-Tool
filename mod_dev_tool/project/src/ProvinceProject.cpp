@@ -47,19 +47,44 @@ auto HMDT::Project::ProvinceProject::save(const std::filesystem::path& path)
 auto HMDT::Project::ProvinceProject::load(const std::filesystem::path& path)
     -> MaybeVoid
 {
-    auto provdata_result = loadProvinceData(path);
-    if(provdata_result.error() == std::errc::no_such_file_or_directory) {
-        provdata_result = STATUS_SUCCESS;
-    }
-    RETURN_IF_ERROR(provdata_result);
+    if(getRootParent().getToolVersion() <= "0.25.0"_V) {
+        WRITE_WARN("Tool version mismatch. Attempting to load province data "
+                   "from version ", getRootParent().getToolVersion());
 
-    auto shapelabels_result = loadShapeLabels(path);
-    RETURN_IF_ERROR(shapelabels_result);
+        // Make sure we load in the 0 -> EMPTY_UUID first, as that will never be
+        //  loaded from the province data file
+        m_oldid_to_uuid[0] = EMPTY_UUID;
+
+        auto provdata_result = loadProvinceData(path);
+        if(provdata_result.error() == std::errc::no_such_file_or_directory) {
+            provdata_result = STATUS_SUCCESS;
+        }
+        RETURN_IF_ERROR(provdata_result);
+
+        WRITE_DEBUG("oldid_to_uuid = {", joinMap(m_oldid_to_uuid.begin(),
+                                                 m_oldid_to_uuid.end(),
+                                                 ", "), "}");
+
+        auto shapelabels_result = loadShapeLabels(path);
+        RETURN_IF_ERROR(shapelabels_result);
+    } else {
+        auto provdata_result = loadProvinceData2(path);
+        if(provdata_result.error() == std::errc::no_such_file_or_directory) {
+            provdata_result = STATUS_SUCCESS;
+        }
+        RETURN_IF_ERROR(provdata_result);
+
+        auto shapelabels_result = loadShapeLabels2(path);
+        RETURN_IF_ERROR(shapelabels_result);
+    }
 
     // Note that order is important here, graphics data _must_ be built before
     //   the outlines
     buildGraphicsData();
     buildProvinceOutlines();
+
+    // Rebuild the uuid->id map last
+    rebuildUUIDToIDMap();
 
     return STATUS_SUCCESS;
 }
@@ -85,7 +110,7 @@ auto HMDT::Project::ProvinceProject::export_(const std::filesystem::path& root) 
         // TODO: writeBMP does not actually return any errors out to us, so we
         //  need to be careful here in case it does fail
         writeBMP(root / PROVINCES_FILENAME,
-                 getMapData()->getProvinces().lock().get(),
+                 getMapData()->getProvinceColors().lock().get(),
                  getMapData()->getWidth(), getMapData()->getHeight());
     }
 
@@ -130,6 +155,9 @@ void HMDT::Project::ProvinceProject::import(const ShapeFinder& sf, std::shared_p
     m_data_cache.clear();
 
     buildProvinceOutlines();
+
+    // Rebuild the uuid->id map last
+    rebuildUUIDToIDMap();
 }
 
 bool HMDT::Project::ProvinceProject::validateData() {
@@ -186,9 +214,14 @@ auto HMDT::Project::ProvinceProject::saveShapeLabels(const std::filesystem::path
         writeData(out, getMapData()->getWidth(), 
                        getMapData()->getHeight());
 
+        auto num_bytes = getMapData()->getProvincesSize() * sizeof(UUID);
+
         // Write the entire label matrix to the file
-        out.write(reinterpret_cast<const char*>(getMapData()->getLabelMatrix().lock().get()),
-                  getMapData()->getMatrixSize() * sizeof(uint32_t));
+        WRITE_DEBUG("Writing province ID data [", getMapData()->getWidth(),
+                    " by ", getMapData()->getHeight(), ": ", num_bytes,
+                    " bytes.");
+        out.write(reinterpret_cast<const char*>(getMapData()->getProvinces().lock().get()),
+                  num_bytes);
         out << '\0';
     } else {
         WRITE_ERROR("Failed to open file ", path);
@@ -220,9 +253,20 @@ auto HMDT::Project::ProvinceProject::saveProvinceData(const std::filesystem::pat
         bool assume_unknown_continents = false;
 
         // Write one line to the CSV for each province
-        for(auto&& province : m_provinces) {
-            out << province.id << ';'
-                << static_cast<int>(province.unique_color.r) << ';'
+        for(auto&& [id, province] : m_provinces) {
+            // If we are exporting, then we need to output a numeric ID number,
+            //   not the internal UUID we use
+            if(is_export) {
+                // Sanity check
+                RETURN_ERROR_IF(m_uuid_to_oldid.count(id) == 0,
+                                STATUS_VALUE_NOT_FOUND);
+
+                out << getIDForProvinceID(id) << ';';
+            } else {
+                out << province.id << ';';
+            }
+
+            out << static_cast<int>(province.unique_color.r) << ';'
                 << static_cast<int>(province.unique_color.g) << ';'
                 << static_cast<int>(province.unique_color.b) << ';'
                 << province.type << ';'
@@ -316,11 +360,158 @@ auto HMDT::Project::ProvinceProject::loadShapeLabels(const std::filesystem::path
         }
 
         auto label_matrix = getMapData()->getLabelMatrix().lock();
+        auto prov_matrix = getMapData()->getProvinces().lock();
 
         if(!safeRead(label_matrix.get(), getMapData()->getMatrixSize() * sizeof(uint32_t), in))
         {
             WRITE_ERROR("Failed to read full label matrix.");
             RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+
+        // Generate the Provinces matrix
+        bool err = false;
+        parallelTransform(label_matrix.get() /* first */,
+                          label_matrix.get() + (width * height) /* last */,
+                          prov_matrix.get() /* dest */,
+                          [this, &err](uint32_t& oldid) -> ProvinceID
+                          {
+                              if(m_oldid_to_uuid.count(oldid) == 0) {
+                                  WRITE_ERROR("Failed to find ", oldid, " in map.");
+                                  err = true;
+                              }
+
+                              const auto& newid = m_oldid_to_uuid.at(oldid);
+
+                              // Convert the old ID to a hash to be the new "label"
+                              oldid = newid.hash();
+
+                              return newid;
+                          });
+        RETURN_ERROR_IF(err, STATUS_VALUE_NOT_FOUND);
+
+        if(prog_opts.debug) {
+            auto path = getRootParent().getDebugRoot();
+            auto lmfname = path / "label_matrix.raw";
+            auto pmfname = path / "prov_matrix.raw";
+
+            if(!std::filesystem::exists(path)) {
+                std::filesystem::create_directory(path);
+            }
+
+            WRITE_DEBUG("Writing label matrix (", getMapData()->getMatrixSize(),
+                        " bytes) to ", lmfname);
+
+            if(std::ofstream out(lmfname, std::ios::binary | std::ios::out); out)
+            {
+                out.write(reinterpret_cast<char*>(label_matrix.get()),
+                          getMapData()->getMatrixSize());
+            }
+
+            WRITE_DEBUG("Writing province matrix (", getMapData()->getProvincesSize(),
+                        " bytes) to ", pmfname);
+
+            if(std::ofstream out(pmfname, std::ios::binary | std::ios::out); out)
+            {
+                out.write(reinterpret_cast<char*>(prov_matrix.get()),
+                          getMapData()->getProvincesSize());
+            }
+        }
+    } else {
+        WRITE_ERROR("Failed to open file ", path);
+        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+    }
+
+    return STATUS_SUCCESS;
+}
+
+auto HMDT::Project::ProvinceProject::loadShapeLabels2(const std::filesystem::path& root)
+    -> MaybeVoid
+{
+    auto path = root / SHAPEDATA_FILENAME;
+
+    if(std::error_code ec; !std::filesystem::exists(path, ec)) {
+        RETURN_ERROR_IF(ec.value() != 0, ec);
+
+        WRITE_WARN("File ", path, " does not exist.");
+        return std::make_error_code(std::errc::no_such_file_or_directory);
+    } else if(std::ifstream in(path, std::ios::binary | std::ios::in); in) {
+        unsigned char magic[4];
+        uint32_t width = 0;
+        uint32_t height = 0;
+
+        // Read in all header information first, and make sure that we were 
+        //  successful
+        if(!safeRead(in, &magic, &width, &height)) {
+            WRITE_ERROR("Failed to read in header information.");
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+
+        // Validate that the width + height for the shape data matches what we
+        //   expect.
+        if(auto input_size = width * height * sizeof(UUID);
+                input_size != getMapData()->getProvincesSize() * sizeof(UUID))
+        {
+            WRITE_ERROR("Loaded shape data size (", input_size, ") does not "
+                        "match expected matrix size of (",
+                        getMapData()->getProvincesSize() * sizeof(UUID),
+                        ")");
+            RETURN_ERROR(std::make_error_code(std::errc::invalid_argument));
+        }
+
+        auto prov_matrix = getMapData()->getProvinces().lock();
+        auto label_matrix = getMapData()->getLabelMatrix().lock();
+
+        WRITE_DEBUG("Reading provinces into prov_matrix! sizeof(HMDT::UUID)=",
+                    sizeof(HMDT::UUID));
+
+        if(!safeRead(prov_matrix.get(),
+                     getMapData()->getProvincesSize() * sizeof(UUID), in))
+        {
+            WRITE_ERROR("Failed to read full provinces matrix.");
+            RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+        }
+
+        std::atomic<uint32_t> num_trans = 0;
+
+        // Now build the label matrix as well
+        parallelTransform(prov_matrix.get() /* first */,
+                          prov_matrix.get() + (width * height) /* last */,
+                          label_matrix.get() /* dest */,
+                          [&num_trans](const ProvinceID& prov_id) -> uint32_t {
+                              ++num_trans;
+                              return prov_id.hash();
+                          });
+
+        // Double check that we actually processed all of the UUIDs like we were
+        //   supposed to
+        RETURN_ERROR_IF(num_trans != width * height, STATUS_UNEXPECTED);
+
+        if(prog_opts.debug) {
+            auto path = getRootParent().getDebugRoot();
+            auto lmfname = path / "label_matrix.raw";
+            auto pmfname = path / "prov_matrix.raw";
+
+            if(!std::filesystem::exists(path)) {
+                std::filesystem::create_directory(path);
+            }
+
+            WRITE_DEBUG("Writing label matrix (", getMapData()->getMatrixSize(),
+                        " bytes) to ", lmfname);
+
+            if(std::ofstream out(lmfname, std::ios::binary | std::ios::out); out)
+            {
+                out.write(reinterpret_cast<char*>(label_matrix.get()),
+                          getMapData()->getMatrixSize());
+            }
+
+            WRITE_DEBUG("Writing province matrix (", getMapData()->getProvincesSize(),
+                        " bytes) to ", pmfname);
+
+            if(std::ofstream out(pmfname, std::ios::binary | std::ios::out); out)
+            {
+                out.write(reinterpret_cast<char*>(prov_matrix.get()),
+                          getMapData()->getProvincesSize());
+            }
         }
     } else {
         WRITE_ERROR("Failed to open file ", path);
@@ -339,6 +530,82 @@ auto HMDT::Project::ProvinceProject::loadShapeLabels(const std::filesystem::path
  * @return True if the file was able to be successfully loaded, false otherwise.
  */
 auto HMDT::Project::ProvinceProject::loadProvinceData(const std::filesystem::path& root)
+    -> MaybeVoid
+{
+    auto path = root / PROVINCEDATA_FILENAME;
+
+    if(std::error_code ec; !std::filesystem::exists(path, ec)) {
+        RETURN_ERROR_IF(ec.value() != 0, ec);
+
+        WRITE_WARN("File ", path, " does not exist.");
+        return std::make_error_code(std::errc::no_such_file_or_directory);
+    } else if(std::ifstream in(path); in) {
+        std::string line;
+
+        // Make sure we don't have any provinces in the list first
+        m_provinces.clear();
+
+        // Get every line from the CSV file for parsing
+        for(uint32_t line_num = 1; std::getline(in, line); ++line_num) {
+            if(line.empty()) continue;
+
+            WRITE_DEBUG("Parsing CSV line ", line);
+
+            std::stringstream ss(line);
+
+            Province prov;
+
+            // Attempt to parse the entire CSV line, we expect it to look like:
+            //  ID;R;G;B;ProvinceType;IsCoastal;TerrainType;ContinentID;BB.BottomLeft.X;BB.BottomLeft.Y;BB.TopRight.X;BB.TopRight.Y;StateID
+            uint32_t id;
+            if(!parseValuesSkipMissing<';'>(ss, &id,
+                                                &prov.unique_color.r,
+                                                &prov.unique_color.g,
+                                                &prov.unique_color.b,
+                                                &prov.type,
+                                                &prov.coastal,
+                                                &prov.terrain,
+                                                &prov.continent,
+                                                &prov.bounding_box.bottom_left.x,
+                                                &prov.bounding_box.bottom_left.y,
+                                                &prov.bounding_box.top_right.x,
+                                                &prov.bounding_box.top_right.y,
+                                                &prov.state, true))
+            {
+                WRITE_ERROR("Failed to parse line #", line_num, ": '", line, "'");
+                RETURN_ERROR(std::make_error_code(std::errc::bad_message));
+            }
+
+            if(m_oldid_to_uuid.count(id) == 0) {
+                // Create the new UUID for the old ID and give it to the
+                //   province to hold onto
+                prov.id = m_oldid_to_uuid[id];
+
+                WRITE_DEBUG("Mapping old province ID ", id, " to ", prov.id);
+            }
+
+            m_provinces[prov.id] = prov;
+        }
+
+        WRITE_DEBUG("Loaded information for ",
+                   m_provinces.size(), " provinces");
+    } else {
+        WRITE_ERROR("Failed to open file ", path);
+        RETURN_ERROR(std::make_error_code(static_cast<std::errc>(errno)));
+    }
+
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief Load all province-level data from $root/PROVINCEDATA_FILENAME, the
+ *        same type of .csv file loaded by HoI4.
+ *
+ * @param root The path to the root where the .csv file is
+ *
+ * @return True if the file was able to be successfully loaded, false otherwise.
+ */
+auto HMDT::Project::ProvinceProject::loadProvinceData2(const std::filesystem::path& root)
     -> MaybeVoid
 {
     auto path = root / PROVINCEDATA_FILENAME;
@@ -382,7 +649,15 @@ auto HMDT::Project::ProvinceProject::loadProvinceData(const std::filesystem::pat
                 RETURN_ERROR(std::make_error_code(std::errc::bad_message));
             }
 
-            m_provinces.push_back(prov);
+            // Sanity check
+            if(m_provinces.count(prov.id) != 0) {
+                WRITE_WARN("Province with id ", prov.id, " already exists! Are "
+                           "there two provinces listed in ", path, " which "
+                           "share an ID?");
+            }
+
+            // Add the province into the vector
+            m_provinces[prov.id] = prov;
         }
 
         WRITE_DEBUG("Loaded information for ",
@@ -434,7 +709,7 @@ void HMDT::Project::ProvinceProject::buildProvinceCache(const Province* province
 
     // Some references first, to make the following code easier to read
     //  id also starts at 1, so make sure we offset it down
-    auto label_matrix = getMapData()->getLabelMatrix().lock();
+    auto label_matrix = getMapData()->getProvinces().lock();
     auto iwidth = getMapData()->getWidth();
 
     auto&& bb = province.bounding_box;
@@ -495,34 +770,51 @@ void HMDT::Project::ProvinceProject::buildProvinceCache(const Province* province
 
 void HMDT::Project::ProvinceProject::buildProvinceOutlines() {
     auto prov_outline_data = getMapData()->getProvinceOutlines().lock();
-    auto graphics_data = getMapData()->getProvinces().lock();
+    auto graphics_data = getMapData()->getProvinceColors().lock();
 
     auto [width, height] = getMapData()->getDimensions();
     Dimensions dimensions{width, height};
+
+    bool failure = false;
 
     // Go over the map again and build extra data that depends on the previously
     //  re-built province data
     for(uint32_t x = 0; x < width; ++x) {
         for(uint32_t y = 0; y < height; ++y) {
             auto lindex = xyToIndex(width, x, y);
-            auto label = getMapData()->getLabelMatrix().lock()[lindex];
+            auto label = getMapData()->getProvinces().lock()[lindex];
             auto gindex = xyToIndex(width * 4, x * 4, y);
 
-            auto& province = getProvinceForLabel(label);
+            if(!isValidProvinceID(label)) {
+                WRITE_WARN("ProvinceID matrix has label ", label,
+                           " at position (", x, ',', y, "), which was not "
+                           "found in the list of loaded provinces.");
 
-            // Error check
-            if(label <= 0 || label > getProvinces().size()) {
-                WRITE_WARN("Label matrix has label ", label,
-                             " at position (", x, ',', y, "), which is out of "
-                             "the range of valid labels [1,",
-                             getProvinces().size(), "]");
+                if(!failure) {
+                    failure = true;
+
+                    WRITE_DEBUG("m_provinces=", [this]() {
+                        std::stringstream ss;
+
+                        for(auto it = m_provinces.begin(); it != m_provinces.end(); ++it) {
+                            if(it != m_provinces.begin()) ss << ", ";
+                            ss << it->first;
+                        }
+
+                        return ss.str();
+                    }().c_str());
+                }
+
                 continue;
             }
+
+            // Look up the province itself
+            auto& province = getProvinceForID(label);
 
             // Recalculate adjacencies for this pixel
             auto is_adjacent = ShapeFinder::calculateAdjacency(dimensions,
                                                                graphics_data.get(),
-                                                               getMapData()->getLabelMatrix().lock().get(),
+                                                               getMapData()->getProvinces().lock().get(),
                                                                province.adjacent_provinces,
                                                                {x, y});
             // If this pixel is adjacent to any others, then make it visible as
@@ -544,33 +836,31 @@ void HMDT::Project::ProvinceProject::buildGraphicsData() {
     // Rebuild the graphics data
     auto [width, height] = getMapData()->getDimensions();
 
-    auto label_matrix = getMapData()->getLabelMatrix().lock();
+    auto prov_matrix = getMapData()->getProvinces().lock();
 
-    auto graphics_data = getMapData()->getProvinces().lock();
+    auto graphics_data = getMapData()->getProvinceColors().lock();
 
     // Rebuild the map_data array and the adjacency lists
     for(uint32_t x = 0; x < width; ++x) {
         for(uint32_t y = 0; y < height; ++y) {
-            // Get the index into the label matrix
+            // Get the index into the prov matrix
             auto lindex = xyToIndex(width, x, y);
 
             // Get the index into the graphics data
             //  3 == the depth
             auto gindex = xyToIndex(width * 3, x * 3, y);
 
-            auto label = label_matrix[lindex];
+            auto id = prov_matrix[lindex];
 
             // Error check
-            if(label <= 0 || label > getProvinces().size()) {
-                WRITE_WARN("Label matrix has label ", label,
-                             " at position (", x, ',', y, "), which is out of "
-                             "the range of valid labels [1,",
-                             getProvinces().size(), "]");
+            if(!isValidProvinceID(id)) {
+                WRITE_WARN("Province matrix has ID ", id,
+                           " at position (", x, ',', y, "), which does not exist.");
                 continue;
             }
 
             // Rebuild color data
-            auto& province = getProvinceForLabel(label);
+            auto& province = getProvinceForID(id);
 
             // Flip the colors from RGB to BGR because BitMap is a bad format
             graphics_data[gindex] = province.unique_color.b;
@@ -590,8 +880,8 @@ void HMDT::Project::ProvinceProject::buildGraphicsData() {
 auto HMDT::Project::ProvinceProject::getPreviewData(ProvinceID id)
     -> ProvinceDataPtr
 {
-    if(isValidProvinceLabel(id)) {
-        return getPreviewData(&getProvinceForLabel(id));
+    if(isValidProvinceID(id)) {
+        return getPreviewData(&getProvinceForID(id));
     }
 
     return nullptr;
@@ -625,5 +915,30 @@ auto HMDT::Project::ProvinceProject::getPreviewData(const Province* province_ptr
     m_data_cache[id] = data;
 
     return data;
+}
+
+auto HMDT::Project::ProvinceProject::getOldIDToUUIDMap() const noexcept
+    -> const std::unordered_map<uint32_t, UUID>&
+{
+    return m_oldid_to_uuid;
+}
+
+uint32_t HMDT::Project::ProvinceProject::getIDForProvinceID(const ProvinceID& id) const noexcept
+{
+    return m_uuid_to_oldid.at(id);
+}
+
+/**
+ * @brief Rebuilds the mapping of UUID->ID.
+ * @details This should be called every time m_provinces changes/is updated.
+ */
+void HMDT::Project::ProvinceProject::rebuildUUIDToIDMap() noexcept {
+    // Clear the old map out first
+    m_uuid_to_oldid.clear();
+
+    uint32_t i = 0;
+    for(auto&& [id, _] : m_provinces) {
+        m_uuid_to_oldid[id] = ++i;
+    }
 }
 

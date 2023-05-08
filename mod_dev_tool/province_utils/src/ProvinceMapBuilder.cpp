@@ -53,7 +53,7 @@ auto HMDT::getState(const Color& color) -> StateID {
 HMDT::ProvinceList HMDT::createProvinceList(const PolygonList& shape_list) {
     ProvinceList provinces;
 
-    for(ProvinceID i = 0; i < shape_list.size(); ++i) {
+    for(auto i = 0; i < shape_list.size(); ++i) {
         auto&& shape = shape_list[i];
 
         Color color = shape.color;
@@ -67,11 +67,14 @@ HMDT::ProvinceList HMDT::createProvinceList(const PolygonList& shape_list) {
 
         auto&& bounding_box = shape.bounding_box;
 
-        provinces.push_back(Province{
-            i + 1, shape.unique_color,
+        UUID provinceID;
+
+        provinces[provinceID] = Province{
+            provinceID, shape.unique_color,
             prov_type, is_coastal, terrain_type, continent, state, bounding_box,
-            { }
-        });
+            { },
+            INVALID_PROVINCE
+        };
     }
 
     return provinces;

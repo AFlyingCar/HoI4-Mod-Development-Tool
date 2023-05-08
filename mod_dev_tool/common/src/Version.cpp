@@ -183,3 +183,6 @@ std::ostream& HMDT::operator<<(std::ostream& stream, const Version& version) {
     return (stream << version.str());
 }
 
+HMDT::Version HMDT::operator""_V(const char* version, size_t length) {
+    return Version{ std::string(version, length) };
+}

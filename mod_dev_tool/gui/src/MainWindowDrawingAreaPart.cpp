@@ -24,7 +24,7 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
                 auto& history_project = project.getHistoryProject();
 
                 auto map_data = project.getMapProject().getMapData();
-                auto lmatrix = map_data->getLabelMatrix().lock();
+                auto lmatrix = map_data->getProvinces().lock();
 
                 // If the click happens outside of the bounds of the image, then
                 //   deselect the province
@@ -42,9 +42,9 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
 
                 // If this is a valid province, then select the state that it is
                 //  a part of (if it is a part of one at all, that is)
-                if(map_project.getProvinceProject().isValidProvinceLabel(label))
+                if(map_project.getProvinceProject().isValidProvinceID(label))
                 {
-                    auto& prov = map_project.getProvinceProject().getProvinceForLabel(label);
+                    auto& prov = map_project.getProvinceProject().getProvinceForID(label);
 
                     // Make sure we check for if the state ID is valid first so
                     //  that we deselect the state for provinces that aren't in
@@ -68,7 +68,7 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
                 auto& map_project = project.getMapProject();
 
                 auto map_data = map_project.getMapData();
-                auto lmatrix = map_data->getLabelMatrix().lock();
+                auto lmatrix = map_data->getProvinces().lock();
 
                 // Multiselect out of bounds will simply not add to the selections
                 if(x > map_data->getWidth() || y > map_data->getHeight()) {
@@ -100,14 +100,12 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
 
                 // If this is a valid province, then select the state that it is
                 //  a part of (if it is a part of one at all, that is)
-                if(map_project.getProvinceProject().isValidProvinceLabel(label)) {
-                    auto& prov = map_project.getProvinceProject().getProvinceForLabel(label -1);
+                if(map_project.getProvinceProject().isValidProvinceID(label)) {
+                    auto& prov = map_project.getProvinceProject().getProvinceForID(label);
 
                     // Don't bother checking for if it's valid or not, as
                     //  MapProject will do that for us
                     SelectionManager::getInstance().addStateSelection(prov.state);
-                } else {
-                    SelectionManager::getInstance().removeStateSelection(label);
                 }
             }
         });
@@ -116,16 +114,9 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
     // Setup each drawing area type
     m_gl_drawing_area.reset(new GL::MapDrawingArea);
     setup_drawing_area(m_gl_drawing_area);
-    m_cairo_drawing_area.reset(new MapDrawingArea);
-    setup_drawing_area(m_cairo_drawing_area);
 
     // Setup initially enabled drawing area
-    auto drawing_area = m_drawing_area =
-#if HMDT_DEFAULT_RENDERING_TO_GL
-        m_gl_drawing_area;
-#else
-        m_cairo_drawing_area;
-#endif
+    auto drawing_area = m_drawing_area = m_gl_drawing_area;
 
     // Set up a signal callback to zoom in and out when performing CTRL+ScrollWhell
     drawing_window->signalOnScroll().connect([drawing_area](GdkEventScroll* event)
@@ -133,10 +124,10 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
         if(event->state & GDK_CONTROL_MASK) {
             switch(event->direction) {
                 case GDK_SCROLL_UP:
-                    drawing_area->zoom(MapDrawingArea::ZoomDirection::IN);
+                    drawing_area->zoom(GL::MapDrawingArea::ZoomDirection::IN);
                     break;
                 case GDK_SCROLL_DOWN:
-                    drawing_area->zoom(MapDrawingArea::ZoomDirection::OUT);
+                    drawing_area->zoom(GL::MapDrawingArea::ZoomDirection::OUT);
                     break;
                 case GDK_SCROLL_SMOOTH:
                     drawing_area->zoom(-event->delta_y * ZOOM_FACTOR);
@@ -157,14 +148,14 @@ void HMDT::GUI::MainWindowDrawingAreaPart::MainWindowDrawingAreaPart::buildDrawi
     {
         switch(event->keyval) {
             case GDK_KEY_KP_Add:
-                drawing_area->zoom(MapDrawingArea::ZoomDirection::IN);
+                drawing_area->zoom(GL::MapDrawingArea::ZoomDirection::IN);
                 break;
             case GDK_KEY_KP_Subtract:
-                drawing_area->zoom(MapDrawingArea::ZoomDirection::OUT);
+                drawing_area->zoom(GL::MapDrawingArea::ZoomDirection::OUT);
                 break;
             case GDK_KEY_r:
                 if(event->state & GDK_CONTROL_MASK) {
-                    drawing_area->zoom(MapDrawingArea::ZoomDirection::RESET);
+                    drawing_area->zoom(GL::MapDrawingArea::ZoomDirection::RESET);
                 }
                 break;
         }

@@ -16,6 +16,7 @@
 # include "Types.h"
 # include "BitMap.h"
 # include "Monad.h"
+# include "Uuid.h"
 
 namespace HMDT {
     class MapData;
@@ -25,7 +26,7 @@ namespace HMDT {
      */
     class ShapeFinder {
         public:
-            using LabelToColorMap = std::map<uint32_t, Color>;
+            using LabelToColorMap = std::map<UUID, Color>;
 
             enum class Stage {
                 START,
@@ -51,20 +52,20 @@ namespace HMDT {
             Stage getStage() const;
 
             std::vector<Pixel>& getBorderPixels();
-            std::map<uint32_t, Color>& getLabelToColorMap();
+            LabelToColorMap& getLabelToColorMap();
             PolygonList& getShapes();
 
             const BitMap* getImage() const;
             const std::vector<Pixel>& getBorderPixels() const;
-            const std::map<uint32_t, Color>& getLabelToColorMap() const;
+            const LabelToColorMap& getLabelToColorMap() const;
             const PolygonList& getShapes() const;
 
-            static bool calculateAdjacency(const BitMap*, const uint32_t*,
-                                           std::set<uint32_t>&, const Point2D&);
+            static bool calculateAdjacency(const BitMap*, const ProvinceID*,
+                                           std::set<ProvinceID>&, const Point2D&);
             static bool calculateAdjacency(const Dimensions&,
                                            const uint8_t*,
-                                           const uint32_t*,
-                                           std::set<uint32_t>&,
+                                           const ProvinceID*,
+                                           std::set<ProvinceID>&,
                                            const Point2D&);
 
             static MonadOptional<Point2D> getAdjacentPoint(const BitMap*,
@@ -82,7 +83,7 @@ namespace HMDT {
                                                          const Point2D&,
                                                          Direction);
         protected:
-            using LabelShapeIdxMap = std::unordered_map<uint32_t, uint32_t>;
+            using LabelShapeIdxMap = std::unordered_map<UUID, uint32_t>;
 
             uint32_t pass1();
             PolygonList& pass2(LabelShapeIdxMap&);
@@ -90,18 +91,18 @@ namespace HMDT {
             bool mergeBorders(PolygonList&,
                               const LabelShapeIdxMap&);
 
-            std::pair<uint32_t, Color> getLabelAndColor(const Point2D&,
+            std::pair<UUID, Color> getLabelAndColor(const Point2D&,
                                                         const Color&);
 
             std::optional<uint32_t> finalize(PolygonList&);
 
             void outputStage(const std::filesystem::path&);
 
-            uint32_t getRootLabel(uint32_t);
+            UUID getRootLabel(const UUID&) const noexcept;
 
             MonadOptional<Point2D> getAdjacentPoint(const Point2D&, Direction) const;
 
-            void buildShape(uint32_t, const Pixel&, PolygonList&,
+            void buildShape(const UUID&, const Pixel&, PolygonList&,
                             LabelShapeIdxMap&);
 
             void calculateAdjacencies(PolygonList&) const;
@@ -117,7 +118,7 @@ namespace HMDT {
             std::shared_ptr<MapData> m_map_data;
 
             //! A mapping of each label -> that label's root (key == value => key is already the root)
-            std::unordered_map<uint32_t, uint32_t> m_label_parents;
+            std::unordered_map<UUID, UUID> m_label_parents;
 
             //! A vector of every border pixel
             std::vector<Pixel> m_border_pixels;

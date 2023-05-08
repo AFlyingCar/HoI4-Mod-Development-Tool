@@ -9,3 +9,4 @@ tests/bin/8bpp_greyscale.bmp filter=lfs diff=lfs merge=lfs -text
 tests/bin/complex_heightmap.bmp filter=lfs diff=lfs merge=lfs -text
 resources/textures/heightmap.png filter=lfs diff=lfs merge=lfs -text
 resources/textures/rivermap.png filter=lfs diff=lfs merge=lfs -text
+tests/bin/map_v1provinceids/shapedata.bin filter=lfs diff=lfs merge=lfs -text
