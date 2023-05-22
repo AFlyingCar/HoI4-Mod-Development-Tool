@@ -2,6 +2,7 @@
 #include "IProject.h"
 
 #include "StatusCodes.h"
+#include "Constants.h"
 
 HMDT::Project::IProject::IProject() {
     resetPromptCallback();
@@ -108,6 +109,106 @@ auto HMDT::Project::IProvinceProject::getProvinceForLabel(uint32_t label)
     -> Province&
 {
     return getProvinces().at(HashOnlyUUID(label));
+}
+
+auto HMDT::Project::IProvinceProject::getRootProvinceParent(const ProvinceID& id) const noexcept
+    -> MaybeRef<const Province>
+{
+    for(ProvinceID root_id = id; root_id != INVALID_PROVINCE;) {
+        if(!isValidProvinceID(root_id)) {
+            RETURN_ERROR(STATUS_VALUE_NOT_FOUND);
+        }
+
+        const Province& province = getProvinceForID(root_id);
+
+        // When we find an invalid province parent ID, then we are at the root
+        if(province.id == INVALID_PROVINCE) {
+            return province;
+        }
+
+        root_id = province.parent_id;
+    }
+
+    // We should never reach here. To do so implies that root_id somehow became
+    //   INVALID_PROVINCE and we ended up _not_ returning in the middle of it.
+    RETURN_ERROR(STATUS_UNEXPECTED);
+}
+
+auto HMDT::Project::IProvinceProject::getRootProvinceParent(const ProvinceID& id) noexcept
+    -> MaybeRef<Province>
+{
+    for(ProvinceID root_id = id; root_id != INVALID_PROVINCE;) {
+        if(!isValidProvinceID(root_id)) {
+            RETURN_ERROR(STATUS_VALUE_NOT_FOUND);
+        }
+
+        Province& province = getProvinceForID(root_id);
+
+        // When we find an invalid province parent ID, then we are at the root
+        if(province.parent_id == INVALID_PROVINCE) {
+            return province;
+        }
+
+        root_id = province.parent_id;
+    }
+
+    // We should never reach here. To do so implies that root_id somehow became
+    //   INVALID_PROVINCE and we ended up _not_ returning in the middle of it.
+    RETURN_ERROR(STATUS_UNEXPECTED);
+}
+
+/**
+ * @brief Merges two provinces together so that they can be treated as one
+ *        single unit.
+ *
+ * @param id1 One of the IDs to merge.
+ * @param id2 One of the IDs to merge.
+ *
+ * @return STATUS_SUCCESS upon success, or a failure code otherwise.
+ */
+auto HMDT::Project::IProvinceProject::mergeProvinces(const ProvinceID& id1,
+                                                     const ProvinceID& id2) noexcept
+    -> MaybeVoid
+{
+    if(!isValidProvinceID(id1) || !isValidProvinceID(id2)) {
+        WRITE_ERROR("One of the following IDs is invalid: ", id1, " or ", id2);
+        RETURN_ERROR(STATUS_VALUE_NOT_FOUND);
+    }
+
+    // First see if we can just add either as a parent
+    if(Province& prov1 = getProvinceForID(id1);
+       prov1.parent_id == INVALID_PROVINCE)
+    {
+        // But make sure that we only set the parent to the other's own parent
+        auto maybe_root = getRootProvinceParent(id2);
+        RETURN_IF_ERROR(maybe_root);
+
+        prov1.parent_id = maybe_root->get().id;
+        return STATUS_SUCCESS;
+    }
+
+    if(Province& prov2 = getProvinceForID(id2);
+       prov2.parent_id == INVALID_PROVINCE)
+    {
+        // But make sure that we only set the parent to the other's own parent
+        auto maybe_root = getRootProvinceParent(id1);
+        RETURN_IF_ERROR(maybe_root);
+
+        prov2.parent_id = maybe_root->get().id;
+        return STATUS_SUCCESS;
+    }
+
+    // Since we cannot, find the root of either of the two provinces and set
+    //   its parent to the root parent of the other
+    auto maybe_root1 = getRootProvinceParent(id1);
+    RETURN_IF_ERROR(maybe_root1);
+
+    auto maybe_root2 = getRootProvinceParent(id2);
+    RETURN_IF_ERROR(maybe_root2);
+
+    maybe_root1->get().parent_id = maybe_root2->get().id;
+
+    return STATUS_SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

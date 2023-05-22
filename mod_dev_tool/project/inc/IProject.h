@@ -125,6 +125,11 @@ namespace HMDT::Project {
         virtual const std::unordered_map<uint32_t, UUID>& getOldIDToUUIDMap() const noexcept = 0;
 
         virtual uint32_t getIDForProvinceID(const ProvinceID&) const noexcept = 0;
+
+        virtual MaybeRef<const Province> getRootProvinceParent(const ProvinceID&) const noexcept;
+        virtual MaybeRef<Province> getRootProvinceParent(const ProvinceID&) noexcept;
+
+        virtual MaybeVoid mergeProvinces(const ProvinceID&, const ProvinceID&) noexcept;
     };
 
     /**
