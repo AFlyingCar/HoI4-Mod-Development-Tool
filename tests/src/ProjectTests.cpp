@@ -521,3 +521,102 @@ TEST(ProjectTests, ProvinceProjectSaveAndLoad) {
     HMDT::Log::Logger::getInstance().reset();
 }
 
+TEST(ProjectTests, MergeProvinceTests) {
+    SET_PROGRAM_OPTION(debug, true);
+
+    // We also want to see log outputs in the test output
+    HMDT::UnitTests::registerTestLogOutputFunction(true, true, true, true);
+
+    auto bin_path = HMDT::UnitTests::getTestProgramPath() / "bin";
+
+    auto input_provinces_path = bin_path / "simple.bmp";
+
+    auto project_path = bin_path / "simple2.hoi4proj";
+    auto prov_path = bin_path / "map_province_saveandload";
+    auto debug_path = bin_path / "test_debug";
+
+    HMDT::UnitTests::HoI4ProjectMock hproject(project_path);
+    hproject.setDebugRoot(debug_path);
+
+    auto& map_project = hproject.getMapProject();
+    auto& prov_project = map_project.getProvinceProject();
+
+    auto map_data = map_project.getMapData();
+
+    // Make sure that we set up the MapData before attempting to load the provinces
+    {
+        // Hard-code these values since we aren't actually loading from a real
+        //   image here
+        auto iwidth = 512;
+        auto iheight = 512;
+
+        // Do a placement new so we keep the same memory location but update all
+        //  of the data inside the shared MapData instead, so that all
+        //  references are also updated too
+        map_data->~MapData();
+        new (map_data.get()) HMDT::MapData(iwidth, iheight);
+    }
+
+    // First import test data
+    {
+        // TODO: ShapeFinder hasn't been switched over to the new BitMap2 object
+        //   yet, so we need to still use the deprecated one for now
+        WRITE_INFO("Loading ", input_provinces_path);
+        HMDT::BitMap* complex_bmp = HMDT::readBMP(input_provinces_path);
+        ASSERT_NE(complex_bmp, nullptr);
+
+        HMDT::ShapeFinder sf2(complex_bmp, HMDT::UnitTests::GraphicsWorkerMock::getInstance(), map_data);
+        sf2.findAllShapes();
+
+        prov_project.import(sf2, map_data);
+    }
+
+    // Find two unrelated provinces
+    const auto& provinces = prov_project.getProvinces();
+
+    auto provinces_it = provinces.begin();
+
+    const auto& prov1 = provinces_it->second;
+    provinces_it = ++provinces_it;
+
+    const auto& prov2 = provinces_it->second;
+    provinces_it = ++provinces_it;
+
+    WRITE_DEBUG("prov1.id=", prov1.id, ", prov1.parent_id=", prov1.parent_id,
+                ", prov2.id=", prov2.id, ", prov2.parent_id=", prov2.parent_id);
+
+    // Attempt to merge two unrelated provinces together
+    prov_project.mergeProvinces(prov1.id, prov2.id);
+    WRITE_DEBUG("prov1.id=", prov1.id, ", prov1.parent_id=", prov1.parent_id,
+                ", prov2.id=", prov2.id, ", prov2.parent_id=", prov2.parent_id);
+    ASSERT_EQ(prov1.parent_id, prov2.id);
+
+    // Attempt to merge a 3rd province into one that already has a parent
+    const auto& prov3 = provinces_it->second;
+    provinces_it = ++provinces_it;
+
+    prov_project.mergeProvinces(prov3.id, prov1.id);
+    ASSERT_EQ(prov3.parent_id, prov2.id);
+
+    const auto& prov4 = provinces_it->second;
+    provinces_it = ++provinces_it;
+
+    const auto& prov5 = provinces_it->second;
+    provinces_it = ++provinces_it;
+
+    // Merge 2 more unrelated provinces together for the next test
+    prov_project.mergeProvinces(prov4.id, prov5.id);
+    ASSERT_EQ(prov4.parent_id, prov5.id);
+
+    // Attempt to merge two provinces which already have parents together
+    // Prov1 parent: prov2
+    // Prov2 parent: none
+    // Prov3 parent: prov2
+    // Prov4 parent: prov5
+    prov_project.mergeProvinces(prov4.id, prov1.id);
+    ASSERT_EQ(prov4.parent_id, prov5.id);
+    ASSERT_EQ(prov5.parent_id, prov2.id); // prov4's parent should now have prov1's parent as its own parent
+
+    HMDT::Log::Logger::getInstance().reset();
+}
+
