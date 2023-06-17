@@ -16,61 +16,6 @@
 #include "StyleClasses.h"
 #include "SelectionManager.h"
 
-HMDT::GUI::StatePropertiesPane::ProvinceRow::ProvinceRow(Gtk::ListBox* owning_box,
-                                                         ProvinceID id):
-    m_province_id(id),
-    m_owning_box(owning_box),
-    m_hbox(),
-    m_label(std::string("   ID ") + std::to_string(id)), // Some spaces for left-padding
-    m_remove_button("×")
-{
-    m_remove_button.set_relief(Gtk::RELIEF_NONE);
-    m_remove_button.get_style_context()->add_class(StyleClasses::DESTRUCTIVE_ACTION.data());
-    m_remove_button.signal_clicked().connect([this]() {
-        if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
-            auto& map_project = opt_project->get().getMapProject();
-
-            // Only bother actually removing the province from the state if the
-            //  ID is valid (if it is invalid, then how did we even add it?)
-            if(map_project.getProvinceProject().isValidProvinceID(m_province_id))
-            {
-                auto& province = map_project.getProvinceProject().getProvinceForID(m_province_id);
-
-                // Deselect the province
-                SelectionManager::getInstance().removeProvinceSelection(m_province_id);
-
-                // If there is only a single province selected, then we want to
-                //  also deselect the state
-                if(auto selected = SelectionManager::getInstance().getSelectedProvinces();
-                        selected.size() == 1)
-                {
-                    SelectionManager::getInstance().removeStateSelection(province.state);
-                }
-
-                // Remove from the state as well, do this after all deselections
-                map_project.removeProvinceFromState(province);
-            } else {
-                WRITE_WARN("Invalid province ID ", m_province_id, ". Cannot remove from the state.");
-            }
-
-            // Either way though, remove it from the list
-            m_owning_box->remove(*this);
-        }
-    });
-
-    m_hbox.pack_start(m_label, Gtk::PACK_SHRINK);
-    m_hbox.pack_start(m_remove_button, Gtk::PACK_EXPAND_PADDING);
-    add(m_hbox);
-
-    show_all_children();
-}
-
-auto HMDT::GUI::StatePropertiesPane::ProvinceRow::getProvinceID() const
-    -> ProvinceID
-{
-    return m_province_id;
-}
-
 HMDT::GUI::StatePropertiesPane::StatePropertiesPane():
     m_state(nullptr),
     m_box(Gtk::ORIENTATION_VERTICAL)
@@ -214,23 +159,52 @@ void HMDT::GUI::StatePropertiesPane::buildIsImpassableField() {
 
 void HMDT::GUI::StatePropertiesPane::buildProvinceListField() {
     auto* frame = addWidget<Gtk::Frame>();
-    m_province_list_window = new Gtk::ScrolledWindow();
-    m_province_list_window->set_size_request(-1, 130);
+
+    m_province_list_window = new ProvinceListWindow(
+        [](auto&& id) {
+            SelectionManager::getInstance().selectProvince(id);
+        },
+        ProvinceListWindow::ProvinceRowInfo {
+            std::string("   ID ") /* label_prefix */,
+            std::string("×") /* remove_button_label */,
+            true /* is_destructive */,
+            true /* remove_self */,
+            [](const ProvinceID& id) -> bool {
+                if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+                    auto& map_project = opt_project->get().getMapProject();
+
+                    // Only bother actually removing the province from the state if the
+                    //  ID is valid (if it is invalid, then how did we even add it?)
+                    if(map_project.getProvinceProject().isValidProvinceID(id))
+                    {
+                        auto& province = map_project.getProvinceProject().getProvinceForID(id);
+
+                        // Deselect the province
+                        SelectionManager::getInstance().removeProvinceSelection(id);
+
+                        // If there is only a single province selected, then we want to
+                        //  also deselect the state
+                        if(auto selected = SelectionManager::getInstance().getSelectedProvinces();
+                                selected.size() == 1)
+                        {
+                            SelectionManager::getInstance().removeStateSelection(province.state);
+                        }
+
+                        // Remove from the state as well, do this after all deselections
+                        map_project.removeProvinceFromState(province);
+                    } else {
+                        WRITE_WARN("Invalid province ID ", id, ". Cannot remove from the state.");
+                    }
+
+                    return true;
+                }
+
+                return false;
+            }
+        }
+    );
 
     frame->add(*m_province_list_window);
-
-    m_province_list = new Gtk::ListBox;
-    m_province_list->set_selection_mode(Gtk::SELECTION_SINGLE);
-    m_province_list->signal_row_selected().connect([](Gtk::ListBoxRow* row) {
-        if(auto* province_row = dynamic_cast<ProvinceRow*>(row);
-                 province_row != nullptr)
-        {
-            auto id = province_row->getProvinceID();
-            SelectionManager::getInstance().selectProvince(id);
-        }
-    });
-
-    m_province_list_window->add(*m_province_list);
 
     m_province_list_window->show_all();
 }
@@ -300,7 +274,8 @@ void HMDT::GUI::StatePropertiesPane::setEnabled(bool enabled) {
     m_category_field->set_sensitive(enabled);
     m_buildings_max_level_factor_field->set_sensitive(enabled);
     m_is_impassable_button->set_sensitive(enabled);
-    m_province_list->set_sensitive(enabled);
+    // m_province_list->set_sensitive(enabled);
+    m_province_list_window->setListEnabled(enabled);
     m_select_all_provinces->set_sensitive(enabled);
     m_delete_state_button->set_sensitive(enabled);
 }
@@ -354,23 +329,13 @@ void HMDT::GUI::StatePropertiesPane::updateProperties(const State* state,
 
 void HMDT::GUI::StatePropertiesPane::updateProvinceListElements(const State* state)
 {
-    // Some of this code comes from here: https://stackoverflow.com/a/41388444
-
-    // First we need to clear out every element in the list
-    auto children = m_province_list->get_children();
-    m_province_list->unselect_all();
-    for(Gtk::Widget* child : children) {
-        m_province_list->remove(*child);
-    }
-
     // Next only add the new provinces to the list if there are provinces to add
     if(state != nullptr) {
         WRITE_DEBUG("Populating list with ", state->provinces.size(), " provinces.");
-        for(ProvinceID prov : state->provinces) {
-            auto row = manage(new ProvinceRow(m_province_list, prov));
-            m_province_list->append(*row);
-            row->show();
-        }
+
+        m_province_list_window->setListElements(
+                std::set<ProvinceID>(state->provinces.begin(),
+                                     state->provinces.end()));
     }
 }
 
