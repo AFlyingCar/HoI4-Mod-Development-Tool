@@ -279,7 +279,8 @@ auto HMDT::Project::ProvinceProject::saveProvinceData(const std::filesystem::pat
                     << province.bounding_box.bottom_left.y << ';'
                     << province.bounding_box.top_right.x << ';'
                     << province.bounding_box.top_right.y << ';'
-                    << province.state;
+                    << province.state << ';'
+                    << province.parent_id;
             } else {
                 auto index = getIndexInSet(continents, province.continent);
                 if(IS_FAILURE(index)) {
@@ -555,6 +556,8 @@ auto HMDT::Project::ProvinceProject::loadProvinceData(const std::filesystem::pat
 
             Province prov;
 
+            prov.parent_id = INVALID_PROVINCE;
+
             // Attempt to parse the entire CSV line, we expect it to look like:
             //  ID;R;G;B;ProvinceType;IsCoastal;TerrainType;ContinentID;BB.BottomLeft.X;BB.BottomLeft.Y;BB.TopRight.X;BB.TopRight.Y;StateID
             uint32_t id;
@@ -629,6 +632,8 @@ auto HMDT::Project::ProvinceProject::loadProvinceData2(const std::filesystem::pa
 
             Province prov;
 
+            prov.parent_id = INVALID_PROVINCE;
+
             // Attempt to parse the entire CSV line, we expect it to look like:
             //  ID;R;G;B;ProvinceType;IsCoastal;TerrainType;ContinentID;BB.BottomLeft.X;BB.BottomLeft.Y;BB.TopRight.X;BB.TopRight.Y;StateID
             if(!parseValuesSkipMissing<';'>(ss, &prov.id,
@@ -643,7 +648,8 @@ auto HMDT::Project::ProvinceProject::loadProvinceData2(const std::filesystem::pa
                                                 &prov.bounding_box.bottom_left.y,
                                                 &prov.bounding_box.top_right.x,
                                                 &prov.bounding_box.top_right.y,
-                                                &prov.state, true))
+                                                &prov.state, true,
+                                                &prov.parent_id, true))
             {
                 WRITE_ERROR("Failed to parse line #", line_num, ": '", line, "'");
                 RETURN_ERROR(std::make_error_code(std::errc::bad_message));
@@ -658,6 +664,17 @@ auto HMDT::Project::ProvinceProject::loadProvinceData2(const std::filesystem::pa
 
             // Add the province into the vector
             m_provinces[prov.id] = prov;
+        }
+
+        // Post load processing
+        // Take care of any additional linking that needs to be done after all
+        //  Province objects exist
+        for(auto&& [prov_id, prov] : m_provinces) {
+            // Make sure that each province is added to its own parent's list of
+            //   children
+            if(isValidProvinceID(prov.parent_id)) {
+                m_provinces[prov.parent_id].children.insert(prov_id);
+            }
         }
 
         WRITE_DEBUG("Loaded information for ",
