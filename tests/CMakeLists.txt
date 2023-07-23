@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.2)
 
 find_package(gtest REQUIRED)
+# find_package(GMock REQUIRED)
 
 set(TEST_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(TEST_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/bin")
@@ -22,7 +23,7 @@ set(TEST_SOURCES
 )
 
 add_executable(unit_tests ${TEST_SOURCES})
-target_link_libraries(unit_tests PRIVATE gtest gtest_main common province_utils unique_colors project logging gui actions)
+target_link_libraries(unit_tests PRIVATE gtest gtest_main gmock common province_utils unique_colors project logging gui actions)
 target_link_libraries(unit_tests PUBLIC stdc++fs pthread)
 target_include_directories(unit_tests PRIVATE inc)
 
