@@ -1,6 +1,8 @@
 
 #include "IProject.h"
 
+#include <queue>
+
 #include "StatusCodes.h"
 #include "Constants.h"
 
@@ -184,6 +186,7 @@ auto HMDT::Project::IProvinceProject::mergeProvinces(const ProvinceID& id1,
         RETURN_IF_ERROR(maybe_root);
 
         prov1.parent_id = maybe_root->get().id;
+        maybe_root->get().children.insert(prov1.id);
         return STATUS_SUCCESS;
     }
 
@@ -195,6 +198,7 @@ auto HMDT::Project::IProvinceProject::mergeProvinces(const ProvinceID& id1,
         RETURN_IF_ERROR(maybe_root);
 
         prov2.parent_id = maybe_root->get().id;
+        maybe_root->get().children.insert(prov2.id);
         return STATUS_SUCCESS;
     }
 
@@ -207,8 +211,82 @@ auto HMDT::Project::IProvinceProject::mergeProvinces(const ProvinceID& id1,
     RETURN_IF_ERROR(maybe_root2);
 
     maybe_root1->get().parent_id = maybe_root2->get().id;
+    maybe_root2->get().children.insert(maybe_root1->get().id);
 
     return STATUS_SUCCESS;
+}
+
+/**
+ * @brief Gets all provinces that have been merged together with the provided
+ *        province.
+ * @details Performs a breadth first search
+ *
+ * @return Will return a set of all connected/merged province ids, or an empty
+ *         list if the province id is invalid. If the ID is valid, the list will
+ *         contain at least one element.
+ */
+auto HMDT::Project::IProvinceProject::getMergedProvinces(const ProvinceID& id) const noexcept
+    -> std::set<ProvinceID>
+{
+    WRITE_DEBUG("Getting all provinces merged with ", id);
+
+    std::set<ProvinceID> connected_provinces;
+
+    std::queue<ProvinceID> to_search;
+    to_search.push(id);
+
+    while(!to_search.empty()) {
+        const auto& next_id = to_search.front();
+        to_search.pop();
+
+        WRITE_DEBUG("Check ", next_id);
+
+        if(!isValidProvinceID(next_id)) {
+            WRITE_ERROR("Invalid province id ", next_id);
+
+            continue;
+        }
+
+        // Check if we've already visisted this id. do this to prevent loops
+        if(connected_provinces.count(next_id) == 0) {
+            const auto& next_province = getProvinceForID(next_id);
+
+            // Mark that we've visited this id
+            connected_provinces.insert(next_id);
+
+            // Add parent first if we haven't visited it yet
+            if(const auto& parent = next_province.parent_id;
+                    connected_provinces.count(parent) == 0)
+            {
+                // Make sure that we don't push invalid provinces into the list
+                //   if this province doesn't have a parent.
+                if(parent != INVALID_PROVINCE) {
+                    WRITE_DEBUG("Add parent ", parent);
+                    to_search.push(parent);
+                }
+            }
+
+            // Add any children if we haven't visited them yet.
+            for(auto&& child_id : next_province.children) {
+                if(connected_provinces.count(child_id) == 0) {
+                    // Get the child as well and perform a quick check on its
+                    //   parent to warn about any discrepencies
+                    if(const auto& child = getProvinceForID(child_id);
+                            child.parent_id != next_id)
+                    {
+                        WRITE_WARN("Child province ", child_id, " is listed as "
+                                   "a child of ", next_id, ", but its own parent "
+                                   "is ", child.parent_id);
+                    }
+
+                    WRITE_DEBUG("Add child ", child_id);
+                    to_search.push(child_id);
+                }
+            }
+        }
+    }
+
+    return connected_provinces;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
