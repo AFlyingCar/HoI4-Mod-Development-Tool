@@ -27,10 +27,10 @@ namespace HMDT::GUI {
 
             static SelectionManager& getInstance();
 
-            void selectProvince(const ProvinceID&);
-            void addProvinceSelection(const ProvinceID&);
-            void removeProvinceSelection(const ProvinceID&);
-            void clearProvinceSelection();
+            void selectProvince(const ProvinceID&, bool = false);
+            void addProvinceSelection(const ProvinceID&, bool = false);
+            void removeProvinceSelection(const ProvinceID&, bool = false);
+            void clearProvinceSelection(bool = false);
 
             void selectState(StateID);
             void addStateSelection(StateID);
@@ -46,7 +46,7 @@ namespace HMDT::GUI {
             const std::set<uint32_t>& getSelectedStateIDs() const;
 
             bool isProvinceSelected(const ProvinceID&) const;
-            bool isStateSelected(const ProvinceID&) const;
+            bool isStateSelected(const StateID&) const;
 
             void setOnSelectProvinceCallback(const std::function<void(const ProvinceID&, Action)>&);
             void setOnSelectStateCallback(const std::function<void(StateID, Action)>&);

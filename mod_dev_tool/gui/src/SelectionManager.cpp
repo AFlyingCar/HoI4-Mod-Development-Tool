@@ -12,33 +12,47 @@ auto HMDT::GUI::SelectionManager::getInstance() -> SelectionManager& {
     return instance;
 }
 
-void HMDT::GUI::SelectionManager::selectProvince(const ProvinceID& label) {
+void HMDT::GUI::SelectionManager::selectProvince(const ProvinceID& label,
+                                                 bool skip_callback)
+{
     // Do not select if the label isn't valid
     if(auto opt_mproj = getCurrentMapProject();
             opt_mproj && opt_mproj->get().getProvinceProject().isValidProvinceID(label))
     {
-        m_on_province_selected_callback(label, Action::SET);
+        if(!skip_callback) {
+            m_on_province_selected_callback(label, Action::SET);
+        }
         m_selected_provinces = {label};
     }
 }
 
-void HMDT::GUI::SelectionManager::addProvinceSelection(const ProvinceID& label) {
+void HMDT::GUI::SelectionManager::addProvinceSelection(const ProvinceID& label,
+                                                       bool skip_callback)
+{
     // Do not select if the label isn't valid
     if(auto opt_mproj = getCurrentMapProject();
             opt_mproj && opt_mproj->get().getProvinceProject().isValidProvinceID(label))
     {
-        m_on_province_selected_callback(label, Action::ADD);
+        if(!skip_callback) {
+            m_on_province_selected_callback(label, Action::ADD);
+        }
         m_selected_provinces.insert(label);
     }
 }
 
-void HMDT::GUI::SelectionManager::removeProvinceSelection(const ProvinceID& label) {
-    m_on_province_selected_callback(label, Action::REMOVE);
+void HMDT::GUI::SelectionManager::removeProvinceSelection(const ProvinceID& label,
+                                                          bool skip_callback)
+{
+    if(!skip_callback) {
+        m_on_province_selected_callback(label, Action::REMOVE);
+    }
     m_selected_provinces.erase(label);
 }
 
-void HMDT::GUI::SelectionManager::clearProvinceSelection() {
-    m_on_province_selected_callback(INVALID_PROVINCE, Action::CLEAR);
+void HMDT::GUI::SelectionManager::clearProvinceSelection(bool skip_callback) {
+    if(!skip_callback) {
+        m_on_province_selected_callback(INVALID_PROVINCE, Action::CLEAR);
+    }
     m_selected_provinces.clear();
 }
 
@@ -183,6 +197,15 @@ auto HMDT::GUI::SelectionManager::getSelectedStateIDs() const
     -> const std::set<uint32_t>&
 {
     return m_selected_states;
+}
+
+bool HMDT::GUI::SelectionManager::isProvinceSelected(const ProvinceID& id) const
+{
+    return m_selected_provinces.count(id) != 0;
+}
+
+bool HMDT::GUI::SelectionManager::isStateSelected(const StateID& id) const {
+    return m_selected_states.count(id) != 0;
 }
 
 /**
