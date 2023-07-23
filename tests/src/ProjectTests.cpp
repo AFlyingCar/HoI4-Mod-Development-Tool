@@ -1,5 +1,6 @@
 
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 #include <filesystem>
 #include <cstring>
@@ -590,6 +591,7 @@ TEST(ProjectTests, MergeProvinceTests) {
     WRITE_DEBUG("prov1.id=", prov1.id, ", prov1.parent_id=", prov1.parent_id,
                 ", prov2.id=", prov2.id, ", prov2.parent_id=", prov2.parent_id);
     ASSERT_EQ(prov1.parent_id, prov2.id);
+    ASSERT_THAT(prov2.children, ::testing::UnorderedElementsAre(prov1.id));
 
     // Attempt to merge a 3rd province into one that already has a parent
     const auto& prov3 = provinces_it->second;
@@ -597,6 +599,7 @@ TEST(ProjectTests, MergeProvinceTests) {
 
     prov_project.mergeProvinces(prov3.id, prov1.id);
     ASSERT_EQ(prov3.parent_id, prov2.id);
+    ASSERT_THAT(prov2.children, ::testing::UnorderedElementsAre(prov1.id, prov3.id));
 
     const auto& prov4 = provinces_it->second;
     provinces_it = ++provinces_it;
@@ -607,6 +610,7 @@ TEST(ProjectTests, MergeProvinceTests) {
     // Merge 2 more unrelated provinces together for the next test
     prov_project.mergeProvinces(prov4.id, prov5.id);
     ASSERT_EQ(prov4.parent_id, prov5.id);
+    ASSERT_THAT(prov5.children, ::testing::UnorderedElementsAre(prov4.id));
 
     // Attempt to merge two provinces which already have parents together
     // Prov1 parent: prov2
@@ -616,6 +620,27 @@ TEST(ProjectTests, MergeProvinceTests) {
     prov_project.mergeProvinces(prov4.id, prov1.id);
     ASSERT_EQ(prov4.parent_id, prov5.id);
     ASSERT_EQ(prov5.parent_id, prov2.id); // prov4's parent should now have prov1's parent as its own parent
+
+    ASSERT_THAT(prov2.children, ::testing::UnorderedElementsAre(prov1.id, prov3.id, prov5.id));
+    ASSERT_THAT(prov5.children, ::testing::UnorderedElementsAre(prov4.id));
+
+    // Validate getMergedProvinces
+    auto&& prov1_merged = prov_project.getMergedProvinces(prov1.id);
+    WRITE_INFO("Got ", prov1_merged.size(), " provinces merged with ", prov1.id);
+    ASSERT_THAT(prov1_merged, ::testing::UnorderedElementsAre(prov1.id, prov2.id, prov3.id, prov5.id, prov4.id));
+
+    // Get a province that we have not merged at all and make sure it's the only
+    //   thing in the list
+    ++provinces_it;
+    const auto& unmerged_prov = provinces_it->second;
+    auto&& unmerged_mergelist = prov_project.getMergedProvinces(unmerged_prov.id);
+    ASSERT_THAT(unmerged_mergelist, ::testing::UnorderedElementsAre(unmerged_prov.id));
+
+    // Get an invalid province ID and make sure that the list generated from that
+    //   is empty
+    HMDT::ProvinceID invalid_id;
+    const auto& invalid_mergelist = prov_project.getMergedProvinces(invalid_id);
+    ASSERT_THAT(invalid_mergelist, ::testing::UnorderedElementsAre());
 
     HMDT::Log::Logger::getInstance().reset();
 }
