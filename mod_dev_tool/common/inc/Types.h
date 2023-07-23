@@ -126,7 +126,11 @@ namespace HMDT {
 
         std::set<ProvinceID> adjacent_provinces;
 
+        //! The parent province
         ProvinceID parent_id;
+
+        //! Child provinces
+        std::set<ProvinceID> children;
     };
 
     /**

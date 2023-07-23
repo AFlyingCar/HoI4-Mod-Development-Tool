@@ -348,7 +348,8 @@ auto HMDT::createProvincesFromShapeList(const PolygonList& shapes)
             0,
             shape.bounding_box,
             { },
-            INVALID_PROVINCE  /* parent_id */
+            INVALID_PROVINCE  /* parent_id */,
+            { } /* children */
         };
     }
 
