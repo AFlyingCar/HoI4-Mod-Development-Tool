@@ -217,6 +217,144 @@ auto HMDT::Project::IProvinceProject::mergeProvinces(const ProvinceID& id1,
 }
 
 /**
+ * @brief Removes the specified province from its parent, "un-merging" them
+ *
+ * @param id The ID of the province to remove from its parent.
+ *
+ * @return STATUS_SUCCESS upon success, or a failure code otherwise.
+ */
+auto HMDT::Project::IProvinceProject::unmergeProvince(const ProvinceID& id) noexcept
+    -> MaybeVoid
+{
+    if(!isValidProvinceID(id)) {
+        WRITE_ERROR("The province ID is invalid: ", id);
+        RETURN_ERROR(STATUS_VALUE_NOT_FOUND);
+    }
+
+    // Get the province
+    Province& province = getProvinceForID(id);
+
+    WRITE_DEBUG("Un-merging province ", id, " whose parent is ",
+                province.parent_id, " and which has ", province.children.size(),
+                " children.");
+
+    // If parent id is set to nil, instead try to remove from top->down
+    if(province.parent_id == INVALID_PROVINCE) {
+        // WRITE_WARN("Attempted to unmerge a province that doesn't have a parent."
+        //            " This is not an error, but could signify a bug.");
+        // return STATUS_SUCCESS;
+
+        if(province.children.size() == 0) {
+            WRITE_WARN("Attempted to unmerge a province that doesn't have a "
+                       "parent and has no children. Doing nothing instead.");
+            return STATUS_SUCCESS;
+        }
+
+        // Go through every child and first make sure they all exist as we only
+        //   want this operation to do anything if it will succeed (failure
+        //   should be a no-op)
+        RefVector<Province> child_provinces;
+        child_provinces.reserve(province.children.size());
+        for(auto&& child_id : province.children) {
+            if(!isValidProvinceID(child_id)) {
+                WRITE_ERROR("This province has an invalid child id: ", child_id);
+                RETURN_ERROR(STATUS_VALUE_NOT_FOUND);
+            }
+
+            child_provinces.push_back(getProvinceForID(child_id));
+        }
+
+        // Pick a new parent from our children
+        auto new_parent_id = child_provinces.front().get().id;
+        Province& new_parent = getProvinceForID(new_parent_id);
+
+        for(auto& child : child_provinces) {
+            // Make sure we don't mark a child as its own parent
+            if(child.get().id != new_parent_id) {
+                child.get().parent_id = new_parent_id;
+                new_parent.children.insert(child.get().id);
+            } else {
+                // For the new parent, make it have a nil parent id
+                child.get().parent_id = INVALID_PROVINCE;
+            }
+        }
+
+        // Remove all of our children
+        province.children.clear();
+
+        return STATUS_SUCCESS;
+    }
+
+    // If the parent id is not nil, but still isn't a valid ID, then return an
+    //   error
+    if(!isValidProvinceID(province.parent_id)) {
+        WRITE_ERROR("This province does not have a valid parent id: ", province.parent_id);
+        RETURN_ERROR(STATUS_VALUE_NOT_FOUND);
+    }
+
+    // Try and find our root parent so we can remove ourselves from their list
+    //   of children
+    auto maybe_root = getRootProvinceParent(province.parent_id);
+    RETURN_IF_ERROR(maybe_root);
+
+    auto& root_children = maybe_root->get().children;
+
+    // Get all of our children and make sure that they know who the new parent is
+    // Go through every child and first make sure they all exist as we only
+    //   want this operation to do anything if it will succeed (failure
+    //   should be a no-op)
+    RefVector<Province> child_provinces;
+    child_provinces.reserve(province.children.size());
+    for(auto&& child_id : province.children) {
+        if(!isValidProvinceID(child_id)) {
+            WRITE_ERROR("This province has an invalid child id: ", child_id);
+            RETURN_ERROR(STATUS_VALUE_NOT_FOUND);
+        }
+
+        child_provinces.push_back(getProvinceForID(child_id));
+    }
+
+    // Make sure the province is in its parent's children list before attempting to
+    //   remove, and issue a warning if we cannot find it.
+    if(auto c = root_children.count(id); c == 0) {
+        // Log the root's children for debugging, since we really shouldn't hit
+        //   this branch unless something has gone wrong.
+        std::stringstream ss;
+        for(auto&& c : root_children)
+            ss << c << ',';
+
+        WRITE_WARN("Child ID ", id, " not found in its children's list of"
+                   " children: ", ss.str());
+    } else {
+        try {
+            root_children.erase(id);
+        } catch(...) {
+            WRITE_ERROR("std::set threw unexpected exception.");
+            RETURN_ERROR(STATUS_UNEXPECTED);
+        }
+    }
+
+    // Once we have all of our children, then update their parent to be our
+    //   parent
+    WRITE_DEBUG("Modifying ", child_provinces.size(),
+                " children's parents to be ", province.parent_id);
+    for(auto& child : child_provinces) {
+        child.get().parent_id = province.parent_id;
+
+        // Make sure to insert the child into it's new parent's list of children
+        root_children.insert(child.get().id);
+    }
+
+    // Remove the province's parent id to unlink it fully from the parent.
+    province.parent_id = INVALID_PROVINCE;
+
+    // Make sure that after all of this we end up with no children.
+    province.children.clear();
+
+    return STATUS_SUCCESS;
+}
+
+/**
  * @brief Gets all provinces that have been merged together with the provided
  *        province.
  * @details Performs a breadth first search

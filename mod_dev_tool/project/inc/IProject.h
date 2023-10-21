@@ -130,6 +130,7 @@ namespace HMDT::Project {
         virtual MaybeRef<Province> getRootProvinceParent(const ProvinceID&) noexcept;
 
         virtual MaybeVoid mergeProvinces(const ProvinceID&, const ProvinceID&) noexcept;
+        virtual MaybeVoid unmergeProvince(const ProvinceID&) noexcept;
 
         virtual std::set<ProvinceID> getMergedProvinces(const ProvinceID&) const noexcept;
     };
