@@ -646,6 +646,11 @@ TEST(ProjectTests, MergeProvinceTests) {
     const auto& invalid_mergelist = prov_project.getMergedProvinces(invalid_id);
     ASSERT_THAT(invalid_mergelist, ::testing::UnorderedElementsAre());
 
+    // Print out the tree for prov5
+    auto tree_result = prov_project.genProvinceChildTree(prov5.id);
+    ASSERT_SUCCEEDED(tree_result);
+    WRITE_INFO("\n", *tree_result);
+
     // Attempt to unmerge prov3 from its parent (unmerge leaf province).
     result = prov_project.unmergeProvince(prov3.id);
     ASSERT_SUCCEEDED(result);
