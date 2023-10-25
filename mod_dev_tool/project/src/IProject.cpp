@@ -124,8 +124,14 @@ auto HMDT::Project::IProvinceProject::getRootProvinceParent(const ProvinceID& id
         const Province& province = getProvinceForID(root_id);
 
         // When we find an invalid province parent ID, then we are at the root
-        if(province.id == INVALID_PROVINCE) {
+        if(province.parent_id == INVALID_PROVINCE) {
             return province;
+        }
+
+        if(province.parent_id == root_id) {
+            WRITE_ERROR("Province ", province.id,
+                        " is marked as its own parent! This should never be possible to happen.");
+            RETURN_ERROR(STATUS_UNEXPECTED);
         }
 
         root_id = province.parent_id;
@@ -151,6 +157,12 @@ auto HMDT::Project::IProvinceProject::getRootProvinceParent(const ProvinceID& id
             return province;
         }
 
+        if(province.parent_id == root_id) {
+            WRITE_ERROR("Province ", province.id,
+                        " is marked as its own parent! This should never be possible to happen.");
+            RETURN_ERROR(STATUS_UNEXPECTED);
+        }
+
         root_id = province.parent_id;
     }
 
@@ -172,37 +184,19 @@ auto HMDT::Project::IProvinceProject::mergeProvinces(const ProvinceID& id1,
                                                      const ProvinceID& id2) noexcept
     -> MaybeVoid
 {
+    WRITE_DEBUG("Merging ", id1, " and ", id2);
+
+    if(id1 == id2) {
+        WRITE_ERROR("Cannot merge a province with itself.");
+        RETURN_ERROR(STATUS_UNEXPECTED);
+    }
+
     if(!isValidProvinceID(id1) || !isValidProvinceID(id2)) {
         WRITE_ERROR("One of the following IDs is invalid: ", id1, " or ", id2);
         RETURN_ERROR(STATUS_VALUE_NOT_FOUND);
     }
 
-    // First see if we can just add either as a parent
-    if(Province& prov1 = getProvinceForID(id1);
-       prov1.parent_id == INVALID_PROVINCE)
-    {
-        // But make sure that we only set the parent to the other's own parent
-        auto maybe_root = getRootProvinceParent(id2);
-        RETURN_IF_ERROR(maybe_root);
-
-        prov1.parent_id = maybe_root->get().id;
-        maybe_root->get().children.insert(prov1.id);
-        return STATUS_SUCCESS;
-    }
-
-    if(Province& prov2 = getProvinceForID(id2);
-       prov2.parent_id == INVALID_PROVINCE)
-    {
-        // But make sure that we only set the parent to the other's own parent
-        auto maybe_root = getRootProvinceParent(id1);
-        RETURN_IF_ERROR(maybe_root);
-
-        prov2.parent_id = maybe_root->get().id;
-        maybe_root->get().children.insert(prov2.id);
-        return STATUS_SUCCESS;
-    }
-
-    // Since we cannot, find the root of either of the two provinces and set
+    // Find the root of either of the two provinces and set
     //   its parent to the root parent of the other
     auto maybe_root1 = getRootProvinceParent(id1);
     RETURN_IF_ERROR(maybe_root1);
@@ -210,8 +204,19 @@ auto HMDT::Project::IProvinceProject::mergeProvinces(const ProvinceID& id1,
     auto maybe_root2 = getRootProvinceParent(id2);
     RETURN_IF_ERROR(maybe_root2);
 
+    if(maybe_root1->get().id == maybe_root2->get().id) {
+        WRITE_ERROR("Both provinces are already merged.");
+        RETURN_ERROR(STATUS_UNEXPECTED);
+    }
+
+    WRITE_DEBUG("Setting root1 (", maybe_root1->get().id, ") parent=",
+                maybe_root2->get().id);
+
     maybe_root1->get().parent_id = maybe_root2->get().id;
     maybe_root2->get().children.insert(maybe_root1->get().id);
+
+    WRITE_DEBUG("New child tree after merging:\n",
+                genProvinceChildTree(maybe_root2->get().id).orElse(""));
 
     return STATUS_SUCCESS;
 }
@@ -240,10 +245,6 @@ auto HMDT::Project::IProvinceProject::unmergeProvince(const ProvinceID& id) noex
 
     // If parent id is set to nil, instead try to remove from top->down
     if(province.parent_id == INVALID_PROVINCE) {
-        // WRITE_WARN("Attempted to unmerge a province that doesn't have a parent."
-        //            " This is not an error, but could signify a bug.");
-        // return STATUS_SUCCESS;
-
         if(province.children.size() == 0) {
             WRITE_WARN("Attempted to unmerge a province that doesn't have a "
                        "parent and has no children. Doing nothing instead.");
@@ -292,6 +293,8 @@ auto HMDT::Project::IProvinceProject::unmergeProvince(const ProvinceID& id) noex
         RETURN_ERROR(STATUS_VALUE_NOT_FOUND);
     }
 
+    WRITE_DEBUG("\n", genProvinceChildTree(province.parent_id).orElse(""));
+
     // Try and find our root parent so we can remove ourselves from their list
     //   of children
     auto maybe_root = getRootProvinceParent(province.parent_id);
@@ -323,8 +326,8 @@ auto HMDT::Project::IProvinceProject::unmergeProvince(const ProvinceID& id) noex
         for(auto&& c : root_children)
             ss << c << ',';
 
-        WRITE_WARN("Child ID ", id, " not found in its children's list of"
-                   " children: ", ss.str());
+        WRITE_WARN("Child ID ", id, " not found in its root parent's children's list of"
+                   " children: {", ss.str(), '}');
     } else {
         try {
             root_children.erase(id);
@@ -352,6 +355,74 @@ auto HMDT::Project::IProvinceProject::unmergeProvince(const ProvinceID& id) noex
     province.children.clear();
 
     return STATUS_SUCCESS;
+}
+
+auto HMDT::Project::IProvinceProject::genProvinceChildTree(ProvinceID id) const noexcept
+    -> Maybe<std::string>
+{
+    constexpr std::size_t MAX_RECURSE_DEPTH = 32;
+
+    // Try and find our root parent so we can remove ourselves from their list
+    //   of children
+    auto maybe_root = getRootProvinceParent(id);
+    RETURN_IF_ERROR(maybe_root);
+
+    id = maybe_root->get().id;
+
+    std::stringstream ss;
+
+    // root should never have a parent, but print it out anyway for debugging
+    ss << maybe_root->get().id
+       << "  <-  "
+       << maybe_root->get().parent_id
+       << std::endl;
+
+    std::function<MaybeVoid(const Province&, const std::string&, std::size_t, bool)> builder;
+    builder = [this, &ss, &builder](const Province& p,
+                                    const std::string& prefix,
+                                    std::size_t depth,
+                                    bool is_last)
+        -> MaybeVoid
+    {
+        if(depth > MAX_RECURSE_DEPTH) {
+            RETURN_ERROR(STATUS_RECURSION_TOO_DEEP);
+        }
+
+        ss << prefix;
+
+        auto c = 0; // counter for how many children we've consumed
+        for(auto&& child_id : p.children) {
+            if(!isValidProvinceID(child_id)) {
+                RETURN_ERROR(STATUS_VALUE_NOT_FOUND);
+            }
+
+            const auto& child = getProvinceForID(child_id);
+
+            // print the strand only if the child has children of its own
+            bool print_strand = true;// child.children.size() > 0;
+
+            auto new_prefix = prefix + (print_strand ? "│   " : "    ");
+
+            if(is_last) {
+                ss << new_prefix << "└── ";
+            } else {
+                ss << new_prefix << "├── ";
+            }
+
+            ss << child_id << "  <-  " << child.parent_id << std::endl;
+            auto result = builder(child, new_prefix, depth + 1, (c == (p.children.size() - 1)));
+            RETURN_IF_ERROR(result);
+
+            ++c;
+        }
+
+        return STATUS_SUCCESS;
+    };
+
+    auto result = builder(maybe_root->get(), "", 0, false);
+    RETURN_IF_ERROR(result);
+
+    return ss.str();
 }
 
 /**

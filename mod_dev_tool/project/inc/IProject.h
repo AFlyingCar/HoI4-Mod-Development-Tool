@@ -116,6 +116,8 @@ namespace HMDT::Project {
         const Province& getProvinceForLabel(uint32_t) const;
         Province& getProvinceForLabel(uint32_t);
 
+        Maybe<std::string> genProvinceChildTree(ProvinceID) const noexcept;
+
         virtual ProvinceDataPtr getPreviewData(ProvinceID) = 0;
         virtual ProvinceDataPtr getPreviewData(const Province*) = 0;
 
