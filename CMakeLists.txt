@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 project(HoI4ModDevelopmentTool CXX ASM)
 
 set(MSYS_PREFIX "C:/msys64" CACHE PATH "Prefix for where packages are installed to with MSYS. Only applies to WIN32.")
+set(DEBUG_BUILD OFF CACHE BOOL "Specifies if builds should be built with debugging information.")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -52,6 +53,11 @@ else()
     add_compile_options(-Wall -Werror -Wextra -Wno-sign-compare -Wno-unused-label -Wno-unused-const-variable -Wno-unused-parameter -Wno-unused-function -Wno-error=deprecated -Wno-error=deprecated-declarations)
     add_definitions(-DHMDT_PROJECT_ROOT="${PROJECT_ROOT}")
     add_definitions(-DHMDT_TOOL_NAME="${HMDT_TOOL_NAME}")
+
+    if(DEBUG_BUILD)
+        message(STATUS "Including debug symbols in build!")
+        add_compile_options(-g)
+    endif()
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
