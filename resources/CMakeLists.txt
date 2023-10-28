@@ -108,6 +108,7 @@ if(GETTEXT_XGETTEXT_EXECUTABLE)
             --keyword=${LOCALIZATION_KEYWORD_DELAY}
             --width=80
             --no-location
+            --omit-header
             ${CPP_FILES}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "pot-update: Pot file generated: ${RESOURCE_DIR}/locale/${HMDT_TOOL_NAME}.pot"
