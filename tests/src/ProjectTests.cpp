@@ -647,11 +647,30 @@ TEST(ProjectTests, MergeProvinceTests) {
     ASSERT_THAT(invalid_mergelist, ::testing::UnorderedElementsAre());
 
     // Print out the tree for prov5
+    // Expected example output:
+    // 09cc163a-d185-4aa2-b44b-5edb0cacb202  <-  00000000-0000-0000-0000-000000000000
+    // │   ├── 01272dcd-9c3d-4b93-8721-06f7116dbf9d  <-  09cc163a-d185-4aa2-b44b-5edb0cacb202
+    // │   │   ├── 09c40c9f-e83f-480d-8ed7-077dd22ad6b3  <-  09cc163a-d185-4aa2-b44b-5edb0cacb202
+    // │   │   ├── 0a784764-8c41-4625-a296-5c6deabae5cd  <-  09cc163a-d185-4aa2-b44b-5edb0cacb202
+    // │   │   │   └── 0333927b-d4d2-4b67-b2d0-738e4013001f  <-  0a784764-8c41-4625-a296-5c6deabae5cd
+    // │   │
+    //
+    // Where:
+    //   prov1=01272dcd-9c3d-4b93-8721-06f7116dbf9d
+    //   prov2=09cc163a-d185-4aa2-b44b-5edb0cacb202
+    //   prov3=09c40c9f-e83f-480d-8ed7-077dd22ad6b3
+    //   prov4=0333927b-d4d2-4b67-b2d0-738e4013001f
+    //   prov5=0a784764-8c41-4625-a296-5c6deabae5cd
     auto tree_result = prov_project.genProvinceChildTree(prov5.id);
     ASSERT_SUCCEEDED(tree_result);
     WRITE_INFO("\n", *tree_result);
 
     // Attempt to unmerge prov3 from its parent (unmerge leaf province).
+    // Result should be:
+    // prov2
+    // ├── prov1
+    // │   ├── prov5
+    // │   │   └── prov4
     result = prov_project.unmergeProvince(prov3.id);
     ASSERT_SUCCEEDED(result);
     ASSERT_EQ(prov3.parent_id, HMDT::INVALID_PROVINCE);
@@ -661,6 +680,10 @@ TEST(ProjectTests, MergeProvinceTests) {
     // Attempt to unmerge prov5 (node in middle of tree, has 1 child)
     //   prov5 should no longer have a parent or children, and all of its old
     //   children should now be children of prov2
+    // Result should be:
+    // prov2
+    // ├── prov1
+    // └── prov4
     result = prov_project.unmergeProvince(prov5.id);
     ASSERT_SUCCEEDED(result);
     ASSERT_EQ(prov5.parent_id, HMDT::INVALID_PROVINCE);
@@ -670,11 +693,36 @@ TEST(ProjectTests, MergeProvinceTests) {
     // Attempt to unmerge prov2 (root node)
     //   prov2 should no longer have a parent or children, and all of its old
     //   children should now be children of a different child
+    // Result should be either:
+    // prov1
+    // └── prov4
+    // OR
+    // prov4
+    // └── prov1
+
+    // Print out the tree again
+    tree_result = prov_project.genProvinceChildTree(prov5.id);
+    ASSERT_SUCCEEDED(tree_result);
+    WRITE_INFO("\n", *tree_result);
+
     result = prov_project.unmergeProvince(prov2.id);
     ASSERT_SUCCEEDED(result);
     ASSERT_EQ(prov2.parent_id, HMDT::INVALID_PROVINCE);
     ASSERT_THAT(prov2.children, ::testing::UnorderedElementsAre());
-    ASSERT_THAT(prov1.children, ::testing::UnorderedElementsAre(prov4.id));
+
+    // Because we don't necessarily know which child will be chosen as the new
+    //   parent, test both possibilities (and test to make sure at leats one of
+    //   them contains a value)
+    ASSERT_THAT(prov1.children,
+            ::testing::AnyOf(
+                ::testing::UnorderedElementsAre(),
+                ::testing::UnorderedElementsAre(prov4.id)));
+    ASSERT_THAT(prov4.children,
+            ::testing::AnyOf(
+                ::testing::UnorderedElementsAre(),
+                ::testing::UnorderedElementsAre(prov1.id)));
+    // Logical XOR
+    ASSERT_TRUE(!prov1.children.empty() != !prov4.children.empty());
 
     HMDT::Log::Logger::getInstance().reset();
 }
