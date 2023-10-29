@@ -92,6 +92,9 @@ if(GETTEXT_XGETTEXT_EXECUTABLE)
         COMMENT "pot-update: Done."
         # DEPENDS ${RESOURCE_DIR}/locale/${HMDT_TOOL_NAME}.pot
     )
+    # Skip writing the location comment so that the .pot file doesn't get
+    #   updated every time a source file changes (even for changes that don't
+    #   actually affect the user-facing strings).
     add_custom_command(
         TARGET pot-update
         PRE_BUILD
@@ -104,6 +107,8 @@ if(GETTEXT_XGETTEXT_EXECUTABLE)
             --keyword=${LOCALIZATION_KEYWORD}
             --keyword=${LOCALIZATION_KEYWORD_DELAY}
             --width=80
+            --no-location
+            --omit-header
             ${CPP_FILES}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "pot-update: Pot file generated: ${RESOURCE_DIR}/locale/${HMDT_TOOL_NAME}.pot"
