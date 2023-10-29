@@ -116,6 +116,8 @@ namespace HMDT::Project {
         const Province& getProvinceForLabel(uint32_t) const;
         Province& getProvinceForLabel(uint32_t);
 
+        Maybe<std::string> genProvinceChildTree(ProvinceID) const noexcept;
+
         virtual ProvinceDataPtr getPreviewData(ProvinceID) = 0;
         virtual ProvinceDataPtr getPreviewData(const Province*) = 0;
 
@@ -125,6 +127,14 @@ namespace HMDT::Project {
         virtual const std::unordered_map<uint32_t, UUID>& getOldIDToUUIDMap() const noexcept = 0;
 
         virtual uint32_t getIDForProvinceID(const ProvinceID&) const noexcept = 0;
+
+        virtual MaybeRef<const Province> getRootProvinceParent(const ProvinceID&) const noexcept;
+        virtual MaybeRef<Province> getRootProvinceParent(const ProvinceID&) noexcept;
+
+        virtual MaybeVoid mergeProvinces(const ProvinceID&, const ProvinceID&) noexcept;
+        virtual MaybeVoid unmergeProvince(const ProvinceID&) noexcept;
+
+        virtual std::set<ProvinceID> getMergedProvinces(const ProvinceID&) const noexcept;
     };
 
     /**

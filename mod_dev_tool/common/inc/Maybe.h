@@ -437,6 +437,24 @@ namespace HMDT {
     } while(0)
 
 /**
+ * @brief Returns a value if the given MAYBE does not contain a value
+ * @details This effectively logs the location where the error was discovered,
+ *          and passes it up the stack so that it can be handled up the stack
+ *
+ * @param MAYBE The Maybe to check
+ * @param VALUE The value to return if the check fails
+ *
+ * @return VALUE if the given MAYBE does not hold a value.
+ */
+# define RETURN_VALUE_IF_ERROR(MAYBE, VALUE)                                  \
+    do {                                                                      \
+        if(IS_FAILURE(MAYBE)) {                                               \
+            WRITE_ERROR_CODE( MAYBE .error() );                               \
+            return VALUE ;                                                    \
+        }                                                                     \
+    } while(0)
+
+/**
  * @brief Returns ERROR_CODE if COND is true
  *
  * @param COND The condition to check

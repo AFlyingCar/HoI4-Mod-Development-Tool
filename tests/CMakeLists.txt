@@ -22,7 +22,7 @@ set(TEST_SOURCES
 )
 
 add_executable(unit_tests ${TEST_SOURCES})
-target_link_libraries(unit_tests PRIVATE gtest gtest_main common province_utils unique_colors project logging gui actions)
+target_link_libraries(unit_tests PRIVATE gtest gtest_main gmock common province_utils unique_colors project logging gui actions)
 target_link_libraries(unit_tests PUBLIC stdc++fs pthread)
 target_include_directories(unit_tests PRIVATE inc)
 

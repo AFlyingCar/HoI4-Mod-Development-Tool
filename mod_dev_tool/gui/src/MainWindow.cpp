@@ -462,42 +462,101 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                         //  selected everywhere that needs it to be marked as such
                         if(map_project.getProvinceProject().isValidProvinceID(prov_id)) {
                             // The selected province
-                            auto* province = &map_project.getProvinceProject().getProvinceForID(prov_id);
-                            auto preview_data = map_project.getProvinceProject().getPreviewData(province);
+                            auto& province_project = map_project.getProvinceProject();
 
-                            if(action == SelectionManager::Action::SET) {
-                                getProvincePropertiesPane().setProvince(province, preview_data);
+                            // Get all child provinces and parent provinces and
+                            //   add those to the selection too
+                            // Also make sure that we also only do "setProvince"
+                            //   for the root parent of the entire hierarchy
 
-                                m_drawing_area->setSelection({preview_data, province->bounding_box, province->id});
+                            auto&& merged_provinces = province_project.getMergedProvinces(prov_id);
+                            if(merged_provinces.empty()) {
+                                WRITE_ERROR("Got 0 elements from getMergedProvinces! Cannot select.");
                             } else {
-                                // This will be true if there are already any selections in the
-                                //  list. In other words, the first selection should always
-                                //  populate the properties pane, but subsequent selections
-                                //  should not.
-                                const auto& selected_labels = SelectionManager::getInstance().getSelectedProvinceLabels();
-                                bool has_selections_already = !selected_labels.empty();
+                                WRITE_DEBUG("Selecting ", merged_provinces.size(), " provinces at once.");
 
-                                getProvincePropertiesPane().setProvince(province, preview_data, has_selections_already);
+                                if(action == SelectionManager::Action::SET) {
+                                    m_drawing_area->setSelection();
+                                }
 
-                                m_drawing_area->addSelection({preview_data, province->bounding_box, province->id});
+                                auto maybe_root = province_project.getRootProvinceParent(prov_id);
+                                ProvinceID root_id;
+                                if(IS_FAILURE(maybe_root)) {
+                                    WRITE_ERROR("Failed with error ",
+                                                maybe_root.error(),
+                                                " to get root province parent for ",
+                                                prov_id,
+                                                ". Continuing with legacy behavior.");
+                                    // Assume the root is 'prov_id'
+                                    // This isn't _quite_ legacy behavior, but
+                                    //   close enough
+                                    root_id = prov_id;
+                                } else {
+                                    root_id = maybe_root->get().id;
+                                }
+
+                                for(auto&& merged_prov : merged_provinces) {
+                                    if(merged_prov != prov_id &&
+                                       !SelectionManager::getInstance().isProvinceSelected(merged_prov))
+                                    {
+                                        SelectionManager::getInstance().addProvinceSelection(merged_prov, true);
+                                    }
+
+                                    auto* province = &province_project.getProvinceForID(merged_prov);
+                                    auto preview_data = province_project.getPreviewData(province);
+
+                                    if(root_id == root_id) {
+                                        if(action == SelectionManager::Action::SET) {
+                                            getProvincePropertiesPane().setProvince(province, preview_data);
+                                        } else {
+                                            // This will be true if there are already any selections in the
+                                            //  list. In other words, the first selection should always
+                                            //  populate the properties pane, but subsequent selections
+                                            //  should not.
+                                            const auto& selected_labels = SelectionManager::getInstance().getSelectedProvinceLabels();
+                                            bool has_selections_already = !selected_labels.empty();
+
+                                            // TODO: preview should show the merged provinces combined
+                                            getProvincePropertiesPane().setProvince(province, preview_data, has_selections_already);
+                                        }
+                                    }
+
+                                    m_drawing_area->addSelection({preview_data, province->bounding_box, province->id});
+                                }
                             }
-
                             m_drawing_area->queueDraw();
                         }
                         break;
                     case SelectionManager::Action::REMOVE:
-                        // Only remove the province from the properties pane if
-                        //  the province there is the same one we are removing
-                        if(getProvincePropertiesPane().getProvince() != nullptr &&
-                           getProvincePropertiesPane().getProvince()->id == prov_id)
                         {
-                            // TODO: We should really be changing to the next one in
-                            //   the selection if we have one selected.
-                            ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
-                            getProvincePropertiesPane().setProvince(nullptr, null_data);
+                            auto& province_project = map_project.getProvinceProject();
+                            auto&& merged_provinces = province_project.getMergedProvinces(prov_id);
+
+                            if(merged_provinces.empty()) {
+                                WRITE_ERROR("Got 0 elements from getMergedProvinces! Cannot de-select.");
+                            } else {
+                                WRITE_DEBUG("Deselecting ", merged_provinces.size(), " provinces at once.");
+
+                                auto* ppp_province = getProvincePropertiesPane().getProvince();
+
+                                for(auto&& merged_prov : merged_provinces) {
+                                    // Only remove the province from the properties pane if
+                                    //  the province there is the same one we are removing
+                                    if(ppp_province != nullptr &&
+                                       ppp_province->id == merged_prov)
+                                    {
+                                        // TODO: We should really be changing to the next one in
+                                        //   the selection if we have one selected.
+                                        ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
+                                        getProvincePropertiesPane().setProvince(nullptr, null_data);
+                                    }
+
+                                    m_drawing_area->removeSelection({nullptr, {}, merged_prov});
+                                }
+                            }
+
+                            m_drawing_area->queueDraw();
                         }
-                        m_drawing_area->removeSelection({nullptr, {}, prov_id});
-                        m_drawing_area->queueDraw();
                         break;
                     case SelectionManager::Action::CLEAR:
                         ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct

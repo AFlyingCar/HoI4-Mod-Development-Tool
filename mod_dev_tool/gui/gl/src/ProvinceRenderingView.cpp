@@ -76,7 +76,12 @@ void HMDT::GUI::GL::ProvinceRenderingView::render() {
 
         // All other uniforms
         std::vector<uint32_t> selection_ids;
-        std::transform(selections.begin(), selections.end(), std::back_inserter(selection_ids), [](const auto& s) { return s.id.hash(); });
+        std::transform(selections.begin(),
+                       selections.end(),
+                       std::back_inserter(selection_ids),
+                       [](const auto& s) {
+                           return s.id.hash();
+                       });
 
         m_selection_shader.uniform("province_labels", selection_ids);
         m_selection_shader.uniform("num_selected", static_cast<uint32_t>(selection_ids.size()));

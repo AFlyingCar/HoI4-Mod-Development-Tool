@@ -13,6 +13,7 @@
 # include "gtkmm/box.h"
 
 # include "Types.h"
+# include "ProvinceListWindow.h"
 
 # include "ProvincePreviewDrawingArea.h"
 
@@ -42,6 +43,7 @@ namespace HMDT::GUI {
         protected:
             virtual void addWidgetToParent(Gtk::Widget&) override;
 
+            void updateMergedListElements(const Province* prov);
             void updateProperties(const Province*, bool);
 
             void rebuildContinentMenu(const std::set<std::string>&);
@@ -53,6 +55,8 @@ namespace HMDT::GUI {
             void buildTerrainTypeField();
             void buildContinentField();
             void buildStateCreationButton();
+            void buildMergeProvincesButton();
+            void buildMergedListWindow();
 
             void setPreview(ProvincePreviewDrawingArea::DataPtr);
 
@@ -77,6 +81,12 @@ namespace HMDT::GUI {
             Gtk::Button* m_create_state_button;
 
             bool m_is_updating_properties;
+
+            //! Button used to merge two or more provinces together
+            Gtk::Button* m_merge_provinces_button;
+
+            //! A list of all provinces that are merged with the currently set one
+            ProvinceListWindow* m_merged_list_window;
     };
 }
 

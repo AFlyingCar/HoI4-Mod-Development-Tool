@@ -64,6 +64,7 @@
     /* Unexpected/Miscellaneous Error Codes */ \
     Y(MISCELLANEOUS, 0x7fffff9c) /* give us at least 100 before the end of the value space */ \
     X(UNEXPECTED, gettext("An unexpected error has occurred.")) \
+    X(RECURSION_TOO_DEEP, gettext("Recursive function proceeded too deep.")) \
 
 #endif
 

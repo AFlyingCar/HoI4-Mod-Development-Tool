@@ -73,7 +73,8 @@ HMDT::ProvinceList HMDT::createProvinceList(const PolygonList& shape_list) {
             provinceID, shape.unique_color,
             prov_type, is_coastal, terrain_type, continent, state, bounding_box,
             { },
-            INVALID_PROVINCE
+            INVALID_PROVINCE,
+            { }
         };
     }
 

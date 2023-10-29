@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-07 23:52-0800\n"
+"POT-Creation-Date: 2023-10-23 19:15-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -139,6 +139,10 @@ msgstr ""
 msgid "An unexpected error has occurred."
 msgstr ""
 
+#: mod_dev_tool/common/inc/StatusCodesDef.h:67
+msgid "Recursive function proceeded too deep."
+msgstr ""
+
 #: mod_dev_tool/exe/src/main.cpp:47
 msgid "General"
 msgstr ""
@@ -247,8 +251,8 @@ msgstr ""
 #: mod_dev_tool/gui/src/AddFileWindow.cpp:72
 #: mod_dev_tool/gui/src/ConfigEditorWindow.cpp:199
 #: mod_dev_tool/gui/src/NewProjectDialog.cpp:28
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:187
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:243
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:193
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:249
 msgid "Cancel"
 msgstr ""
 
@@ -265,8 +269,8 @@ msgid "Choose an input file"
 msgstr ""
 
 #: mod_dev_tool/gui/src/AddFileWindow.cpp:175
-#: mod_dev_tool/gui/src/MainWindow.cpp:707
-#: mod_dev_tool/gui/src/MainWindow.cpp:829
+#: mod_dev_tool/gui/src/MainWindow.cpp:702
+#: mod_dev_tool/gui/src/MainWindow.cpp:834
 msgid "All files"
 msgstr ""
 
@@ -587,56 +591,56 @@ msgstr ""
 msgid "Level"
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:342
+#: mod_dev_tool/gui/src/MainWindow.cpp:309
 msgid "Successfully generated template river map."
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:384
+#: mod_dev_tool/gui/src/MainWindow.cpp:351
 msgid "Libraries Used:"
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:399
+#: mod_dev_tool/gui/src/MainWindow.cpp:366
 msgid "Source code"
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:677
+#: mod_dev_tool/gui/src/MainWindow.cpp:672
 msgid "Failed to save project."
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:703
+#: mod_dev_tool/gui/src/MainWindow.cpp:698
 msgid "Choose a project file."
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:706
-#: mod_dev_tool/gui/src/MainWindow.cpp:828
+#: mod_dev_tool/gui/src/MainWindow.cpp:701
+#: mod_dev_tool/gui/src/MainWindow.cpp:833
 msgid "Project Files"
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:717
+#: mod_dev_tool/gui/src/MainWindow.cpp:722
 msgid "Failed to open file."
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:726
+#: mod_dev_tool/gui/src/MainWindow.cpp:731
 msgid "This project was built with a different tool version: '"
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:729
+#: mod_dev_tool/gui/src/MainWindow.cpp:734
 msgid "Color data may be generated differently."
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:806
+#: mod_dev_tool/gui/src/MainWindow.cpp:811
 msgid "Failed to save file."
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:883
+#: mod_dev_tool/gui/src/MainWindow.cpp:888
 msgid "Reason: "
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:887
+#: mod_dev_tool/gui/src/MainWindow.cpp:892
 msgid "Failed to export project."
 msgstr ""
 
-#: mod_dev_tool/gui/src/MainWindow.cpp:893
+#: mod_dev_tool/gui/src/MainWindow.cpp:898
 msgid "Successfully exported project."
 msgstr ""
 
@@ -668,53 +672,57 @@ msgstr ""
 msgid "Path to project"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:67
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:73
 msgid "Is Coastal"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:82
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:88
 msgid "Province Type"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:87
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:93
 msgid "Land"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:88
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:94
 msgid "Sea"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:89
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:95
 msgid "Lake"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:112
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:118
 msgid "Terrain Type"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:139
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:145
 msgid "Continent"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:175
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:181
 msgid "Add a continent"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:177
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:183
 msgid "Name of the new continent:"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:184
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:240
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:190
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:246
 msgid "Confirm"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:234
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:240
 msgid "Remove a Continent"
 msgstr ""
 
-#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:291
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:297
 msgid "Create State"
+msgstr ""
+
+#: mod_dev_tool/gui/src/ProvincePropertiesPane.cpp:317
+msgid "Merge Provinces"
 msgstr ""
 
 #: mod_dev_tool/gui/src/Toolbar.cpp:37

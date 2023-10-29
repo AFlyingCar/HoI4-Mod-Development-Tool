@@ -58,6 +58,12 @@ void HMDT::GUI::ProvincePropertiesPane::init() {
     buildStateCreationButton();
     addWidget<Gtk::Label>("");
 
+    buildMergeProvincesButton();
+    addWidget<Gtk::Label>("");
+
+    buildMergedListWindow();
+    addWidget<Gtk::Label>("");
+
     setEnabled(false);
 
     m_parent.show_all();
@@ -306,6 +312,132 @@ void HMDT::GUI::ProvincePropertiesPane::buildStateCreationButton() {
     });
 }
 
+
+/**
+ * @brief Creates the button to merge two or more provinces together
+ */
+void HMDT::GUI::ProvincePropertiesPane::buildMergeProvincesButton() {
+    m_merge_provinces_button = addWidget<Gtk::Button>(gettext("Merge Provinces"));
+
+    m_merge_provinces_button->signal_clicked().connect([]() {
+        if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+            auto& province_project = opt_project->get().getMapProject().getProvinceProject();
+
+            auto selected = SelectionManager::getInstance().getSelectedProvinceLabels();
+
+            // Get a root province project 
+            auto it = selected.begin();
+            auto root_id = province_project.getRootProvinceParent(*it);
+            if(IS_FAILURE(root_id)) {
+                WRITE_ERROR("Failed to get root province parent of id ", *it);
+                return;
+            }
+
+            for(; it != selected.end(); ++it) {
+                // Merge all selected provinces together (but take care not to
+                //   merge the root into itself
+                if(*it != root_id->get().id) {
+                    province_project.mergeProvinces(root_id->get().id, *it);
+                }
+            }
+
+            // Re-select the merged province now to update the pane.
+            //   We only need to do this on one of them, and it will trigger the
+            //   code to select all merged provinces
+            SelectionManager::getInstance().selectProvince(root_id->get().id);
+        }
+    });
+
+    // Default this to being disabled
+    m_merge_provinces_button->set_sensitive(false);
+}
+
+/**
+ * @brief Creates the list of merged provinces
+ */
+void HMDT::GUI::ProvincePropertiesPane::buildMergedListWindow() {
+    auto* frame = addWidget<Gtk::Frame>();
+
+    m_merged_list_window = new ProvinceListWindow(
+        [](auto&& id) {
+            SelectionManager::getInstance().selectProvince(id);
+        } /* callback */,
+        ProvinceListWindow::ProvinceRowInfo {
+            std::string("   ID ") /* label_prefix */,
+            std::string("×") /* remove_button_label */,
+            true /* is_destructive */,
+            true /* remove_self */,
+            [](const ProvinceID& id) -> bool {
+                if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+                    auto& map_project = opt_project->get().getMapProject();
+
+                    // Only bother actually removing the province from the state if the
+                    //  ID is valid (if it is invalid, then how did we even add it?)
+                    if(auto& prov_project = map_project.getProvinceProject();
+                            prov_project.isValidProvinceID(id))
+                    {
+                        auto& province = prov_project.getProvinceForID(id);
+
+                        // Deselect the province
+                        SelectionManager::getInstance().removeProvinceSelection(id);
+
+                        // If there is only a single province selected, then we want to
+                        //  also deselect the state
+                        if(auto selected = SelectionManager::getInstance().getSelectedProvinces();
+                                selected.size() == 1)
+                        {
+                            SelectionManager::getInstance().removeStateSelection(province.state);
+                        }
+
+                        // Unmerge the state last, after all deselections
+                        if(auto result = prov_project.unmergeProvince(id);
+                           IS_FAILURE(result))
+                        {
+                            WRITE_ERROR("Failed with error to unmerge province ",
+                                        id, " from its parent.");
+                        }
+                    } else {
+                        WRITE_WARN("Invalid province ID ", id, ". Cannot unmerge.");
+                    }
+
+                    return true;
+                }
+
+                return false;
+            } /* remove_button_callback */
+        }
+    );
+
+    frame->add(*m_merged_list_window);
+
+    m_merged_list_window->show_all();
+}
+
+/**
+ * @brief Updates the list of merged provinces for a new province
+ *
+ * @param prov The province to update with
+ */
+void HMDT::GUI::ProvincePropertiesPane::updateMergedListElements(const Province* prov)
+{
+    // Next only add the new provinces to the list if there are provinces to add
+    if(prov != nullptr) {
+        if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
+            auto& province_project = opt_project->get().getMapProject().getProvinceProject();
+
+            auto&& merged_provinces = province_project.getMergedProvinces(prov->id);
+
+            WRITE_DEBUG("Populating list with ", merged_provinces.size(), " provinces.");
+
+            m_merged_list_window->setListElements(merged_provinces);
+        }
+    } else {
+        // Clear out the list if prov is null
+        WRITE_DEBUG("Populating list with 0 provinces.");
+        m_merged_list_window->setListElements({});
+    }
+}
+
 void HMDT::GUI::ProvincePropertiesPane::addWidgetToParent(Gtk::Widget& widget) {
     m_box.add(widget);
 }
@@ -389,6 +521,11 @@ void HMDT::GUI::ProvincePropertiesPane::updateProperties(const Province* prov,
         m_terrain_menu->set_active_text(prov->terrain.empty() ? "unknown" : prov->terrain.c_str());
         m_continent_menu->set_active_text(prov->continent.empty() ? "None" : prov->continent.c_str());
     }
+
+    // Only allow merging provinces if at least two are selected
+    m_merge_provinces_button->set_sensitive(prov != nullptr && is_multiselect);
+
+    updateMergedListElements(prov);
 
     m_is_updating_properties = false;
 }

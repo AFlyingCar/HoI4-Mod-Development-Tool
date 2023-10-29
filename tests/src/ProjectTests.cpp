@@ -1,5 +1,6 @@
 
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 #include <filesystem>
 #include <cstring>
@@ -517,6 +518,211 @@ TEST(ProjectTests, ProvinceProjectSaveAndLoad) {
     ASSERT_TRUE(std::equal(prov_data.get(),
                            prov_data.get() + map_data->getProvincesSize(),
                            map_data->getProvinces().lock().get()));
+
+    HMDT::Log::Logger::getInstance().reset();
+}
+
+TEST(ProjectTests, MergeProvinceTests) {
+    SET_PROGRAM_OPTION(debug, true);
+
+    // We also want to see log outputs in the test output
+    HMDT::UnitTests::registerTestLogOutputFunction(true, true, true, true);
+
+    auto bin_path = HMDT::UnitTests::getTestProgramPath() / "bin";
+
+    auto input_provinces_path = bin_path / "simple.bmp";
+
+    auto project_path = bin_path / "simple2.hoi4proj";
+    auto prov_path = bin_path / "map_province_saveandload";
+    auto debug_path = bin_path / "test_debug";
+
+    HMDT::UnitTests::HoI4ProjectMock hproject(project_path);
+    hproject.setDebugRoot(debug_path);
+
+    auto& map_project = hproject.getMapProject();
+    auto& prov_project = map_project.getProvinceProject();
+
+    auto map_data = map_project.getMapData();
+
+    // Make sure that we set up the MapData before attempting to load the provinces
+    {
+        // Hard-code these values since we aren't actually loading from a real
+        //   image here
+        auto iwidth = 512;
+        auto iheight = 512;
+
+        // Do a placement new so we keep the same memory location but update all
+        //  of the data inside the shared MapData instead, so that all
+        //  references are also updated too
+        map_data->~MapData();
+        new (map_data.get()) HMDT::MapData(iwidth, iheight);
+    }
+
+    // First import test data
+    {
+        // TODO: ShapeFinder hasn't been switched over to the new BitMap2 object
+        //   yet, so we need to still use the deprecated one for now
+        WRITE_INFO("Loading ", input_provinces_path);
+        HMDT::BitMap* complex_bmp = HMDT::readBMP(input_provinces_path);
+        ASSERT_NE(complex_bmp, nullptr);
+
+        HMDT::ShapeFinder sf2(complex_bmp, HMDT::UnitTests::GraphicsWorkerMock::getInstance(), map_data);
+        sf2.findAllShapes();
+
+        prov_project.import(sf2, map_data);
+    }
+
+    // Find two unrelated provinces
+    const auto& provinces = prov_project.getProvinces();
+
+    auto provinces_it = provinces.begin();
+
+    const auto& prov1 = provinces_it->second;
+    provinces_it = ++provinces_it;
+
+    const auto& prov2 = provinces_it->second;
+    provinces_it = ++provinces_it;
+
+    WRITE_DEBUG("prov1.id=", prov1.id, ", prov1.parent_id=", prov1.parent_id,
+                ", prov2.id=", prov2.id, ", prov2.parent_id=", prov2.parent_id);
+
+    // Attempt to merge two unrelated provinces together
+    auto result = prov_project.mergeProvinces(prov1.id, prov2.id);
+    ASSERT_SUCCEEDED(result);
+    WRITE_DEBUG("prov1.id=", prov1.id, ", prov1.parent_id=", prov1.parent_id,
+                ", prov2.id=", prov2.id, ", prov2.parent_id=", prov2.parent_id);
+    ASSERT_EQ(prov1.parent_id, prov2.id);
+    ASSERT_THAT(prov2.children, ::testing::UnorderedElementsAre(prov1.id));
+
+    // Attempt to merge a 3rd province into one that already has a parent
+    const auto& prov3 = provinces_it->second;
+    provinces_it = ++provinces_it;
+
+    result = prov_project.mergeProvinces(prov3.id, prov1.id);
+    ASSERT_SUCCEEDED(result);
+    ASSERT_EQ(prov3.parent_id, prov2.id);
+    ASSERT_THAT(prov2.children, ::testing::UnorderedElementsAre(prov1.id, prov3.id));
+
+    const auto& prov4 = provinces_it->second;
+    provinces_it = ++provinces_it;
+
+    const auto& prov5 = provinces_it->second;
+    provinces_it = ++provinces_it;
+
+    // Merge 2 more unrelated provinces together for the next test
+    result = prov_project.mergeProvinces(prov4.id, prov5.id);
+    ASSERT_SUCCEEDED(result);
+    ASSERT_EQ(prov4.parent_id, prov5.id);
+    ASSERT_THAT(prov5.children, ::testing::UnorderedElementsAre(prov4.id));
+
+    // Attempt to merge two provinces which already have parents together
+    // Prov1 parent: prov2
+    // Prov2 parent: none
+    // Prov3 parent: prov2
+    // Prov4 parent: prov5
+    result = prov_project.mergeProvinces(prov4.id, prov1.id);
+    ASSERT_SUCCEEDED(result);
+    ASSERT_EQ(prov4.parent_id, prov5.id);
+    ASSERT_EQ(prov5.parent_id, prov2.id); // prov4's parent should now have prov1's parent as its own parent
+
+    ASSERT_THAT(prov2.children, ::testing::UnorderedElementsAre(prov1.id, prov3.id, prov5.id));
+    ASSERT_THAT(prov5.children, ::testing::UnorderedElementsAre(prov4.id));
+
+    // Validate getMergedProvinces
+    auto&& prov1_merged = prov_project.getMergedProvinces(prov1.id);
+    WRITE_INFO("Got ", prov1_merged.size(), " provinces merged with ", prov1.id);
+    ASSERT_THAT(prov1_merged, ::testing::UnorderedElementsAre(prov1.id, prov2.id, prov3.id, prov5.id, prov4.id));
+
+    // Get a province that we have not merged at all and make sure it's the only
+    //   thing in the list
+    ++provinces_it;
+    const auto& unmerged_prov = provinces_it->second;
+    auto&& unmerged_mergelist = prov_project.getMergedProvinces(unmerged_prov.id);
+    ASSERT_THAT(unmerged_mergelist, ::testing::UnorderedElementsAre(unmerged_prov.id));
+
+    // Get an invalid province ID and make sure that the list generated from that
+    //   is empty
+    HMDT::ProvinceID invalid_id;
+    const auto& invalid_mergelist = prov_project.getMergedProvinces(invalid_id);
+    ASSERT_THAT(invalid_mergelist, ::testing::UnorderedElementsAre());
+
+    // Print out the tree for prov5
+    // Expected example output:
+    // 09cc163a-d185-4aa2-b44b-5edb0cacb202  <-  00000000-0000-0000-0000-000000000000
+    // │   ├── 01272dcd-9c3d-4b93-8721-06f7116dbf9d  <-  09cc163a-d185-4aa2-b44b-5edb0cacb202
+    // │   │   ├── 09c40c9f-e83f-480d-8ed7-077dd22ad6b3  <-  09cc163a-d185-4aa2-b44b-5edb0cacb202
+    // │   │   ├── 0a784764-8c41-4625-a296-5c6deabae5cd  <-  09cc163a-d185-4aa2-b44b-5edb0cacb202
+    // │   │   │   └── 0333927b-d4d2-4b67-b2d0-738e4013001f  <-  0a784764-8c41-4625-a296-5c6deabae5cd
+    // │   │
+    //
+    // Where:
+    //   prov1=01272dcd-9c3d-4b93-8721-06f7116dbf9d
+    //   prov2=09cc163a-d185-4aa2-b44b-5edb0cacb202
+    //   prov3=09c40c9f-e83f-480d-8ed7-077dd22ad6b3
+    //   prov4=0333927b-d4d2-4b67-b2d0-738e4013001f
+    //   prov5=0a784764-8c41-4625-a296-5c6deabae5cd
+    auto tree_result = prov_project.genProvinceChildTree(prov5.id);
+    ASSERT_SUCCEEDED(tree_result);
+    WRITE_INFO("\n", *tree_result);
+
+    // Attempt to unmerge prov3 from its parent (unmerge leaf province).
+    // Result should be:
+    // prov2
+    // ├── prov1
+    // │   ├── prov5
+    // │   │   └── prov4
+    result = prov_project.unmergeProvince(prov3.id);
+    ASSERT_SUCCEEDED(result);
+    ASSERT_EQ(prov3.parent_id, HMDT::INVALID_PROVINCE);
+    ASSERT_THAT(prov2.children, ::testing::UnorderedElementsAre(prov1.id, prov5.id));
+    ASSERT_THAT(prov5.children, ::testing::UnorderedElementsAre(prov4.id));
+
+    // Attempt to unmerge prov5 (node in middle of tree, has 1 child)
+    //   prov5 should no longer have a parent or children, and all of its old
+    //   children should now be children of prov2
+    // Result should be:
+    // prov2
+    // ├── prov1
+    // └── prov4
+    result = prov_project.unmergeProvince(prov5.id);
+    ASSERT_SUCCEEDED(result);
+    ASSERT_EQ(prov5.parent_id, HMDT::INVALID_PROVINCE);
+    ASSERT_THAT(prov2.children, ::testing::UnorderedElementsAre(prov1.id, prov4.id));
+    ASSERT_THAT(prov5.children, ::testing::UnorderedElementsAre());
+
+    // Attempt to unmerge prov2 (root node)
+    //   prov2 should no longer have a parent or children, and all of its old
+    //   children should now be children of a different child
+    // Result should be either:
+    // prov1
+    // └── prov4
+    // OR
+    // prov4
+    // └── prov1
+
+    // Print out the tree again
+    tree_result = prov_project.genProvinceChildTree(prov5.id);
+    ASSERT_SUCCEEDED(tree_result);
+    WRITE_INFO("\n", *tree_result);
+
+    result = prov_project.unmergeProvince(prov2.id);
+    ASSERT_SUCCEEDED(result);
+    ASSERT_EQ(prov2.parent_id, HMDT::INVALID_PROVINCE);
+    ASSERT_THAT(prov2.children, ::testing::UnorderedElementsAre());
+
+    // Because we don't necessarily know which child will be chosen as the new
+    //   parent, test both possibilities (and test to make sure at leats one of
+    //   them contains a value)
+    ASSERT_THAT(prov1.children,
+            ::testing::AnyOf(
+                ::testing::UnorderedElementsAre(),
+                ::testing::UnorderedElementsAre(prov4.id)));
+    ASSERT_THAT(prov4.children,
+            ::testing::AnyOf(
+                ::testing::UnorderedElementsAre(),
+                ::testing::UnorderedElementsAre(prov1.id)));
+    // Logical XOR
+    ASSERT_TRUE(!prov1.children.empty() != !prov4.children.empty());
 
     HMDT::Log::Logger::getInstance().reset();
 }

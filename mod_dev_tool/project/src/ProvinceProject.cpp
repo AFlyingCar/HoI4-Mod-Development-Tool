@@ -107,11 +107,17 @@ auto HMDT::Project::ProvinceProject::export_(const std::filesystem::path& root) 
 
     // Next, export the provinces.bmp file.
     {
-        // TODO: writeBMP does not actually return any errors out to us, so we
-        //  need to be careful here in case it does fail
-        writeBMP(root / PROVINCES_FILENAME,
-                 getMapData()->getProvinceColors().lock().get(),
-                 getMapData()->getWidth(), getMapData()->getHeight());
+        auto exportable_colors = getProvinceColorsForExport();
+        RETURN_ERROR_IF(exportable_colors == nullptr, STATUS_UNEXPECTED);
+
+        // TODO: Should we also specify a BMP header version? Default=V4
+        auto result = writeBMP2(
+                root / PROVINCES_FILENAME,
+                exportable_colors.get(),
+                getMapData()->getWidth(),
+                getMapData()->getHeight()
+            );
+        RETURN_IF_ERROR(result);
     }
 
     // Next, export the definition.csv file.
@@ -257,6 +263,13 @@ auto HMDT::Project::ProvinceProject::saveProvinceData(const std::filesystem::pat
             // If we are exporting, then we need to output a numeric ID number,
             //   not the internal UUID we use
             if(is_export) {
+                // For provinces that have been merged with another, skip
+                //   actually writing them when exporting because we want to
+                //   only export their parent's information
+                if(province.parent_id != INVALID_PROVINCE) {
+                    continue;
+                }
+
                 // Sanity check
                 RETURN_ERROR_IF(m_uuid_to_oldid.count(id) == 0,
                                 STATUS_VALUE_NOT_FOUND);
@@ -279,7 +292,8 @@ auto HMDT::Project::ProvinceProject::saveProvinceData(const std::filesystem::pat
                     << province.bounding_box.bottom_left.y << ';'
                     << province.bounding_box.top_right.x << ';'
                     << province.bounding_box.top_right.y << ';'
-                    << province.state;
+                    << province.state << ';'
+                    << province.parent_id;
             } else {
                 auto index = getIndexInSet(continents, province.continent);
                 if(IS_FAILURE(index)) {
@@ -555,6 +569,8 @@ auto HMDT::Project::ProvinceProject::loadProvinceData(const std::filesystem::pat
 
             Province prov;
 
+            prov.parent_id = INVALID_PROVINCE;
+
             // Attempt to parse the entire CSV line, we expect it to look like:
             //  ID;R;G;B;ProvinceType;IsCoastal;TerrainType;ContinentID;BB.BottomLeft.X;BB.BottomLeft.Y;BB.TopRight.X;BB.TopRight.Y;StateID
             uint32_t id;
@@ -629,6 +645,8 @@ auto HMDT::Project::ProvinceProject::loadProvinceData2(const std::filesystem::pa
 
             Province prov;
 
+            prov.parent_id = INVALID_PROVINCE;
+
             // Attempt to parse the entire CSV line, we expect it to look like:
             //  ID;R;G;B;ProvinceType;IsCoastal;TerrainType;ContinentID;BB.BottomLeft.X;BB.BottomLeft.Y;BB.TopRight.X;BB.TopRight.Y;StateID
             if(!parseValuesSkipMissing<';'>(ss, &prov.id,
@@ -643,7 +661,8 @@ auto HMDT::Project::ProvinceProject::loadProvinceData2(const std::filesystem::pa
                                                 &prov.bounding_box.bottom_left.y,
                                                 &prov.bounding_box.top_right.x,
                                                 &prov.bounding_box.top_right.y,
-                                                &prov.state, true))
+                                                &prov.state, true,
+                                                &prov.parent_id, true))
             {
                 WRITE_ERROR("Failed to parse line #", line_num, ": '", line, "'");
                 RETURN_ERROR(std::make_error_code(std::errc::bad_message));
@@ -658,6 +677,17 @@ auto HMDT::Project::ProvinceProject::loadProvinceData2(const std::filesystem::pa
 
             // Add the province into the vector
             m_provinces[prov.id] = prov;
+        }
+
+        // Post load processing
+        // Take care of any additional linking that needs to be done after all
+        //  Province objects exist
+        for(auto&& [prov_id, prov] : m_provinces) {
+            // Make sure that each province is added to its own parent's list of
+            //   children
+            if(isValidProvinceID(prov.parent_id)) {
+                m_provinces[prov.parent_id].children.insert(prov_id);
+            }
         }
 
         WRITE_DEBUG("Loaded information for ",
@@ -868,6 +898,56 @@ void HMDT::Project::ProvinceProject::buildGraphicsData() {
             graphics_data[gindex + 2] = province.unique_color.r;
         }
     }
+}
+
+/**
+ * @brief Gets the province colors in a form that's ready to be exported.
+ *
+ * @return A new flat array containing all pixel colors, or nullptr if a failure
+ *         occurs
+ */
+auto HMDT::Project::ProvinceProject::getProvinceColorsForExport() const noexcept
+    -> std::unique_ptr<unsigned char[]>
+{
+    auto province_colors = getMapData()->getProvinceColors().lock();
+    auto prov_matrix = getMapData()->getProvinces().lock();
+    auto [width, height] = getMapData()->getDimensions();
+
+    std::unique_ptr<unsigned char[]> exportable_colors(new unsigned char[getMapData()->getProvinceColorsSize()]);
+
+    // TODO: Can we parallelize this?
+    for(uint32_t x = 0; x < width; ++x) {
+        for(uint32_t y = 0; y < height; ++y) {
+            // Get the index into the prov matrix
+            auto lindex = xyToIndex(width, x, y);
+
+            // Get the index into the graphics data
+            //  3 == the depth
+            auto gindex = xyToIndex(width * 3, x * 3, y);
+
+            auto id = prov_matrix[lindex];
+
+            // Error check
+            if(!isValidProvinceID(id)) {
+                WRITE_WARN("Province matrix has ID ", id,
+                           " at position (", x, ',', y, "), which does not exist.");
+                continue;
+            }
+
+            // Rebuild color data
+            auto maybe_root = getRootProvinceParent(id);
+            // TODO: We should really figure out how to return the error code up
+            //   from here. The reason we can't is because we cannot build a
+            //   Maybe<unique_ptr>
+            RETURN_VALUE_IF_ERROR(maybe_root, nullptr);
+
+            exportable_colors[gindex] = maybe_root->get().unique_color.r;
+            exportable_colors[gindex + 1] = maybe_root->get().unique_color.g;
+            exportable_colors[gindex + 2] = maybe_root->get().unique_color.b;
+        }
+    }
+
+    return exportable_colors;
 }
 
 /**
