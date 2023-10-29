@@ -510,18 +510,35 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                         }
                         break;
                     case SelectionManager::Action::REMOVE:
-                        // Only remove the province from the properties pane if
-                        //  the province there is the same one we are removing
-                        if(getProvincePropertiesPane().getProvince() != nullptr &&
-                           getProvincePropertiesPane().getProvince()->id == prov_id)
                         {
-                            // TODO: We should really be changing to the next one in
-                            //   the selection if we have one selected.
-                            ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
-                            getProvincePropertiesPane().setProvince(nullptr, null_data);
+                            auto& province_project = map_project.getProvinceProject();
+                            auto&& merged_provinces = province_project.getMergedProvinces(prov_id);
+
+                            if(merged_provinces.empty()) {
+                                WRITE_ERROR("Got 0 elements from getMergedProvinces! Cannot de-select.");
+                            } else {
+                                WRITE_DEBUG("Deselecting ", merged_provinces.size(), " provinces at once.");
+
+                                auto* ppp_province = getProvincePropertiesPane().getProvince();
+
+                                for(auto&& merged_prov : merged_provinces) {
+                                    // Only remove the province from the properties pane if
+                                    //  the province there is the same one we are removing
+                                    if(ppp_province != nullptr &&
+                                       ppp_province->id == merged_prov)
+                                    {
+                                        // TODO: We should really be changing to the next one in
+                                        //   the selection if we have one selected.
+                                        ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
+                                        getProvincePropertiesPane().setProvince(nullptr, null_data);
+                                    }
+
+                                    m_drawing_area->removeSelection({nullptr, {}, merged_prov});
+                                }
+                            }
+
+                            m_drawing_area->queueDraw();
                         }
-                        m_drawing_area->removeSelection({nullptr, {}, prov_id});
-                        m_drawing_area->queueDraw();
                         break;
                     case SelectionManager::Action::CLEAR:
                         ProvincePreviewDrawingArea::DataPtr null_data; // Do not construct
