@@ -464,9 +464,9 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                             // The selected province
                             auto& province_project = map_project.getProvinceProject();
 
-                            // TODO: Get all child provinces and parent provinces
-                            //   and add those to the selection too
-                            // NOTE: Make sure that we also only do "setProvince"
+                            // Get all child provinces and parent provinces and
+                            //   add those to the selection too
+                            // Also make sure that we also only do "setProvince"
                             //   for the root parent of the entire hierarchy
 
                             auto&& merged_provinces = province_project.getMergedProvinces(prov_id);
@@ -479,6 +479,22 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                                     m_drawing_area->setSelection();
                                 }
 
+                                auto maybe_root = province_project.getRootProvinceParent(prov_id);
+                                ProvinceID root_id;
+                                if(IS_FAILURE(maybe_root)) {
+                                    WRITE_ERROR("Failed with error ",
+                                                maybe_root.error(),
+                                                " to get root province parent for ",
+                                                prov_id,
+                                                ". Continuing with legacy behavior.");
+                                    // Assume the root is 'prov_id'
+                                    // This isn't _quite_ legacy behavior, but
+                                    //   close enough
+                                    root_id = prov_id;
+                                } else {
+                                    root_id = maybe_root->get().id;
+                                }
+
                                 for(auto&& merged_prov : merged_provinces) {
                                     if(merged_prov != prov_id &&
                                        !SelectionManager::getInstance().isProvinceSelected(merged_prov))
@@ -489,18 +505,20 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                                     auto* province = &province_project.getProvinceForID(merged_prov);
                                     auto preview_data = province_project.getPreviewData(province);
 
-                                    if(action == SelectionManager::Action::SET) {
-                                        getProvincePropertiesPane().setProvince(province, preview_data);
-                                    } else {
-                                        // This will be true if there are already any selections in the
-                                        //  list. In other words, the first selection should always
-                                        //  populate the properties pane, but subsequent selections
-                                        //  should not.
-                                        const auto& selected_labels = SelectionManager::getInstance().getSelectedProvinceLabels();
-                                        bool has_selections_already = !selected_labels.empty();
+                                    if(root_id == root_id) {
+                                        if(action == SelectionManager::Action::SET) {
+                                            getProvincePropertiesPane().setProvince(province, preview_data);
+                                        } else {
+                                            // This will be true if there are already any selections in the
+                                            //  list. In other words, the first selection should always
+                                            //  populate the properties pane, but subsequent selections
+                                            //  should not.
+                                            const auto& selected_labels = SelectionManager::getInstance().getSelectedProvinceLabels();
+                                            bool has_selections_already = !selected_labels.empty();
 
-                                        // TODO: preview should show the merged provinces combined
-                                        getProvincePropertiesPane().setProvince(province, preview_data, has_selections_already);
+                                            // TODO: preview should show the merged provinces combined
+                                            getProvincePropertiesPane().setProvince(province, preview_data, has_selections_already);
+                                        }
                                     }
 
                                     m_drawing_area->addSelection({preview_data, province->bounding_box, province->id});
