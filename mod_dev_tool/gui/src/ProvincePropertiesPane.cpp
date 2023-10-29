@@ -313,6 +313,9 @@ void HMDT::GUI::ProvincePropertiesPane::buildStateCreationButton() {
 }
 
 
+/**
+ * @brief Creates the button to merge two or more provinces together
+ */
 void HMDT::GUI::ProvincePropertiesPane::buildMergeProvincesButton() {
     m_merge_provinces_button = addWidget<Gtk::Button>(gettext("Merge Provinces"));
 
@@ -344,8 +347,14 @@ void HMDT::GUI::ProvincePropertiesPane::buildMergeProvincesButton() {
             SelectionManager::getInstance().selectProvince(root_id->get().id);
         }
     });
+
+    // Default this to being disabled
+    m_merge_provinces_button->set_sensitive(false);
 }
 
+/**
+ * @brief Creates the list of merged provinces
+ */
 void HMDT::GUI::ProvincePropertiesPane::buildMergedListWindow() {
     auto* frame = addWidget<Gtk::Frame>();
 
@@ -404,6 +413,11 @@ void HMDT::GUI::ProvincePropertiesPane::buildMergedListWindow() {
     m_merged_list_window->show_all();
 }
 
+/**
+ * @brief Updates the list of merged provinces for a new province
+ *
+ * @param prov The province to update with
+ */
 void HMDT::GUI::ProvincePropertiesPane::updateMergedListElements(const Province* prov)
 {
     // Next only add the new provinces to the list if there are provinces to add
@@ -417,6 +431,10 @@ void HMDT::GUI::ProvincePropertiesPane::updateMergedListElements(const Province*
 
             m_merged_list_window->setListElements(merged_provinces);
         }
+    } else {
+        // Clear out the list if prov is null
+        WRITE_DEBUG("Populating list with 0 provinces.");
+        m_merged_list_window->setListElements({});
     }
 }
 
@@ -503,6 +521,9 @@ void HMDT::GUI::ProvincePropertiesPane::updateProperties(const Province* prov,
         m_terrain_menu->set_active_text(prov->terrain.empty() ? "unknown" : prov->terrain.c_str());
         m_continent_menu->set_active_text(prov->continent.empty() ? "None" : prov->continent.c_str());
     }
+
+    // Only allow merging provinces if at least two are selected
+    m_merge_provinces_button->set_sensitive(prov != nullptr && is_multiselect);
 
     updateMergedListElements(prov);
 
