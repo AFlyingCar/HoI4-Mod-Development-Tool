@@ -199,11 +199,21 @@ auto HMDT::GUI::SelectionManager::getSelectedStateIDs() const
     return m_selected_states;
 }
 
+/**
+ * @brief Checks if the given province ID is currently selected
+ *
+ * @param id The province ID to check
+ */
 bool HMDT::GUI::SelectionManager::isProvinceSelected(const ProvinceID& id) const
 {
     return m_selected_provinces.count(id) != 0;
 }
 
+/**
+ * @brief Checks if the given state ID is currently selected
+ *
+ * @param id The state ID to check
+ */
 bool HMDT::GUI::SelectionManager::isStateSelected(const StateID& id) const {
     return m_selected_states.count(id) != 0;
 }

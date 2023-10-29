@@ -65,6 +65,7 @@ namespace HMDT::GUI {
             ConstrainedEntry* m_buildings_max_level_factor_field; // Float field
             Gtk::CheckButton* m_is_impassable_button;
 
+            //! The list of all provinces in this state
             ProvinceListWindow* m_province_list_window;
 
             Gtk::Button* m_select_all_provinces;

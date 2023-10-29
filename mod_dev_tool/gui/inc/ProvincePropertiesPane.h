@@ -82,8 +82,10 @@ namespace HMDT::GUI {
 
             bool m_is_updating_properties;
 
+            //! Button used to merge two or more provinces together
             Gtk::Button* m_merge_provinces_button;
 
+            //! A list of all provinces that are merged with the currently set one
             ProvinceListWindow* m_merged_list_window;
     };
 }

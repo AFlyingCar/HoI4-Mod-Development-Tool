@@ -3,6 +3,13 @@
 
 #include "StyleClasses.h"
 
+/**
+ * @brief Constructs a new ProvinceRow
+ *
+ * @param owning_box The ListBox that owns this row
+ * @param id The province ID this row is representing
+ * @param info A reference to additional information about this row
+ */
 HMDT::GUI::ProvinceListWindow::ProvinceRow::ProvinceRow(Gtk::ListBox* owning_box,
                                                         ProvinceID id,
                                                         const ProvinceRowInfo& info):
@@ -33,12 +40,23 @@ HMDT::GUI::ProvinceListWindow::ProvinceRow::ProvinceRow(Gtk::ListBox* owning_box
     show_all_children();
 }
 
+/**
+ * @brief Gets the ID for the province this row represents
+ *
+ * @return The ID for the province this row represents
+ */
 auto HMDT::GUI::ProvinceListWindow::ProvinceRow::getProvinceID() const
     -> ProvinceID
 {
     return m_province_id;
 }
 
+/**
+ * @brief Constructs a new ProvinceListWindow
+ *
+ * @param callback A function to call whenever a row is clicked on in this list.
+ * @param info Additional information to describe how rows should behave
+ */
 HMDT::GUI::ProvinceListWindow::ProvinceListWindow(const std::function<void(const ProvinceID&)>& callback,
                                                   const ProvinceRowInfo& info):
     m_info(info)
@@ -61,6 +79,11 @@ HMDT::GUI::ProvinceListWindow::ProvinceListWindow(const std::function<void(const
     add(*m_province_list);
 }
 
+/**
+ * @brief Sets the list of elements contained in this row
+ *
+ * @param elements The elements that this row will contain
+ */
 void HMDT::GUI::ProvinceListWindow::setListElements(const std::set<ProvinceID>& elements) noexcept
 {
     // Some of this code comes from here: https://stackoverflow.com/a/41388444
@@ -79,6 +102,11 @@ void HMDT::GUI::ProvinceListWindow::setListElements(const std::set<ProvinceID>& 
     }
 }
 
+/**
+ * @brief Whether this window is enabled
+ *
+ * @param enabled True if this window should be enabled, false if it shouldn't.
+ */
 void HMDT::GUI::ProvinceListWindow::setListEnabled(bool enabled) noexcept {
     m_province_list->set_sensitive(enabled);
 }

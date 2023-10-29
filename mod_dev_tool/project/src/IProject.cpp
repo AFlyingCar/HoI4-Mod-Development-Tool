@@ -113,6 +113,17 @@ auto HMDT::Project::IProvinceProject::getProvinceForLabel(uint32_t label)
     return getProvinces().at(HashOnlyUUID(label));
 }
 
+/**
+ * @brief Gets the parent at the root of the child hierarchy for the given ID
+ *
+ * @param id The province ID to check
+ *
+ * @return The Province at the root of the hierarchy tree. If 'id' is already at
+ *         the root of the tree, then we simply return that. If any ID up the
+ *         tree is not a valid ID, then STATUS_VALUE_NOT_FOUND is returned. If
+ *         a loop is detected (where a province somehow is marked as its own
+ *         parent), then STATUS_UNEXPECTED is returned.
+ */
 auto HMDT::Project::IProvinceProject::getRootProvinceParent(const ProvinceID& id) const noexcept
     -> MaybeRef<const Province>
 {
@@ -142,6 +153,17 @@ auto HMDT::Project::IProvinceProject::getRootProvinceParent(const ProvinceID& id
     RETURN_ERROR(STATUS_UNEXPECTED);
 }
 
+/**
+ * @brief Gets the parent at the root of the child hierarchy for the given ID
+ *
+ * @param id The province ID to check
+ *
+ * @return The Province at the root of the hierarchy tree. If 'id' is already at
+ *         the root of the tree, then we simply return that. If any ID up the
+ *         tree is not a valid ID, then STATUS_VALUE_NOT_FOUND is returned. If
+ *         a loop is detected (where a province somehow is marked as its own
+ *         parent), then STATUS_UNEXPECTED is returned.
+ */
 auto HMDT::Project::IProvinceProject::getRootProvinceParent(const ProvinceID& id) noexcept
     -> MaybeRef<Province>
 {
@@ -357,6 +379,15 @@ auto HMDT::Project::IProvinceProject::unmergeProvince(const ProvinceID& id) noex
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Generates a string to display the child tree hierarchy. This is
+ *        primarily to be used as a debugging feature.
+ *
+ * @param id The ID to generate the child tree for
+ *
+ * @return A string containing the hierarchy tree, or a failure code if an error
+ *         occurs.
+ */
 auto HMDT::Project::IProvinceProject::genProvinceChildTree(ProvinceID id) const noexcept
     -> Maybe<std::string>
 {
