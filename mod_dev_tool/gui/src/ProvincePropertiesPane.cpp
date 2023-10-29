@@ -337,6 +337,11 @@ void HMDT::GUI::ProvincePropertiesPane::buildMergeProvincesButton() {
                     province_project.mergeProvinces(root_id->get().id, *it);
                 }
             }
+
+            // Re-select the merged province now to update the pane.
+            //   We only need to do this on one of them, and it will trigger the
+            //   code to select all merged provinces
+            SelectionManager::getInstance().selectProvince(root_id->get().id);
         }
     });
 }
