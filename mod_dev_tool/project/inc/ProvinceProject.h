@@ -51,6 +51,8 @@ namespace HMDT::Project {
 
             void buildGraphicsData();
 
+            std::unique_ptr<unsigned char[]> getProvinceColorsForExport() const noexcept;
+
             void rebuildUUIDToIDMap() noexcept;
 
         private:

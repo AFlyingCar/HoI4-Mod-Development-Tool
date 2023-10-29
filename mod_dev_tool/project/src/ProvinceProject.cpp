@@ -107,11 +107,16 @@ auto HMDT::Project::ProvinceProject::export_(const std::filesystem::path& root) 
 
     // Next, export the provinces.bmp file.
     {
-        // TODO: writeBMP does not actually return any errors out to us, so we
-        //  need to be careful here in case it does fail
-        writeBMP(root / PROVINCES_FILENAME,
-                 getMapData()->getProvinceColors().lock().get(),
-                 getMapData()->getWidth(), getMapData()->getHeight());
+        auto exportable_colors = getProvinceColorsForExport();
+
+        // TODO: Should we also specify a BMP header version? Default=V4
+        auto result = writeBMP2(
+                root / PROVINCES_FILENAME,
+                exportable_colors.get(),
+                getMapData()->getWidth(),
+                getMapData()->getHeight()
+            );
+        RETURN_IF_ERROR(result);
     }
 
     // Next, export the definition.csv file.
@@ -257,6 +262,13 @@ auto HMDT::Project::ProvinceProject::saveProvinceData(const std::filesystem::pat
             // If we are exporting, then we need to output a numeric ID number,
             //   not the internal UUID we use
             if(is_export) {
+                // For provinces that have been merged with another, skip
+                //   actually writing them when exporting because we want to
+                //   only export their parent's information
+                if(province.parent_id != INVALID_PROVINCE) {
+                    continue;
+                }
+
                 // Sanity check
                 RETURN_ERROR_IF(m_uuid_to_oldid.count(id) == 0,
                                 STATUS_VALUE_NOT_FOUND);
@@ -885,6 +897,47 @@ void HMDT::Project::ProvinceProject::buildGraphicsData() {
             graphics_data[gindex + 2] = province.unique_color.r;
         }
     }
+}
+
+auto HMDT::Project::ProvinceProject::getProvinceColorsForExport() const noexcept
+    -> std::unique_ptr<unsigned char[]>
+{
+    auto province_colors = getMapData()->getProvinceColors().lock();
+    auto prov_matrix = getMapData()->getProvinces().lock();
+    auto [width, height] = getMapData()->getDimensions();
+
+    std::unique_ptr<unsigned char[]> exportable_colors(new unsigned char[getMapData()->getProvinceColorsSize()]);
+
+    // TODO: Can we parallelize this?
+    for(uint32_t x = 0; x < width; ++x) {
+        for(uint32_t y = 0; y < height; ++y) {
+            // Get the index into the prov matrix
+            auto lindex = xyToIndex(width, x, y);
+
+            // Get the index into the graphics data
+            //  3 == the depth
+            auto gindex = xyToIndex(width * 3, x * 3, y);
+
+            auto id = prov_matrix[lindex];
+
+            // Error check
+            if(!isValidProvinceID(id)) {
+                WRITE_WARN("Province matrix has ID ", id,
+                           " at position (", x, ',', y, "), which does not exist.");
+                continue;
+            }
+
+            // Rebuild color data
+            auto maybe_root = getRootProvinceParent(id);
+            RETURN_VALUE_IF_ERROR(maybe_root, nullptr);
+
+            exportable_colors[gindex] = maybe_root->get().unique_color.r;
+            exportable_colors[gindex + 1] = maybe_root->get().unique_color.g;
+            exportable_colors[gindex + 2] = maybe_root->get().unique_color.b;
+        }
+    }
+
+    return exportable_colors;
 }
 
 /**
