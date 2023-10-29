@@ -108,6 +108,7 @@ auto HMDT::Project::ProvinceProject::export_(const std::filesystem::path& root) 
     // Next, export the provinces.bmp file.
     {
         auto exportable_colors = getProvinceColorsForExport();
+        RETURN_ERROR_IF(exportable_colors == nullptr, STATUS_UNEXPECTED);
 
         // TODO: Should we also specify a BMP header version? Default=V4
         auto result = writeBMP2(
@@ -899,6 +900,12 @@ void HMDT::Project::ProvinceProject::buildGraphicsData() {
     }
 }
 
+/**
+ * @brief Gets the province colors in a form that's ready to be exported.
+ *
+ * @return A new flat array containing all pixel colors, or nullptr if a failure
+ *         occurs
+ */
 auto HMDT::Project::ProvinceProject::getProvinceColorsForExport() const noexcept
     -> std::unique_ptr<unsigned char[]>
 {
@@ -929,6 +936,9 @@ auto HMDT::Project::ProvinceProject::getProvinceColorsForExport() const noexcept
 
             // Rebuild color data
             auto maybe_root = getRootProvinceParent(id);
+            // TODO: We should really figure out how to return the error code up
+            //   from here. The reason we can't is because we cannot build a
+            //   Maybe<unique_ptr>
             RETURN_VALUE_IF_ERROR(maybe_root, nullptr);
 
             exportable_colors[gindex] = maybe_root->get().unique_color.r;
