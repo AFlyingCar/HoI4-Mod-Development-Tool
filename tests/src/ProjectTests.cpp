@@ -788,6 +788,10 @@ TEST(ProjectTests, SimpleHierarchyIterationTest) {
     HMDT::Project::Project hproject(project_path);
     ASSERT_STATUS(hproject.load(), HMDT::STATUS_SUCCESS);
 
+
+    std::vector<HMDT::ProvinceID> state1_provs;
+    std::vector<HMDT::ProvinceID> state2_provs;
+
     // Load in some province data and create a few states
     {
         // Load in province data
@@ -807,9 +811,25 @@ TEST(ProjectTests, SimpleHierarchyIterationTest) {
 
         hproject.getMapProject().import(finder, map_data);
 
+        auto& prov_proj = hproject.getMapProject().getProvinceProject();
+
+        // Get some provinces to put into the states
+        std::transform(
+            prov_proj.getProvinces().begin(),
+            std::next(prov_proj.getProvinces().begin(), 5),
+            std::back_inserter(state1_provs),
+            [](auto&& kv) { return kv.first; }
+        );
+        std::transform(
+            std::next(prov_proj.getProvinces().begin(), 5),
+            std::next(prov_proj.getProvinces().begin(), 10),
+            std::back_inserter(state2_provs),
+            [](auto&& kv) { return kv.first; }
+        );
+
         // Generate a few states
-        hproject.getHistoryProject().getStateProject().addNewState({ 1, 2, 3, 4, 5 });
-        hproject.getHistoryProject().getStateProject().addNewState({ 6, 7, 8, 9, 10 });
+        hproject.getHistoryProject().getStateProject().addNewState(state1_provs);
+        hproject.getHistoryProject().getStateProject().addNewState(state2_provs);
     }
 
     std::vector<std::shared_ptr<HMDT::Project::Hierarchy::ILinkNode>> link_nodes;

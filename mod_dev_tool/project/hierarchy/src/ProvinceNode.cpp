@@ -15,7 +15,7 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setID(ProvinceID& id,
                                                    const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
-    auto id_node = std::make_shared<PropertyNode<uint32_t>>(ID, id);
+    auto id_node = std::make_shared<PropertyNode<ProvinceID>>(ID, id);
     visitor(id_node);
 
     auto result = addChild(id_node);
@@ -25,7 +25,7 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setID(ProvinceID& id,
 }
 
 auto HMDT::Project::Hierarchy::ProvinceNode::setColor(const Color& color,
-                                                   const INodeVisitor& visitor) noexcept
+                                                      const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     auto color_node = std::make_shared<ConstPropertyNode<Color>>(COLOR, color);

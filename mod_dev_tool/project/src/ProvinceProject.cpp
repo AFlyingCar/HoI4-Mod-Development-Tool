@@ -1055,7 +1055,7 @@ auto HMDT::Project::ProvinceProject::visitProvinces(const std::function<MaybeVoi
     auto result = visitor(provinces_group_node);
     RETURN_IF_ERROR(result);
 
-    for(auto&& province : m_provinces) {
+    for(auto&& [id, province] : m_provinces) {
         auto name = std::to_string(province.id);
 
         auto province_node = std::make_shared<Hierarchy::ProvinceNode>(name);
