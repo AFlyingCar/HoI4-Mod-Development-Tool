@@ -19,6 +19,12 @@ msgstr ""
 msgid "Validation failed."
 msgstr ""
 
+msgid "The given type is not valid."
+msgstr ""
+
+msgid "The key already exists."
+msgstr ""
+
 msgid "Project Validation Failed."
 msgstr ""
 
