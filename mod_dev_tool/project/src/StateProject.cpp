@@ -569,46 +569,41 @@ auto HMDT::Project::StateProject::visit(const std::function<MaybeVoid(std::share
 auto HMDT::Project::StateProject::visitStates(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
     -> Maybe<std::shared_ptr<Hierarchy::IGroupNode>>
 {
-    auto states_group_node = std::make_shared<Hierarchy::DynamicGroupNode>("States",
-        [this](const Hierarchy::DynamicGroupNode& node)
-            -> Hierarchy::IGroupNode::Children
-        {
-            Hierarchy::IGroupNode::Children children;
+    auto states_group_node = std::make_shared<Hierarchy::GroupNode>("States");
 
-            for(auto&& [id, state] : m_states) {
-                auto state_node = std::make_shared<Hierarchy::StateNode>(state.name);
+    const auto& children = states_group_node->getChildren();
+    for(auto&& [id, state] : m_states) {
+        auto state_node = std::make_shared<Hierarchy::StateNode>(state.name);
 
-                state_node->setID(const_cast<StateID&>(state.id),
+        state_node->setID(const_cast<StateID&>(state.id),
+                          [](auto&&...){ return STATUS_SUCCESS; });
+        state_node->setManpower(const_cast<size_t&>(state.manpower),
+                                [](auto&&...){ return STATUS_SUCCESS; });
+        state_node->setCategory(const_cast<std::string&>(state.category),
+                                [](auto&&...){ return STATUS_SUCCESS; });
+        state_node->setBuildingsMaxLevelFactor(const_cast<float&>(state.buildings_max_level_factor),
+                                               [](auto&&...){ return STATUS_SUCCESS; });
+        state_node->setImpassable(const_cast<bool&>(state.impassable),
                                   [](auto&&...){ return STATUS_SUCCESS; });
-                state_node->setManpower(const_cast<size_t&>(state.manpower),
-                                        [](auto&&...){ return STATUS_SUCCESS; });
-                state_node->setCategory(const_cast<std::string&>(state.category),
-                                        [](auto&&...){ return STATUS_SUCCESS; });
-                state_node->setBuildingsMaxLevelFactor(const_cast<float&>(state.buildings_max_level_factor),
-                                                       [](auto&&...){ return STATUS_SUCCESS; });
-                state_node->setImpassable(const_cast<bool&>(state.impassable),
-                                          [](auto&&...){ return STATUS_SUCCESS; });
 
-                // Since this is a DynamicGroup for States, setting the
-                //   provinces statically should be fine, but we may want to
-                //   change this to somehow produce a DynamicGroup instead?
-                state_node->setProvinces(state.provinces,
-                                         [](auto&&...){ return STATUS_SUCCESS; });
+        // Since this is a DynamicGroup for States, setting the
+        //   provinces statically should be fine, but we may want to
+        //   change this to somehow produce a DynamicGroup instead?
+        WRITE_DEBUG("Add ", state.provinces.size(), " provinces to state node.");
+        state_node->setProvinces(state.provinces,
+                                 [](auto&&...){ return STATUS_SUCCESS; });
 
-                // Find out how many children share the same name as this state
-                uint32_t count = 0;
-                for(; children.count(state.name + "-" + std::to_string(count)) != 0;
-                      ++count);
+        // Find out how many children share the same name as this state
+        uint32_t count = 0;
+        for(; children.count(state.name + "-" + std::to_string(count)) != 0;
+              ++count);
 
-                if(count == 0) {
-                    children[state.name] = state_node;
-                } else {
-                    children[state.name + "-" + std::to_string(count)] = state_node;
-                }
-            }
-
-            return children;
-        });
+        if(count == 0) {
+            states_group_node->addChild(state.name, state_node);
+        } else {
+            states_group_node->addChild(state.name + "-" + std::to_string(count), state_node);
+        }
+    }
 
     auto result = visitor(states_group_node);
     RETURN_IF_ERROR(result);
