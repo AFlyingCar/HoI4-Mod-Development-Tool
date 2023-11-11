@@ -92,14 +92,12 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setContinent(Continent& continent,
     return STATUS_SUCCESS;
 }
 
-auto HMDT::Project::Hierarchy::ProvinceNode::setState(State& state,
+auto HMDT::Project::Hierarchy::ProvinceNode::setState(const StateID& state_id,
                                                       const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
-    auto state_id = state.id;
-
     auto state_link_node = std::make_shared<LinkNode>(
-        state.name,
+        std::to_string(state_id),
         [state_id](ILinkNode::LinkedNode node) -> bool {
             if(node->getType() == Node::Type::STATE) {
                 auto id_node = std::dynamic_pointer_cast<StateNode>(node)->getIDProperty();
@@ -149,6 +147,9 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setState(State& state,
         }
         );
     visitor(state_link_node);
+
+    auto result = addChild(state_link_node);
+    RETURN_IF_ERROR(result);
 
     return STATUS_SUCCESS;
 }

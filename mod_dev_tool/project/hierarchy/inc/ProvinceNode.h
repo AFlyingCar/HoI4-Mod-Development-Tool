@@ -31,7 +31,7 @@ namespace HMDT::Project::Hierarchy {
             MaybeVoid setCoastal(bool&, const INodeVisitor&) noexcept;
             MaybeVoid setTerrain(TerrainID&, const INodeVisitor&) noexcept;
             MaybeVoid setContinent(Continent&, const INodeVisitor&) noexcept;
-            MaybeVoid setState(State&, const INodeVisitor&) noexcept;
+            MaybeVoid setState(const StateID&, const INodeVisitor&) noexcept;
             MaybeVoid setAdjacentProvinces(const std::set<ProvinceID>&, const INodeVisitor&) noexcept;
 
             Maybe<std::shared_ptr<const IPropertyNode>> getIDProperty() const noexcept;
