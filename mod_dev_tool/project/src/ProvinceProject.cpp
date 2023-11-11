@@ -1081,8 +1081,11 @@ auto HMDT::Project::ProvinceProject::visitProvinces(const std::function<MaybeVoi
         result = province_node->setContinent(const_cast<Continent&>(province.continent), visitor);
         RETURN_IF_ERROR(result);
 
+        // TODO: States still use uint32_t for ID numbering. This needs to be
+        //   changed over to UUID before we can safely implement province->state
+        //   linkage.
 #if 0
-        result = province_node->setState(const_cast<State&>(province.state), visitor);
+        result = province_node->setState(province.state, visitor);
         RETURN_IF_ERROR(result);
 
         result = province_node->setAdjacentProvinces(province.adjacent_provinces, visitor);
