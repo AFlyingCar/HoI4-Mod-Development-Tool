@@ -660,5 +660,9 @@ namespace HMDT {
     using Ref = std::reference_wrapper<T>;
 }
 
+namespace std {
+    string to_string(const void*);
+}
+
 #endif
 
