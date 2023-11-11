@@ -2,9 +2,11 @@
 #include "LinkNode.h"
 
 HMDT::Project::Hierarchy::LinkNode::LinkNode(const std::string& name,
-                                             ResolutionCheck resolution_check):
+                                             ResolutionCheck resolution_check,
+                                             LinkSearch link_search):
     m_name(name),
     m_resolution_check(resolution_check),
+    m_link_search(link_search),
     m_cached_link(nullptr)
 { }
 
@@ -46,5 +48,33 @@ bool HMDT::Project::Hierarchy::LinkNode::resolveLink(LinkedNode node) noexcept {
     }
 
     return false;
+}
+
+/**
+ * @brief Attempts to resolve the link
+ *
+ * @param root The root of the hiearchy to search for the link to resole with
+ *
+ * @return STATUS_SUCCESS if resolution succeeded, or a failure code otherwise.
+ */
+auto HMDT::Project::Hierarchy::LinkNode::resolve(INodePtr root) noexcept
+    -> MaybeVoid
+{
+    // Do a search starting from root for the value that should resolve this link
+    MaybeVoid result = m_link_search(root)
+        .andThen([this](auto search_result) -> MaybeVoid {
+            // If a value was found, attempt to resolve the link
+            if(!resolveLink(search_result)) {
+                WRITE_ERROR("Failed to resolve link with search result of ",
+                        std::to_string(*search_result));
+                // TODO: We may want to return a better error code in this case?
+                RETURN_ERROR(STATUS_VALUE_NOT_FOUND);
+            }
+
+            return STATUS_SUCCESS;
+        });
+    RETURN_IF_ERROR(result);
+
+    return STATUS_SUCCESS;
 }
 
