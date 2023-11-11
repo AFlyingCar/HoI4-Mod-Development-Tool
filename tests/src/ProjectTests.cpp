@@ -865,15 +865,18 @@ TEST(ProjectTests, SimpleHierarchyIterationTest) {
     auto project_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::ProjectNode>(root_node);
     ASSERT_NE(project_node, nullptr);
 
-    // Debug dump tree. Leave this disabled unless things are _really_ broken
-#if 0
+    // Debug dump tree.
     std::stack<uint32_t> indents;
     indents.push(0);
     root_node->visit([&indents](auto node) -> HMDT::MaybeVoid {
+        using namespace std::string_literals;
+
         uint32_t indent_lvl = indents.top();
         indents.pop();
 
-        WRITE_DEBUG(std::string(2 * indent_lvl, ' '), std::to_string(*node));
+        std::string value_string;
+
+        std::string indent_str(2 * indent_lvl, ' ');
 
         switch(node->getType()) {
             case HMDT::Project::Hierarchy::Node::Type::GROUP:
@@ -882,100 +885,56 @@ TEST(ProjectTests, SimpleHierarchyIterationTest) {
             case HMDT::Project::Hierarchy::Node::Type::PROVINCE:
             {
                 auto group_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::IGroupNode>(node);
+                RETURN_ERROR_IF(group_node == nullptr, HMDT::STATUS_PARAM_CANNOT_BE_NULL);
+
+                value_string = ":";
+
                 for(auto i = 0; i < group_node->getChildren().size(); ++i) {
                     indents.push(indent_lvl + 1);
                 }
+
+                break;
             }
+            case HMDT::Project::Hierarchy::Node::Type::PROPERTY:
+            case HMDT::Project::Hierarchy::Node::Type::CONST_PROPERTY:
+            {
+                auto prop_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::IPropertyNode>(node);
+                RETURN_ERROR_IF(prop_node == nullptr, HMDT::STATUS_PARAM_CANNOT_BE_NULL);
+
+                // TODO: Verification?
+                value_string = "=<";
+                if(prop_node->hasValue()) {
+                    value_string.append("data> [type=");
+                    value_string.append(prop_node->getTypeInfo()->name());
+                    value_string.append("]");
+                } else {
+                    value_string += "null>";
+                }
+
+                break;
+            }
+            case HMDT::Project::Hierarchy::Node::Type::LINK:
+            {
+                auto link_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::ILinkNode>(node);
+                RETURN_ERROR_IF(link_node == nullptr, HMDT::STATUS_PARAM_CANNOT_BE_NULL);
+
+                EXPECT_TRUE(link_node->isLinkValid());
+
+                // TODO: Verification?
+                value_string = "->"s +
+                    (link_node->isLinkValid() ?
+                         std::to_string(*link_node->getLinkedNode()) :
+                         "<UNKNOWN>"s);
+
+                break;
+            }
+
             default:;
         }
 
+        WRITE_INFO(indent_str, std::to_string(*node), value_string);
+
         return HMDT::STATUS_SUCCESS;
     });
-#endif
-
-    // Depth-first iteration over the entire tree structure
-    std::stack<std::shared_ptr<HMDT::Project::Hierarchy::IGroupNode>> next_groups;
-    next_groups.push(project_node);
-
-    uint32_t last_indent = 0;
-    std::stack<uint32_t> next_indents;
-    next_indents.push(0);
-    while(!next_groups.empty()) {
-        auto next_group = next_groups.top();
-        next_groups.pop();
-
-        // Formatting
-        uint32_t indent_level = next_indents.top();
-        next_indents.pop();
-        std::string indent1(2 * indent_level, ' ');
-        std::string indent2(2 * (indent_level + 1), ' ');
-
-        WRITE_INFO(indent1, std::to_string(*next_group), "={");
-        for(auto&& [name, child_node] : next_group->getChildren()) {
-            switch(child_node->getType()) {
-                // If it is a group or group-like, make sure to add it to the
-                //   back of the groups queue
-                case HMDT::Project::Hierarchy::Node::Type::GROUP:
-                case HMDT::Project::Hierarchy::Node::Type::PROJECT:
-                case HMDT::Project::Hierarchy::Node::Type::STATE:
-                case HMDT::Project::Hierarchy::Node::Type::PROVINCE:
-                {
-                    next_indents.push(indent_level + 1);
-                    auto group_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::IGroupNode>(child_node);
-                    ASSERT_NE(group_node, nullptr);
-                    next_groups.push(group_node);
-                    break;
-                }
-                case HMDT::Project::Hierarchy::Node::Type::PROPERTY:
-                case HMDT::Project::Hierarchy::Node::Type::CONST_PROPERTY:
-                {
-                    auto prop_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::IPropertyNode>(child_node);
-                    ASSERT_NE(prop_node, nullptr);
-
-                    // TODO: Verification?
-                    std::string value_string = "<";
-                    if(prop_node->hasValue()) {
-                        value_string.append("data> [type=");
-                        value_string.append(prop_node->getTypeInfo()->name());
-                        value_string.append("]");
-                    } else {
-                        value_string += "null>";
-                    }
-                    WRITE_INFO(indent2, std::to_string(*prop_node), "=", value_string);
-
-                    break;
-                }
-                case HMDT::Project::Hierarchy::Node::Type::LINK:
-                {
-                    auto link_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::ILinkNode>(child_node);
-                    ASSERT_NE(link_node, nullptr);
-
-                    EXPECT_TRUE(link_node->isLinkValid());
-
-                    // TODO: Verification?
-                    std::string linked_node_string = link_node->isLinkValid() ?
-                                                     std::to_string(*link_node->getLinkedNode()) :
-                                                     std::string("<UNKNOWN>");
-                    WRITE_INFO(indent2, std::to_string(*link_node), "->", linked_node_string);
-
-                    break;
-                }
-            }
-        }
-        if(next_indents.empty()               ||
-           next_indents.top() == indent_level ||
-           next_indents.top() == indent_level - 1)
-        {
-            WRITE_INFO(indent1, "}");
-        }
-        last_indent = indent_level;
-    }
-
-    for(uint32_t i = 0, m=last_indent; i < m; ++i) {
-        std::string indent(2 * (last_indent - 1), ' ');
-        --last_indent;
-
-        WRITE_INFO(indent, "}");
-    }
 }
 
