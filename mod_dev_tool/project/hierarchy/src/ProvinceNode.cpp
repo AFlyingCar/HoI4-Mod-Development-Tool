@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "PropertyNode.h"
+#include "ProjectNode.h"
 #include "LinkNode.h"
 #include "StateNode.h"
 
@@ -108,7 +109,45 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setState(State& state,
             }
 
             return false;
-        });
+        },
+        [state_id](INodePtr root) -> Maybe<ILinkNode::LinkedNode> {
+            // Get Root[Project]->History[Project]->States[Project]->States[Group]->ID
+            INodePtr node = root;
+
+            // Get History Project
+            RETURN_ERROR_IF(node->getType() != Node::Type::PROJECT,
+                            STATUS_INVALID_TYPE);
+            auto result = std::dynamic_pointer_cast<ProjectNode>(node)->getChild("History"); // TODO: Make magic string here a constant
+            RETURN_IF_ERROR(result);
+            node = *result;
+
+            // Get States Project
+            RETURN_ERROR_IF(node->getType() != Node::Type::PROJECT,
+                            STATUS_INVALID_TYPE);
+            result = std::dynamic_pointer_cast<ProjectNode>(node)->getChild("States"); // TODO: Make magic string here a constant
+            RETURN_IF_ERROR(result);
+            node = *result;
+
+            // Get States Group
+            RETURN_ERROR_IF(node->getType() != Node::Type::PROJECT,
+                            STATUS_INVALID_TYPE);
+            result = std::dynamic_pointer_cast<ProjectNode>(node)->getChild("States"); // TODO: Make magic string here a constant
+            RETURN_IF_ERROR(result);
+            node = *result;
+
+            // Get State from group
+            RETURN_ERROR_IF(node->getType() != Node::Type::GROUP,
+                            STATUS_INVALID_TYPE);
+            result = std::dynamic_pointer_cast<IGroupNode>(node)->getChild(std::to_string(state_id)); // TODO: Make magic string here a constant
+            RETURN_IF_ERROR(result);
+            node = *result;
+
+            RETURN_ERROR_IF(node->getType() != Node::Type::STATE,
+                            STATUS_INVALID_TYPE);
+
+            return node;
+        }
+        );
     visitor(state_link_node);
 
     return STATUS_SUCCESS;
