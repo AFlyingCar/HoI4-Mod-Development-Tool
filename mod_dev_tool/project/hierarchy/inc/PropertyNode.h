@@ -114,7 +114,7 @@ namespace HMDT::Project::Hierarchy {
 
             virtual MaybeVoid setValue(const std::any& value) noexcept override
             {
-                return STATUS_SUCCESS;
+                return STATUS_NOT_IMPLEMENTED;
             }
 
             virtual bool canSetValue() const noexcept override {
