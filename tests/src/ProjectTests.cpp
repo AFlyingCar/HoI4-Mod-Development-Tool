@@ -15,6 +15,7 @@
 #include "ShapeFinder2.h"
 #include "Util.h"
 #include "ProjectNode.h"
+#include "LinkNode.h"
 
 #include "TestUtils.h"
 #include "TestMocks.h"
@@ -779,7 +780,7 @@ TEST(ProjectTests, SimpleHierarchyTest) {
 
 TEST(ProjectTests, SimpleHierarchyIterationTest) {
     // We also want to see log outputs in the test output
-    HMDT::UnitTests::registerTestLogOutputFunction(true, true, true, true);
+    // HMDT::UnitTests::registerTestLogOutputFunction(true, true, true, true);
 
     auto project_path = HMDT::UnitTests::getTestProgramPath() / "bin" / "simple.hoi4proj";
     auto root_path = project_path.parent_path();
@@ -832,47 +833,65 @@ TEST(ProjectTests, SimpleHierarchyIterationTest) {
         hproject.getHistoryProject().getStateProject().addNewState(state2_provs);
     }
 
-    std::vector<std::shared_ptr<HMDT::Project::Hierarchy::ILinkNode>> link_nodes;
-    auto maybe_root_node = hproject.visit([&link_nodes](std::shared_ptr<HMDT::Project::Hierarchy::INode> node)
-        -> HMDT::MaybeVoid
-        {
-            if(node->getType() == HMDT::Project::Hierarchy::Node::Type::LINK) {
-                auto link = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::ILinkNode>(node);
-                RETURN_ERROR_IF(link == nullptr, HMDT::STATUS_PARAM_CANNOT_BE_NULL);
-
-                WRITE_INFO("Found Link Node");
-
-                link_nodes.push_back(link);
-            }
-
-            return HMDT::STATUS_SUCCESS;
-        });
+    auto maybe_root_node = hproject.visit([](auto node) -> HMDT::MaybeVoid {
+        return HMDT::STATUS_SUCCESS;
+    });
     ASSERT_SUCCEEDED(maybe_root_node);
 
-    // Visit again to build all of the link nodes
-    hproject.visit([&link_nodes](std::shared_ptr<HMDT::Project::Hierarchy::INode> node)
-        -> HMDT::MaybeVoid
-        {
-            link_nodes.erase(std::remove_if(link_nodes.begin(), link_nodes.end(),
-                        [&node](auto link_node) {
-                            auto result = link_node->resolveLink(node);
-                            if(result) {
-                                WRITE_INFO("Resolving link node");
-                            }
-
-                            return result;
-                        }), link_nodes.end());
-
-            return HMDT::STATUS_SUCCESS;
-        });
-    ASSERT_TRUE(link_nodes.empty());
-
     auto root_node = *maybe_root_node;
+
+    // Visit the entire tree and resolve all link nodes
+    auto result = root_node->visit([&root_node](auto node)
+        -> HMDT::MaybeVoid
+    {
+        if(node->getType() == HMDT::Project::Hierarchy::Node::Type::LINK) {
+            WRITE_DEBUG("Resolve link node ", node->getName());
+            auto link_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::LinkNode>(node);
+            auto result = link_node->resolve(root_node);
+            RETURN_IF_ERROR(result);
+
+            if(!link_node->isLinkValid()) {
+                WRITE_ERROR("Link resolution succeeded, but the link node is still invalid.");
+                RETURN_ERROR(HMDT::STATUS_UNEXPECTED);
+            }
+        }
+
+        return HMDT::STATUS_SUCCESS;
+    });
+    ASSERT_SUCCEEDED(result);
 
     ASSERT_EQ(root_node->getType(), HMDT::Project::Hierarchy::Node::Type::PROJECT);
 
     auto project_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::ProjectNode>(root_node);
     ASSERT_NE(project_node, nullptr);
+
+    // Debug dump tree. Leave this disabled unless things are _really_ broken
+#if 0
+    std::stack<uint32_t> indents;
+    indents.push(0);
+    root_node->visit([&indents](auto node) -> HMDT::MaybeVoid {
+        uint32_t indent_lvl = indents.top();
+        indents.pop();
+
+        WRITE_DEBUG(std::string(2 * indent_lvl, ' '), std::to_string(*node));
+
+        switch(node->getType()) {
+            case HMDT::Project::Hierarchy::Node::Type::GROUP:
+            case HMDT::Project::Hierarchy::Node::Type::PROJECT:
+            case HMDT::Project::Hierarchy::Node::Type::STATE:
+            case HMDT::Project::Hierarchy::Node::Type::PROVINCE:
+            {
+                auto group_node = std::dynamic_pointer_cast<HMDT::Project::Hierarchy::IGroupNode>(node);
+                for(auto i = 0; i < group_node->getChildren().size(); ++i) {
+                    indents.push(indent_lvl + 1);
+                }
+            }
+            default:;
+        }
+
+        return HMDT::STATUS_SUCCESS;
+    });
+#endif
 
     // Depth-first iteration over the entire tree structure
     std::stack<std::shared_ptr<HMDT::Project::Hierarchy::IGroupNode>> next_groups;
