@@ -1,5 +1,6 @@
 
 #include "INode.h"
+#include "Util.h"
 
 auto HMDT::Project::Hierarchy::INode::visit(INodeVisitor visitor) noexcept
     -> MaybeVoid
@@ -45,6 +46,18 @@ auto HMDT::Project::Hierarchy::IGroupNode::operator[](const std::string& name) n
     }
 }
 
+auto HMDT::Project::Hierarchy::IGroupNode::getChild(const std::string& name) const noexcept
+    -> Maybe<ConstChildNode>
+{
+    return (*this)[name];
+}
+
+auto HMDT::Project::Hierarchy::IGroupNode::getChild(const std::string& name) noexcept
+    -> Maybe<ChildNode>
+{
+    return (*this)[name];
+}
+
 std::string std::to_string(const HMDT::Project::Hierarchy::Node::Type& type) {
     switch(type) {
         case HMDT::Project::Hierarchy::Node::Type::GROUP:
@@ -65,6 +78,6 @@ std::string std::to_string(const HMDT::Project::Hierarchy::Node::Type& type) {
 }
 
 std::string std::to_string(const HMDT::Project::Hierarchy::INode& node) {
-    return node.getName() + " [" + std::to_string(node.getType()) + "]";
+    return node.getName() + " (" + std::to_string(&node) + ") [" + std::to_string(node.getType()) + "]";
 }
 

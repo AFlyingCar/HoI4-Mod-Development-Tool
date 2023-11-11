@@ -39,6 +39,9 @@ namespace HMDT::Project::Hierarchy {
             using Type = Node::Type;
 
         public:
+            INode() = default;
+            INode(const INode&) = delete;
+
             virtual ~INode() = default;
 
             virtual Type getType() const noexcept = 0;
@@ -52,12 +55,17 @@ namespace HMDT::Project::Hierarchy {
             using ConstLinkedNode = std::shared_ptr<const INode>;
             using LinkedNode = std::shared_ptr<INode>;
 
+            ILinkNode() = default;
+            ILinkNode(const ILinkNode&) = delete;
+
             virtual ConstLinkedNode getLinkedNode() const noexcept = 0;
             virtual LinkedNode getLinkedNode() noexcept = 0;
 
             virtual bool isLinkValid() const noexcept = 0;
 
             virtual bool resolveLink(LinkedNode) noexcept = 0;
+
+            virtual MaybeVoid resolve(INodePtr) noexcept = 0;
     };
 
     class IGroupNode: public INode {
@@ -65,6 +73,9 @@ namespace HMDT::Project::Hierarchy {
             using ChildNode = std::shared_ptr<INode>;
             using ConstChildNode = std::shared_ptr<const INode>;
             using Children = std::unordered_map<std::string, ChildNode>;
+
+            IGroupNode() = default;
+            IGroupNode(const IGroupNode&) = delete;
 
             virtual ~IGroupNode() = default;
 
@@ -75,10 +86,16 @@ namespace HMDT::Project::Hierarchy {
 
             Maybe<ConstChildNode> operator[](const std::string&) const noexcept;
             Maybe<ChildNode> operator[](const std::string&) noexcept;
+
+            Maybe<ConstChildNode> getChild(const std::string&) const noexcept;
+            Maybe<ChildNode> getChild(const std::string&) noexcept;
     };
 
     class IPropertyNode: public INode {
         public:
+            IPropertyNode() = default;
+            IPropertyNode(const IPropertyNode&) = delete;
+
             template<typename T>
             MaybeRef<const T> getValue() const noexcept {
                 auto result = getAnyValue();
