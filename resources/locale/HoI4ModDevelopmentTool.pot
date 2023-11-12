@@ -25,6 +25,9 @@ msgstr ""
 msgid "The key already exists."
 msgstr ""
 
+msgid "The key does not exist."
+msgstr ""
+
 msgid "Project Validation Failed."
 msgstr ""
 
