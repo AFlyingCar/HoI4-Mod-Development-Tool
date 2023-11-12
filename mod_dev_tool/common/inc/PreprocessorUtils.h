@@ -22,5 +22,21 @@
 
 # define ON_STATIC_INIT_END_BLOCK } HMDT_UNIQUE_NAME(___ON_STATIC_INIT_INSTANCE___)
 
+# ifdef __has_include
+#  if __has_include(<version>)
+#   include <version>
+#  endif
+# endif
+
+// Define feature-test macros if they aren't already defined
+// If __has_cpp_attribute is not defined though, then we must assume that the
+//   feature in question does not exist (this should only be used for features
+//   newer than C++20)
+# ifdef __has_cpp_attribute
+#  define HAS_ATTRIBUTE(attr) __has_cpp_attribute(attr)
+# else
+#  define HAS_ATTRIBUTE(attr) 0
+# endif
+
 #endif
 
