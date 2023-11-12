@@ -58,6 +58,48 @@ auto HMDT::Project::Hierarchy::IGroupNode::getChild(const std::string& name) noe
     return (*this)[name];
 }
 
+/**
+ * @brief Builds a new Key
+ *
+ * @param parts The parts of the key
+ */
+HMDT::Project::Hierarchy::Key::Key(const std::vector<std::string>& parts):
+    m_parts(parts)
+{ }
+
+/**
+ * @brief Builds a new Key
+ *
+ * @param parts The parts of the key
+ */
+HMDT::Project::Hierarchy::Key::Key(std::initializer_list<std::string> parts):
+    m_parts(parts)
+{ }
+
+/**
+ * @brief Looks up a node using this key starting from the given root.
+ *
+ * @param root The root to start searching from
+ *
+ * @return The node that matches this key.
+ */
+auto HMDT::Project::Hierarchy::Key::lookup(INodePtr root) const noexcept
+    -> Maybe<INodePtr>
+{
+    for(auto&& part : m_parts) {
+        RETURN_ERROR_IF(root->getType() != Node::Type::PROJECT &&
+                        root->getType() != Node::Type::GROUP &&
+                        root->getType() != Node::Type::STATE &&
+                        root->getType() != Node::Type::PROVINCE,
+                        STATUS_INVALID_TYPE);
+        auto result = std::dynamic_pointer_cast<IGroupNode>(root)->getChild(part);
+        RETURN_IF_ERROR(result);
+        root = *result;
+    }
+
+    return root;
+}
+
 std::string std::to_string(const HMDT::Project::Hierarchy::Node::Type& type) {
     switch(type) {
         case HMDT::Project::Hierarchy::Node::Type::GROUP:

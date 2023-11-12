@@ -164,6 +164,21 @@ namespace HMDT::Project::Hierarchy {
                 return getAnyValue().has_value();
             }
     };
+
+    /**
+     * @brief Key for looking up nodes in the tree
+     */
+    class Key {
+        public:
+            Key(const std::vector<std::string>&);
+            Key(std::initializer_list<std::string>);
+
+            Maybe<INodePtr> lookup(INodePtr) const noexcept;
+
+        private:
+            //! The parts of this key used for looking up a node
+            std::vector<std::string> m_parts;
+    };
 }
 
 namespace std {
