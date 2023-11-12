@@ -75,6 +75,8 @@ std::string std::to_string(const HMDT::Project::Hierarchy::Node::Type& type) {
         case HMDT::Project::Hierarchy::Node::Type::LINK:
             return "Link";
     }
+
+    UNREACHABLE();
 }
 
 std::string std::to_string(const HMDT::Project::Hierarchy::INode& node) {
