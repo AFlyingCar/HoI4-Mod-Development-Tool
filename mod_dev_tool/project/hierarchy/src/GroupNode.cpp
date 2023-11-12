@@ -71,3 +71,46 @@ auto HMDT::Project::Hierarchy::GroupNode::addChild(const std::string& name,
     }
 }
 
+/**
+ * @brief Sets a child node stored in this group
+ *
+ * @param name The name of the new child node
+ * @param node The new child node
+ *
+ * @return STATUS_SUCCESS on success, STATUS_KEY_NOT_FOUND if a node does not
+ *         already exist under the given name, and STATUS_PARAM_CANNOT_BE_NULL
+ *         if node is null.
+ */
+auto HMDT::Project::Hierarchy::GroupNode::setChild(const std::string& name,
+                                                   ChildNode node) noexcept
+    -> MaybeVoid
+{
+    auto result = removeChild(name);
+    RETURN_IF_ERROR(result);
+
+    result = addChild(name, node);
+    RETURN_IF_ERROR(result);
+
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief Removes a child node stored in this group
+ *
+ * @param name The name of the child node
+ *
+ * @return STATUS_SUCCESS on success, STATUS_KEY_NOT_FOUND if a node does not
+ *         already exist under the given name.
+ */
+auto HMDT::Project::Hierarchy::GroupNode::removeChild(const std::string& name) noexcept
+    -> MaybeVoid
+{
+    if(m_children.count(name) == 0) {
+        RETURN_ERROR(STATUS_KEY_NOT_FOUND);
+    }
+
+    m_children.erase(name);
+
+    return STATUS_SUCCESS;
+}
+

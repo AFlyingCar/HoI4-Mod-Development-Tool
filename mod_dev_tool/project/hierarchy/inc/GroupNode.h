@@ -22,6 +22,9 @@ namespace HMDT::Project::Hierarchy {
             MaybeVoid addChild(const std::string&, ChildNode) noexcept;
             MaybeVoid addChild(ChildNode) noexcept;
 
+            MaybeVoid setChild(const std::string&, ChildNode) noexcept;
+            MaybeVoid removeChild(const std::string&) noexcept;
+
         private:
             //! The name of this group
             std::string m_name;
