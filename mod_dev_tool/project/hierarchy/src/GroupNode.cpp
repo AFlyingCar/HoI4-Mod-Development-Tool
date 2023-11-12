@@ -1,33 +1,6 @@
 
 #include "GroupNode.h"
 
-HMDT::Project::Hierarchy::DynamicGroupNode::DynamicGroupNode(const std::string& name,
-                                                             ChildVisitor child_visitor):
-    m_name(name),
-    m_child_visitor(child_visitor)
-{
-}
-
-auto HMDT::Project::Hierarchy::DynamicGroupNode::getChildren() const noexcept
-    -> const Children&
-{
-    return std::move(m_child_visitor(*this));
-}
-
-auto HMDT::Project::Hierarchy::DynamicGroupNode::getName() const noexcept
-    -> const std::string&
-{
-    return m_name;
-}
-
-auto HMDT::Project::Hierarchy::DynamicGroupNode::getType() const noexcept -> Type {
-    return Type::GROUP;
-}
-
-auto HMDT::Project::Hierarchy::DynamicGroupNode::getChildren() noexcept -> Children {
-    return m_child_visitor(*this);
-}
-
 HMDT::Project::Hierarchy::GroupNode::GroupNode(const std::string& name):
     m_name(name)
 { }

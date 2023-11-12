@@ -5,31 +5,6 @@
 
 namespace HMDT::Project::Hierarchy {
     /**
-     * @brief Represents a dynamic group of generic Nodes
-     */
-    class DynamicGroupNode: public IGroupNode {
-        public:
-            //! A function which will return all children for this group
-            using ChildVisitor = std::function<Children(const DynamicGroupNode&)>;
-
-            DynamicGroupNode(const std::string&, ChildVisitor);
-            virtual ~DynamicGroupNode() = default;
-
-            virtual const Children& getChildren() const noexcept override;
-            virtual Children getChildren() noexcept override;
-
-            virtual const std::string& getName() const noexcept override;
-            virtual Type getType() const noexcept override;
-
-        private:
-            //! The name of this group
-            std::string m_name;
-
-            //! The function which returns all children in this group
-            ChildVisitor m_child_visitor;
-    };
-
-    /**
      * @brief Represents a group of nodes where the children in the group do not
      *        dynamically update
      */
