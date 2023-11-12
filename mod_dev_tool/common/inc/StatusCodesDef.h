@@ -25,6 +25,7 @@
     X(VALIDATION_FAILED, gettext("Validation failed.")) \
     X(INVALID_TYPE, gettext("The given type is not valid.")) \
     X(KEY_EXISTS, gettext("The key already exists.")) \
+    X(KEY_NOT_FOUND, gettext("The key does not exist.")) \
     /* Project Error Codes */ \
     Y(PROJECT, 0x100) \
     X(PROJECT_VALIDATION_FAILED, gettext("Project Validation Failed.")) \
