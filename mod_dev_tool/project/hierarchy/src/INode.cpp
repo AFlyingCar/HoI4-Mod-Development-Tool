@@ -2,6 +2,13 @@
 #include "INode.h"
 #include "Util.h"
 
+/**
+ * @brief Visits this INode object
+ *
+ * @param visitor The visitor callback
+ *
+ * @return A status code
+ */
 auto HMDT::Project::Hierarchy::INode::visit(INodeVisitor visitor) noexcept
     -> MaybeVoid
 {
@@ -11,6 +18,13 @@ auto HMDT::Project::Hierarchy::INode::visit(INodeVisitor visitor) noexcept
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Visits this IGroupNode, and then visits every child node
+ *
+ * @param visitor The visitor callback
+ *
+ * @return A status code
+ */
 auto HMDT::Project::Hierarchy::IGroupNode::visit(INodeVisitor visitor) noexcept
     -> MaybeVoid
 {
@@ -26,6 +40,14 @@ auto HMDT::Project::Hierarchy::IGroupNode::visit(INodeVisitor visitor) noexcept
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Looks up a node held by this group
+ *
+ * @param name The name to use for lookup
+ *
+ * @return A Maybe containing the node to lookup, or VALUE_NOT_FOUND if it
+ *         doesn't exist
+ */
 auto HMDT::Project::Hierarchy::IGroupNode::operator[](const std::string& name) const noexcept
     -> Maybe<ConstChildNode>
 {
@@ -36,6 +58,14 @@ auto HMDT::Project::Hierarchy::IGroupNode::operator[](const std::string& name) c
     }
 }
 
+/**
+ * @brief Looks up a node held by this group
+ *
+ * @param name The name to use for lookup
+ *
+ * @return A Maybe containing the node to lookup, or VALUE_NOT_FOUND if it
+ *         doesn't exist
+ */
 auto HMDT::Project::Hierarchy::IGroupNode::operator[](const std::string& name) noexcept
     -> Maybe<ChildNode>
 {
@@ -46,12 +76,28 @@ auto HMDT::Project::Hierarchy::IGroupNode::operator[](const std::string& name) n
     }
 }
 
+/**
+ * @brief Looks up a node held by this group
+ *
+ * @param name The name to use for lookup
+ *
+ * @return A Maybe containing the node to lookup, or VALUE_NOT_FOUND if it
+ *         doesn't exist
+ */
 auto HMDT::Project::Hierarchy::IGroupNode::getChild(const std::string& name) const noexcept
     -> Maybe<ConstChildNode>
 {
     return (*this)[name];
 }
 
+/**
+ * @brief Looks up a node held by this group
+ *
+ * @param name The name to use for lookup
+ *
+ * @return A Maybe containing the node to lookup, or VALUE_NOT_FOUND if it
+ *         doesn't exist
+ */
 auto HMDT::Project::Hierarchy::IGroupNode::getChild(const std::string& name) noexcept
     -> Maybe<ChildNode>
 {
@@ -100,6 +146,13 @@ auto HMDT::Project::Hierarchy::Key::lookup(INodePtr root) const noexcept
     return root;
 }
 
+/**
+ * @brief Converts Type enum to string
+ *
+ * @param type The type to convert
+ *
+ * @return A string representation of 'type'
+ */
 std::string std::to_string(const HMDT::Project::Hierarchy::Node::Type& type) {
     switch(type) {
         case HMDT::Project::Hierarchy::Node::Type::GROUP:
@@ -121,6 +174,15 @@ std::string std::to_string(const HMDT::Project::Hierarchy::Node::Type& type) {
     UNREACHABLE();
 }
 
+/**
+ * @brief Converts an INode to a string
+ * @details Will generate a string representation in the format of
+ *          <tt>NAME (ADDRESS) [NODETYPE]</tt>
+ *
+ * @param node The node to convert
+ *
+ * @return A string representation of this INode
+ */
 std::string std::to_string(const HMDT::Project::Hierarchy::INode& node) {
     return node.getName() + " (" + std::to_string(&node) + ") [" + std::to_string(node.getType()) + "]";
 }
