@@ -831,6 +831,9 @@ TEST(ProjectTests, SimpleHierarchyIterationTest) {
         // Generate a few states
         hproject.getHistoryProject().getStateProject().addNewState(state1_provs);
         hproject.getHistoryProject().getStateProject().addNewState(state2_provs);
+
+        // Generate a continent
+        hproject.getMapProject().getContinentProject().addNewContinent("test");
     }
 
     auto maybe_root_node = hproject.visit([](auto node) -> HMDT::MaybeVoid {
