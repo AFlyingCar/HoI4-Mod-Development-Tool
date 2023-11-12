@@ -8,15 +8,28 @@
 #include "ProjectNode.h"
 #include "LinkNode.h"
 
+/**
+ * @brief Gets the type of StateNode
+ *
+ * @return Node::Type::STATE
+ */
 auto HMDT::Project::Hierarchy::StateNode::getType() const noexcept -> Type {
     return Node::Type::STATE;
 }
 
-auto HMDT::Project::Hierarchy::StateNode::setID(uint32_t& id,
+/**
+ * @brief Sets the ID property of this node
+ *
+ * @param id The StateID to set
+ * @param visitor The visitor callback
+ *
+ * @return A status code
+ */
+auto HMDT::Project::Hierarchy::StateNode::setID(StateID& id,
                                                 const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
-    auto id_node = std::make_shared<PropertyNode<uint32_t>>(ID, id);
+    auto id_node = std::make_shared<PropertyNode<StateID>>(ID, id);
     visitor(id_node);
 
     auto result = addChild(id_node);
@@ -25,6 +38,14 @@ auto HMDT::Project::Hierarchy::StateNode::setID(uint32_t& id,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Sets the Manpower property of this node
+ *
+ * @param manpower The manpower to set
+ * @param visitor The visitor callback
+ *
+ * @return A status code
+ */
 auto HMDT::Project::Hierarchy::StateNode::setManpower(size_t& manpower,
                                                       const INodeVisitor& visitor) noexcept
     -> MaybeVoid
@@ -39,6 +60,14 @@ auto HMDT::Project::Hierarchy::StateNode::setManpower(size_t& manpower,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Sets the Category property of this node
+ *
+ * @param category The category to set
+ * @param visitor The visitor callback
+ *
+ * @return A status code
+ */
 auto HMDT::Project::Hierarchy::StateNode::setCategory(std::string& category,
                                                       const INodeVisitor& visitor) noexcept
     -> MaybeVoid
@@ -53,6 +82,14 @@ auto HMDT::Project::Hierarchy::StateNode::setCategory(std::string& category,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Sets the BuildingsMaxLevelFactor property of this node
+ *
+ * @param buildings_max_level_factor The category to set
+ * @param visitor The visitor callback
+ *
+ * @return A status code
+ */
 auto HMDT::Project::Hierarchy::StateNode::setBuildingsMaxLevelFactor(float& buildings_max_level_factor,
                                                                      const INodeVisitor& visitor) noexcept
     -> MaybeVoid
@@ -67,6 +104,14 @@ auto HMDT::Project::Hierarchy::StateNode::setBuildingsMaxLevelFactor(float& buil
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Sets the impassable property of this node
+ *
+ * @param impassable The category to set
+ * @param visitor The visitor callback
+ *
+ * @return A status code
+ */
 auto HMDT::Project::Hierarchy::StateNode::setImpassable(bool& impassable,
                                                         const INodeVisitor& visitor) noexcept
     -> MaybeVoid
@@ -81,6 +126,16 @@ auto HMDT::Project::Hierarchy::StateNode::setImpassable(bool& impassable,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Sets the provinces property of this node
+ * @details Builds a GroupNode to hold LinkNodes which point at the relevant
+ *          province node
+ *
+ * @param provinces The category to set
+ * @param visitor The visitor callback
+ *
+ * @return A status code
+ */
 auto HMDT::Project::Hierarchy::StateNode::setProvinces(const std::vector<ProvinceID>& provinces,
                                                        const INodeVisitor& visitor) noexcept
     -> MaybeVoid
@@ -134,6 +189,11 @@ auto HMDT::Project::Hierarchy::StateNode::setProvinces(const std::vector<Provinc
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Gets the ID property
+ *
+ * @return A Maybe containing the ID property, or an error code if it's not found
+ */
 auto HMDT::Project::Hierarchy::StateNode::getIDProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>>
 {
@@ -144,6 +204,11 @@ auto HMDT::Project::Hierarchy::StateNode::getIDProperty() const noexcept
         });
 }
 
+/**
+ * @brief Gets the manpower property
+ *
+ * @return A Maybe containing the manpower property, or an error code if it's not found
+ */
 auto HMDT::Project::Hierarchy::StateNode::getManpowerProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>> 
 {
@@ -154,6 +219,11 @@ auto HMDT::Project::Hierarchy::StateNode::getManpowerProperty() const noexcept
         });
 }
 
+/**
+ * @brief Gets the category property
+ *
+ * @return A Maybe containing the category property, or an error code if it's not found
+ */
 auto HMDT::Project::Hierarchy::StateNode::getCategoryProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>> 
 {
@@ -164,6 +234,11 @@ auto HMDT::Project::Hierarchy::StateNode::getCategoryProperty() const noexcept
         });
 }
 
+/**
+ * @brief Gets the BuildingsMaxLevelFactor property
+ *
+ * @return A Maybe containing the BuildingsMaxLevelFactor property, or an error code if it's not found
+ */
 auto HMDT::Project::Hierarchy::StateNode::getBuildingsMaxLevelFactorProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>> 
 {
@@ -174,6 +249,11 @@ auto HMDT::Project::Hierarchy::StateNode::getBuildingsMaxLevelFactorProperty() c
         });
 }
 
+/**
+ * @brief Gets the impassable property
+ *
+ * @return A Maybe containing the impassable property, or an error code if it's not found
+ */
 auto HMDT::Project::Hierarchy::StateNode::getImpassableProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>> 
 {
@@ -184,6 +264,11 @@ auto HMDT::Project::Hierarchy::StateNode::getImpassableProperty() const noexcept
         });
 }
 
+/**
+ * @brief Gets the provinces property
+ *
+ * @return A Maybe containing the provinces property, or an error code if it's not found
+ */
 auto HMDT::Project::Hierarchy::StateNode::getProvincesProperty() const noexcept
     -> Maybe<std::shared_ptr<const IGroupNode>>
 {

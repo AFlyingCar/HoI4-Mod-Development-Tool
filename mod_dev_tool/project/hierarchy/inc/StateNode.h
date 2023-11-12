@@ -23,7 +23,7 @@ namespace HMDT::Project::Hierarchy {
 
             virtual Type getType() const noexcept override;
 
-            MaybeVoid setID(uint32_t&, const INodeVisitor&) noexcept;
+            MaybeVoid setID(StateID&, const INodeVisitor&) noexcept;
             MaybeVoid setManpower(size_t&, const INodeVisitor&) noexcept;
             MaybeVoid setCategory(std::string&, const INodeVisitor&) noexcept;
             MaybeVoid setBuildingsMaxLevelFactor(float&, const INodeVisitor&) noexcept;
