@@ -167,17 +167,12 @@ auto HMDT::Project::ContinentProject::visit(const std::function<MaybeVoid(std::s
     auto result = visitor(continent_project_node);
     RETURN_IF_ERROR(result);
 
-    auto continents_node = std::make_shared<Hierarchy::DynamicGroupNode>("Continents",
-        [this](const Hierarchy::DynamicGroupNode& node)
-            -> Hierarchy::IGroupNode::Children
-        {
-            Hierarchy::IGroupNode::Children children;
-            for(const auto& continent : m_continents) {
-                auto property = std::make_shared<Hierarchy::ConstPropertyNode<std::string>>(continent, continent);
-                children[continent] = property;
-            }
-            return children;
-        });
+    auto continents_node = std::make_shared<Hierarchy::GroupNode>("Continents");
+
+    for(const auto& continent : m_continents) {
+        auto property = std::make_shared<Hierarchy::ConstPropertyNode<std::string>>(continent, continent);
+        continents_node->addChild(property);
+    }
 
     result = visitor(continents_node);
     RETURN_IF_ERROR(result);
