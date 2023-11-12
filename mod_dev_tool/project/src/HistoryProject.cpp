@@ -4,6 +4,7 @@
 #include "StatusCodes.h"
 
 #include "ProjectNode.h"
+#include "NodeKeyNames.h"
 
 HMDT::Project::HistoryProject::HistoryProject(IProject& parent_project):
     m_state_project(*this),
@@ -97,7 +98,7 @@ bool HMDT::Project::HistoryProject::validateData() {
 auto HMDT::Project::HistoryProject::visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
     -> Maybe<std::shared_ptr<Hierarchy::INode>>
 {
-    auto history_project_node = std::make_shared<Hierarchy::ProjectNode>("History");
+    auto history_project_node = std::make_shared<Hierarchy::ProjectNode>(Hierarchy::ProjectKeys::HISTORY);
 
     auto result = visitor(history_project_node);
     RETURN_IF_ERROR(result);

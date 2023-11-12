@@ -20,6 +20,7 @@
 
 #include "ProjectNode.h"
 #include "ProvinceNode.h"
+#include "NodeKeyNames.h"
 
 HMDT::Project::ProvinceProject::ProvinceProject(IRootMapProject& parent_project):
     m_parent_project(parent_project),
@@ -1035,7 +1036,7 @@ void HMDT::Project::ProvinceProject::rebuildUUIDToIDMap() noexcept {
 auto HMDT::Project::ProvinceProject::visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
     -> Maybe<std::shared_ptr<Hierarchy::INode>>
 {
-    auto province_project_node = std::make_shared<Hierarchy::ProjectNode>("Provinces");
+    auto province_project_node = std::make_shared<Hierarchy::ProjectNode>(Hierarchy::ProjectKeys::PROVINCES);
 
     auto result = visitor(province_project_node);
     RETURN_IF_ERROR(result);
@@ -1064,7 +1065,7 @@ auto HMDT::Project::ProvinceProject::visitProvinces(const std::function<MaybeVoi
 {
     // This should be a static group since the number of provinces will not
     //   change unless a new province map is loaded
-    auto provinces_group_node = std::make_shared<Hierarchy::GroupNode>("Provinces");
+    auto provinces_group_node = std::make_shared<Hierarchy::GroupNode>(Hierarchy::GroupKeys::PROVINCES);
 
     auto result = visitor(provinces_group_node);
     RETURN_IF_ERROR(result);

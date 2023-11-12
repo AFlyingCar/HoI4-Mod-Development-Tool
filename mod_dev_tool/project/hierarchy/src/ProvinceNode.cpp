@@ -7,6 +7,7 @@
 #include "ProjectNode.h"
 #include "LinkNode.h"
 #include "StateNode.h"
+#include "NodeKeyNames.h"
 
 /**
  * @brief Gets the type of ProvinceNode
@@ -30,7 +31,7 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setID(ProvinceID& id,
                                                    const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
-    auto id_node = std::make_shared<PropertyNode<ProvinceID>>(ID, id);
+    auto id_node = std::make_shared<PropertyNode<ProvinceID>>(ProvinceKeys::ID, id);
     visitor(id_node);
 
     auto result = addChild(id_node);
@@ -51,7 +52,7 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setColor(const Color& color,
                                                       const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
-    auto color_node = std::make_shared<ConstPropertyNode<Color>>(COLOR, color);
+    auto color_node = std::make_shared<ConstPropertyNode<Color>>(ProvinceKeys::COLOR, color);
     visitor(color_node);
 
     auto result = addChild(color_node);
@@ -72,7 +73,7 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setProvinceType(ProvinceType& provi
                                                              const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
-    auto prov_type_node = std::make_shared<PropertyNode<ProvinceType>>(TYPE, province_type);
+    auto prov_type_node = std::make_shared<PropertyNode<ProvinceType>>(ProvinceKeys::TYPE, province_type);
     visitor(prov_type_node);
 
     auto result = addChild(prov_type_node);
@@ -93,7 +94,7 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setCoastal(bool& coastal,
                                                         const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
-    auto coastal_node = std::make_shared<PropertyNode<bool>>(COASTAL, coastal);
+    auto coastal_node = std::make_shared<PropertyNode<bool>>(ProvinceKeys::COASTAL, coastal);
     visitor(coastal_node);
 
     auto result = addChild(coastal_node);
@@ -114,7 +115,7 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setTerrain(TerrainID& terrain_id,
                                                         const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
-    auto terrain_node = std::make_shared<PropertyNode<TerrainID>>(TERRAIN,
+    auto terrain_node = std::make_shared<PropertyNode<TerrainID>>(ProvinceKeys::TERRAIN,
                                                                   terrain_id);
     visitor(terrain_node);
 
@@ -136,7 +137,7 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setContinent(Continent& continent,
                                                           const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
-    auto continent_node = std::make_shared<PropertyNode<Continent>>(CONTINENT,
+    auto continent_node = std::make_shared<PropertyNode<Continent>>(ProvinceKeys::CONTINENT,
                                                                     continent);
     visitor(continent_node);
 
@@ -174,7 +175,12 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setState(const StateID& state_id,
             // Get Root[Project]->History[Project]->States[Project]->States[Group]->ID
 
             // TODO: Make magic strings here constants
-            Key key{ "History", "States", "States", std::to_string(state_id) };
+            Key key{
+                ProjectKeys::HISTORY,
+                ProjectKeys::STATES,
+                GroupKeys::STATES,
+                std::to_string(state_id)
+            };
             auto node = key.lookup(root);
             RETURN_IF_ERROR(node);
 
@@ -215,7 +221,7 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setAdjacentProvinces(const std::set
 auto HMDT::Project::Hierarchy::ProvinceNode::getIDProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>>
 {
-    return (*this)[ID].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
+    return (*this)[ProvinceKeys::ID].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
         -> Maybe<std::shared_ptr<const IPropertyNode>>
         {
             return std::dynamic_pointer_cast<const IPropertyNode>(node);
@@ -230,7 +236,7 @@ auto HMDT::Project::Hierarchy::ProvinceNode::getIDProperty() const noexcept
 auto HMDT::Project::Hierarchy::ProvinceNode::getColorProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>>
 {
-    return (*this)[COLOR].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
+    return (*this)[ProvinceKeys::COLOR].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
         -> std::shared_ptr<const IPropertyNode>
         {
             return std::dynamic_pointer_cast<const IPropertyNode>(node);
@@ -245,7 +251,7 @@ auto HMDT::Project::Hierarchy::ProvinceNode::getColorProperty() const noexcept
 auto HMDT::Project::Hierarchy::ProvinceNode::getProvinceType() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>>
 {
-    return (*this)[TYPE].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
+    return (*this)[ProvinceKeys::TYPE].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
         -> std::shared_ptr<const IPropertyNode>
         {
             return std::dynamic_pointer_cast<const IPropertyNode>(node);
@@ -260,7 +266,7 @@ auto HMDT::Project::Hierarchy::ProvinceNode::getProvinceType() const noexcept
 auto HMDT::Project::Hierarchy::ProvinceNode::getCoastalProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>>
 {
-    return (*this)[COASTAL].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
+    return (*this)[ProvinceKeys::COASTAL].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
         -> std::shared_ptr<const IPropertyNode>
         {
             return std::dynamic_pointer_cast<const IPropertyNode>(node);
@@ -275,7 +281,7 @@ auto HMDT::Project::Hierarchy::ProvinceNode::getCoastalProperty() const noexcept
 auto HMDT::Project::Hierarchy::ProvinceNode::getTerrainProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>>
 {
-    return (*this)[TERRAIN].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
+    return (*this)[ProvinceKeys::TERRAIN].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
         -> std::shared_ptr<const IPropertyNode>
         {
             return std::dynamic_pointer_cast<const IPropertyNode>(node);
@@ -290,7 +296,7 @@ auto HMDT::Project::Hierarchy::ProvinceNode::getTerrainProperty() const noexcept
 auto HMDT::Project::Hierarchy::ProvinceNode::getContinentProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>>
 {
-    return (*this)[CONTINENT].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
+    return (*this)[ProvinceKeys::CONTINENT].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
         -> std::shared_ptr<const IPropertyNode>
         {
             return std::dynamic_pointer_cast<const IPropertyNode>(node);
@@ -305,7 +311,7 @@ auto HMDT::Project::Hierarchy::ProvinceNode::getContinentProperty() const noexce
 auto HMDT::Project::Hierarchy::ProvinceNode::getStateProperty() const noexcept
     -> Maybe<std::shared_ptr<const ILinkNode>>
 {
-    return (*this)[STATE].andThen<std::shared_ptr<const ILinkNode>>([](auto node)
+    return (*this)[ProvinceKeys::STATE].andThen<std::shared_ptr<const ILinkNode>>([](auto node)
         -> std::shared_ptr<const ILinkNode>
         {
             return std::dynamic_pointer_cast<const ILinkNode>(node);
@@ -320,7 +326,7 @@ auto HMDT::Project::Hierarchy::ProvinceNode::getStateProperty() const noexcept
 auto HMDT::Project::Hierarchy::ProvinceNode::getAdjacentProvincesProperty() const noexcept
     -> Maybe<std::shared_ptr<const IGroupNode>>
 {
-    return (*this)[ADJACENT_PROVINCES].andThen<std::shared_ptr<const IGroupNode>>([](auto node)
+    return (*this)[ProvinceKeys::ADJACENT_PROVINCES].andThen<std::shared_ptr<const IGroupNode>>([](auto node)
         -> std::shared_ptr<const IGroupNode>
         {
             return std::dynamic_pointer_cast<const IGroupNode>(node);

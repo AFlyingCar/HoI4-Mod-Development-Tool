@@ -16,6 +16,7 @@
 #include "HoI4Project.h"
 
 #include "ProjectNode.h"
+#include "NodeKeyNames.h"
 
 HMDT::Project::MapProject::MapProject(IProject& parent_project):
     m_provinces_project(*this),
@@ -573,7 +574,7 @@ void HMDT::Project::MapProject::calculateCoastalProvinces(bool dry) {
 auto HMDT::Project::MapProject::visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
     -> Maybe<std::shared_ptr<Hierarchy::INode>>
 {
-    auto map_project_node = std::make_shared<Hierarchy::ProjectNode>("Map");
+    auto map_project_node = std::make_shared<Hierarchy::ProjectNode>(Hierarchy::ProjectKeys::MAP);
 
     auto result = visitor(map_project_node);
     RETURN_IF_ERROR(result);

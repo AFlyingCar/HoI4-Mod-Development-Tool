@@ -15,15 +15,6 @@ namespace HMDT::Project::Hierarchy {
         public:
             using GroupNode::GroupNode;
 
-            static constexpr const char* const ID = "ID";
-            static constexpr const char* const COLOR = "Color";
-            static constexpr const char* const TYPE = "Type";
-            static constexpr const char* const COASTAL = "Coastal";
-            static constexpr const char* const TERRAIN = "Terrain";
-            static constexpr const char* const CONTINENT = "Continent";
-            static constexpr const char* const STATE = "State";
-            static constexpr const char* const ADJACENT_PROVINCES = "AdjacentProvinces";
-
             virtual ~ProvinceNode() = default;
 
             virtual Type getType() const noexcept override;

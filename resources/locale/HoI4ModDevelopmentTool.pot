@@ -566,3 +566,54 @@ msgstr ""
 
 msgid "Switch View: "
 msgstr ""
+
+msgid "Map"
+msgstr ""
+
+msgid "Provinces"
+msgstr ""
+
+msgid "States"
+msgstr ""
+
+msgid "HeightMap"
+msgstr ""
+
+msgid "History"
+msgstr ""
+
+msgid "Rivers"
+msgstr ""
+
+msgid "Continents"
+msgstr ""
+
+msgid "ID"
+msgstr ""
+
+msgid "Manpower"
+msgstr ""
+
+msgid "Category"
+msgstr ""
+
+msgid "BuildingsMaxLevelFactor"
+msgstr ""
+
+msgid "Impassable"
+msgstr ""
+
+msgid "Color"
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "Coastal"
+msgstr ""
+
+msgid "Terrain"
+msgstr ""
+
+msgid "AdjacentProvinces"
+msgstr ""

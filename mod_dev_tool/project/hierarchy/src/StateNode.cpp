@@ -7,6 +7,7 @@
 #include "ProvinceNode.h"
 #include "ProjectNode.h"
 #include "LinkNode.h"
+#include "NodeKeyNames.h"
 
 /**
  * @brief Gets the type of StateNode
@@ -29,7 +30,7 @@ auto HMDT::Project::Hierarchy::StateNode::setID(StateID& id,
                                                 const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
-    auto id_node = std::make_shared<PropertyNode<StateID>>(ID, id);
+    auto id_node = std::make_shared<PropertyNode<StateID>>(StateKeys::ID, id);
     visitor(id_node);
 
     auto result = addChild(id_node);
@@ -50,7 +51,7 @@ auto HMDT::Project::Hierarchy::StateNode::setManpower(size_t& manpower,
                                                       const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
-    auto manpower_node = std::make_shared<PropertyNode<size_t>>(MANPOWER,
+    auto manpower_node = std::make_shared<PropertyNode<size_t>>(StateKeys::MANPOWER,
                                                                 manpower);
     visitor(manpower_node);
 
@@ -72,7 +73,7 @@ auto HMDT::Project::Hierarchy::StateNode::setCategory(std::string& category,
                                                       const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
-    auto category_node = std::make_shared<PropertyNode<std::string>>(CATEGORY,
+    auto category_node = std::make_shared<PropertyNode<std::string>>(StateKeys::CATEGORY,
                                                                      category);
     visitor(category_node);
 
@@ -94,7 +95,7 @@ auto HMDT::Project::Hierarchy::StateNode::setBuildingsMaxLevelFactor(float& buil
                                                                      const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
-    auto bmlf_node = std::make_shared<PropertyNode<float>>(BUILDINGS_MAX_LEVEL_FACTOR,
+    auto bmlf_node = std::make_shared<PropertyNode<float>>(StateKeys::BUILDINGS_MAX_LEVEL_FACTOR,
                                                            buildings_max_level_factor);
     visitor(bmlf_node);
 
@@ -116,7 +117,7 @@ auto HMDT::Project::Hierarchy::StateNode::setImpassable(bool& impassable,
                                                         const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
-    auto impassable_node = std::make_shared<PropertyNode<bool>>(IMPASSABLE,
+    auto impassable_node = std::make_shared<PropertyNode<bool>>(StateKeys::IMPASSABLE,
                                                                 impassable);
     visitor(impassable_node);
 
@@ -142,7 +143,7 @@ auto HMDT::Project::Hierarchy::StateNode::setProvinces(const std::vector<Provinc
 {
     MaybeVoid result = STATUS_SUCCESS;
 
-    auto provinces_group_node = std::make_shared<GroupNode>(PROVINCES);
+    auto provinces_group_node = std::make_shared<GroupNode>(StateKeys::PROVINCES);
     visitor(provinces_group_node);
 
     for(auto&& province_id : provinces) {
@@ -167,7 +168,12 @@ auto HMDT::Project::Hierarchy::StateNode::setProvinces(const std::vector<Provinc
                 // Get Root[Project]->Map[Project]->Provinces[Project]->Provinces[Group]->ID
 
                 // TODO: Make magic strings here constants
-                Key key{ "Map", "Provinces", "Provinces", std::to_string(province_id) };
+                Key key{
+                    ProjectKeys::MAP,
+                    ProjectKeys::PROVINCES,
+                    GroupKeys::PROVINCES,
+                    std::to_string(province_id)
+                };
                 auto node = key.lookup(root);
                 RETURN_IF_ERROR(node);
 
@@ -197,7 +203,7 @@ auto HMDT::Project::Hierarchy::StateNode::setProvinces(const std::vector<Provinc
 auto HMDT::Project::Hierarchy::StateNode::getIDProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>>
 {
-    return (*this)[ID].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
+    return (*this)[StateKeys::ID].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
         -> Maybe<std::shared_ptr<const IPropertyNode>>
         {
             return std::dynamic_pointer_cast<const IPropertyNode>(node);
@@ -212,7 +218,7 @@ auto HMDT::Project::Hierarchy::StateNode::getIDProperty() const noexcept
 auto HMDT::Project::Hierarchy::StateNode::getManpowerProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>> 
 {
-    return (*this)[MANPOWER].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
+    return (*this)[StateKeys::MANPOWER].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
         -> Maybe<std::shared_ptr<const IPropertyNode>>
         {
             return std::dynamic_pointer_cast<const IPropertyNode>(node);
@@ -227,7 +233,7 @@ auto HMDT::Project::Hierarchy::StateNode::getManpowerProperty() const noexcept
 auto HMDT::Project::Hierarchy::StateNode::getCategoryProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>> 
 {
-    return (*this)[CATEGORY].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
+    return (*this)[StateKeys::CATEGORY].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
         -> Maybe<std::shared_ptr<const IPropertyNode>>
         {
             return std::dynamic_pointer_cast<const IPropertyNode>(node);
@@ -242,7 +248,7 @@ auto HMDT::Project::Hierarchy::StateNode::getCategoryProperty() const noexcept
 auto HMDT::Project::Hierarchy::StateNode::getBuildingsMaxLevelFactorProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>> 
 {
-    return (*this)[BUILDINGS_MAX_LEVEL_FACTOR].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
+    return (*this)[StateKeys::BUILDINGS_MAX_LEVEL_FACTOR].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
         -> Maybe<std::shared_ptr<const IPropertyNode>>
         {
             return std::dynamic_pointer_cast<const IPropertyNode>(node);
@@ -257,7 +263,7 @@ auto HMDT::Project::Hierarchy::StateNode::getBuildingsMaxLevelFactorProperty() c
 auto HMDT::Project::Hierarchy::StateNode::getImpassableProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>> 
 {
-    return (*this)[IMPASSABLE].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
+    return (*this)[StateKeys::IMPASSABLE].andThen<std::shared_ptr<const IPropertyNode>>([](auto node)
         -> Maybe<std::shared_ptr<const IPropertyNode>>
         {
             return std::dynamic_pointer_cast<const IPropertyNode>(node);
@@ -272,7 +278,7 @@ auto HMDT::Project::Hierarchy::StateNode::getImpassableProperty() const noexcept
 auto HMDT::Project::Hierarchy::StateNode::getProvincesProperty() const noexcept
     -> Maybe<std::shared_ptr<const IGroupNode>>
 {
-    return (*this)[PROVINCES].andThen<std::shared_ptr<const IGroupNode>>([](auto node)
+    return (*this)[StateKeys::PROVINCES].andThen<std::shared_ptr<const IGroupNode>>([](auto node)
         -> Maybe<std::shared_ptr<const IGroupNode>>
         {
             return std::dynamic_pointer_cast<const IGroupNode>(node);

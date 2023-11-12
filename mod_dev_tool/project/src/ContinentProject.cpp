@@ -11,6 +11,7 @@
 #include "GroupNode.h"
 #include "ProjectNode.h"
 #include "PropertyNode.h"
+#include "NodeKeyNames.h"
 
 HMDT::Project::ContinentProject::ContinentProject(IRootMapProject& parent):
     m_parent_project(parent),
@@ -169,12 +170,12 @@ auto HMDT::Project::ContinentProject::getContinents() -> ContinentSet& {
 auto HMDT::Project::ContinentProject::visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
     -> Maybe<std::shared_ptr<Hierarchy::INode>>
 {
-    auto continent_project_node = std::make_shared<Hierarchy::ProjectNode>("Continent");
+    auto continent_project_node = std::make_shared<Hierarchy::ProjectNode>(Hierarchy::ProjectKeys::CONTINENT);
 
     auto result = visitor(continent_project_node);
     RETURN_IF_ERROR(result);
 
-    auto continents_node = std::make_shared<Hierarchy::GroupNode>("Continents");
+    auto continents_node = std::make_shared<Hierarchy::GroupNode>(Hierarchy::GroupKeys::CONTINENTS);
 
     for(const auto& continent : m_continents) {
         auto property = std::make_shared<Hierarchy::ConstPropertyNode<std::string>>(continent, continent);

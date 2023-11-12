@@ -15,13 +15,6 @@ namespace HMDT::Project::Hierarchy {
         public:
             using GroupNode::GroupNode;
 
-            static constexpr const char* const ID = "ID";
-            static constexpr const char* const MANPOWER = "Manpower";
-            static constexpr const char* const CATEGORY = "Category";
-            static constexpr const char* const BUILDINGS_MAX_LEVEL_FACTOR = "BuildingsMaxLevelFactor";
-            static constexpr const char* const IMPASSABLE = "Impassable";
-            static constexpr const char* const PROVINCES = "Provinces";
-
             virtual ~StateNode() = default;
 
             virtual Type getType() const noexcept override;

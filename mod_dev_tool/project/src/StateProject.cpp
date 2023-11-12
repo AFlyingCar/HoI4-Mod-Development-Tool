@@ -18,6 +18,7 @@
 #include "ProjectNode.h"
 #include "GroupNode.h"
 #include "StateNode.h"
+#include "NodeKeyNames.h"
 
 HMDT::Project::StateProject::StateProject(IRootHistoryProject& parent_project):
     m_parent_project(parent_project),
@@ -556,7 +557,7 @@ auto HMDT::Project::StateProject::removeProvinceFromState(StateID state_id,
 auto HMDT::Project::StateProject::visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
     -> Maybe<std::shared_ptr<Hierarchy::INode>>
 {
-    auto state_project_node = std::make_shared<Hierarchy::ProjectNode>("States");
+    auto state_project_node = std::make_shared<Hierarchy::ProjectNode>(Hierarchy::ProjectKeys::STATES);
 
     auto result = visitor(state_project_node);
     RETURN_IF_ERROR(result);
@@ -583,7 +584,7 @@ auto HMDT::Project::StateProject::visit(const std::function<MaybeVoid(std::share
 auto HMDT::Project::StateProject::visitStates(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
     -> Maybe<std::shared_ptr<Hierarchy::IGroupNode>>
 {
-    auto states_group_node = std::make_shared<Hierarchy::GroupNode>("States");
+    auto states_group_node = std::make_shared<Hierarchy::GroupNode>(Hierarchy::GroupKeys::STATES);
 
     const auto& children = states_group_node->getChildren();
     for(auto&& [id, state] : m_states) {
