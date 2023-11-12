@@ -229,6 +229,13 @@ auto HMDT::Project::HeightMapProject::getBitMap() const
     }
 }
 
+/**
+ * @brief Builds the project hierarchy tree for HeightMapProject
+ *
+ * @param visitor The visitor callback
+ *
+ * @return The root node for HeightMapProject
+ */
 auto HMDT::Project::HeightMapProject::visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
     -> Maybe<std::shared_ptr<Hierarchy::INode>>
 {

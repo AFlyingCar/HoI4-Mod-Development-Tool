@@ -4,36 +4,22 @@
 # include "GroupNode.h"
 
 namespace HMDT::Project::Hierarchy {
-#if 0
-    class ProjectNode: public IGroupNode {
-        public:
-            ProjectNode(const std::string&);
-            virtual ~ProjectNode() = default;
-
-            virtual const Children& getChildren() const noexcept override;
-
-            virtual const std::string& getName() const noexcept override;
-            virtual Type getType() const noexcept override;
-
-            MaybeVoid addChild(ChildNode) noexcept;
-
-        protected:
-            virtual Children getChildren() noexcept override;
-
-        private:
-            std::string m_name;
-            Children m_children;
-    };
-#else
+    /**
+     * @brief Specialized GroupNode that represents a Project
+     */
     class ProjectNode: public GroupNode {
         public:
             using GroupNode::GroupNode;
 
+            /**
+             * @brief Gets the type of ProjectNode
+             *
+             * @return Node::Type::PROJECT
+             */
             virtual Type getType() const noexcept override {
                 return Type::PROJECT;
             }
     };
-#endif
 }
 
 #endif

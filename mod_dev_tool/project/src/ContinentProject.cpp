@@ -159,6 +159,13 @@ auto HMDT::Project::ContinentProject::getContinents() -> ContinentSet& {
     return m_continents;
 }
 
+/**
+ * @brief Builds the project hierarchy tree for ContinentProject
+ *
+ * @param visitor The visitor callback
+ *
+ * @return The root node for ContinentProject
+ */
 auto HMDT::Project::ContinentProject::visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
     -> Maybe<std::shared_ptr<Hierarchy::INode>>
 {

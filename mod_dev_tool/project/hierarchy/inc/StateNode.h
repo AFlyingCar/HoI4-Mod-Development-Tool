@@ -8,6 +8,9 @@
 # include "GroupNode.h"
 
 namespace HMDT::Project::Hierarchy {
+    /**
+     * @brief Specialized GroupNode that represents a State
+     */
     class StateNode: public GroupNode {
         public:
             using GroupNode::GroupNode;
