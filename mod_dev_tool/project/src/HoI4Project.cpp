@@ -439,6 +439,13 @@ bool HMDT::Project::HoI4Project::validateData() {
            m_history_project.validateData();
 }
 
+/**
+ * @brief Builds the project hierarchy tree for HoI4Project
+ *
+ * @param visitor The visitor callback
+ *
+ * @return The root node for HoI4Project
+ */
 auto HMDT::Project::HoI4Project::visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
     -> Maybe<std::shared_ptr<Hierarchy::INode>>
 {
