@@ -26,22 +26,47 @@ namespace HMDT::Project::Hierarchy {
 
             virtual ~PropertyNode() = default;
 
+            /**
+             * @brief Gets the name of this node
+             *
+             * @return The name of this node
+             */
             virtual const std::string& getName() const noexcept override {
                 return m_name;
             }
 
+            /**
+             * @brief Gets the type of PropertyNode
+             *
+             * @return Node::Type::PROPERTY
+             */
             virtual Node::Type getType() const noexcept override {
                 return Node::Type::PROPERTY;
             }
 
+            /**
+             * @brief Gets the value held by this property
+             *
+             * @return The value held by this property
+             */
             virtual Maybe<std::any> getAnyValue() const noexcept override {
                 return m_value;
             }
 
+            /**
+             * @brief Gets the value held by this property
+             *
+             * @return The value held by this property
+             */
             virtual Maybe<std::any> getAnyValue() noexcept override {
                 return m_value;
             }
 
+            /**
+             * @brief Gets the type info of the type held by this property
+             *
+             * @return The type info of the type held by this property
+             */
             virtual Maybe<std::type_index> getTypeInfo() const noexcept override
             {
                 return m_type_index;
@@ -67,10 +92,20 @@ namespace HMDT::Project::Hierarchy {
                 return STATUS_SUCCESS;
             }
 
+            /**
+             * @brief Checks if the value of this property can be set
+             *
+             * @return True
+             */
             virtual bool canSetValue() const noexcept override {
                 return true;
             }
 
+            /**
+             * @brief Checks if this property holds a value
+             *
+             * @return True
+             */
             virtual bool hasValue() const noexcept override {
                 return true;
             }
@@ -104,19 +139,39 @@ namespace HMDT::Project::Hierarchy {
                 PropertyNode<const T>::PropertyNode(name, value)
             { }
 
+            /**
+             * @brief Builds this property
+             *
+             * @param name The name of this property
+             */
             ConstPropertyNode(const std::string& name):
                 PropertyNode<const T>(name, name)
             { }
 
+            /**
+             * @brief Gets the type of ConstPropertyNode
+             *
+             * @return Node::Type::CONST_PROPERTY
+             */
             virtual Node::Type getType() const noexcept override {
                 return Node::Type::CONST_PROPERTY;
             }
 
+            /**
+             * @brief Sets the value that this node is representing
+             *
+             * @return STATUS_NOT_IMPLEMENTED
+             */
             virtual MaybeVoid setValue(const std::any& value) noexcept override
             {
-                return STATUS_NOT_IMPLEMENTED;
+                RETURN_ERROR(STATUS_NOT_IMPLEMENTED);
             }
 
+            /**
+             * @brief Checks if the value of this property can be set
+             *
+             * @return False
+             */
             virtual bool canSetValue() const noexcept override {
                 return false;
             }

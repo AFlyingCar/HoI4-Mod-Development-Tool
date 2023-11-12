@@ -1,6 +1,15 @@
 
 #include "LinkNode.h"
 
+/**
+ * @brief Builds a LinkNode
+ *
+ * @param name The name of this node
+ * @param resolution_check A function which checks if a given node can be used
+ *                         to resolve this link
+ * @param link_search A function which searches from a given root for a node
+ *                    that should resolve this link
+ */
 HMDT::Project::Hierarchy::LinkNode::LinkNode(const std::string& name,
                                              ResolutionCheck resolution_check,
                                              LinkSearch link_search):
@@ -10,26 +19,53 @@ HMDT::Project::Hierarchy::LinkNode::LinkNode(const std::string& name,
     m_cached_link(nullptr)
 { }
 
+/**
+ * @brief Gets the type of LinkNode
+ *
+ * @return Node::Type::LINK
+ */
 auto HMDT::Project::Hierarchy::LinkNode::getType() const noexcept -> Type {
     return Node::Type::LINK;
 }
 
+/**
+ * @brief Gets the name of this node
+ *
+ * @return This node's name
+ */
 const std::string& HMDT::Project::Hierarchy::LinkNode::getName() const noexcept
 {
     return m_name;
 }
 
+/**
+ * @brief Gets the Node that this node links to
+ * @details This function will return null if the link has not yet been resolved
+ *
+ * @return The linked node
+ */
 auto HMDT::Project::Hierarchy::LinkNode::getLinkedNode() const noexcept
     -> ConstLinkedNode
 {
     return m_cached_link;
 }
 
+/**
+ * @brief Gets the Node that this node links to
+ * @details This function will return null if the link has not yet been resolved
+ *
+ * @return The linked node
+ */
 auto HMDT::Project::Hierarchy::LinkNode::getLinkedNode() noexcept -> LinkedNode
 {
     return m_cached_link;
 }
 
+/**
+ * @brief Gets if the link node has been resolved
+ *
+ * @return True if the cached link is not null, false otherwise
+ */
 bool HMDT::Project::Hierarchy::LinkNode::isLinkValid() const noexcept {
     return m_cached_link != nullptr;
 }

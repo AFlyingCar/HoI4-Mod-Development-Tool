@@ -566,6 +566,13 @@ auto HMDT::Project::StateProject::visit(const std::function<MaybeVoid(std::share
     return state_project_node;
 }
 
+/**
+ * @brief Builds the project hierarchy tree for StateProject
+ *
+ * @param visitor The visitor callback
+ *
+ * @return The root node for StateProject
+ */
 auto HMDT::Project::StateProject::visitStates(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
     -> Maybe<std::shared_ptr<Hierarchy::IGroupNode>>
 {

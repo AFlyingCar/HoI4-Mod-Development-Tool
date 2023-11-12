@@ -1,26 +1,51 @@
 
 #include "GroupNode.h"
 
+/**
+ * @brief Builds a new group node
+ *
+ * @param name The name of this node
+ */
 HMDT::Project::Hierarchy::GroupNode::GroupNode(const std::string& name):
     m_name(name)
 { }
 
+/**
+ * @brief Gets the collection of nodes held in this group
+ *
+ * @return The collection of nodes held in this group
+ */
 auto HMDT::Project::Hierarchy::GroupNode::getChildren() const noexcept
     -> const Children&
 {
     return m_children;
 }
 
+/**
+ * @brief Gets the name of this node
+ *
+ * @return The name of this group
+ */
 auto HMDT::Project::Hierarchy::GroupNode::getName() const noexcept
     -> const std::string&
 {
     return m_name;
 }
 
+/**
+ * @brief Gets the type of GroupNode
+ *
+ * @return Node::Type::GROUP
+ */
 auto HMDT::Project::Hierarchy::GroupNode::getType() const noexcept -> Type {
     return Type::GROUP;
 }
 
+/**
+ * @brief Gets the collection of nodes held in this group
+ *
+ * @return The collection of nodes held in this group
+ */
 auto HMDT::Project::Hierarchy::GroupNode::getChildren() noexcept -> Children
 {
     return m_children;

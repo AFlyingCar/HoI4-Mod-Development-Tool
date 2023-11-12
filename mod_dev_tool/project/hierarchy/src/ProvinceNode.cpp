@@ -8,10 +8,24 @@
 #include "LinkNode.h"
 #include "StateNode.h"
 
+/**
+ * @brief Gets the type of ProvinceNode
+ *
+ * @return Node::Type::PROVINCE
+ */
 auto HMDT::Project::Hierarchy::ProvinceNode::getType() const noexcept -> Type {
     return Type::PROVINCE;
 }
 
+
+/**
+ * @brief Sets the ID property of this node
+ *
+ * @param id The value to set
+ * @param visitor The visitor callback
+ *
+ * @return A status code
+ */
 auto HMDT::Project::Hierarchy::ProvinceNode::setID(ProvinceID& id,
                                                    const INodeVisitor& visitor) noexcept
     -> MaybeVoid
@@ -25,6 +39,14 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setID(ProvinceID& id,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Sets the color property of this node
+ *
+ * @param color The value to set
+ * @param visitor The vistor callback
+ *
+ * @return A status code
+ */
 auto HMDT::Project::Hierarchy::ProvinceNode::setColor(const Color& color,
                                                       const INodeVisitor& visitor) noexcept
     -> MaybeVoid
@@ -38,6 +60,14 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setColor(const Color& color,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Sets the ProvinceType property of this node
+ *
+ * @param province_type The value to set
+ * @param visitor The vistor callback
+ *
+ * @return A status code
+ */
 auto HMDT::Project::Hierarchy::ProvinceNode::setProvinceType(ProvinceType& province_type,
                                                              const INodeVisitor& visitor) noexcept
     -> MaybeVoid
@@ -51,6 +81,14 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setProvinceType(ProvinceType& provi
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Sets the coastal property of this node
+ *
+ * @param coastal The value to set
+ * @param visitor The vistor callback
+ *
+ * @return A status code
+ */
 auto HMDT::Project::Hierarchy::ProvinceNode::setCoastal(bool& coastal,
                                                         const INodeVisitor& visitor) noexcept
     -> MaybeVoid
@@ -64,6 +102,14 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setCoastal(bool& coastal,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Sets the terrain_id property of this node
+ *
+ * @param terrain_id The value to set
+ * @param visitor The vistor callback
+ *
+ * @return A status code
+ */
 auto HMDT::Project::Hierarchy::ProvinceNode::setTerrain(TerrainID& terrain_id,
                                                         const INodeVisitor& visitor) noexcept
     -> MaybeVoid
@@ -78,6 +124,14 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setTerrain(TerrainID& terrain_id,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Sets the continent property of this node
+ *
+ * @param continent The value to set
+ * @param visitor The vistor callback
+ *
+ * @return A status code
+ */
 auto HMDT::Project::Hierarchy::ProvinceNode::setContinent(Continent& continent,
                                                           const INodeVisitor& visitor) noexcept
     -> MaybeVoid
@@ -92,6 +146,14 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setContinent(Continent& continent,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Sets the state_id property of this node
+ *
+ * @param state_id The value to set
+ * @param visitor The vistor callback
+ *
+ * @return A status code
+ */
 auto HMDT::Project::Hierarchy::ProvinceNode::setState(const StateID& state_id,
                                                       const INodeVisitor& visitor) noexcept
     -> MaybeVoid
@@ -130,6 +192,14 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setState(const StateID& state_id,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Sets the adjacent provinces property of this node
+ *
+ * @param adj_provinces The value to set
+ * @param visitor The vistor callback
+ *
+ * @return A status code
+ */
 auto HMDT::Project::Hierarchy::ProvinceNode::setAdjacentProvinces(const std::set<ProvinceID>& adj_provinces,
                                                                   const INodeVisitor& visitor) noexcept
     -> MaybeVoid
@@ -137,6 +207,11 @@ auto HMDT::Project::Hierarchy::ProvinceNode::setAdjacentProvinces(const std::set
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/**
+ * @brief Gets the id property
+ *
+ * @return A Maybe containing the id property, or an error code if it's not found
+ */
 auto HMDT::Project::Hierarchy::ProvinceNode::getIDProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>>
 {
@@ -147,6 +222,11 @@ auto HMDT::Project::Hierarchy::ProvinceNode::getIDProperty() const noexcept
         });
 }
 
+/**
+ * @brief Gets the color property
+ *
+ * @return A Maybe containing the color property, or an error code if it's not found
+ */
 auto HMDT::Project::Hierarchy::ProvinceNode::getColorProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>>
 {
@@ -157,6 +237,11 @@ auto HMDT::Project::Hierarchy::ProvinceNode::getColorProperty() const noexcept
         });
 }
 
+/**
+ * @brief Gets the province type property
+ *
+ * @return A Maybe containing the province type property, or an error code if it's not found
+ */
 auto HMDT::Project::Hierarchy::ProvinceNode::getProvinceType() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>>
 {
@@ -167,6 +252,11 @@ auto HMDT::Project::Hierarchy::ProvinceNode::getProvinceType() const noexcept
         });
 }
 
+/**
+ * @brief Gets the coastal property
+ *
+ * @return A Maybe containing the coastal property, or an error code if it's not found
+ */
 auto HMDT::Project::Hierarchy::ProvinceNode::getCoastalProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>>
 {
@@ -177,6 +267,11 @@ auto HMDT::Project::Hierarchy::ProvinceNode::getCoastalProperty() const noexcept
         });
 }
 
+/**
+ * @brief Gets the terrain property
+ *
+ * @return A Maybe containing the terrain property, or an error code if it's not found
+ */
 auto HMDT::Project::Hierarchy::ProvinceNode::getTerrainProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>>
 {
@@ -187,6 +282,11 @@ auto HMDT::Project::Hierarchy::ProvinceNode::getTerrainProperty() const noexcept
         });
 }
 
+/**
+ * @brief Gets the continent property
+ *
+ * @return A Maybe containing the continent property, or an error code if it's not found
+ */
 auto HMDT::Project::Hierarchy::ProvinceNode::getContinentProperty() const noexcept
     -> Maybe<std::shared_ptr<const IPropertyNode>>
 {
@@ -197,6 +297,11 @@ auto HMDT::Project::Hierarchy::ProvinceNode::getContinentProperty() const noexce
         });
 }
 
+/**
+ * @brief Gets the state property
+ *
+ * @return A Maybe containing the state property, or an error code if it's not found
+ */
 auto HMDT::Project::Hierarchy::ProvinceNode::getStateProperty() const noexcept
     -> Maybe<std::shared_ptr<const ILinkNode>>
 {
@@ -207,6 +312,11 @@ auto HMDT::Project::Hierarchy::ProvinceNode::getStateProperty() const noexcept
         });
 }
 
+/**
+ * @brief Gets the adjacent provinces property
+ *
+ * @return A Maybe containing the adjacent provinces property, or an error code if it's not found
+ */
 auto HMDT::Project::Hierarchy::ProvinceNode::getAdjacentProvincesProperty() const noexcept
     -> Maybe<std::shared_ptr<const IGroupNode>>
 {

@@ -6,7 +6,10 @@
 namespace HMDT::Project::Hierarchy {
     class LinkNode: public ILinkNode {
         public:
+            //! Alias for function that checks if a single node can resolve a link
             using ResolutionCheck = std::function<bool(LinkedNode)>;
+
+            //! Alias for function that searches for a node that may resolve a link
             using LinkSearch = std::function<Maybe<LinkedNode>(INodePtr)>;
 
             LinkNode(const std::string&, ResolutionCheck, LinkSearch);
