@@ -871,8 +871,11 @@ TEST(ProjectTests, SimpleHierarchyIterationTest) {
     // Debug dump tree.
     std::stack<uint32_t> indents;
     indents.push(0);
-    root_node->visit([&indents](auto node) -> HMDT::MaybeVoid {
+    uint32_t num_nodes = 0;
+    root_node->visit([&indents, &num_nodes](auto node) -> HMDT::MaybeVoid {
         using namespace std::string_literals;
+
+        ++num_nodes;
 
         uint32_t indent_lvl = indents.top();
         indents.pop();
@@ -939,5 +942,15 @@ TEST(ProjectTests, SimpleHierarchyIterationTest) {
 
         return HMDT::STATUS_SUCCESS;
     });
+
+    // Make sure the iterator works
+    WRITE_INFO("Iterate over hierarchy tree...");
+    uint32_t c = 0;
+    for(auto it = root_node->begin(); it != root_node->end(); ++it) {
+        auto node = *it;
+        WRITE_DEBUG(std::to_string(*node));
+        ++c;
+    }
+    ASSERT_EQ(c, num_nodes);
 }
 
