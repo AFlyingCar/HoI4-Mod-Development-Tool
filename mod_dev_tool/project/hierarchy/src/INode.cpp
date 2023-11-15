@@ -3,6 +3,101 @@
 #include "Util.h"
 
 /**
+ * @brief Builds a new INode iterator
+ *
+ * @param node The starting root node to iterate from
+ */
+template<typename NodePtr>
+HMDT::Project::Hierarchy::INode::IteratorImpl<NodePtr>::IteratorImpl(NodePtr node):
+    m_nodes()
+{
+    if(node != nullptr) {
+        m_nodes.push(node);
+    }
+}
+
+/**
+ * @brief Increments the iterator by one
+ *
+ * @return This iterator
+ */
+template<typename NodePtr>
+auto HMDT::Project::Hierarchy::INode::IteratorImpl<NodePtr>::operator++() -> IteratorImpl& {
+    // Do not attempt to increment if we are at the end
+    if(m_nodes.empty()) {
+        return *this;
+    }
+
+    // Advance by 1
+    advance();
+
+    return *this;
+}
+
+/**
+ * @brief Dereferences this iterator
+ *
+ * @return The current node
+ */
+template<typename NodePtr>
+auto HMDT::Project::Hierarchy::INode::IteratorImpl<NodePtr>::operator*() const noexcept
+    -> NodePtr
+{
+    return this->getNodeStack().top();
+}
+
+/**
+ * @brief Dereferences this iterator
+ *
+ * @return The current node
+ */
+template<typename NodePtr>
+auto HMDT::Project::Hierarchy::INode::IteratorImpl<NodePtr>::operator->() const noexcept
+    -> NodePtr
+{
+    return this->getNodeStack().top();
+}
+
+/**
+ * @brief Tests if this iterator is at the end.
+ *
+ * @return True if there are no nodes left, false otherwise.
+ */
+template<typename NodePtr>
+bool HMDT::Project::Hierarchy::INode::IteratorImpl<NodePtr>::isEnd() const noexcept {
+    return m_nodes.empty();
+}
+
+/**
+ * @brief Advances the iterator by one node.
+ * @details Performs one single step of a breadth-first
+ *          search of the node tree. Will assume that
+ *          m_nodes is not empty.
+ */
+template<typename NodePtr>
+void HMDT::Project::Hierarchy::INode::IteratorImpl<NodePtr>::advance() noexcept {
+    // _MKM_DEBUG_OUTPUT << "advance()" << std::endl;
+    auto node = m_nodes.top();
+    m_nodes.pop();
+
+    // If the node is some sort of group node, then add all of its children to
+    //   m_nodes. Use dynamic_pointer_cast instead of getType() as we want to do
+    //   this for any subclass of IGroupNode, not just for GroupNodes.
+    if(auto gnode = std::dynamic_pointer_cast<const IGroupNode>(node);
+            gnode != nullptr)
+    {
+        auto&& children = gnode->getChildren();
+        for(auto&& [_, child] : children) {
+            m_nodes.push(child);
+        }
+    }
+}
+
+// Explicitly instantiate const and non-const iterators
+template class HMDT::Project::Hierarchy::INode::IteratorImpl<HMDT::Project::Hierarchy::INodePtr>;
+template class HMDT::Project::Hierarchy::INode::IteratorImpl<HMDT::Project::Hierarchy::ConstINodePtr>;
+
+/**
  * @brief Visits this INode object
  *
  * @param visitor The visitor callback
@@ -16,6 +111,34 @@ auto HMDT::Project::Hierarchy::INode::visit(INodeVisitor visitor) noexcept
     RETURN_IF_ERROR(result);
 
     return STATUS_SUCCESS;
+}
+
+/**
+ * @brief Gets a const iterator to the start of the hierarchy
+ */
+auto HMDT::Project::Hierarchy::INode::begin() const noexcept -> ConstIterator {
+    return ConstIterator(shared_from_this());
+}
+
+/**
+ * @brief Gets a non-const iterator to the start of the hierarchy
+ */
+auto HMDT::Project::Hierarchy::INode::begin() noexcept -> Iterator {
+    return Iterator(shared_from_this());
+}
+
+/**
+ * @brief Gets a const iterator to the end of the hierarchy
+ */
+auto HMDT::Project::Hierarchy::INode::end() const noexcept -> ConstIterator {
+    return ConstIterator();
+}
+
+/**
+ * @brief Gets a non-const iterator to the end of the hierarchy
+ */
+auto HMDT::Project::Hierarchy::INode::end() noexcept -> Iterator {
+    return Iterator();
 }
 
 /**

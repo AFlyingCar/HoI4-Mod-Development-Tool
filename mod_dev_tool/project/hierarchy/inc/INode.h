@@ -8,6 +8,7 @@
 
 # include <any>
 # include <map>
+# include <stack>
 # include <string>
 # include <memory>
 # include <typeindex>
@@ -33,6 +34,9 @@ namespace HMDT::Project::Hierarchy {
     //! Helper alias for an INode pointer
     using INodePtr = std::shared_ptr<INode>;
 
+    //! Helper alias for a const INode pointer
+    using ConstINodePtr = std::shared_ptr<const INode>;
+
     /**
      * @brief Helper alias for a node's visitor function
      *
@@ -53,6 +57,93 @@ namespace HMDT::Project::Hierarchy {
             using Type = Node::Type;
 
         public:
+            /**
+             * @brief A forward-only iterator
+             *
+             * @tparam The NodePtr type used for this iterator (used to generify
+             *         this iterator between const and non-const)
+             */
+            template<typename NodePtr>
+            class IteratorImpl {
+                protected:
+                    //! A stack of INodes to iterate over next
+                    using NodeStack = std::stack<NodePtr>;
+
+                public:
+                    IteratorImpl() = default;
+                    IteratorImpl(NodePtr);
+
+                    IteratorImpl<NodePtr>& operator++();
+
+                    NodePtr operator*() const noexcept;
+                    NodePtr operator->() const noexcept;
+
+                    /**
+                     * @brief Compares this iterator against another of the same
+                     *        NodeType
+                     *
+                     * @param it The other iterator to compare against.
+                     *
+                     * @return True if they are not equal, false otherwise.
+                     */
+                    template<typename T>
+                    bool operator!=(const IteratorImpl<T>& it) const noexcept {
+                        return !(*this == it);
+                    }
+
+                    /**
+                     * @brief Compares this iterator against another of the same
+                     *        NodeType
+                     *
+                     * @param it The other iterator to compare against.
+                     *
+                     * @return True if they are equal, false otherwise.
+                     */
+                    template<typename T>
+                    bool operator==(const IteratorImpl<T>& it) const noexcept {
+                        // TODO: Convert this into a boolean expression and
+                        //   remove branching
+                        if(isEnd() && it.isEnd()) {
+                            return true;
+                        } else if(isEnd() || it.isEnd()) {
+                            return false;
+                        }
+
+                        // IteratorImpl is the same as another if they are currently
+                        //  looking at the same node.
+                        return m_nodes.top().get() == it.m_nodes.top().get();
+                    }
+
+                    bool isEnd() const noexcept;
+
+                protected:
+                    void advance() noexcept;
+
+                    /**
+                     * @brief Gets m_nodes.
+                     */
+                    NodeStack& getNodeStack() noexcept {
+                        return m_nodes;
+                    }
+
+                    /**
+                     * @brief Gets m_nodes.
+                     */
+                    const NodeStack& getNodeStack() const noexcept {
+                        return m_nodes;
+                    }
+
+                private:
+                    //! The stack of nodes being iterated over.
+                    NodeStack m_nodes;
+            };
+
+            //! A non-const iterator over an INode hierarchy
+            using Iterator = IteratorImpl<INodePtr>;
+
+            //! A const iterator over an INode hierarchy
+            using ConstIterator = IteratorImpl<ConstINodePtr>;
+
             INode() = default;
             INode(const INode&) = delete;
 
@@ -62,6 +153,12 @@ namespace HMDT::Project::Hierarchy {
             virtual const std::string& getName() const noexcept = 0;
 
             virtual MaybeVoid visit(INodeVisitor) noexcept;
+
+            ConstIterator begin() const noexcept;
+            ConstIterator end() const noexcept;
+
+            Iterator begin() noexcept;
+            Iterator end() noexcept;
     };
 
     /**
