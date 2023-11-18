@@ -351,7 +351,7 @@ namespace HMDT::Project::Hierarchy {
 
 namespace std {
     string to_string(const HMDT::Project::Hierarchy::Node::Type&);
-    string to_string(const HMDT::Project::Hierarchy::INode&);
+    string to_string(const HMDT::Project::Hierarchy::INode&, bool = false);
 }
 
 #endif

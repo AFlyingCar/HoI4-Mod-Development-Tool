@@ -303,10 +303,18 @@ std::string std::to_string(const HMDT::Project::Hierarchy::Node::Type& type) {
  *          <tt>NAME (ADDRESS) [NODETYPE]</tt>
  *
  * @param node The node to convert
+ * @param include_address Whether to include the memory address of node
  *
  * @return A string representation of this INode
  */
-std::string std::to_string(const HMDT::Project::Hierarchy::INode& node) {
-    return node.getName() + " (" + std::to_string(&node) + ") [" + std::to_string(node.getType()) + "]";
+std::string std::to_string(const HMDT::Project::Hierarchy::INode& node,
+                           bool include_address)
+{
+    std::string s = node.getName();
+    if(include_address) {
+        s += " (" + std::to_string(&node) + ")";
+    }
+
+    return s + " [" + std::to_string(node.getType()) + "]";
 }
 
