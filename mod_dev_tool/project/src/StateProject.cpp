@@ -589,17 +589,38 @@ auto HMDT::Project::StateProject::visitStates(const std::function<MaybeVoid(std:
     const auto& children = states_group_node->getChildren();
     for(auto&& [id, state] : m_states) {
         auto state_node = std::make_shared<Hierarchy::StateNode>(state.name);
+        auto state_id = id;
 
-        state_node->setID(const_cast<StateID&>(state.id),
-                          [](auto&&...){ return STATUS_SUCCESS; });
-        state_node->setManpower(const_cast<size_t&>(state.manpower),
-                                [](auto&&...){ return STATUS_SUCCESS; });
-        state_node->setCategory(const_cast<std::string&>(state.category),
-                                [](auto&&...){ return STATUS_SUCCESS; });
-        state_node->setBuildingsMaxLevelFactor(const_cast<float&>(state.buildings_max_level_factor),
-                                               [](auto&&...){ return STATUS_SUCCESS; });
-        state_node->setImpassable(const_cast<bool&>(state.impassable),
-                                  [](auto&&...){ return STATUS_SUCCESS; });
+        state_node->setID([_this=const_cast<StateProject*>(this), state_id]()
+                -> auto&
+            {
+                return _this->m_states[state_id].id;
+            },
+            [](auto&&...){ return STATUS_SUCCESS; } /* visitor */);
+        state_node->setManpower([_this=const_cast<StateProject*>(this),
+                                 state_id]() -> auto&
+            {
+                return _this->m_states[state_id].manpower;
+            },
+            [](auto&&...){ return STATUS_SUCCESS; });
+        state_node->setCategory([_this=const_cast<StateProject*>(this),
+                                 state_id]() -> auto&
+            {
+                return _this->m_states[state_id].category;
+            },
+            [](auto&&...){ return STATUS_SUCCESS; });
+        state_node->setBuildingsMaxLevelFactor([_this=const_cast<StateProject*>(this),
+                                                state_id]() -> auto&
+            {
+                return _this->m_states[state_id].buildings_max_level_factor;
+            },
+            [](auto&&...){ return STATUS_SUCCESS; });
+        state_node->setImpassable([_this=const_cast<StateProject*>(this),
+                                   state_id]() -> auto&
+            {
+                return _this->m_states[state_id].impassable;
+            },
+            [](auto&&...){ return STATUS_SUCCESS; });
 
         // Since this is a DynamicGroup for States, setting the
         //   provinces statically should be fine, but we may want to

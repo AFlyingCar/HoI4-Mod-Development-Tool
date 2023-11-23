@@ -178,7 +178,7 @@ auto HMDT::Project::ContinentProject::visit(const std::function<MaybeVoid(std::s
     auto continents_node = std::make_shared<Hierarchy::GroupNode>(Hierarchy::GroupKeys::CONTINENTS);
 
     for(const auto& continent : m_continents) {
-        auto property = std::make_shared<Hierarchy::ConstPropertyNode<std::string>>(continent, continent);
+        auto property = std::make_shared<Hierarchy::ConstPropertyNode<std::string>>(continent);
         continents_node->addChild(property);
     }
 

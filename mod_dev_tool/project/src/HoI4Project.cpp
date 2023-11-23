@@ -454,12 +454,27 @@ auto HMDT::Project::HoI4Project::visit(const std::function<MaybeVoid(std::shared
     auto result = visitor(hoi4_project_node);
     RETURN_IF_ERROR(result);
 
-    auto name_node = std::make_shared<Hierarchy::PropertyNode<std::string>>("Name", const_cast<std::string&>(m_name));
+    auto name_node = std::make_shared<Hierarchy::PropertyNode<std::string>>(
+            "Name",
+            [_this=const_cast<HoI4Project*>(this)]() -> MaybeRef<std::string> {
+                return _this->m_name;
+            },
+            [_this=const_cast<HoI4Project*>(this)](const auto& name) -> MaybeVoid {
+                _this->m_name = name;
+                return STATUS_SUCCESS;
+            });
     result = visitor(name_node);
     RETURN_IF_ERROR(result);
     hoi4_project_node->addChild(name_node);
 
-    auto hoi4_version_node = std::make_shared<Hierarchy::PropertyNode<Version>>("HoI4 Version", const_cast<Version&>(m_hoi4_version));
+    auto hoi4_version_node = std::make_shared<Hierarchy::PropertyNode<Version>>("HoI4 Version",
+            [_this=const_cast<HoI4Project*>(this)]() -> MaybeRef<Version> {
+                return _this->m_hoi4_version;
+            },
+            [_this=const_cast<HoI4Project*>(this)](const auto& version) -> MaybeVoid {
+                _this->m_hoi4_version = version;
+                return STATUS_SUCCESS;
+            });
     result = visitor(hoi4_version_node);
     RETURN_IF_ERROR(result);
     hoi4_project_node->addChild(hoi4_version_node);
@@ -469,7 +484,7 @@ auto HMDT::Project::HoI4Project::visit(const std::function<MaybeVoid(std::shared
     RETURN_IF_ERROR(result);
 
     for(auto&& tag : m_tags) {
-        auto tag_node = std::make_shared<Hierarchy::ConstPropertyNode<std::string>>(tag);
+        auto tag_node = std::make_shared<Hierarchy::ConstPropertyNode<const std::string>>(tag);
 
         result = visitor(tag_node);
         RETURN_IF_ERROR(result);

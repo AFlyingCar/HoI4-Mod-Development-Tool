@@ -1071,6 +1071,7 @@ auto HMDT::Project::ProvinceProject::visitProvinces(const std::function<MaybeVoi
     RETURN_IF_ERROR(result);
 
     for(auto&& [id, province] : m_provinces) {
+        auto province_id = id;
         auto name = std::to_string(province.id);
 
         auto province_node = std::make_shared<Hierarchy::ProvinceNode>(name);
@@ -1078,22 +1079,45 @@ auto HMDT::Project::ProvinceProject::visitProvinces(const std::function<MaybeVoi
         result = visitor(province_node);
         RETURN_IF_ERROR(result);
 
-        result = province_node->setID(const_cast<ProvinceID&>(province.id), visitor);
+        result = province_node->setID([_this=const_cast<ProvinceProject*>(this),
+                                       province_id]() -> auto&
+            {
+                return _this->m_provinces[province_id].id;
+            }, visitor);
         RETURN_IF_ERROR(result);
 
-        result = province_node->setColor(const_cast<const Color&>(province.unique_color), visitor);
+        result = province_node->setColor([_this=const_cast<ProvinceProject*>(this),
+                                          province_id]() -> const auto&
+            {
+                return _this->m_provinces[province_id].unique_color;
+            }, visitor);
         RETURN_IF_ERROR(result);
 
-        result = province_node->setProvinceType(const_cast<ProvinceType&>(province.type), visitor);
+        result = province_node->setProvinceType([_this=const_cast<ProvinceProject*>(this),
+                                                 province_id]() -> auto& {
+                return _this->m_provinces[province_id].type;
+            }, visitor);
         RETURN_IF_ERROR(result);
 
-        result = province_node->setCoastal(const_cast<bool&>(province.coastal), visitor);
+        result = province_node->setCoastal([_this=const_cast<ProvinceProject*>(this),
+                                            province_id]() -> auto&
+            {
+                return _this->m_provinces[province_id].coastal;
+            }, visitor);
         RETURN_IF_ERROR(result);
 
-        result = province_node->setTerrain(const_cast<TerrainID&>(province.terrain), visitor);
+        result = province_node->setTerrain([_this=const_cast<ProvinceProject*>(this),
+                                            province_id]() -> auto&
+            {
+                return _this->m_provinces[province_id].terrain;
+            }, visitor);
         RETURN_IF_ERROR(result);
 
-        result = province_node->setContinent(const_cast<Continent&>(province.continent), visitor);
+        result = province_node->setContinent([_this=const_cast<ProvinceProject*>(this),
+                                              province_id]() -> auto&
+            {
+                return _this->m_provinces[province_id].continent;
+            }, visitor);
         RETURN_IF_ERROR(result);
 
         // TODO: States still use uint32_t for ID numbering. This needs to be
