@@ -195,6 +195,7 @@ auto HMDT::Project::Hierarchy::IGroupNode::operator[](const std::string& name) n
     if(getChildren().count(name) != 0) {
         return getChildren().at(name);
     } else {
+        WRITE_ERROR("Could not find ", name, " in ", std::to_string(*this));
         RETURN_ERROR(STATUS_VALUE_NOT_FOUND);
     }
 }
@@ -269,6 +270,11 @@ auto HMDT::Project::Hierarchy::Key::lookup(INodePtr root) const noexcept
     return root;
 }
 
+const std::vector<std::string>& HMDT::Project::Hierarchy::Key::getParts() const noexcept
+{
+    return m_parts;
+}
+
 /**
  * @brief Converts Type enum to string
  *
@@ -316,5 +322,11 @@ std::string std::to_string(const HMDT::Project::Hierarchy::INode& node,
     }
 
     return s + " [" + std::to_string(node.getType()) + "]";
+}
+
+std::string std::to_string(const HMDT::Project::Hierarchy::Key& key) {
+    std::stringstream ss;
+    for(auto&& p : key.getParts()) ss << p << ':';
+    return ss.str();
 }
 

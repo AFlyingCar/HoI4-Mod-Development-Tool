@@ -12,15 +12,21 @@ namespace HMDT::Project::Hierarchy {
     template<typename T>
     class PropertyNode: public IPropertyNode {
         public:
+            using ValueGetter = std::function<MaybeRef<T>()>;
+            using ValueSetter = std::function<MaybeVoid(const T&)>;
+
             /**
              * @brief Builds this property
              *
              * @param name The name of the property
              * @param value A reference to the value this property represents
              */
-            PropertyNode(const std::string& name, T& value):
+            PropertyNode(const std::string& name,
+                         const ValueGetter& getter,
+                         const ValueSetter& setter):
                 m_name(name),
-                m_value(value),
+                m_getter(getter),
+                m_setter(setter),
                 m_type_index(typeid(T))
             { }
 
@@ -50,7 +56,10 @@ namespace HMDT::Project::Hierarchy {
              * @return The value held by this property
              */
             virtual Maybe<std::any> getAnyValue() const noexcept override {
-                return m_value;
+                auto result = m_getter();
+                RETURN_IF_ERROR(result);
+
+                return result->get();
             }
 
             /**
@@ -59,7 +68,10 @@ namespace HMDT::Project::Hierarchy {
              * @return The value held by this property
              */
             virtual Maybe<std::any> getAnyValue() noexcept override {
-                return m_value;
+                auto result = m_getter();
+                RETURN_IF_ERROR(result);
+
+                return result->get();
             }
 
             /**
@@ -82,7 +94,8 @@ namespace HMDT::Project::Hierarchy {
             {
                 if constexpr(!std::is_const_v<T>) {
                     try {
-                        m_value = std::any_cast<T>(value);
+                        auto result = m_setter(std::any_cast<T>(value));
+                        RETURN_IF_ERROR(result);
                     } catch(const std::bad_any_cast& e) {
                         WRITE_ERROR("Invalid type requested for value.");
                         RETURN_ERROR(STATUS_INVALID_TYPE);
@@ -114,8 +127,11 @@ namespace HMDT::Project::Hierarchy {
             //! The name of this property
             std::string m_name;
 
-            //! A reference to the value this node represents
-            T& m_value;
+            //! Function to get the raw value referred to by this node
+            ValueGetter m_getter;
+
+            //! Function to set the raw value referred to by this node
+            ValueSetter m_setter;
 
             //! Information about the type stored in this node
             std::type_index m_type_index;
@@ -135,8 +151,14 @@ namespace HMDT::Project::Hierarchy {
              * @param name The name of the property
              * @param value A reference to the value this property represents
              */
-            ConstPropertyNode(const std::string& name, const T& value):
-                PropertyNode<const T>::PropertyNode(name, value)
+            ConstPropertyNode(const std::string& name,
+                              const typename PropertyNode<const T>::ValueGetter& getter):
+                PropertyNode<const T>::PropertyNode(
+                        name,
+                        getter,
+                        [](auto&&...) {
+                            RETURN_ERROR(STATUS_NOT_IMPLEMENTED);
+                        })
             { }
 
             /**
@@ -145,7 +167,11 @@ namespace HMDT::Project::Hierarchy {
              * @param name The name of this property
              */
             ConstPropertyNode(const std::string& name):
-                PropertyNode<const T>(name, name)
+                PropertyNode<const T>(name,
+                        [this]() -> MaybeRef<const T> { return std::ref(this->getName()); },
+                        [](auto&&...) {
+                            RETURN_ERROR(STATUS_NOT_IMPLEMENTED);
+                        })
             { }
 
             /**

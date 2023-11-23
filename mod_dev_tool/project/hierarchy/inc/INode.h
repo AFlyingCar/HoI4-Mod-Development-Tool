@@ -221,6 +221,9 @@ namespace HMDT::Project::Hierarchy {
      */
     class IPropertyNode: public INode {
         public:
+            template<typename T>
+            using ValueLookup = std::function<MaybeRef<T>()>;
+
             IPropertyNode() = default;
             IPropertyNode(const IPropertyNode&) = delete;
 
@@ -237,14 +240,12 @@ namespace HMDT::Project::Hierarchy {
                 auto result = getAnyValue();
                 RETURN_IF_ERROR(result);
 
-                result = result.andThen([](const std::any& v) -> MaybeVoid {
-                    try {
-                        return std::any_cast<T>(v);
-                    } catch(const std::bad_any_cast& e) {
-                        WRITE_ERROR("Invalid type requested for value.");
-                        RETURN_ERROR(STATUS_INVALID_TYPE);
-                    }
-                });
+                try {
+                    return std::any_cast<T>(*result);
+                } catch(const std::bad_any_cast& e) {
+                    WRITE_ERROR("Invalid type requested for value.");
+                    RETURN_ERROR(STATUS_INVALID_TYPE);
+                }
                 RETURN_IF_ERROR(result);
 
                 return STATUS_SUCCESS;
@@ -263,14 +264,12 @@ namespace HMDT::Project::Hierarchy {
                 auto result = getAnyValue();
                 RETURN_IF_ERROR(result);
 
-                result = result.andThen([](const std::any& v) -> MaybeVoid {
-                    try {
-                        return std::any_cast<T>(v);
-                    } catch(const std::bad_any_cast& e) {
-                        WRITE_ERROR("Invalid type requested for value.");
-                        RETURN_ERROR(STATUS_INVALID_TYPE);
-                    }
-                });
+                try {
+                    return std::any_cast<T>(*result);
+                } catch(const std::bad_any_cast& e) {
+                    WRITE_ERROR("Invalid type requested for value.");
+                    RETURN_ERROR(STATUS_INVALID_TYPE);
+                }
                 RETURN_IF_ERROR(result);
 
                 return STATUS_SUCCESS;
@@ -343,6 +342,8 @@ namespace HMDT::Project::Hierarchy {
 
             Maybe<INodePtr> lookup(INodePtr) const noexcept;
 
+            const std::vector<std::string>& getParts() const noexcept;
+
         private:
             //! The parts of this key used for looking up a node
             std::vector<std::string> m_parts;
@@ -352,6 +353,7 @@ namespace HMDT::Project::Hierarchy {
 namespace std {
     string to_string(const HMDT::Project::Hierarchy::Node::Type&);
     string to_string(const HMDT::Project::Hierarchy::INode&, bool = false);
+    string to_string(const HMDT::Project::Hierarchy::Key&);
 }
 
 #endif

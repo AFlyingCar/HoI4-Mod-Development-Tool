@@ -19,12 +19,18 @@ namespace HMDT::Project::Hierarchy {
 
             virtual Type getType() const noexcept override;
 
-            MaybeVoid setID(StateID&, const INodeVisitor&) noexcept;
-            MaybeVoid setManpower(size_t&, const INodeVisitor&) noexcept;
-            MaybeVoid setCategory(std::string&, const INodeVisitor&) noexcept;
-            MaybeVoid setBuildingsMaxLevelFactor(float&, const INodeVisitor&) noexcept;
-            MaybeVoid setImpassable(bool&, const INodeVisitor&) noexcept;
-            MaybeVoid setProvinces(const std::vector<ProvinceID>&, const INodeVisitor&) noexcept;
+            MaybeVoid setID(const IPropertyNode::ValueLookup<StateID>&,
+                            const INodeVisitor&) noexcept;
+            MaybeVoid setManpower(const IPropertyNode::ValueLookup<size_t>&,
+                                  const INodeVisitor&) noexcept;
+            MaybeVoid setCategory(const IPropertyNode::ValueLookup<std::string>&,
+                                  const INodeVisitor&) noexcept;
+            MaybeVoid setBuildingsMaxLevelFactor(const IPropertyNode::ValueLookup<float>&,
+                                                 const INodeVisitor&) noexcept;
+            MaybeVoid setImpassable(const IPropertyNode::ValueLookup<bool>&,
+                                    const INodeVisitor&) noexcept;
+            MaybeVoid setProvinces(const std::vector<ProvinceID>&,
+                                   const INodeVisitor&) noexcept;
 
             Maybe<std::shared_ptr<const IPropertyNode>> getIDProperty() const noexcept;
             Maybe<std::shared_ptr<const IPropertyNode>> getManpowerProperty() const noexcept;

@@ -26,11 +26,18 @@ auto HMDT::Project::Hierarchy::StateNode::getType() const noexcept -> Type {
  *
  * @return A status code
  */
-auto HMDT::Project::Hierarchy::StateNode::setID(StateID& id,
+auto HMDT::Project::Hierarchy::StateNode::setID(const IPropertyNode::ValueLookup<StateID>& lookup,// StateID& id,
                                                 const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
-    auto id_node = std::make_shared<PropertyNode<StateID>>(StateKeys::ID, id);
+    auto id_node = std::make_shared<PropertyNode<StateID>>(StateKeys::ID,
+            lookup,
+            [lookup](const StateID& id) -> MaybeVoid {
+                auto result = lookup();
+                RETURN_IF_ERROR(result);
+                result->get() = id;
+                return STATUS_SUCCESS;
+            });
     visitor(id_node);
 
     auto result = addChild(id_node);
@@ -47,12 +54,18 @@ auto HMDT::Project::Hierarchy::StateNode::setID(StateID& id,
  *
  * @return A status code
  */
-auto HMDT::Project::Hierarchy::StateNode::setManpower(size_t& manpower,
+auto HMDT::Project::Hierarchy::StateNode::setManpower(const IPropertyNode::ValueLookup<size_t>& lookup,// size_t& manpower,
                                                       const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     auto manpower_node = std::make_shared<PropertyNode<size_t>>(StateKeys::MANPOWER,
-                                                                manpower);
+            lookup,
+            [lookup](const size_t& manpower) -> MaybeVoid {
+                auto result = lookup();
+                RETURN_IF_ERROR(result);
+                result->get() = manpower;
+                return STATUS_SUCCESS;
+            });
     visitor(manpower_node);
 
     auto result = addChild(manpower_node);
@@ -69,12 +82,18 @@ auto HMDT::Project::Hierarchy::StateNode::setManpower(size_t& manpower,
  *
  * @return A status code
  */
-auto HMDT::Project::Hierarchy::StateNode::setCategory(std::string& category,
+auto HMDT::Project::Hierarchy::StateNode::setCategory(const IPropertyNode::ValueLookup<std::string>& lookup,
                                                       const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     auto category_node = std::make_shared<PropertyNode<std::string>>(StateKeys::CATEGORY,
-                                                                     category);
+            lookup,
+            [lookup](const std::string& category) -> MaybeVoid {
+                auto result = lookup();
+                RETURN_IF_ERROR(result);
+                result->get() = category;
+                return STATUS_SUCCESS;
+            });
     visitor(category_node);
 
     auto result = addChild(category_node);
@@ -91,12 +110,18 @@ auto HMDT::Project::Hierarchy::StateNode::setCategory(std::string& category,
  *
  * @return A status code
  */
-auto HMDT::Project::Hierarchy::StateNode::setBuildingsMaxLevelFactor(float& buildings_max_level_factor,
+auto HMDT::Project::Hierarchy::StateNode::setBuildingsMaxLevelFactor(const IPropertyNode::ValueLookup<float>& lookup,
                                                                      const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     auto bmlf_node = std::make_shared<PropertyNode<float>>(StateKeys::BUILDINGS_MAX_LEVEL_FACTOR,
-                                                           buildings_max_level_factor);
+            lookup,
+            [lookup](const float& buildings_max_level_factor) -> MaybeVoid {
+                auto result = lookup();
+                RETURN_IF_ERROR(result);
+                result->get() = buildings_max_level_factor;
+                return STATUS_SUCCESS;
+            });
     visitor(bmlf_node);
 
     auto result = addChild(bmlf_node);
@@ -113,12 +138,18 @@ auto HMDT::Project::Hierarchy::StateNode::setBuildingsMaxLevelFactor(float& buil
  *
  * @return A status code
  */
-auto HMDT::Project::Hierarchy::StateNode::setImpassable(bool& impassable,
+auto HMDT::Project::Hierarchy::StateNode::setImpassable(const IPropertyNode::ValueLookup<bool>& lookup,
                                                         const INodeVisitor& visitor) noexcept
     -> MaybeVoid
 {
     auto impassable_node = std::make_shared<PropertyNode<bool>>(StateKeys::IMPASSABLE,
-                                                                impassable);
+            lookup,
+            [lookup](const bool& impassable) -> MaybeVoid {
+                auto result = lookup();
+                RETURN_IF_ERROR(result);
+                result->get() = impassable;
+                return STATUS_SUCCESS;
+            });
     visitor(impassable_node);
 
     auto result = addChild(impassable_node);

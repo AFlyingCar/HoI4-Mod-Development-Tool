@@ -19,14 +19,22 @@ namespace HMDT::Project::Hierarchy {
 
             virtual Type getType() const noexcept override;
 
-            MaybeVoid setID(ProvinceID&, const INodeVisitor&) noexcept;
-            MaybeVoid setColor(const Color&, const INodeVisitor&) noexcept;
-            MaybeVoid setProvinceType(ProvinceType&, const INodeVisitor&) noexcept;
-            MaybeVoid setCoastal(bool&, const INodeVisitor&) noexcept;
-            MaybeVoid setTerrain(TerrainID&, const INodeVisitor&) noexcept;
-            MaybeVoid setContinent(Continent&, const INodeVisitor&) noexcept;
-            MaybeVoid setState(const StateID&, const INodeVisitor&) noexcept;
-            MaybeVoid setAdjacentProvinces(const std::set<ProvinceID>&, const INodeVisitor&) noexcept;
+            MaybeVoid setID(const IPropertyNode::ValueLookup<ProvinceID>&,
+                            const INodeVisitor&) noexcept;
+            MaybeVoid setColor(const IPropertyNode::ValueLookup<const Color>&,
+                               const INodeVisitor&) noexcept;
+            MaybeVoid setProvinceType(const IPropertyNode::ValueLookup<ProvinceType>&,
+                                      const INodeVisitor&) noexcept;
+            MaybeVoid setCoastal(const IPropertyNode::ValueLookup<bool>&,
+                                 const INodeVisitor&) noexcept;
+            MaybeVoid setTerrain(const IPropertyNode::ValueLookup<TerrainID>&,
+                                 const INodeVisitor&) noexcept;
+            MaybeVoid setContinent(const IPropertyNode::ValueLookup<Continent>&,
+                                   const INodeVisitor&) noexcept;
+            MaybeVoid setState(const IPropertyNode::ValueLookup<StateID>&,
+                               const INodeVisitor&) noexcept;
+            MaybeVoid setAdjacentProvinces(const std::set<ProvinceID>&,
+                                           const INodeVisitor&) noexcept;
 
             Maybe<std::shared_ptr<const IPropertyNode>> getIDProperty() const noexcept;
             Maybe<std::shared_ptr<const IPropertyNode>> getColorProperty() const noexcept;
