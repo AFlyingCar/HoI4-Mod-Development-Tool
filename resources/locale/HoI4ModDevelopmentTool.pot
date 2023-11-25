@@ -567,6 +567,9 @@ msgstr ""
 msgid "Switch View: "
 msgstr ""
 
+msgid "Root"
+msgstr ""
+
 msgid "Map"
 msgstr ""
 
@@ -586,6 +589,15 @@ msgid "Rivers"
 msgstr ""
 
 msgid "Continents"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "HoI4 Version"
+msgstr ""
+
+msgid "Tags"
 msgstr ""
 
 msgid "ID"
