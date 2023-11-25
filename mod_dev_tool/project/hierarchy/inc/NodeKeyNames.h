@@ -8,6 +8,7 @@ namespace HMDT::Project::Hierarchy {
      * @brief Defines all keys for Project nodes
      */
     struct ProjectKeys {
+        static constexpr const char* ROOT = HMDT_LOCALIZE("Root");
         static constexpr const char* MAP = HMDT_LOCALIZE("Map");
         static constexpr const char* PROVINCES = HMDT_LOCALIZE("Provinces");
         static constexpr const char* STATES = HMDT_LOCALIZE("States");
@@ -24,6 +25,15 @@ namespace HMDT::Project::Hierarchy {
         static constexpr const char* PROVINCES = HMDT_LOCALIZE("Provinces");
         static constexpr const char* STATES = HMDT_LOCALIZE("States");
         static constexpr const char* CONTINENTS = HMDT_LOCALIZE("Continents");
+    };
+
+    /**
+     * @brief Defines all keys for the root node
+     */
+    struct RootKeys {
+        static constexpr const char* NAME = HMDT_LOCALIZE("Name");
+        static constexpr const char* HOI4_VERSION = HMDT_LOCALIZE("HoI4 Version");
+        static constexpr const char* TAGS = HMDT_LOCALIZE("Tags");
     };
 
     /**

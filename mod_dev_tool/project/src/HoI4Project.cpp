@@ -15,6 +15,7 @@
 #include "GroupNode.h"
 #include "ProjectNode.h"
 #include "PropertyNode.h"
+#include "NodeKeyNames.h"
 
 HMDT::Project::HoI4Project::HoI4Project():
     m_path(),
@@ -449,13 +450,13 @@ bool HMDT::Project::HoI4Project::validateData() {
 auto HMDT::Project::HoI4Project::visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
     -> Maybe<std::shared_ptr<Hierarchy::INode>>
 {
-    auto hoi4_project_node = std::make_shared<Hierarchy::ProjectNode>("Root");
+    auto hoi4_project_node = std::make_shared<Hierarchy::ProjectNode>(Hierarchy::ProjectKeys::ROOT);
 
     auto result = visitor(hoi4_project_node);
     RETURN_IF_ERROR(result);
 
     auto name_node = std::make_shared<Hierarchy::PropertyNode<std::string>>(
-            "Name",
+            Hierarchy::RootKeys::NAME,
             [_this=const_cast<HoI4Project*>(this)]() -> MaybeRef<std::string> {
                 return _this->m_name;
             },
@@ -467,7 +468,8 @@ auto HMDT::Project::HoI4Project::visit(const std::function<MaybeVoid(std::shared
     RETURN_IF_ERROR(result);
     hoi4_project_node->addChild(name_node);
 
-    auto hoi4_version_node = std::make_shared<Hierarchy::PropertyNode<Version>>("HoI4 Version",
+    auto hoi4_version_node = std::make_shared<Hierarchy::PropertyNode<Version>>(
+            Hierarchy::RootKeys::HOI4_VERSION,
             [_this=const_cast<HoI4Project*>(this)]() -> MaybeRef<Version> {
                 return _this->m_hoi4_version;
             },
@@ -479,7 +481,7 @@ auto HMDT::Project::HoI4Project::visit(const std::function<MaybeVoid(std::shared
     RETURN_IF_ERROR(result);
     hoi4_project_node->addChild(hoi4_version_node);
 
-    auto tags_node = std::make_shared<Hierarchy::GroupNode>("Tags");
+    auto tags_node = std::make_shared<Hierarchy::GroupNode>(Hierarchy::RootKeys::TAGS);
     result = visitor(tags_node);
     RETURN_IF_ERROR(result);
 
