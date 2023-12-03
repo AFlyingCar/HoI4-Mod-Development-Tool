@@ -95,7 +95,7 @@ namespace HMDT {
             template<typename U = T,
                      typename = std::enable_if_t<!std::is_same_v<U, Maybe<T>> &&
                                                  !std::is_same_v<U, MonadOptional<T>> &&
-                                                 std::is_convertible_v<U, T>>
+                                                 std::is_convertible_v<U, typename MonadOptional<T>::value_type>>
                     >
             constexpr Maybe(U&& value): MonadOptional<T>(std::forward<U>(value))
             { }
@@ -138,7 +138,7 @@ namespace HMDT {
              * @return A std::monostate, or std::nullopt if this object does not
              *         hold a value.
              */
-            MonadOptional<std::monostate> andThen(std::function<void(T&)> func)
+            MonadOptional<std::monostate> andThen(std::function<void(typename MonadOptional<T>::value_type&)> func)
             {
                 if(getWrapped()) {
                     func(*getWrapped());
@@ -159,7 +159,7 @@ namespace HMDT {
              *         does not hold a value.
              */
             template<typename R>
-            Maybe<R> andThen(std::function<Maybe<R>(T&)> func) {
+            Maybe<R> andThen(std::function<Maybe<R>(typename MonadOptional<T>::value_type&)> func) {
                 if(getWrapped()) {
                     return func(*getWrapped());
                 }
@@ -178,7 +178,7 @@ namespace HMDT {
              *         does not hold a value.
              */
             template<typename R>
-            Maybe<R> andThen(std::function<Maybe<R>(const T&)> func) const {
+            Maybe<R> andThen(std::function<Maybe<R>(const typename MonadOptional<T>::value_type&)> func) const {
                 if(getWrapped()) {
                     return func(*getWrapped());
                 }
@@ -199,7 +199,7 @@ namespace HMDT {
              *         will be returned, or std::nullopt if R is void
              */
             template<typename R,
-                     typename = std::enable_if_t<std::is_convertible_v<R, T> ||
+                     typename = std::enable_if_t<std::is_convertible_v<R, typename MonadOptional<T>::value_type> ||
                                                  std::is_void_v<R>>>
             Maybe<T> orElse(std::function<Maybe<R>()> func) {
                 if(getWrapped()) {
@@ -229,7 +229,8 @@ namespace HMDT {
             //   than just specialization due to a GCC bug that prevents
             //   specialization in non-namespace scopes
 
-            template<typename U = T>
+            template<typename U = T,
+                     typename = std::enable_if_t<std::is_constructible_v<typename MonadOptional<T>::value_type, U>>>
             Maybe(const Maybe<U>& maybe, Identity_t<U>):
                 MonadOptional<T>(maybe.getWrapped()),
                 m_ec(maybe.error())
@@ -239,7 +240,8 @@ namespace HMDT {
                 MonadOptional<T>(std::nullopt), m_ec(maybe.error())
             { }
 
-            template<typename U = T>
+            template<typename U = T,
+                     typename = std::enable_if_t<std::is_constructible_v<typename MonadOptional<T>::value_type, U&&>>>
             Maybe(Maybe<U>&& maybe, Identity_t<U>):
                 MonadOptional<T>(std::move(maybe)),
                 m_ec(std::move(maybe.error()))

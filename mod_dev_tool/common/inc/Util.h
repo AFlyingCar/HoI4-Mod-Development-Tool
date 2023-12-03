@@ -658,6 +658,27 @@ namespace HMDT {
      */
     template<typename T>
     using Ref = std::reference_wrapper<T>;
+
+# if HAS_ATTRIBUTE(__cpp_lib_unreachable)
+#  define UNREACHABLE() std::unreachable()
+# else
+    // Copied from https://en.cppreference.com/w/cpp/utility/unreachable
+    [[noreturn]] inline void Unreachable() {
+        // Uses compiler specific extensions if possible.
+        // Even if no extension is used, undefined behavior is still raised by
+        // an empty function body and the noreturn attribute.
+#  ifdef __GNUC__ // GCC, Clang, ICC
+        __builtin_unreachable();
+#  elif defined(_MSC_VER) // MSVC
+        __assume(false);
+#  endif
+    }
+#  define UNREACHABLE() ::HMDT::Unreachable()
+# endif
+}
+
+namespace std {
+    string to_string(const void*);
 }
 
 #endif

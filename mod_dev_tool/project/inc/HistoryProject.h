@@ -27,6 +27,8 @@ namespace HMDT::Project {
             virtual StateProject& getStateProject() noexcept override;
             virtual const StateProject& getStateProject() const noexcept override;
 
+            virtual Maybe<std::shared_ptr<Hierarchy::INode>> visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>&) const noexcept override;
+
         private:
             //! The State project
             StateProject m_state_project;

@@ -17,6 +17,24 @@
 # include <variant> // std::monostate
 
 namespace HMDT {
+    template<typename T>
+    struct IsOptional: public std::false_type{};
+
+    template<typename T>
+    struct IsOptional<std::optional<T>>: public std::true_type{};
+
+    template<typename T>
+    constexpr bool IsOptional_v = IsOptional<T>::value;
+
+    template<typename T>
+    struct AsMonostateIfVoid { using Type = T; };
+
+    template<>
+    struct AsMonostateIfVoid<void> { using Type = std::monostate; };
+
+    template<typename T>
+    using AsMonostateIfVoid_t = typename AsMonostateIfVoid<T>::Type;
+
     /**
      * @brief A light-weight wrapper around a std::optional, with support for
      *        monadic functions/operations
@@ -26,7 +44,7 @@ namespace HMDT {
     template<typename T>
     class MonadOptional {
         public:
-            using OptionalType = std::optional<T>;
+            using OptionalType = std::optional<AsMonostateIfVoid_t<T>>;
             using value_type = typename OptionalType::value_type;
 
             MonadOptional() noexcept: m_opt() { }
@@ -50,15 +68,16 @@ namespace HMDT {
                 m_opt(i, ilist, args...)
             { }
 
-            template<typename U = T,
-                     typename = std::enable_if_t<!std::is_same_v<U, MonadOptional<T>>>
+            template<typename U = value_type,
+                     typename = std::enable_if_t<!std::is_base_of_v<MonadOptional<value_type>, U> &&
+                                                 !IsOptional_v<U>>
                     >
             constexpr MonadOptional(U&& value): m_opt(std::forward<U>(value))
             { }
 
-            MonadOptional(const MonadOptional<T>& mopt): m_opt(mopt.m_opt)
+            MonadOptional(const MonadOptional<value_type>& mopt): m_opt(mopt.m_opt)
             { }
-            MonadOptional(MonadOptional<T>&& mopt): m_opt(std::move(mopt.m_opt))
+            MonadOptional(MonadOptional<value_type>&& mopt): m_opt(std::move(mopt.m_opt))
             { }
 
             MonadOptional& operator=(const MonadOptional& mopt) {
@@ -69,23 +88,23 @@ namespace HMDT {
 
             ////////////////////////////////////////////////////////////////////
 
-            constexpr const T* operator->() const {
+            constexpr const value_type* operator->() const {
                 return m_opt.operator->();
             }
-            constexpr T* operator->() {
+            constexpr value_type* operator->() {
                 return m_opt.operator->();
             }
-            constexpr const T& operator*() const& {
+            constexpr const value_type& operator*() const& {
                 return m_opt.operator*();
             }
-            constexpr T& operator*() & {
+            constexpr value_type& operator*() & {
                 return m_opt.operator*();
             }
-            constexpr const T&& operator*() const&& {
-                return std::forward<T>(m_opt.operator*());
+            constexpr const value_type&& operator*() const&& {
+                return std::forward<value_type>(m_opt.operator*());
             }
-            constexpr T&& operator*() && {
-                return std::forward<T>(m_opt.operator*());
+            constexpr value_type&& operator*() && {
+                return std::forward<value_type>(m_opt.operator*());
             }
 
             constexpr explicit operator bool() const noexcept {
@@ -96,30 +115,30 @@ namespace HMDT {
             }
 
 
-            constexpr T& value() & {
+            constexpr value_type& value() & {
                 return m_opt.value();
             }
-            constexpr const T& value() const& {
+            constexpr const value_type& value() const& {
                 return m_opt.value();
             }
-            constexpr T&& value() && {
+            constexpr value_type&& value() && {
                 return m_opt.value();
             }
-            constexpr const T&& value() const&& {
+            constexpr const value_type&& value() const&& {
                 return m_opt.value();
             }
 
             template<typename U>
-            constexpr T value_or(U&& default_value) const& {
+            constexpr value_type value_or(U&& default_value) const& {
                 return m_opt.template value_or<U>(std::forward<U>(default_value));
             }
             template<typename U>
-            constexpr T value_or(U&& default_value) && {
+            constexpr value_type value_or(U&& default_value) && {
                 return m_opt.template value_or<U>(std::forward<U>(default_value));
             }
 
-            void swap(MonadOptional& mopt) noexcept(std::is_nothrow_move_constructible_v<T> &&
-                                                    std::is_nothrow_swappable_v<T>)
+            void swap(MonadOptional& mopt) noexcept(std::is_nothrow_move_constructible_v<value_type> &&
+                                                    std::is_nothrow_swappable_v<value_type>)
             {
                 return m_opt.swap(mopt.m_opt);
             }
@@ -129,18 +148,18 @@ namespace HMDT {
             }
 
             template<typename... Args>
-            T& emplace(Args&&... args) {
+            value_type& emplace(Args&&... args) {
                 return m_opt.template emplace<Args...>(std::forward<Args>(args)...);
             }
             template<typename U, typename... Args>
-            T& emplace(std::initializer_list<U> ilist, Args&&... args) {
+            value_type& emplace(std::initializer_list<U> ilist, Args&&... args) {
                 return m_opt.template emplace<U, Args...>(ilist, std::forward<Args>(args)...);
             }
 
             ////////////////////////////////////////////////////////////////////
 
             /**
-             * @brief Transforms T into R with the given function, if this
+             * @brief Transforms value_type into R with the given function, if this
              *        object holds a value.
              *
              * @tparam R The type to transform into
@@ -151,7 +170,7 @@ namespace HMDT {
              *         value.
              */
             template<typename R>
-            MonadOptional<R> transform(std::function<R(const T&)> func) {
+            MonadOptional<R> transform(std::function<R(const value_type&)> func) {
                 if(m_opt) {
                     return MonadOptional<R>{std::optional<R>{func(*m_opt)}};
                 }
@@ -170,7 +189,7 @@ namespace HMDT {
              *         does not hold a value.
              */
             template<typename R>
-            MonadOptional<R> andThen(std::function<MonadOptional<R>(T&)> func) {
+            MonadOptional<R> andThen(std::function<MonadOptional<R>(value_type&)> func) {
                 if(m_opt) {
                     return func(*m_opt);
                 }
@@ -187,7 +206,7 @@ namespace HMDT {
              * @return A std::monostate, or std::nullopt if this object does not
              *         hold a value.
              */
-            MonadOptional<std::monostate> andThen(std::function<void(T&)> func)
+            MonadOptional<std::monostate> andThen(std::function<void(value_type&)> func)
             {
                 if(m_opt) {
                     func(*m_opt);
@@ -208,7 +227,7 @@ namespace HMDT {
              *         does not hold a value.
              */
             template<typename R>
-            MonadOptional<R> andThen(std::function<MonadOptional<R>(const T&)> func) const
+            MonadOptional<R> andThen(std::function<MonadOptional<R>(const value_type&)> func) const
             {
                 if(m_opt) {
                     return func(*m_opt);
@@ -226,7 +245,7 @@ namespace HMDT {
              * @return A std::monostate, or std::nullopt if this object does not
              *         hold a value.
              */
-            MonadOptional<std::monostate> andThen(std::function<void(const T&)> func) const
+            MonadOptional<std::monostate> andThen(std::function<void(const value_type&)> func) const
             {
                 if(m_opt) {
                     func(*m_opt);
@@ -241,7 +260,7 @@ namespace HMDT {
              *        calls the given function.
              *
              * @tparam R The type returned by the given function. Must be
-             *           convertible to a T.
+             *           convertible to a value_type.
              * @param func A function to call if this object does not hold a
              *             value
              *
@@ -249,9 +268,9 @@ namespace HMDT {
              *         will be returned, or std::nullopt if R is void
              */
             template<typename R,
-                     typename = std::enable_if_t<std::is_convertible_v<R, T> ||
+                     typename = std::enable_if_t<std::is_convertible_v<R, value_type> ||
                                                  std::is_void_v<R>>>
-            MonadOptional<T> orElse(std::function<R()> func) {
+            MonadOptional<value_type> orElse(std::function<R()> func) {
                 if(m_opt) {
                     return m_opt;
                 }
@@ -268,7 +287,7 @@ namespace HMDT {
              *        returns the provided default value
              *
              * @tparam R The type of the default value. Must be convertible to a
-             *           T.
+             *           value_type.
              * @param value The default value to return if this object does not
              *              hold a value.
              *
@@ -276,14 +295,14 @@ namespace HMDT {
              *         returned, otherwise this optional's value is returned.
              */
             template<typename R,
-                     typename = std::enable_if_t<std::is_convertible_v<R, T> ||
-                                                 std::is_constructible_v<T, R>>>
-            T orElse(const R& value) {
+                     typename = std::enable_if_t<std::is_convertible_v<R, value_type> ||
+                                                 std::is_constructible_v<value_type, R>>>
+            value_type orElse(const R& value) {
                 if(m_opt) {
                     return *m_opt;
                 }
 
-                return T{value};
+                return value_type{value};
             }
 
             /**

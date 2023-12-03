@@ -15,6 +15,9 @@
 
 #include "HoI4Project.h"
 
+#include "ProjectNode.h"
+#include "NodeKeyNames.h"
+
 HMDT::Project::MapProject::MapProject(IProject& parent_project):
     m_provinces_project(*this),
     m_continent_project(*this),
@@ -559,5 +562,59 @@ void HMDT::Project::MapProject::calculateCoastalProvinces(bool dry) {
         }
     }
     WRITE_INFO("Done.");
+}
+
+/**
+ * @brief Builds the project hierarchy tree for MapProject
+ *
+ * @param visitor The visitor callback
+ *
+ * @return The root node for MapProject
+ */
+auto HMDT::Project::MapProject::visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
+    -> Maybe<std::shared_ptr<Hierarchy::INode>>
+{
+    auto map_project_node = std::make_shared<Hierarchy::ProjectNode>(Hierarchy::ProjectKeys::MAP);
+
+    auto result = visitor(map_project_node);
+    RETURN_IF_ERROR(result);
+
+    result = getProvinceProject().visit(visitor)
+        .andThen([&map_project_node](auto province_project_node) -> MaybeVoid {
+            auto result = map_project_node->addChild(province_project_node);
+            RETURN_IF_ERROR(result);
+
+            return STATUS_SUCCESS;
+        });
+    RETURN_IF_ERROR(result);
+
+    result = getContinentProject().visit(visitor)
+        .andThen([&map_project_node](auto continent_project_node) -> MaybeVoid {
+            auto result = map_project_node->addChild(continent_project_node);
+            RETURN_IF_ERROR(result);
+
+            return STATUS_SUCCESS;
+        });
+    RETURN_IF_ERROR(result);
+
+    result = getHeightMapProject().visit(visitor)
+        .andThen([&map_project_node](auto heightmap_project_node) -> MaybeVoid {
+            auto result = map_project_node->addChild(heightmap_project_node);
+            RETURN_IF_ERROR(result);
+
+            return STATUS_SUCCESS;
+        });
+    RETURN_IF_ERROR(result);
+
+    result = getRiversProject().visit(visitor)
+        .andThen([&map_project_node](auto rivers_project_node) -> MaybeVoid {
+            auto result = map_project_node->addChild(rivers_project_node);
+            RETURN_IF_ERROR(result);
+
+            return STATUS_SUCCESS;
+        });
+    RETURN_IF_ERROR(result);
+
+    return map_project_node;
 }
 

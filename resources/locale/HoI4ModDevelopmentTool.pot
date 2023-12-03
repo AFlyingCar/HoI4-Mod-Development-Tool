@@ -19,6 +19,15 @@ msgstr ""
 msgid "Validation failed."
 msgstr ""
 
+msgid "The given type is not valid."
+msgstr ""
+
+msgid "The key already exists."
+msgstr ""
+
+msgid "The key does not exist."
+msgstr ""
+
 msgid "Project Validation Failed."
 msgstr ""
 
@@ -556,4 +565,67 @@ msgid "_SwitchView"
 msgstr ""
 
 msgid "Switch View: "
+msgstr ""
+
+msgid "Root"
+msgstr ""
+
+msgid "Map"
+msgstr ""
+
+msgid "Provinces"
+msgstr ""
+
+msgid "States"
+msgstr ""
+
+msgid "HeightMap"
+msgstr ""
+
+msgid "History"
+msgstr ""
+
+msgid "Rivers"
+msgstr ""
+
+msgid "Continents"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "HoI4 Version"
+msgstr ""
+
+msgid "Tags"
+msgstr ""
+
+msgid "ID"
+msgstr ""
+
+msgid "Manpower"
+msgstr ""
+
+msgid "Category"
+msgstr ""
+
+msgid "BuildingsMaxLevelFactor"
+msgstr ""
+
+msgid "Impassable"
+msgstr ""
+
+msgid "Color"
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "Coastal"
+msgstr ""
+
+msgid "Terrain"
+msgstr ""
+
+msgid "AdjacentProvinces"
 msgstr ""

@@ -65,6 +65,8 @@ namespace HMDT::Project {
 
             virtual void calculateCoastalProvinces(bool = false) override;
 
+            virtual Maybe<std::shared_ptr<Hierarchy::INode>> visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>&) const noexcept override;
+
         protected:
             MaybeVoid validateProvinceStateID(StateID, ProvinceID);
 

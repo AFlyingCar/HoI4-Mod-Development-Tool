@@ -18,6 +18,10 @@
 
 #include "HoI4Project.h"
 
+#include "ProjectNode.h"
+#include "ProvinceNode.h"
+#include "NodeKeyNames.h"
+
 HMDT::Project::ProvinceProject::ProvinceProject(IRootMapProject& parent_project):
     m_parent_project(parent_project),
     m_provinces()
@@ -1020,5 +1024,116 @@ void HMDT::Project::ProvinceProject::rebuildUUIDToIDMap() noexcept {
     for(auto&& [id, _] : m_provinces) {
         m_uuid_to_oldid[id] = ++i;
     }
+}
+
+/**
+ * @brief Builds the project hierarchy tree for ProvinceProject
+ *
+ * @param visitor The visitor callback
+ *
+ * @return The root node for ProvinceProject
+ */
+auto HMDT::Project::ProvinceProject::visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
+    -> Maybe<std::shared_ptr<Hierarchy::INode>>
+{
+    auto province_project_node = std::make_shared<Hierarchy::ProjectNode>(Hierarchy::ProjectKeys::PROVINCES);
+
+    auto result = visitor(province_project_node);
+    RETURN_IF_ERROR(result);
+
+    result = visitProvinces(visitor)
+        .andThen([&province_project_node](auto provinces_group_node) -> MaybeVoid {
+            auto result = province_project_node->addChild(provinces_group_node);
+            RETURN_IF_ERROR(result);
+
+            return STATUS_SUCCESS;
+        });
+    RETURN_IF_ERROR(result);
+
+    return province_project_node;
+}
+
+/**
+ * @brief Builds the group node for holding all provinces
+ *
+ * @param visitor The visitor callback
+ *
+ * @return A GroupNode that holds all ProvinceNodes for this project
+ */
+auto HMDT::Project::ProvinceProject::visitProvinces(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
+    -> Maybe<std::shared_ptr<Hierarchy::IGroupNode>>
+{
+    // This should be a static group since the number of provinces will not
+    //   change unless a new province map is loaded
+    auto provinces_group_node = std::make_shared<Hierarchy::GroupNode>(Hierarchy::GroupKeys::PROVINCES);
+
+    auto result = visitor(provinces_group_node);
+    RETURN_IF_ERROR(result);
+
+    for(auto&& [id, province] : m_provinces) {
+        auto province_id = id;
+        auto name = std::to_string(province.id);
+
+        auto province_node = std::make_shared<Hierarchy::ProvinceNode>(name);
+
+        result = visitor(province_node);
+        RETURN_IF_ERROR(result);
+
+        result = province_node->setID([_this=const_cast<ProvinceProject*>(this),
+                                       province_id]() -> auto&
+            {
+                return _this->m_provinces[province_id].id;
+            }, visitor);
+        RETURN_IF_ERROR(result);
+
+        result = province_node->setColor([_this=const_cast<ProvinceProject*>(this),
+                                          province_id]() -> const auto&
+            {
+                return _this->m_provinces[province_id].unique_color;
+            }, visitor);
+        RETURN_IF_ERROR(result);
+
+        result = province_node->setProvinceType([_this=const_cast<ProvinceProject*>(this),
+                                                 province_id]() -> auto& {
+                return _this->m_provinces[province_id].type;
+            }, visitor);
+        RETURN_IF_ERROR(result);
+
+        result = province_node->setCoastal([_this=const_cast<ProvinceProject*>(this),
+                                            province_id]() -> auto&
+            {
+                return _this->m_provinces[province_id].coastal;
+            }, visitor);
+        RETURN_IF_ERROR(result);
+
+        result = province_node->setTerrain([_this=const_cast<ProvinceProject*>(this),
+                                            province_id]() -> auto&
+            {
+                return _this->m_provinces[province_id].terrain;
+            }, visitor);
+        RETURN_IF_ERROR(result);
+
+        result = province_node->setContinent([_this=const_cast<ProvinceProject*>(this),
+                                              province_id]() -> auto&
+            {
+                return _this->m_provinces[province_id].continent;
+            }, visitor);
+        RETURN_IF_ERROR(result);
+
+        // TODO: States still use uint32_t for ID numbering. This needs to be
+        //   changed over to UUID before we can safely implement province->state
+        //   linkage.
+#if 0
+        result = province_node->setState(province.state, visitor);
+        RETURN_IF_ERROR(result);
+
+        result = province_node->setAdjacentProvinces(province.adjacent_provinces, visitor);
+        RETURN_IF_ERROR(result);
+#endif
+
+        provinces_group_node->addChild(name, province_node);
+    }
+
+    return provinces_group_node;
 }
 

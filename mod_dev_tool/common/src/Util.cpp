@@ -367,3 +367,16 @@ std::filesystem::path HMDT::getExecutablePath() {
     return std::filesystem::path(path).parent_path();
 }
 
+/**
+ * @brief Converts a pointer to a string using a common interface
+ *
+ * @param ptr The pointer
+ *
+ * @return A string representation of ptr as '0x{POINTER}'
+ */
+std::string std::to_string(const void* ptr) {
+    std::stringstream ss;
+    ss << ptr;
+    return ss.str();
+}
+

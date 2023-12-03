@@ -14,6 +14,10 @@
 
 #include "WorldNormalBuilder.h"
 
+#include "ProjectNode.h"
+#include "PropertyNode.h"
+#include "NodeKeyNames.h"
+
 HMDT::Project::HeightMapProject::HeightMapProject(IRootMapProject& parent):
     m_parent_project(parent),
     m_heightmap_bmp(nullptr)
@@ -224,5 +228,23 @@ auto HMDT::Project::HeightMapProject::getBitMap() const
     } else {
         return std::nullopt;
     }
+}
+
+/**
+ * @brief Builds the project hierarchy tree for HeightMapProject
+ *
+ * @param visitor The visitor callback
+ *
+ * @return The root node for HeightMapProject
+ */
+auto HMDT::Project::HeightMapProject::visit(const std::function<MaybeVoid(std::shared_ptr<Hierarchy::INode>)>& visitor) const noexcept
+    -> Maybe<std::shared_ptr<Hierarchy::INode>>
+{
+    auto heightmap_project_node = std::make_shared<Hierarchy::ProjectNode>(Hierarchy::ProjectKeys::HEIGHT_MAP);
+
+    auto result = visitor(heightmap_project_node);
+    RETURN_IF_ERROR(result);
+
+    return heightmap_project_node;
 }
 
