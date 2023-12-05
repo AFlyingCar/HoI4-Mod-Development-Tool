@@ -10,6 +10,7 @@
 #include <queue>
 #include <cerrno> // errno
 #include <cstring> // strerror
+#include <csignal>
 
 #include <libintl.h>
 
@@ -37,6 +38,168 @@
 
 #include "Interfaces.h"
 #include "Logger.h"
+
+namespace HMDT {
+    FILE* _dump_out_file = nullptr;
+}
+
+// Forward declarations
+std::filesystem::path getAppLocalPath();
+std::filesystem::path getLogOutputFilePath();
+std::filesystem::path getPreferencesPath();
+
+extern "C" {
+    /**
+     * @brief Function to run as a last resort in the event of a catastrophic
+     *        error. Will finalize the logger and make sure we shut down semi-
+     *        cleanly. Will never return
+     *
+     * @param signal_num The Signal ID being handled
+     */
+    [[noreturn]] void lastResortHandler(int signal_num) {
+        // Check to make sure we don't invoke this signal handler multiple times
+        static bool last_resort_invoked = false;
+        if(last_resort_invoked) {
+            std::printf("!!!LAST RESORT SIGNAL HANDLER INVOKED MORE THAN ONCE WITH SIGNAL %d!!!\n"
+                        "!!!UNABLE TO CONTINUE SAFELY SHUTTING DOWN, TERMINATING IMMEDIATELY!!!\n",
+                        signal_num);
+            std::terminate();
+        } else {
+            last_resort_invoked = true;
+        }
+
+        WRITE_ERROR("Fatal Error: Signal ", signal_num, " received. Dumping all"
+                    " logs and stack traces (if possible), and then terminating"
+                    " immediately.");
+
+        std::printf("!!!LAST RESORT INVOKED FOR SIGNAL %d !!!\n"
+                    "!!!DUMPING LOGGER AND OTHER RELEVANT DEBUGGING INFORMATION!!!\n",
+                    signal_num);
+
+        // Get the number of threads
+        std::vector<std::uint32_t> tids;
+
+#ifndef WIN32
+        for(auto&& path : std::filesystem::recursive_directory_iterator("/proc/self/task"))
+        {
+            if(path.is_directory()) {
+                if(auto tid = std::atoi(path.path().stem().generic_string().c_str());
+                        tid != 0)
+                {
+                    tids.push_back(tid);
+                }
+            }
+        }
+
+        // Create timestamped filename in format:
+        //   crash-YYYY-MM-DD-HH-MM-SS.trace
+        char buffer[64] = { 0 };
+        std::time_t now = std::time(0);
+        std::strftime(buffer, sizeof(buffer), "crash-%Y-%m-%d-%H-%M-%S.trace",
+                      std::localtime(&now));
+
+        auto stacktrace_file_path = getAppLocalPath() / buffer;
+
+        std::printf("!!!WRITING CRASH DUMPS TO %s!!!\n",
+                    stacktrace_file_path.generic_string().c_str());
+        HMDT::_dump_out_file = fopen(stacktrace_file_path.generic_string().c_str(), "w");
+
+        // Signal to every thread that it must immediately dump its backtrace
+        std::printf("!!!FOUND %zu THREADS. SIGNALLING ALL NOW!!!\n", tids.size());
+        for(auto&& tid : tids) {
+            auto res = ::kill(tid, SIGUSR1);
+            // Ignore EPERM, some of these threads aren't real and so we don't
+            //   have permission to send a signal to them
+            if(res < 0 && errno != 1) {
+                std::printf("!!!FAILED TO SEND SIGNAL %d TO THREAD %d. ERRNO=%d!!!\n",
+                            SIGUSR1, tid, errno);
+            }
+        }
+
+        fclose(HMDT::_dump_out_file);
+#else
+        UNUSED(tids);
+        std::printf("!!!WINDOWS DOES NOT SUPPORT SIGNALING OTHER THREADS. "
+                    "CANNOT DUMP STACKTRACE!!!\n");
+#endif
+
+        // Wait for the logger to finish outputting all messages, then exit
+        //   cleanly
+        HMDT::Log::Logger::getInstance().waitForLogger();
+
+#ifdef WIN32
+        // Create timestamped filename in format:
+        //   crash-YYYY-MM-DD-HH-MM-SS.dmp
+        wchar_t buffer[32];
+        std::time_t now = std::time(0);
+        wcsftime(buffer, sizeof(buffer), L"crash-%Y-%m-%e-%H-%M-%S.dmp",
+                 std::localtime(&now));
+        auto minidump_file_path = getAppLocalPath() / buffer;
+
+        HANDLE minidump_file_handle;
+        minidump_file_handle = CreateFileW(
+                minidump_file_path.string(),
+                GENERIC_WRITE,
+                0 /* dwShareMode */,
+                NULL /* lpSecurityAttributes */,
+                CREATE_ALWAYS,
+                FILE_ATTRIBUTE_NORMAL,
+                NULL /* hTemplateFile */);
+
+        if(minidump_file_handle != INVALID_HANDLE_VALUE) {
+            auto res = MiniDumpWriteDump(
+                    GetCurrentProcess(),
+                    GetCurrentProcessId(),
+                    minidump_file_handle,
+                    MiniDumpNormal /* DumpType */,
+                    NULL /* ExceptionParam */,
+                    NULL /* UserStreamParam */,
+                    NULL /* CallbackParam */
+                );
+            if(res == FALSE) {
+                std::printf("!!!FAILED TO GENERATE MINIDUMP. REASON=0x%08x!!!\n",
+                            GetLastError());
+            }
+        } else {
+            std::printf("!!!FAILED TO GENERATE MINIDUMP. REASON=0x%08x!!!\n",
+                        GetLastError());
+        }
+#else
+        // Generate a coredump (by handling the signal, we override this behavior
+        //   so we have to tell Linux to generate one manually
+        std::signal(signal_num, SIG_DFL);
+        ::kill(getpid(), signal_num);
+#endif
+
+        // Finally, exit cleanly with exit code -1
+        std::exit(-1);
+    }
+
+    void signalDumpBacktrace(int /* signal_num */) {
+        constexpr std::uint32_t MAX_FRAMES = 63;
+
+        static std::mutex _mut;
+
+        int tid =
+#if WIN32
+            GetCurrentThreadId()
+#else
+            pthread_self()
+#endif
+        ;
+
+        std::lock_guard<std::mutex> guard(_mut);
+
+        // Immediately dump a backtrace for all threads before trying anything
+        //   else
+        HMDT::dumpBacktrace(stderr, MAX_FRAMES, tid);
+
+        // Also dump it to _dump_out_file if that is set
+        if(HMDT::_dump_out_file != nullptr) {
+            HMDT::dumpBacktrace(HMDT::_dump_out_file, MAX_FRAMES, tid);
+        }
+    }
+}
 
 namespace HMDT {
     ProgramOptions prog_opts;
@@ -230,6 +393,13 @@ int main(int argc, char** argv) {
     std::ios_base::sync_with_stdio(false);
     std::cout.setf(std::ios::unitbuf);
 
+    // Set up some signal handlers to finalize execution and dump the logger
+    std::signal(SIGABRT, lastResortHandler);
+    std::signal(SIGSEGV, lastResortHandler);
+    std::signal(SIGFPE, lastResortHandler);
+
+    std::signal(SIGUSR1, signalDumpBacktrace);
+
     // First, we must register the console output function
     std::shared_ptr<bool> quiet(new bool(false));
     std::shared_ptr<bool> verbose(new bool(false));
@@ -354,6 +524,9 @@ int main(int argc, char** argv) {
     } catch(const std::exception& e) {
         WRITE_ERROR(e.what());
         return -1;
+    } catch(...) {
+        WRITE_ERROR("Unknown exception thrown! Terminating immediately.");
+        throw;
     }
 }
 
