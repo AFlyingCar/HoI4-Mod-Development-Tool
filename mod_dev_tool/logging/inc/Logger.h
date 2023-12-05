@@ -8,6 +8,7 @@
 # include <thread>
 # include <sstream>
 # include <iomanip>
+# include <condition_variable>
 
 # include "Source.h"
 # include "Message.h"
@@ -104,6 +105,8 @@ namespace HMDT::Log {
             //  testing
             void reset();
 
+            void waitForLogger() const noexcept;
+
         private:
             /**
              * @brief Builds a Message object
@@ -164,6 +167,15 @@ namespace HMDT::Log {
 
             //! The thread where update() gets called from
             std::thread m_worker_thread;
+
+            /**
+             * @brief Condition variable used to signal to other threads that
+             *        Logger has finished processing a batch of messages.
+             */
+            mutable std::condition_variable m_wait_cv;
+
+            //! Mutex for locking the condition
+            mutable std::mutex m_wait_mutex;
 
             //! The list of output functions
             static std::vector<OutputFunction> output_funcs;
