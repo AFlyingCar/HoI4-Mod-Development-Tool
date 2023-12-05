@@ -56,7 +56,8 @@ else()
 
     if(DEBUG_BUILD)
         message(STATUS "Including debug symbols in build!")
-        add_compile_options(-g)
+        add_compile_options(-g -fsanitize=address -fsanitize-recover=address)
+        add_link_options(-fsanitize=address -fsanitize-recover=address)
     endif()
 endif()
 
