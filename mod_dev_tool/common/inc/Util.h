@@ -467,6 +467,9 @@ namespace HMDT {
 
     std::filesystem::path getExecutablePath();
 
+    void dumpBacktrace(FILE* = stderr, std::uint32_t = 63,
+                       int tid = -1) noexcept;
+
     /**
      * @brief Will split the given string, transform each value using the
      *        given unary function, and place each result into the output
