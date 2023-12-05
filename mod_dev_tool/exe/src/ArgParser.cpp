@@ -18,20 +18,20 @@ static std::string program_name = "hoi4_mod_dev_tool";
  * @brief Prints help information to the console.
  */
 void HMDT::printHelp() {
-    std::cout << program_name << " [OPTIONS...] {[INFILE] [OUTPATH]}";
-    std::cout << "\t   --no-gui                Alias for --headless.";
-    std::cout << "\t   --no-skip-no-name-state Do not skip states with no name.";
-    std::cout << "\t   --state-input           The input file for writing state definitions.";
-    std::cout << "\t   --height-map            The input file for writing the normal map.";
-    std::cout << "\t   --hoi4-install-path     The installation path for Hearts of Iron 4.";
-    std::cout << "\t   --output-stages         Output every stage of the shape detection algorithm.";
-    std::cout << "\t   --headless              Should the application run in headless mode (without the GUI). Note that this requires [INFIILE] and [OUTPATH] to be provided.";
-    std::cout << "\t   --debug                 Should debugging features be enabled.";
-    std::cout << "\t   --dont-write-logfiles   Should log files get written to a file.";
-    std::cout << "\t   --fix-warnings-on-load  Whether or not problems in a project file should attempt to be fixed when they are loaded.";
-    std::cout << "\t-v,--verbose               Display all output.";
-    std::cout << "\t-q,--quiet                 Display only errors and warnings (does not affect this message).";
-    std::cout << "\t-h,--help                  Display this message and exit.";
+    std::cout << program_name << " [OPTIONS...] {[INFILE] [OUTPATH]}" << std::endl;
+    std::cout << "\t   --no-gui                Alias for --headless." << std::endl;
+    std::cout << "\t   --no-skip-no-name-state Do not skip states with no name." << std::endl;
+    std::cout << "\t   --state-input           The input file for writing state definitions." << std::endl;
+    std::cout << "\t   --height-map            The input file for writing the normal map." << std::endl;
+    std::cout << "\t   --hoi4-install-path     The installation path for Hearts of Iron 4." << std::endl;
+    std::cout << "\t   --output-stages         Output every stage of the shape detection algorithm." << std::endl;
+    std::cout << "\t   --headless              Should the application run in headless mode (without the GUI). Note that this requires [INFIILE] and [OUTPATH] to be provided." << std::endl;
+    std::cout << "\t   --debug                 Should debugging features be enabled." << std::endl;
+    std::cout << "\t   --dont-write-logfiles   Should log files get written to a file." << std::endl;
+    std::cout << "\t   --fix-warnings-on-load  Whether or not problems in a project file should attempt to be fixed when they are loaded." << std::endl;
+    std::cout << "\t-v,--verbose               Display all output." << std::endl;
+    std::cout << "\t-q,--quiet                 Display only errors and warnings (does not affect this message)." << std::endl;
+    std::cout << "\t-h,--help                  Display this message and exit." << std::endl;
 }
 
 /**
