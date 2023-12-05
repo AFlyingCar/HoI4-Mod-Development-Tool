@@ -4,6 +4,7 @@ project(HoI4ModDevelopmentTool CXX ASM)
 
 set(MSYS_PREFIX "C:/msys64" CACHE PATH "Prefix for where packages are installed to with MSYS. Only applies to WIN32.")
 set(DEBUG_BUILD OFF CACHE BOOL "Specifies if builds should be built with debugging information.")
+set(DEBUG_ENABLE_ASAN OFF CACHE BOOL "Specifies if builds should be built with ASAN.")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -56,7 +57,12 @@ else()
 
     if(DEBUG_BUILD)
         message(STATUS "Including debug symbols in build!")
-        add_compile_options(-g -fsanitize=address -fsanitize-recover=address)
+        add_compile_options(-g)
+    endif()
+
+    if(DEBUG_ENABLE_ASAN)
+        message(STATUS "Enabling ASAN. Note that this build will not be able to be used with other memory checking tools, such as valgrind.")
+        add_compile_options(-fsanitize=address -fsanitize-recover=address)
         add_link_options(-fsanitize=address -fsanitize-recover=address)
     endif()
 endif()
