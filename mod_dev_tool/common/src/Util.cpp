@@ -5,9 +5,6 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include <execinfo.h>
-#include <cxxabi.h>
-
 #include "Constants.h"
 #include "BitMap.h"
 
@@ -19,6 +16,8 @@
 #else
 # include <unistd.h>
 # include <linux/limits.h>
+# include <execinfo.h>
+# include <cxxabi.h>
 #endif
 
 // Helper replacement for __builtin_ctz if on MSVC
@@ -382,10 +381,58 @@ void HMDT::dumpBacktrace(FILE* out_file, std::uint32_t max_frames, int tid) noex
 {
     // Code taken/adapted from here:
     //   https://panthema.net/2008/0901-stacktrace-demangled/
+    // and here:
+    //   https://code.whatever.social/questions/5693192/win32-backtrace-from-c-code#5699483
     std::fprintf(out_file, "STACK TRACE (Max %u Frames) [TID:%d]:\n",
                  max_frames, tid);
 
     void* addr_list[max_frames + 1];
+
+#ifdef _WIN32
+    constexpr std::size_t MAX_SYMBOL_NAME_LENGTH = 1024;
+
+    HANDLE process = GetCurrentProcess();
+
+    SymInitialize(process, NULL, TRUE);
+
+    // Skip the first frame since that is _this_ function.
+    unsigned short frame_count = CaptureStackBackTrace(1 /* FramesToSkip */,
+                                                       max_frames,
+                                                       addr_list,
+                                                       NULL /* BackTraceHash */);
+
+    // Allocate enough space for a symbol with a name of MAX_SYMBOL_NAME_LENGTH 
+    //   characters in length
+    std::uint8_t symbol[sizeof(SYMBOL_INFO) + MAX_SYMBOL_NAME_LENGTH * sizeof(char)];
+    PSYMBOL_INFO symbol_info = reinterpret_cast<PSYMBOL_INFO>(&symbol[0]);
+    symbol_info->MaxNameLen = MAX_SYMBOL_NAME_LENGTH - 1; // Account for nul byte
+    symbol_info->SizeOfStruct = sizeof(SYMBOL_INFO);
+
+    // Output each name as:
+    //   module : function+offset
+    for(auto i = 0; i < frame_count; ++i) {
+        DWORD64 displacement = 0;
+
+        auto module_path = Log::getModulePath();
+
+        auto result = SymFromAddr(process,
+                                  (DWORD64)addr_list[i],
+                                  &displacement,
+                                  symbol_info);
+        if (result == TRUE) {
+            std::fprintf(out_file, "  %s : %s+0x%08x\n",
+                         module_path.generic_string().c_str(),
+                         symbol_info->Name,
+                         displacement);
+        } else {
+            // demangling failed. Output just the address as-is
+            std::fprintf(out_file, "  %s : %p\n",
+                         module_path.generic_string().c_str(),
+                         addr_list[i]);
+        }
+    }
+
+#else
     int addr_len = backtrace(addr_list, sizeof(addr_list) / sizeof(void*));
 
     if(addr_len == 0) {
@@ -449,6 +496,7 @@ void HMDT::dumpBacktrace(FILE* out_file, std::uint32_t max_frames, int tid) noex
             std::fprintf(out_file, "  %s\n", symbol_list[i]);
         }
     }
+#endif
 }
 
 /**
