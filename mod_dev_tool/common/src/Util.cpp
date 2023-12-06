@@ -421,7 +421,7 @@ void HMDT::dumpBacktrace(FILE* out_file, std::uint32_t max_frames, int tid) noex
                                   &displacement,
                                   symbol_info);
         if (result == TRUE) {
-            std::fprintf(out_file, "  %s : %s+0x%08x\n",
+            std::fprintf(out_file, "  %s : %s+0x%08llx\n",
                          module_path.generic_string().c_str(),
                          symbol_info->Name,
                          displacement);
