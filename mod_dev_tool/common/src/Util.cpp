@@ -10,6 +10,7 @@
 
 #ifdef _WIN32
 # include "windows.h"
+# include "Dbghelp.h"
 # ifndef PATH_MAX
 #  define PATH_MAX FILENAME_MAX
 # endif
