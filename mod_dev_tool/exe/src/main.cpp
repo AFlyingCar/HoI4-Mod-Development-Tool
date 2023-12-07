@@ -19,6 +19,7 @@
 # include <Windows.h>
 # include <shlwapi.h>
 # include "shlobj.h"
+# include "minidumpapiset.h"
 # ifdef ERROR
 #  undef ERROR // This is necessary because we define ERROR in an enum, but windows defines it as something else
 # endif
@@ -118,7 +119,7 @@ extern "C" {
 
         fclose(HMDT::_dump_out_file);
 #else
-        UNUSED(tids);
+        (void)tids;
         std::printf("!!!WINDOWS DOES NOT SUPPORT SIGNALING OTHER THREADS. "
                     "CANNOT DUMP STACKTRACE!!!\n");
 #endif
@@ -138,7 +139,7 @@ extern "C" {
 
         HANDLE minidump_file_handle;
         minidump_file_handle = CreateFileW(
-                minidump_file_path.string(),
+                minidump_file_path.wstring().c_str(),
                 GENERIC_WRITE,
                 0 /* dwShareMode */,
                 NULL /* lpSecurityAttributes */,
@@ -398,7 +399,11 @@ int main(int argc, char** argv) {
     std::signal(SIGSEGV, lastResortHandler);
     std::signal(SIGFPE, lastResortHandler);
 
+    // Windows does not support user-defined signals, so only enable this signal
+    //   on non-Win32 systems
+#ifndef _WIN32
     std::signal(SIGUSR1, signalDumpBacktrace);
+#endif
 
     // First, we must register the console output function
     std::shared_ptr<bool> quiet(new bool(false));
