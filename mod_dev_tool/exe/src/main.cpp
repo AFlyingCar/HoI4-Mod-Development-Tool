@@ -18,8 +18,8 @@
 # define WIN32_LEAN_AND_MEAN
 # include <Windows.h>
 # include <shlwapi.h>
+# include <dbghelp.h>
 # include "shlobj.h"
-# include "minidumpapiset.h"
 # ifdef ERROR
 #  undef ERROR // This is necessary because we define ERROR in an enum, but windows defines it as something else
 # endif
