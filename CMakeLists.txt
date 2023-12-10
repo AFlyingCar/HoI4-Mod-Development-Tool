@@ -78,7 +78,10 @@ endif()
 
 # Set up the resources first, as they will get depended on by subsequent projects
 add_subdirectory(resources)
-add_definitions(-DHMDT_GLIB_RESOURCES="${RESOURCE_C_SRC_NAME}")
+add_definitions(-DHMDT_GLIB_RESOURCES="${RESOURCE_C_SRC_NAME}"
+                -DHMDT_GLIB_IONICONS_RESOURCES="${IONICONS_RESOURCE_C_SRC_NAME}"
+                -DHMDT_RESOURCES="${RESOURCE_PREFIX}"
+                -DHMDT_IONICONS_RESOURCES="${IONICONS_RESOURCE_PREFIX}")
 
 # Note: We are adding the 'gettext_' alias so that we can localize without
 #   getting picked up by xgettext
@@ -88,7 +91,7 @@ add_subdirectory(mod_dev_tool)
 
 add_subdirectory(tests)
 
-add_dependencies(mod_dev_tool glib_resources locale_resources)
+add_dependencies(mod_dev_tool glib_resources glib_ionicons_resources locale_resources)
 
 ################################################################################
 
@@ -160,7 +163,7 @@ include(InstallRequiredSystemLibraries)
 #         DESTINATION ${INSTALL_DESTINATION})
 # install(DIRECTORY resources/share
 #         DESTINATION ${INSTALL_DESTINATION})
-install(FILES ${RESOURCE_C_SRC}
+install(FILES ${RESOURCE_C_SRC} ${IONICONS_RESOURCE_C_SRC}
         DESTINATION ${INSTALL_DESTINATION}/bin)
 install(FILES README.md
         DESTINATION ${INSTALL_DESTINATION}/share/doc/)
