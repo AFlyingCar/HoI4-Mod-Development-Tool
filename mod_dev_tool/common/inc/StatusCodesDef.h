@@ -26,6 +26,7 @@
     X(INVALID_TYPE, gettext("The given type is not valid.")) \
     X(KEY_EXISTS, gettext("The key already exists.")) \
     X(KEY_NOT_FOUND, gettext("The key does not exist.")) \
+    X(INVALID_VALUE, gettext("The value is invalid.")) \
     /* Project Error Codes */ \
     Y(PROJECT, 0x100) \
     X(PROJECT_VALIDATION_FAILED, gettext("Project Validation Failed.")) \
@@ -48,6 +49,7 @@
     X(NO_SUCH_ITEM_TYPE, gettext("No such item type of the given name exists.")) \
     X(EXPECTED_PATHS, gettext("The path list for adding an item is empty.")) \
     X(UNEXPECTED_RESPONSE, gettext("The response returned from the user prompt was unexpected.")) \
+    X(RESOURCE_LOAD_FAILURE, gettext("Failed to create or initialize resources.")) \
     /* ShapeFinder Error Codes */ \
     Y(SHAPEFINDER, 0x5000) \
     X(SHAPEFINDER_ESTOP, gettext("Shape Finder was stopped early.")) \
