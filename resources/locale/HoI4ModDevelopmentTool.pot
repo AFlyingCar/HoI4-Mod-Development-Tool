@@ -28,6 +28,9 @@ msgstr ""
 msgid "The key does not exist."
 msgstr ""
 
+msgid "The value is invalid."
+msgstr ""
+
 msgid "Project Validation Failed."
 msgstr ""
 
@@ -69,6 +72,9 @@ msgid "The path list for adding an item is empty."
 msgstr ""
 
 msgid "The response returned from the user prompt was unexpected."
+msgstr ""
+
+msgid "Failed to create or initialize resources."
 msgstr ""
 
 msgid "Shape Finder was stopped early."
@@ -466,6 +472,9 @@ msgid "This project was built with a different tool version: '"
 msgstr ""
 
 msgid "Color data may be generated differently."
+msgstr ""
+
+msgid "Failed to signal project opening to file tree."
 msgstr ""
 
 msgid "Failed to save file."
