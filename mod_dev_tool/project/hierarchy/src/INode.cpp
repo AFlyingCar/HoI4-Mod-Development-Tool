@@ -195,7 +195,8 @@ auto HMDT::Project::Hierarchy::IGroupNode::operator[](const std::string& name) n
     if(getChildren().count(name) != 0) {
         return getChildren().at(name);
     } else {
-        WRITE_ERROR("Could not find ", name, " in ", std::to_string(*this));
+        WRITE_ERROR("Could not find ", name, " in ",
+                    std::to_string((INode&)*this));
         RETURN_ERROR(STATUS_VALUE_NOT_FOUND);
     }
 }
