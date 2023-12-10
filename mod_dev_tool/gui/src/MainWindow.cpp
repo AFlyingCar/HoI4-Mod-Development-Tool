@@ -30,6 +30,8 @@
 
 #include "Item.h"
 
+#include "NodeKeyNames.h"
+
 /**
  * @brief Constructs the main window.
  *
@@ -391,6 +393,9 @@ void HMDT::GUI::MainWindow::initializeHelpActions() {
 bool HMDT::GUI::MainWindow::initializeWidgets() {
     buildToolbar();
 
+    m_left_pane = manage(new Gtk::Paned());
+    m_left_pane->set_position(DEFAULT_FILE_TREE_POSITION);
+
     m_paned = addWidget<Gtk::Paned>();
     
     // Set the minimum size of the pane to 512x512
@@ -398,6 +403,10 @@ bool HMDT::GUI::MainWindow::initializeWidgets() {
 
     // Make sure that we take up all of the available vertical space
     m_paned->set_vexpand();
+
+    m_paned->pack1(*m_left_pane);
+
+    buildFileTree(m_left_pane);
 
     // The view pane will always be loaded, so load it now
     buildViewPane();
@@ -455,6 +464,7 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
             {
                 auto& map_project = Driver::getInstance().getProject()->get().getMapProject();
 
+                WRITE_DEBUG("Select province ", prov_id, ", action=", (int)action);
                 switch(action) {
                     case SelectionManager::Action::SET:
                     case SelectionManager::Action::ADD:
@@ -495,6 +505,11 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                                     root_id = maybe_root->get().id;
                                 }
 
+                                // List of keys for each merged province
+                                std::vector<Project::Hierarchy::Key> keys;
+
+                                // Go over every province in the merged
+                                //   provinces and add them to the selection
                                 for(auto&& merged_prov : merged_provinces) {
                                     if(merged_prov != prov_id &&
                                        !SelectionManager::getInstance().isProvinceSelected(merged_prov))
@@ -521,8 +536,19 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                                         }
                                     }
 
+                                    keys.push_back(
+                                        Project::Hierarchy::Key{
+                                            Project::Hierarchy::ProjectKeys::MAP,
+                                            Project::Hierarchy::ProjectKeys::PROVINCES,
+                                            Project::Hierarchy::GroupKeys::PROVINCES,
+                                            std::to_string(merged_prov)
+                                        }
+                                    );
+
                                     m_drawing_area->addSelection({preview_data, province->bounding_box, province->id});
                                 }
+
+                                selectNode(keys, action);
                             }
                             m_drawing_area->queueDraw();
                         }
@@ -539,6 +565,11 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
 
                                 auto* ppp_province = getProvincePropertiesPane().getProvince();
 
+                                // List of keys for each merged province
+                                std::vector<Project::Hierarchy::Key> keys;
+
+                                // Go over every province in the merged province
+                                //   and remove it from the selection
                                 for(auto&& merged_prov : merged_provinces) {
                                     // Only remove the province from the properties pane if
                                     //  the province there is the same one we are removing
@@ -551,8 +582,18 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                                         getProvincePropertiesPane().setProvince(nullptr, null_data);
                                     }
 
+                                    keys.push_back(
+                                        Project::Hierarchy::Key{
+                                            Project::Hierarchy::ProjectKeys::MAP,
+                                            Project::Hierarchy::ProjectKeys::PROVINCES,
+                                            Project::Hierarchy::GroupKeys::PROVINCES,
+                                            std::to_string(merged_prov)
+                                        }
+                                    );
                                     m_drawing_area->removeSelection({nullptr, {}, merged_prov});
                                 }
+
+                                selectNode(keys, action);
                             }
 
                             m_drawing_area->queueDraw();
@@ -563,6 +604,8 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                         getProvincePropertiesPane().setProvince(nullptr, null_data);
 
                         getStatePropertiesPane().setState(nullptr);
+
+                        selectNode({}, SelectionManager::Action::CLEAR);
 
                         m_drawing_area->setSelection();
                         m_drawing_area->queueDraw();
@@ -651,9 +694,29 @@ void HMDT::GUI::MainWindow::buildToolbar() {
  * @brief Builds the view pane, which is where the map gets rendered to.
  */
 void HMDT::GUI::MainWindow::buildViewPane() {
-    m_paned->pack1(*std::get<Gtk::Frame*>(setActiveChild(new Gtk::Frame)), true, false);
+    m_left_pane->pack2(*std::get<Gtk::Frame*>(setActiveChild(new Gtk::Frame)), true, false);
 
     buildDrawingArea();
+}
+
+/**
+ * @brief Updates a part of the main window.
+ *
+ * @param part Which part to update
+ * @param data User data that the specific part updater needs
+ */
+void HMDT::GUI::MainWindow::updatePart(const PartType& part, const std::any& data) noexcept
+{
+    switch(part) {
+        case PartType::MAIN:
+        case PartType::DRAWING_AREA:
+        case PartType::PROPERTIES_PANE:
+            WRITE_WARN("Asked to update part #", (int)part, ", but that hasn't "
+                       "been implemented yet.");
+            break;
+        case PartType::FILE_TREE:
+            updateFileTree(std::any_cast<Project::Hierarchy::Key>(data));
+    }
 }
 
 Gtk::Orientation HMDT::GUI::MainWindow::getDisplayOrientation() const {
@@ -800,6 +863,13 @@ void HMDT::GUI::MainWindow::onProjectOpened() {
     // Issue callback to the properties pane to inform it that a project has
     //   been opened
     MainWindowPropertiesPanePart::onProjectOpened();
+    auto result = MainWindowFileTreePart::onProjectOpened();
+    if(IS_FAILURE(result)) {
+        Gtk::MessageDialog dialog(*this, gettext("Failed to signal project opening to file tree."), false,
+                                  Gtk::MESSAGE_ERROR);
+        dialog.run();
+        return;
+    }
 }
 
 /**

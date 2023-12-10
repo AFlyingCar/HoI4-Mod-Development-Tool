@@ -49,6 +49,9 @@ Gtk::Frame* HMDT::GUI::MainWindowPropertiesPanePart::buildPropertiesPane(Gtk::Pa
     {
         m_province_properties_pane.reset(new ProvincePropertiesPane);
         m_province_properties_pane->init();
+        m_province_properties_pane->setCallbackOnValueChanged([this](const Project::Hierarchy::Key& key) {
+            updatePart(BaseMainWindow::PartType::FILE_TREE, key);
+        });
         properties_tab->append_page(m_province_properties_pane->getParent(), gettext("Province"));
     }
 
@@ -56,6 +59,12 @@ Gtk::Frame* HMDT::GUI::MainWindowPropertiesPanePart::buildPropertiesPane(Gtk::Pa
     {
         m_state_properties_pane.reset(new StatePropertiesPane);
         m_state_properties_pane->init();
+        m_state_properties_pane->setCallbackOnValueChanged([this](const Project::Hierarchy::Key& key) {
+            // TODO: Currently this will fail because states are still using the
+            //   old id system, not the new UUID-based system
+            // They must be changed over before state updating can work properly
+            updatePart(BaseMainWindow::PartType::FILE_TREE, key);
+        });
 
         properties_tab->append_page(m_state_properties_pane->getParent(), gettext("State"));
     }
