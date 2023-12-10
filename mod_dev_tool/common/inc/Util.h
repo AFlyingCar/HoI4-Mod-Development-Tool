@@ -682,6 +682,20 @@ namespace HMDT {
 
 namespace std {
     string to_string(const void*);
+
+    template<typename Iterable,
+             typename = std::enable_if_t<HMDT::IsIterable_v<Iterable>>>
+    string to_string(const Iterable& iterable) {
+        string s = "{";
+        bool first = true;
+        for(auto&& v : iterable) {
+            s += (first ? "" : ", ") + to_string(v);
+            first = false;
+        }
+        s += "}";
+
+        return s;
+    }
 }
 
 #endif
