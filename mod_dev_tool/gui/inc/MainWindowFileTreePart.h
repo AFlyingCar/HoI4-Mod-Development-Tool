@@ -142,9 +142,6 @@ namespace HMDT::GUI {
 
             //! Flag to prevent infinitely recursing
             bool m_in_select_node = false;
-
-            //! A map to hold the icons for each type
-            static TypeIconMap type_icons;
     };
 }
 
