@@ -777,20 +777,15 @@ auto HMDT::GUI::MainWindowFileTreePart::HierarchyModel::valueAsString(const Proj
     else if(IS_TYPE(float)) RETURN_T_TO_STR(float);
     else if(IS_TYPE(double)) RETURN_T_TO_STR(double);
     else if(IS_TYPE(UUID)) RETURN_T_TO_STR(UUID);
-    // else if(IS_TYPE(Version)) {
-    //     auto r = node.getValue<Version>();
-    //     RETURN_IF_ERROR(r);
-    //     WRITE_DEBUG("Version.str()=", r->get().str());
-    //     // printf("Version.str()=%s", r->get().str().c_str());
-    //     std::string s = r->get().str();
-    //     WRITE_DEBUG("s=", s);
-    //     return std::string("\"") + s + "\"";
-    // }
+    else if(IS_TYPE(Version)) {
+        auto r = node.getValue<Version>();
+        RETURN_IF_ERROR(r);
+        return std::string("\"") + r->get().str() + "\"";
+    }
     else if(IS_TYPE(std::string)) {
         auto r = node.getValue<std::string>();
         RETURN_IF_ERROR(r);
-        std::string s = *r;
-        return std::string("\"") + s + "\"";
+        return std::string("\"") + r->get() + "\"";
     }
     else return "<data>";
 
