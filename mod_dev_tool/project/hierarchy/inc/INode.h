@@ -15,6 +15,7 @@
 
 # include "Maybe.h"
 # include "StatusCodes.h"
+# include "Util.h"
 
 # include "Logger.h"
 
@@ -241,9 +242,12 @@ namespace HMDT::Project::Hierarchy {
                 RETURN_IF_ERROR(result);
 
                 try {
-                    return std::any_cast<T>(*result);
+                    return std::any_cast<Ref<const T>>(*result);
                 } catch(const std::bad_any_cast& e) {
-                    WRITE_ERROR("Invalid type requested for value.");
+                    WRITE_ERROR("Invalid type requested for value, expected ",
+                                "typeid=", typeid(Ref<const T>).name(),
+                                ", got typeid=", result->type().name(),
+                                " instead.");
                     RETURN_ERROR(STATUS_INVALID_TYPE);
                 }
                 RETURN_IF_ERROR(result);
@@ -267,7 +271,9 @@ namespace HMDT::Project::Hierarchy {
                 try {
                     return std::any_cast<T>(*result);
                 } catch(const std::bad_any_cast& e) {
-                    WRITE_ERROR("Invalid type requested for value.");
+                    WRITE_ERROR("Invalid type requested for value, expected ",
+                                "typeid=", typeid(T).name(), ", got typeid=",
+                                result->type().name(), " instead.");
                     RETURN_ERROR(STATUS_INVALID_TYPE);
                 }
                 RETURN_IF_ERROR(result);
@@ -290,7 +296,7 @@ namespace HMDT::Project::Hierarchy {
 
                 if(!IS_FAILURE(any_value)) {
                     try {
-                        return std::any_cast<T>(*any_value) == other;
+                        return std::any_cast<Ref<const T>>(*any_value).get() == other;
                     } catch(const std::bad_any_cast& e) {
                         WRITE_ERROR("Invalid type requested for value.");
                     }
