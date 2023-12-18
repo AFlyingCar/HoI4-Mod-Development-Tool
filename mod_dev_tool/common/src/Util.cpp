@@ -2,18 +2,23 @@
 #include "Util.h"
 
 #include <cstdlib>
+#include <cstdio>
+#include <cstdlib>
 
 #include "Constants.h"
 #include "BitMap.h"
 
 #ifdef _WIN32
 # include "windows.h"
+# include "Dbghelp.h"
 # ifndef PATH_MAX
 #  define PATH_MAX FILENAME_MAX
 # endif
 #else
 # include <unistd.h>
 # include <linux/limits.h>
+# include <execinfo.h>
+# include <cxxabi.h>
 #endif
 
 // Helper replacement for __builtin_ctz if on MSVC
@@ -365,6 +370,134 @@ std::filesystem::path HMDT::getExecutablePath() {
 #endif
 
     return std::filesystem::path(path).parent_path();
+}
+
+/**
+ * @brief Dump a demangled backtrace for the caller to 'out_file'
+ *
+ * @param out_file The FILE to write the backtrace to
+ * @param max_frames The maximum number of frames to write
+ */
+void HMDT::dumpBacktrace(FILE* out_file, std::uint32_t max_frames, int tid) noexcept
+{
+    // Code taken/adapted from here:
+    //   https://panthema.net/2008/0901-stacktrace-demangled/
+    // and here:
+    //   https://code.whatever.social/questions/5693192/win32-backtrace-from-c-code#5699483
+    std::fprintf(out_file, "STACK TRACE (Max %u Frames) [TID:%d]:\n",
+                 max_frames, tid);
+
+    void* addr_list[max_frames + 1];
+
+#ifdef _WIN32
+    constexpr std::size_t MAX_SYMBOL_NAME_LENGTH = 1024;
+
+    HANDLE process = GetCurrentProcess();
+
+    SymInitialize(process, NULL, TRUE);
+
+    // Skip the first frame since that is _this_ function.
+    unsigned short frame_count = CaptureStackBackTrace(1 /* FramesToSkip */,
+                                                       max_frames,
+                                                       addr_list,
+                                                       NULL /* BackTraceHash */);
+
+    // Allocate enough space for a symbol with a name of MAX_SYMBOL_NAME_LENGTH 
+    //   characters in length
+    std::uint8_t symbol[sizeof(SYMBOL_INFO) + MAX_SYMBOL_NAME_LENGTH * sizeof(char)];
+    PSYMBOL_INFO symbol_info = reinterpret_cast<PSYMBOL_INFO>(&symbol[0]);
+    symbol_info->MaxNameLen = MAX_SYMBOL_NAME_LENGTH - 1; // Account for nul byte
+    symbol_info->SizeOfStruct = sizeof(SYMBOL_INFO);
+
+    // Output each name as:
+    //   module : function+offset
+    for(auto i = 0; i < frame_count; ++i) {
+        DWORD64 displacement = 0;
+
+        auto module_path = Log::getModulePath();
+
+        auto result = SymFromAddr(process,
+                                  (DWORD64)addr_list[i],
+                                  &displacement,
+                                  symbol_info);
+        if (result == TRUE) {
+            std::fprintf(out_file, "  %s : %s+0x%08llx\n",
+                         module_path.generic_string().c_str(),
+                         symbol_info->Name,
+                         displacement);
+        } else {
+            // demangling failed. Output just the address as-is
+            std::fprintf(out_file, "  %s : %p\n",
+                         module_path.generic_string().c_str(),
+                         addr_list[i]);
+        }
+    }
+
+#else
+    int addr_len = backtrace(addr_list, sizeof(addr_list) / sizeof(void*));
+
+    if(addr_len == 0) {
+        std::fprintf(out_file, "  <No addresses returned! Possibly corrupt stack>\n");
+        return;
+    }
+
+    // resolve addresses into strings containing "filename(function+address)",
+    // this array must be free()-ed
+    char** symbol_list = backtrace_symbols(addr_list, addr_len);
+    RUN_AT_SCOPE_END(std::bind(std::free, symbol_list));
+
+    std::size_t fname_size = 256;
+    char* fname_buffer = (char*)malloc(fname_size);
+    RUN_AT_SCOPE_END(std::bind(std::free, fname_buffer));
+
+    // iterate over the returned symbol lines. skip the first, it is the
+    // address of this function.
+    for(auto i = 1; i < addr_len; ++i) {
+        char* begin_name = 0;
+        char* begin_offset = 0;
+        char* end_offset = 0;
+
+        // find parentheses and +address offset surrounding the mangled name:
+        // ./module(function+0x15c) [0x8048a6d]
+        for(char* p = symbol_list[i]; p != nullptr; ++p) {
+            if(*p == '(') begin_name = p;
+            else if(*p == '+') begin_offset = p;
+            else if(*p == ')' && begin_offset != nullptr) {
+                end_offset = p;
+                break;
+            }
+        }
+
+        if(begin_name != nullptr && begin_offset != nullptr &&
+           end_offset != nullptr && begin_name < begin_offset)
+        {
+            *begin_name++ = '\0';
+            *begin_offset++ = '\0';
+            *end_offset = '\0';
+
+            // mangled name is now in [begin_name, begin_offset) and caller
+            // offset in [begin_offset, end_offset). now apply
+            // __cxa_demangle():
+            int status = 0;
+            char* ret = abi::__cxa_demangle(begin_name, fname_buffer,
+                                            &fname_size, &status);
+            if (status == 0) {
+                fname_buffer = ret; // use possibly realloc()-ed string
+                std::fprintf(out_file, "  %s : %s+%s\n", symbol_list[i],
+                             fname_buffer, begin_offset);
+            }
+            else {
+                // demangling failed. Output function name as a C function with
+                // no arguments.
+                std::fprintf(out_file, "  %s : %s()+%s\n", symbol_list[i],
+                             begin_name, begin_offset);
+            }
+        } else {
+            // Failed to parse the line, so just dump it as-is
+            std::fprintf(out_file, "  %s\n", symbol_list[i]);
+        }
+    }
+#endif
 }
 
 /**

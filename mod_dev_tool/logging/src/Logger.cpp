@@ -155,6 +155,10 @@ void HMDT::Log::Logger::update() {
 
         tempMessages.clear();
 
+        // Notify all other threads that are waiting to let them know that we
+        //   have finished processing the last batch of messages
+        m_wait_cv.notify_all();
+
         // Calculate how long this last update call took
         update_time = std::chrono::duration_cast<std::chrono::seconds>(now() - curr_time);
     }
@@ -183,6 +187,9 @@ void HMDT::Log::Logger::update() {
             }
         }
     }
+
+    // One last notify since at this point we are shutting down
+    m_wait_cv.notify_all();
 }
 
 HMDT::Log::Logger::Logger(): m_quit(false), m_messages(), m_messages_mutex(),
@@ -235,6 +242,8 @@ void HMDT::Log::Logger::destroyWorkerThread() {
         m_quit = true;
 
         m_worker_thread.join();
+
+        m_wait_cv.notify_all();
     }
 }
 
@@ -247,5 +256,19 @@ void HMDT::Log::Logger::reset() {
     m_quit = false;
     m_messages.clear();
     m_worker_thread = std::thread(&Logger::update, this);
+}
+
+/**
+ * @brief Waits until the logger has finished processing the next batch of
+ *        messages.
+ */
+void HMDT::Log::Logger::waitForLogger() const noexcept {
+    // Return early if there are no messages or if we are quitting
+    if(m_messages.empty() || m_quit) return;
+
+    std::unique_lock<std::mutex> lock(m_wait_mutex);
+
+    // Unconditional wait, we will return once the CV has been notified
+    m_wait_cv.wait(lock);
 }
 

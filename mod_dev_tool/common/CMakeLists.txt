@@ -53,7 +53,7 @@ target_include_directories(common PRIVATE "${CMAKE_BINARY_DIR}")
 target_link_libraries(common PRIVATE nlohmann_json::nlohmann_json uuid)
 
 if(WIN32)
-    target_link_libraries(common PRIVATE rpcrt4.lib)
+    target_link_libraries(common PRIVATE rpcrt4.lib dbghelp)
 endif()
 
 target_link_libraries(common PUBLIC unique_colors logging)

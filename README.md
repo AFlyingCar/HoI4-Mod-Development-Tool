@@ -33,7 +33,7 @@ properly or compile. As such, I will not describe how to compile with MSVC here.
 #### Using MSYS2
 
 Make sure you install [MSYS](https://www.msys2.org/wiki/MSYS2-installation/)
-first, and run the following commands in an MSYS2 shell.
+first, and run the following commands in an MSYS2-MINGW shell.
 
 ```
 $ ./win32.bootstrap.sh

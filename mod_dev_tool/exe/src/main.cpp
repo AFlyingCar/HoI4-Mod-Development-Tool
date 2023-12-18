@@ -10,6 +10,8 @@
 #include <queue>
 #include <cerrno> // errno
 #include <cstring> // strerror
+#include <csignal>
+#include <chrono> // std::literals
 
 #include <libintl.h>
 
@@ -17,6 +19,8 @@
 # define WIN32_LEAN_AND_MEAN
 # include <Windows.h>
 # include <shlwapi.h>
+# include <dbghelp.h>
+# include <tlhelp32.h>
 # include "shlobj.h"
 # ifdef ERROR
 #  undef ERROR // This is necessary because we define ERROR in an enum, but windows defines it as something else
@@ -37,6 +41,292 @@
 
 #include "Interfaces.h"
 #include "Logger.h"
+
+namespace HMDT {
+    FILE* _dump_out_file = nullptr;
+
+#ifdef WIN32
+    std::atomic<std::uint32_t> apc_counter = 0;
+#endif
+}
+
+// Forward declarations
+std::filesystem::path getAppLocalPath();
+std::filesystem::path getLogOutputFilePath();
+std::filesystem::path getPreferencesPath();
+
+extern "C" {
+    /**
+     * @brief Function to run as a last resort in the event of a catastrophic
+     *        error. Will finalize the logger and make sure we shut down semi-
+     *        cleanly. Will never return
+     *
+     * @param signal_num The Signal ID being handled
+     */
+    [[noreturn]] void lastResortHandler(int signal_num) {
+        // Check to make sure we don't invoke this signal handler multiple times
+        static bool last_resort_invoked = false;
+        if(last_resort_invoked) {
+            std::fprintf(stderr,
+                         "!!!LAST RESORT SIGNAL HANDLER INVOKED MORE THAN ONCE WITH SIGNAL %d!!!\n"
+                         "!!!UNABLE TO CONTINUE SAFELY SHUTTING DOWN, TERMINATING IMMEDIATELY!!!\n",
+                         signal_num);
+            std::terminate();
+        } else {
+            last_resort_invoked = true;
+        }
+
+        WRITE_ERROR("Fatal Error: Signal ", signal_num, " received. Dumping all"
+                    " logs and stack traces (if possible), and then terminating"
+                    " immediately.");
+
+        std::fprintf(stderr, "!!!LAST RESORT INVOKED FOR SIGNAL %d !!!\n"
+                     "!!!DUMPING LOGGER AND OTHER RELEVANT DEBUGGING INFORMATION!!!\n",
+                     signal_num);
+
+        // Create timestamped filename in format:
+        //   crash-YYYY-MM-DD-HH-MM-SS.trace
+        char trace_buffer[64] = { 0 };
+        std::time_t now = std::time(0);
+        std::strftime(trace_buffer, sizeof(trace_buffer), "crash-%Y-%m-%d-%H-%M-%S.trace",
+                      std::localtime(&now));
+
+        auto stacktrace_file_path = getAppLocalPath() / trace_buffer;
+
+        std::fprintf(stderr, "!!!WRITING CRASH DUMPS TO %s!!!\n",
+                     stacktrace_file_path.generic_string().c_str());
+        HMDT::_dump_out_file = fopen(stacktrace_file_path.generic_string().c_str(), "w");
+
+#ifndef WIN32
+        // Enumerate all threads
+        std::vector<std::uint32_t> tids;
+        for(auto&& path : std::filesystem::recursive_directory_iterator("/proc/self/task"))
+        {
+            if(path.is_directory()) {
+                if(auto tid = std::atoi(path.path().stem().generic_string().c_str());
+                        tid != 0)
+                {
+                    tids.push_back(tid);
+                }
+            }
+        }
+
+        // Signal to every thread that it must immediately dump its backtrace
+        std::fprintf(stderr, "!!!FOUND %zu THREADS. SIGNALLING ALL NOW!!!\n", tids.size());
+        for(auto&& tid : tids) {
+            auto res = ::kill(tid, SIGUSR1);
+            // Ignore EPERM, some of these threads aren't real and so we don't
+            //   have permission to send a signal to them
+            if(res < 0 && errno != 1) {
+                std::fprintf(stderr, "!!!FAILED TO SEND SIGNAL %d TO THREAD %d. ERRNO=%d!!!\n",
+                             SIGUSR1, tid, errno);
+            }
+        }
+
+        fclose(HMDT::_dump_out_file);
+#else
+        // Get our own process id
+        DWORD process_id = GetCurrentProcessId();
+
+        std::vector<DWORD> tids;
+
+        // Enumerate all threads (See: https://stackoverflow.com/a/1206915)
+        HANDLE handle = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+        if(handle != INVALID_HANDLE_VALUE) {
+            THREADENTRY32 thread_entry;
+            thread_entry.dwSize = sizeof(thread_entry);
+
+            if(Thread32First(handle, &thread_entry)) {
+                do {
+                    // Sorry for the indentation here, there's no real way to
+                    //   make this if-statement look nice :(
+                    constexpr auto EXPECTED_SIZE = FIELD_OFFSET(THREADENTRY32,
+                                                                th32OwnerProcessID) +
+                                                   sizeof(thread_entry.th32OwnerProcessID);
+
+                    if(thread_entry.dwSize >= EXPECTED_SIZE) {
+                        // Note that this will give us every thread on the
+                        //   system, so we have to also make sure that the
+                        //   thread is only for our process
+                        if(thread_entry.th32OwnerProcessID == process_id) {
+                            tids.push_back(thread_entry.th32ThreadID);
+                        }
+                    }
+
+                    thread_entry.dwSize = sizeof(thread_entry);
+                } while(Thread32Next(handle, &thread_entry));
+            }
+        }
+
+        // For every thread, queue a function to be run at the earliest
+        //   opportunity, and immediately suspend + unsuspend the function
+        // We do this because APC calls will only be run when a thread is
+        //   waiting (which we cannot guarantee every thread will do so before
+        //   the program finishes going down), and when the thread is
+        //   _unsuspended_, meaning we want to suspend and unsuspend each thread
+        //   to force them to run the callback we need
+        std::fprintf(stderr, "!!!FOUND %zu THREADS. SIGNALLING ALL NOW!!!\n", tids.size());
+        for(auto&& tid : tids) {
+            std::fprintf(stderr, "!!!Signal thread %d!!!\n", tid);
+            if(tid == GetCurrentThreadId()) {
+                // Write the backtrace to both stderr and to
+                //   HMDT::_dump_out_file
+                ::HMDT::dumpBacktrace(stderr, 63,
+                                      static_cast<int>(tid));
+                ::HMDT::dumpBacktrace(HMDT::_dump_out_file, 63,
+                                      static_cast<int>(tid));
+                continue;
+            }
+
+            // Grab the thread handle first with Suspend, Resume, and SetContext
+            //   access
+            HANDLE thread_handle = OpenThread(
+                    THREAD_SUSPEND_RESUME | THREAD_SET_CONTEXT /* dwDesiredAccess */,
+                    FALSE /* bInheritHandle */,
+                    tid);
+            if(thread_handle == NULL) {
+                std::fprintf(stderr, "!!!FAILED TO GET HANDLE FOR THREAD %d, REASON: 0x%08x!!!\n",
+                             tid, GetLastError());
+                continue;
+            }
+
+            // TODO: Do we need to actually do this since the program is going
+            //   to be destroyed here in a second anyway?
+            RUN_AT_SCOPE_END(std::bind(CloseHandle, thread_handle));
+
+            // First suspend the thread
+            if(SuspendThread(thread_handle) == (DWORD)-1) {
+                std::fprintf(stderr, "!!!FAILED TO SUSPEND THREAD %d, REASON: 0x%08x!!!\n",
+                             tid, GetLastError());
+                continue;
+            }
+
+            // Convert the thread Id into a ULONG_PTR and send that in as the
+            //   parameter. We only need this one data parameter, so it's fine
+            //   to just send it in as-is
+            if(!QueueUserAPC(+[](ULONG_PTR parameter) {
+                    // Write the backtrace to both stderr and to
+                    //   HMDT::_dump_out_file
+                    ::HMDT::dumpBacktrace(stderr, 63,
+                                          static_cast<int>(parameter));
+                    ::HMDT::dumpBacktrace(HMDT::_dump_out_file, 63,
+                                          static_cast<int>(parameter));
+                    ++HMDT::apc_counter;
+                }, thread_handle, static_cast<ULONG_PTR>(tid)))
+            {
+                std::fprintf(stderr, "!!!FAILED TO QUEUE BACKTRACE FOR THREAD %d, REASON: 0x%08x!!!\n",
+                             tid, GetLastError());
+                continue;
+            }
+
+            // Then resume the thread
+            if(ResumeThread(thread_handle) == (DWORD)-1) {
+                std::fprintf(stderr, "!!!FAILED TO RESUME THREAD %d, REASON: 0x%08x!!!\n",
+                             tid, GetLastError());
+                continue;
+            }
+        }
+
+        // wait until all threads are finished dumping, or 30s
+        for(auto i = 0; HMDT::apc_counter < tids.size() && i < 10; ++i) {
+            using namespace std::literals;
+            std::this_thread::sleep_for(1s);
+        }
+#endif
+
+        // Wait for the logger to finish outputting all messages, then exit
+        //   cleanly
+        HMDT::Log::Logger::getInstance().waitForLogger();
+
+#ifdef WIN32
+        // Create timestamped filename in format:
+        //   crash-YYYY-MM-DD-HH-MM-SS.dmp
+        char dmp_buffer[32] = { 0 };
+        strftime(dmp_buffer, sizeof(dmp_buffer), "crash-%Y-%m-%d-%H-%M-%S.dmp",
+                 std::localtime(&now));
+        auto minidump_file_path = getAppLocalPath() / dmp_buffer;
+
+        std::fprintf(stderr, "!!!WRITING MINIDUMP TO %s!!!\n",
+                     minidump_file_path.generic_string().c_str());
+
+        HANDLE minidump_file_handle;
+        minidump_file_handle = CreateFileW(
+                minidump_file_path.wstring().c_str(),
+                GENERIC_WRITE,
+                0 /* dwShareMode */,
+                NULL /* lpSecurityAttributes */,
+                CREATE_ALWAYS,
+                FILE_ATTRIBUTE_NORMAL,
+                NULL /* hTemplateFile */);
+
+        if(minidump_file_handle != INVALID_HANDLE_VALUE) {
+            auto res = MiniDumpWriteDump(
+                    GetCurrentProcess(),
+                    GetCurrentProcessId(),
+                    minidump_file_handle,
+                    MiniDumpNormal /* DumpType */,
+                    NULL /* ExceptionParam */,
+                    NULL /* UserStreamParam */,
+                    NULL /* CallbackParam */
+                );
+            if(res == FALSE) {
+                std::fprintf(stderr, "!!!FAILED TO WRITE MINIDUMP. REASON=0x%08x!!!\n",
+                             GetLastError());
+            }
+        } else {
+            LPSTR msg_buf = nullptr;
+            auto err = GetLastError();
+
+            FormatMessageA(
+                FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS /* dwFlags */,
+                NULL /* lpSource */,
+                err /* dwMessageId */,
+                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT) /* dwLanguageId */,
+                (LPSTR)&msg_buf /* lpBuffer */,
+                0 /* nSize */,
+                NULL /* Arguments */);
+
+            std::fprintf(stderr, "!!!FAILED TO CREATE MINIDUMP FILE. REASON=0x%08x: %s!!!\n",
+                         err, msg_buf);
+
+            LocalFree(msg_buf);
+        }
+#else
+        // Generate a coredump (by handling the signal, we override this behavior
+        //   so we have to tell Linux to generate one manually
+        std::signal(signal_num, SIG_DFL);
+        ::kill(getpid(), signal_num);
+#endif
+
+        // Finally, exit cleanly with exit code -1
+        std::exit(-1);
+    }
+
+    void signalDumpBacktrace(int /* signal_num */) {
+        constexpr std::uint32_t MAX_FRAMES = 63;
+
+        static std::mutex _mut;
+
+        int tid =
+#if WIN32
+            GetCurrentThreadId()
+#else
+            pthread_self()
+#endif
+        ;
+
+        std::lock_guard<std::mutex> guard(_mut);
+
+        // Immediately dump a backtrace for all threads before trying anything
+        //   else
+        HMDT::dumpBacktrace(stderr, MAX_FRAMES, tid);
+
+        // Also dump it to _dump_out_file if that is set
+        if(HMDT::_dump_out_file != nullptr) {
+            HMDT::dumpBacktrace(HMDT::_dump_out_file, MAX_FRAMES, tid);
+        }
+    }
+}
 
 namespace HMDT {
     ProgramOptions prog_opts;
@@ -230,6 +520,17 @@ int main(int argc, char** argv) {
     std::ios_base::sync_with_stdio(false);
     std::cout.setf(std::ios::unitbuf);
 
+    // Set up some signal handlers to finalize execution and dump the logger
+    std::signal(SIGABRT, lastResortHandler);
+    std::signal(SIGSEGV, lastResortHandler);
+    std::signal(SIGFPE, lastResortHandler);
+
+    // Windows does not support user-defined signals, so only enable this signal
+    //   on non-Win32 systems
+#ifndef _WIN32
+    std::signal(SIGUSR1, signalDumpBacktrace);
+#endif
+
     // First, we must register the console output function
     std::shared_ptr<bool> quiet(new bool(false));
     std::shared_ptr<bool> verbose(new bool(false));
@@ -354,6 +655,9 @@ int main(int argc, char** argv) {
     } catch(const std::exception& e) {
         WRITE_ERROR(e.what());
         return -1;
+    } catch(...) {
+        WRITE_ERROR("Unknown exception thrown! Terminating immediately.");
+        throw;
     }
 }
 
