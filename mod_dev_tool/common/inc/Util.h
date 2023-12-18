@@ -662,6 +662,19 @@ namespace HMDT {
     template<typename T>
     using Ref = std::reference_wrapper<T>;
 
+    /**
+     * @brief Converts a Ref<T> to a Ref<const T>
+     *
+     * @tparam T The type held by Ref
+     * @param r The Ref object
+     *
+     * @return A Ref<const T>, holding the same reference as 'r'
+     */
+    template<typename T>
+    Ref<const T> refAsConstRef(const Ref<T>& r) {
+        return r;
+    }
+
 # if HAS_ATTRIBUTE(__cpp_lib_unreachable)
 #  define UNREACHABLE() std::unreachable()
 # else
