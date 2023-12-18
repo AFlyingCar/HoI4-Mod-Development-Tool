@@ -27,6 +27,7 @@
     X(KEY_EXISTS, gettext("The key already exists.")) \
     X(KEY_NOT_FOUND, gettext("The key does not exist.")) \
     X(INVALID_VALUE, gettext("The value is invalid.")) \
+    X(OUT_OF_RANGE, gettext("The requested index is out of range.")) \
     /* Project Error Codes */ \
     Y(PROJECT, 0x100) \
     X(PROJECT_VALIDATION_FAILED, gettext("Project Validation Failed.")) \
