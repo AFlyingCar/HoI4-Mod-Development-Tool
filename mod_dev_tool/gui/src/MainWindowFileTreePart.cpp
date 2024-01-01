@@ -182,6 +182,10 @@ auto HMDT::GUI::MainWindowFileTreePart::HierarchyModel::getValueFromNode(Project
                         auto result = getValueFromNode(lnode->getLinkedNode(),
                                                        column, value);
                         RETURN_IF_ERROR(result);
+
+                        // Return here to prevent Gtk errors of initializing
+                        //   'value' multiple times.
+                        return STATUS_SUCCESS;
                     } else {
                         WRITE_WARN("Node ", std::to_string(*node, true),
                                    " is marked as a link node, but we failed to"
