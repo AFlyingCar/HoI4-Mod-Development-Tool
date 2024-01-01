@@ -329,10 +329,6 @@ bool HMDT::GUI::MainWindowFileTreePart::HierarchyModel::iter_next_vfunc(const it
     std::shared_ptr<Project::Hierarchy::INode> next_node = nullptr;
 
     if(parent != nullptr) {
-        // DEBUGGING: Only allow one deep into the tree
-        // if(m_parent_map.count(parent.get()) != 0 && m_parent_map.at(parent.get()) != nullptr)
-        //     return false;
-
         // First, what is the current index for the node
         if(m_node_index_map.count(node) == 0) {
             WRITE_ERROR("Node ", std::to_string(*node), " was not found in the "
@@ -430,8 +426,6 @@ int HMDT::GUI::MainWindowFileTreePart::HierarchyModel::iter_n_children_vfunc(con
     // Make sure the cast was successful. If it wasn't, then we do not have a
     //   group node (and thus, no children)
     if(gnode == nullptr) {
-        // WRITE_ERROR("Node ", std::to_string(*node), " is not a group node.");
-        // WRITE_DEBUG("node ", std::to_string(*node), " has 0 children.");
         return 0;
     }
 
@@ -759,10 +753,6 @@ auto HMDT::GUI::MainWindowFileTreePart::HierarchyModel::valueAsString(const Proj
     return ss.str(); \
 } while (0)
 
-    // TODO: There is currently a SIGSEGV caused by a dangling reference when
-    //   attempting to get strings. Version is disabled for now until that can
-    //   be tracked down (it also causes strings to crash in general without
-    //   first assigning it to a temporary)
     if(IS_TYPE(bool)) RETURN_BOOL();
     else if(IS_TYPE(Color)) RETURN_COLOR();
     else if(IS_TYPE(ProvinceType)) RETURN_PROVTYPE();
