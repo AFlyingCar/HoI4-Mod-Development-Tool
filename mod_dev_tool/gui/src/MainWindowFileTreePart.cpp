@@ -321,13 +321,21 @@ bool HMDT::GUI::MainWindowFileTreePart::HierarchyModel::iter_next_vfunc(const it
         return false;
     }
 
-    // Get the parent of this node (one should always exist, though the parent
-    //   will be null for the root node)
-    if(m_parent_map.count(node) == 0) {
-        WRITE_ERROR("Could not find parent of ", std::to_string(*node), " in parent map.");
-        return false;
+    Project::Hierarchy::INodePtr parent;
+
+    // Special case for link nodes
+    if(iter.gobj()->user_data2 == nullptr) {
+        // Get the parent of this node (one should always exist, though the parent
+        //   will be null for the root node)
+        if(m_parent_map.count(node) == 0) {
+            WRITE_ERROR("Could not find parent of ", std::to_string(*node), " in parent map.");
+            return false;
+        }
+        parent = m_parent_map.at(node);
+    } else {
+        parent = static_cast<Project::Hierarchy::INode*>(iter.gobj()->user_data2)
+            ->shared_from_this();
     }
-    auto parent = m_parent_map.at(node);
 
     // The next node for the iterator
     std::shared_ptr<Project::Hierarchy::INode> next_node = nullptr;
@@ -341,20 +349,48 @@ bool HMDT::GUI::MainWindowFileTreePart::HierarchyModel::iter_next_vfunc(const it
         }
         auto cur_idx = m_node_index_map.at(node);
 
-        // Is there a next index?
-        if(m_ordered_children_map.count(parent.get()) == 0) {
-            WRITE_ERROR("Parent ", std::to_string(*parent), " was not found in "
+        // If the "parent" is a link node, dereference the true parent and do
+        //   the next index checks on that (since link nodes don't technically
+        //   actually contain any children)
+        Project::Hierarchy::INodePtr true_parent;
+        if(parent->getType() == Project::Hierarchy::Node::Type::LINK) {
+            if(auto lnode = std::dynamic_pointer_cast<Project::Hierarchy::ILinkNode>(parent);
+                    lnode != nullptr)
+            {
+                true_parent = lnode->getLinkedNode();
+            } else {
+                WRITE_WARN("Node ", std::to_string(*node, true), " is marked "
+                           "as a link node, but we failed to cast it to "
+                           "an ILinkNode object. Assuming that the given "
+                           "parent is actually the node's parent.");
+                true_parent = parent;
+            }
+        } else {
+            true_parent = parent;
+        }
+
+        // Make sure that there actually _is_ a next index
+        if(m_ordered_children_map.count(true_parent.get()) == 0) {
+            WRITE_ERROR("Parent ", std::to_string(*true_parent), " was not found in "
                         "the ordered children map.");
             return false;
         }
 
-        auto&& children = m_ordered_children_map.at(parent.get());
+        auto&& children = m_ordered_children_map.at(true_parent.get());
         if(cur_idx + 1 >= children.size()) {
             // Reached the end of iteration for this parent
             return false;
-        } else {
-            next_node = children[cur_idx + 1];
         }
+
+        // Now that we're sure that a next index exists, go ahead and get the
+        //   next child
+        auto maybe_next = getNthChildForNode(parent, cur_idx + 1, false);
+        if(IS_FAILURE(maybe_next) && maybe_next == STATUS_OUT_OF_RANGE) {
+            return false;
+        }
+        RETURN_VALUE_IF_ERROR(maybe_next, false);
+
+        next_node = *maybe_next;
     } else {
         // WRITE_DEBUG("Reached end of iteration (node is root).");
         return false;
@@ -422,10 +458,28 @@ int HMDT::GUI::MainWindowFileTreePart::HierarchyModel::iter_n_children_vfunc(con
         return 0;
     }
 
-    // TODO: Add code so this also works for link nodes
+    return getNumChildrenForNode(node->shared_from_this());
+}
 
-    // Do a separate dynamic cast here so we can actually do the casting (TODO: Does this even work?)
-    auto* gnode = dynamic_cast<Project::Hierarchy::IGroupNode*>(node);
+std::int32_t HMDT::GUI::MainWindowFileTreePart::HierarchyModel::getNumChildrenForNode(Project::Hierarchy::INodePtr node) const noexcept
+{
+    // Special case for link nodes, their children is the same as what they are
+    //   pointing at
+    if(node->getType() == Project::Hierarchy::Node::Type::LINK) {
+        if(auto lnode = std::dynamic_pointer_cast<Project::Hierarchy::ILinkNode>(node);
+                lnode != nullptr)
+        {
+            return getNumChildrenForNode(lnode->getLinkedNode());
+        } else {
+            WRITE_WARN("Node ", std::to_string(*node, true), " is marked"
+                       " as a link node, but we failed to cast it to"
+                       " an ILinkNode object.");
+            return 0;
+        }
+    }
+
+    // Do a separate dynamic cast here so we can actually do the casting
+    auto gnode = std::dynamic_pointer_cast<Project::Hierarchy::IGroupNode>(node);
 
     // Make sure the cast was successful. If it wasn't, then we do not have a
     //   group node (and thus, no children)
@@ -444,16 +498,7 @@ int HMDT::GUI::MainWindowFileTreePart::HierarchyModel::iter_n_children_vfunc(con
  */
 int HMDT::GUI::MainWindowFileTreePart::HierarchyModel::iter_n_root_children_vfunc() const
 {
-    // WRITE_DEBUG("iter_n_root_children_vfunc()");
-    if(auto gnode = std::dynamic_pointer_cast<const Project::Hierarchy::IGroupNode>(m_project_hierarchy);
-            gnode != nullptr)
-    {
-        return gnode->getChildren().size();
-    } else {
-        // This should never happen as the root should always be some form of
-        //   group node, but just in case lets return 0 here anyway
-        return 0;
-    }
+    return getNumChildrenForNode(m_project_hierarchy);
 }
 
 /**
@@ -496,25 +541,75 @@ bool HMDT::GUI::MainWindowFileTreePart::HierarchyModel::iter_nth_child_vfunc(
     }
     // WRITE_DEBUG("Get child of node ", std::to_string(*node));
 
-    // Make sure the node is known to have children
-    if(m_ordered_children_map.count(node) == 0) {
-        return false;
-    }
+    auto nth_child = getNthChildForNode(node->shared_from_this(), n);
+    RETURN_VALUE_IF_ERROR(nth_child, false);
 
-    // Make sure the requested child is valid
-    if(auto num_children = m_ordered_children_map.at(node).size();
-            n < 0 || n >= num_children)
-    {
-        WRITE_ERROR("Requested child ", n, " is out of range. Node ",
-                    std::to_string(*node), " has ", num_children, " children.");
-        return false;
-    }
+    iter.gobj()->user_data = static_cast<void*>(nth_child->get());
 
-    iter.gobj()->user_data = static_cast<void*>(m_ordered_children_map.at(node)[n].get());
+    // Special case for link nodes
+    // If we are coming from a link node, then we need to make sure that we mark
+    //   this, otherwise Gtk gets confused on how to go back up the tree
+    //   properly
+    if(node->getType() == Project::Hierarchy::Node::Type::LINK) {
+        iter.gobj()->user_data2 = node;
+    }
 
     iter.set_stamp(m_stamp);
 
     return true;
+}
+
+/**
+ * @brief Gets the nth child from a node
+ *
+ * @param node The node
+ * @param n The child to get
+ * @param link The link node parent (if applicable)
+ * @param report_on_oor Whether to report out of range errors
+ *
+ * @return The nth child, or an error code on failure
+ */
+auto HMDT::GUI::MainWindowFileTreePart::HierarchyModel::getNthChildForNode(
+        Project::Hierarchy::INodePtr node,
+        std::int32_t n,
+        bool report_on_oor) const noexcept
+    -> Maybe<Project::Hierarchy::INodePtr>
+{
+    // Special case for link nodes
+    if(node->getType() == Project::Hierarchy::Node::Type::LINK) {
+        if(auto lnode = std::dynamic_pointer_cast<Project::Hierarchy::ILinkNode>(node);
+                lnode != nullptr)
+        {
+            auto res = getNthChildForNode(lnode->getLinkedNode(), n);
+            RETURN_IF_ERROR(res);
+            return res;
+        } else {
+            WRITE_WARN("Node ", std::to_string(*node, true), " is marked"
+                       " as a link node, but we failed to cast it to"
+                       " an ILinkNode object.");
+            RETURN_ERROR(STATUS_UNEXPECTED);
+        }
+    }
+
+    // Make sure the node is known to have children
+    if(m_ordered_children_map.count(node.get()) == 0) {
+        RETURN_ERROR(STATUS_KEY_NOT_FOUND);
+    }
+
+    // Make sure the requested child is valid
+    if(auto num_children = m_ordered_children_map.at(node.get()).size();
+            n < 0 || n >= num_children)
+    {
+        if(report_on_oor) {
+            WRITE_ERROR("Requested child ", n, " is out of range. Node ",
+                        std::to_string(*node), " has ", num_children, " children.");
+            RETURN_ERROR(STATUS_OUT_OF_RANGE);
+        } else {
+            return STATUS_OUT_OF_RANGE;
+        }
+    }
+
+    return m_ordered_children_map.at(node.get())[n];
 }
 
 bool HMDT::GUI::MainWindowFileTreePart::HierarchyModel::iter_nth_root_child_vfunc(int n, iterator& iter) const
@@ -550,14 +645,29 @@ bool HMDT::GUI::MainWindowFileTreePart::HierarchyModel::iter_parent_vfunc(const 
         return false;
     }
 
+    // Special case for link nodes to make sure we go back up to the correct
+    //   parent
+    if(child.gobj()->user_data2 != nullptr) {
+        iter.gobj()->user_data = child.gobj()->user_data2;
+        iter.set_stamp(m_stamp);
+        return true;
+    }
+
     auto* child_node = static_cast<Project::Hierarchy::INode*>(child.gobj()->user_data);
 
-    if(m_parent_map.count(child_node) == 0) {
-        WRITE_ERROR("Could not find child node ", std::to_string(*child_node),
-                    " in the parent map! This should never happen.");
-        return false;
+    // Special case: If we are coming from a link node, then the "parent" of
+    //   this iterator is the link node itself
+    void* parent;
+    if(child.gobj()->user_data2 != nullptr) {
+        parent = child.gobj()->user_data2;
+    } else {
+        if(m_parent_map.count(child_node) == 0) {
+            WRITE_ERROR("Could not find child node ", std::to_string(*child_node),
+                        " in the parent map! This should never happen.");
+            return false;
+        }
+        parent = m_parent_map.at(child_node).get();
     }
-    auto* parent = m_parent_map.at(child_node).get();
 
     // WRITE_DEBUG("Initializing iter with parent=", std::to_string(*parent),
     //             ", from node=", std::to_string(*child_node));
@@ -663,25 +773,10 @@ bool HMDT::GUI::MainWindowFileTreePart::HierarchyModel::get_iter_vfunc(const Pat
             continue;
         }
 
-        if(m_ordered_children_map.count(node.get()) == 0) {
-            WRITE_ERROR("Asked to find a child node in node ",
-                        std::to_string(*node), ", however it is not in the "
-                        "ordered children map.");
-            return false;
-        }
+        auto maybe_node = getNthChildForNode(node, part);
+        RETURN_VALUE_IF_ERROR(maybe_node, false);
+        node = *maybe_node;
 
-        auto&& children = m_ordered_children_map.at(node.get());
-
-        // WRITE_DEBUG("Get child ", part, " of child ", std::to_string(*node));
-        if(part < 0 || part >= children.size()) {
-            WRITE_ERROR("Asked to get child ", part, " of node ",
-                        std::to_string(*node), ", however we only know of that "
-                        "node having ", children.size(),
-                        " children.");
-            return false;
-        }
-
-        node = children[part];
         if(_spam_logs) WRITE_DEBUG("Next node=", std::to_string(*node));
     }
 

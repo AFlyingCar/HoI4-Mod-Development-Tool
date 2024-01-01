@@ -96,6 +96,12 @@ namespace HMDT::GUI {
                     std::string getTooltipForNode(Project::Hierarchy::INodePtr,
                                                   bool = true) const noexcept;
 
+                    std::int32_t getNumChildrenForNode(Project::Hierarchy::INodePtr) const noexcept;
+                    Maybe<Project::Hierarchy::INodePtr>
+                        getNthChildForNode(Project::Hierarchy::INodePtr,
+                                           std::int32_t,
+                                           bool = true) const noexcept;
+
                 private:
                     //! The root of the current project hierarchy
                     std::shared_ptr<Project::Hierarchy::INode> m_project_hierarchy;
