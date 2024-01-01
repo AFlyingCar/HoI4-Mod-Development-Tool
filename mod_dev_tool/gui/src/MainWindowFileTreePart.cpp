@@ -13,9 +13,6 @@
 #include "ProvinceNode.h"
 #include "StateNode.h"
 
-//! Helper boolean for optionally enabling logs that tend to spam the console
-static bool _spam_logs = false;
-
 std::int32_t HMDT::GUI::MainWindowFileTreePart::HierarchyModel::next_stamp = 0;
 
 /**
@@ -687,8 +684,6 @@ bool HMDT::GUI::MainWindowFileTreePart::HierarchyModel::iter_parent_vfunc(const 
 Gtk::TreeModel::Path
     HMDT::GUI::MainWindowFileTreePart::HierarchyModel::get_path_vfunc(const iterator& iter) const
 {
-    if(_spam_logs) WRITE_DEBUG("get_path_vfunc(...)");
-
     Gtk::TreeModel::Path path;
 
     if(!isValid(iter)) {
@@ -726,11 +721,6 @@ Gtk::TreeModel::Path
             }
 
             index = m_node_index_map.at(node);
-
-            if(_spam_logs) {
-                WRITE_DEBUG("Index of ", std::to_string(*node), " (parent = ",
-                            std::to_string(*parent), ") is ", index);
-            }
         }
 
         // Add the index to the front
@@ -738,7 +728,6 @@ Gtk::TreeModel::Path
         node = parent.get();
     }
 
-    if(_spam_logs) WRITE_DEBUG("Returning path=", path.to_string());
     return path;
 }
 
@@ -753,8 +742,6 @@ Gtk::TreeModel::Path
 bool HMDT::GUI::MainWindowFileTreePart::HierarchyModel::get_iter_vfunc(const Path& path,
                                                                        iterator& iter) const
 {
-    if(_spam_logs) WRITE_DEBUG("get_iter_vfunc(", path.to_string(), ')');
-
     if(path.empty()) {
         WRITE_WARN("Got empty path!");
     }
@@ -776,23 +763,12 @@ bool HMDT::GUI::MainWindowFileTreePart::HierarchyModel::get_iter_vfunc(const Pat
         auto maybe_node = getNthChildForNode(node, part);
         RETURN_VALUE_IF_ERROR(maybe_node, false);
         node = *maybe_node;
-
-        if(_spam_logs) WRITE_DEBUG("Next node=", std::to_string(*node));
     }
 
     if(node == nullptr) {
         WRITE_ERROR("Got a null node after parsing the path ", path.to_string());
         return false;
     }
-
-    // TODO: REMOVE THIS TO REDUCE SPAM!!!
-    if(_spam_logs) 
-        WRITE_DEBUG("Initializing iterator with node=",
-                    (node == nullptr ?
-                        std::string("<null>") :
-                        std::to_string(*node)),
-                    " for path ", path.to_string()
-        );
 
     iter.gobj()->user_data = static_cast<void*>(node.get());
     iter.set_stamp(m_stamp);
