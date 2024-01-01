@@ -282,7 +282,7 @@ std::string HMDT::GUI::MainWindowFileTreePart::HierarchyModel::getTooltipForNode
         {
             // Format:
             //   NAME (TYPE) [ADDRESS] => (TYPE) [ADDRESS] = VALUE
-            tooltip += " => " + getTooltipForNode(lnode->getLinkedNode(), false);
+            tooltip += " =>" + getTooltipForNode(lnode->getLinkedNode(), false);
         } else {
             WRITE_WARN("Node ", std::to_string(*node, true), " is marked"
                        " as a link node, but we failed to cast it to"
