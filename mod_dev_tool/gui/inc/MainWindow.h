@@ -45,6 +45,15 @@ namespace HMDT::GUI {
 
             OptionalReference<LogViewerWindow> getLogViewerWindow();
 
+            template<typename T>
+            T* as() const noexcept {
+                static_assert(std::is_base_of_v<T, MainWindow>,
+                              "Can only get MainWindow as one if its base "
+                              "classes.");
+
+                return dynamic_cast<T*>(this);
+            }
+
         protected:
             virtual void updatePart(const PartType&, const std::any&) noexcept override;
 
