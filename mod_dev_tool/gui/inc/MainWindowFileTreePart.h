@@ -20,10 +20,18 @@ namespace HMDT::GUI {
      */
     class MainWindowFileTreePart: public virtual BaseMainWindow {
         public:
+            //! Helper alias for a callback to be used when a node is clicked on
+            using NodeClickCallback = std::function<void(Project::Hierarchy::INodePtr /* node */,
+                                                         GdkEventType /* type */,
+                                                         uint32_t /* button */)>;
+
             //! The max width of a name for the tree in characters
             static constexpr std::int32_t MAX_TREE_NAME_WIDTH = 32;
 
             MainWindowFileTreePart() = default;
+
+            void setOnNodeClickCallback(const NodeClickCallback&) noexcept;
+            void setOnNodeDoubleClickCallback(const NodeClickCallback&) noexcept;
 
         protected:
             /**
@@ -135,7 +143,6 @@ namespace HMDT::GUI {
 
             static Driver::Pixbuf getTypeIcon(const Project::Hierarchy::Node::Type&) noexcept;
 
-
         private:
             //! The model used by the Tree for this 
             Glib::RefPtr<HierarchyModel> m_model;
@@ -148,6 +155,12 @@ namespace HMDT::GUI {
 
             //! Flag to prevent infinitely recursing
             bool m_in_select_node = false;
+
+            //! Callback invoked when a node is clicked
+            NodeClickCallback m_on_click = [](auto&&...) { };
+
+            //! Callback invoked when a node is double clicked
+            NodeClickCallback m_on_double_click = [](auto&&...) { };
     };
 }
 

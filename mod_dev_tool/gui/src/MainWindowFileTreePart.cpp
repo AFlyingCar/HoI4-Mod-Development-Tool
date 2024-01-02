@@ -1013,6 +1013,57 @@ Gtk::Frame* HMDT::GUI::MainWindowFileTreePart::buildFileTree(Gtk::Paned* pane) {
     m_tree_view->set_tooltip_column(static_cast<int>(HierarchyModel::Columns::TOOLTIP));
     m_tree_view->get_selection()->set_mode(Gtk::SELECTION_MULTIPLE);
 
+    // For some reason I cannot begin to fathom, GTK refuses to send
+    //   single-clicks to button-press-event, only to button-release-event
+    // However, button-release-event cannot catch double clicks, so we have to
+    //   register against event-after instead, and handle which one we want to
+    //   use manually
+    m_tree_view->set_events(Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK);
+
+    // IMPORTANT NOTE: Double clicks will get sent to event-after as 2 single
+    //   clicks followed by a double click. This shouldn't be much of an issue
+    //   for what I plan to use this handler for, but it is important to keep in
+    //   mind
+    m_tree_view->signal_event_after().connect([this](GdkEvent* event)// (GdkEventButton* event)
+    {
+        NodeClickCallback* callback_to_invoke = nullptr;
+
+        // Figure out which callback we want to actually invoke
+        if(event->type == GDK_BUTTON_PRESS) {
+            callback_to_invoke = &m_on_click;
+        } else if(event->type == GDK_2BUTTON_PRESS) {
+            callback_to_invoke = &m_on_double_click;
+        }
+        // TODO: Do we want to support triple clicks?
+
+        if(callback_to_invoke != nullptr) {
+            // Get the path to the selected node
+            Gtk::TreeModel::Path path;
+            auto res = m_tree_view->get_path_at_pos(event->button.x, event->button.y, path);
+
+            // WRITE_DEBUG("get_path@(", event->button.x, ',', event->button.y,
+            //             ")=>", res, ": event->type=", event->button.type,
+            //             ", event->button=", event->button.button);
+
+            // Only call the callback if a node actually exists at (x,y)
+            if(res) {
+                auto iter = m_model->get_iter(path);
+                auto* node = static_cast<Project::Hierarchy::INode*>(iter.gobj()->user_data);
+
+                if(node == nullptr) {
+                    WRITE_ERROR("Got a valid path from Gtk::TreeView::get_path_at_pos"
+                                ", but get_iter gave us a null node! Cannot "
+                                "on_click callback.");
+                    return;
+                }
+
+                (*callback_to_invoke)(node->shared_from_this(),
+                                      event->button.type,
+                                      event->button.button);
+            }
+        }
+    });
+
     // TODO: We should really change this to instead just listen for a mouse click
     //   rather than expecting Gtk to tell us if the tree has changed
     auto update_selections_callback = [this](bool clear_previous) {
@@ -1326,5 +1377,15 @@ void HMDT::GUI::MainWindowFileTreePart::selectNode(const std::vector<Project::Hi
             return false;
         });
     }
+}
+
+void HMDT::GUI::MainWindowFileTreePart::setOnNodeClickCallback(const NodeClickCallback& on_click) noexcept
+{
+    m_on_click = on_click;
+}
+
+void HMDT::GUI::MainWindowFileTreePart::setOnNodeDoubleClickCallback(const NodeClickCallback& on_double_click) noexcept
+{
+    m_on_double_click = on_double_click;
 }
 
