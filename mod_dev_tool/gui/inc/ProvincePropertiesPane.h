@@ -12,6 +12,8 @@
 # include "gtkmm/entry.h"
 # include "gtkmm/box.h"
 
+# include "INode.h"
+
 # include "Types.h"
 # include "ProvinceListWindow.h"
 
@@ -23,6 +25,8 @@ namespace HMDT::GUI {
      */
     class ProvincePropertiesPane: public WidgetContainer {
         public:
+            using ValueChangedCallback = std::function<void(const Project::Hierarchy::Key&)>;
+
             ProvincePropertiesPane();
 
             Gtk::ScrolledWindow& getParent();
@@ -39,6 +43,8 @@ namespace HMDT::GUI {
             void updateProperties(bool);
 
             void onProjectOpened();
+
+            void setCallbackOnValueChanged(const ValueChangedCallback&) noexcept;
 
         protected:
             virtual void addWidgetToParent(Gtk::Widget&) override;
@@ -87,6 +93,9 @@ namespace HMDT::GUI {
 
             //! A list of all provinces that are merged with the currently set one
             ProvinceListWindow* m_merged_list_window;
+
+            //! A callback which is called when a province property gets modified
+            ValueChangedCallback m_value_changed_callback;
     };
 }
 

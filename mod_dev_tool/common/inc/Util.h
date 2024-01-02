@@ -662,6 +662,19 @@ namespace HMDT {
     template<typename T>
     using Ref = std::reference_wrapper<T>;
 
+    /**
+     * @brief Converts a Ref<T> to a Ref<const T>
+     *
+     * @tparam T The type held by Ref
+     * @param r The Ref object
+     *
+     * @return A Ref<const T>, holding the same reference as 'r'
+     */
+    template<typename T>
+    Ref<const T> refAsConstRef(const Ref<T>& r) {
+        return r;
+    }
+
 # if HAS_ATTRIBUTE(__cpp_lib_unreachable)
 #  define UNREACHABLE() std::unreachable()
 # else
@@ -682,6 +695,20 @@ namespace HMDT {
 
 namespace std {
     string to_string(const void*);
+
+    template<typename Iterable,
+             typename = std::enable_if_t<HMDT::IsIterable_v<Iterable>>>
+    string to_string(const Iterable& iterable) {
+        string s = "{";
+        bool first = true;
+        for(auto&& v : iterable) {
+            s += (first ? "" : ", ") + to_string(v);
+            first = false;
+        }
+        s += "}";
+
+        return s;
+    }
 }
 
 #endif
