@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 find_package(gtkmm REQUIRED)
 find_package(NativeDialogs REQUIRED)
+find_package(MultiKeyMap REQUIRED)
 
 add_library(gui STATIC
     src/Application.cpp
@@ -26,6 +27,7 @@ add_library(gui STATIC
     src/Toolbar.cpp
     src/MainWindowDrawingAreaPart.cpp
     src/MainWindowPropertiesPanePart.cpp
+    src/MainWindowFileTreePart.cpp
     src/Item.cpp
     src/ItemAddFunctions.cpp
     src/ItemRegistrar.cpp
@@ -35,7 +37,7 @@ add_library(gui STATIC
 
 target_include_directories(gui PUBLIC inc)
 
-target_link_libraries(gui gtkmm native_dialogs stdc++fs)
+target_link_libraries(gui gtkmm native_dialogs stdc++fs MultiKeyMap::MultiKeyMap)
 
 add_subdirectory(gl)
 

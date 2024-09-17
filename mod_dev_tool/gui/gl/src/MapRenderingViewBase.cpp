@@ -84,42 +84,47 @@ void HMDT::GUI::GL::MapRenderingViewBase::init() {
 
     WRITE_DEBUG("Building Selection Texture...");
     {
-        // TODO: This path shouldn't be hardcoded, we should get it instead from
-        //   the build system/from a ResourceManager
-        auto stream = Driver::getInstance().getResources()->open_stream("/com/aflyingcar/HoI4ModDevelopmentTool/textures/selection.bmp");
-
-        std::unique_ptr<BitMap> selection_bmp(new BitMap);
-        if(readBMP(stream, selection_bmp.get()) == nullptr) {
-            WRITE_ERROR("Failed to load selection texture!");
-
-            m_selection_texture.setTextureUnitID(Texture::Unit::TEX_UNIT3);
-
-            m_selection_texture.bind();
-
-            m_selection_texture.setTextureData(Texture::Format::RGBA, 1, 1,
-                                               (uint8_t*)0);
-            m_selection_texture.bind(false);
+        auto maybe_stream = Driver::getInstance().getResourceStream(
+                                HMDT_GLIB_RESOURCES,
+                                "textures/selection.bmp");
+        if(IS_FAILURE(maybe_stream)) {
+            WRITE_ERROR("Failed to load stream ", HMDT_GLIB_RESOURCES, ":", "textures/selection.bmp");
         } else {
-            auto iwidth = selection_bmp->info_header.width;
-            auto iheight = selection_bmp->info_header.height;
+            auto stream = *maybe_stream;
 
-            m_selection_texture.setTextureUnitID(Texture::Unit::TEX_UNIT3);
+            std::unique_ptr<BitMap> selection_bmp(new BitMap);
+            if(readBMP(stream, selection_bmp.get()) == nullptr) {
+                WRITE_ERROR("Failed to load selection texture!");
 
-            m_selection_texture.bind();
-            {
-                // Use NEAREST rather than LINEAR to prevent weird outlines around
-                //  the textures
-                m_selection_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::LINEAR);
-                m_selection_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::LINEAR);
+                m_selection_texture.setTextureUnitID(Texture::Unit::TEX_UNIT3);
 
-                m_selection_texture.setWrapping(Texture::Axis::S, Texture::WrapMode::REPEAT);
-                m_selection_texture.setWrapping(Texture::Axis::T, Texture::WrapMode::REPEAT);
+                m_selection_texture.bind();
 
-                m_selection_texture.setTextureData(Texture::Format::RGBA,
-                                                   iwidth, iheight,
-                                                   selection_bmp->data);
+                m_selection_texture.setTextureData(Texture::Format::RGBA, 1, 1,
+                                                   (uint8_t*)0);
+                m_selection_texture.bind(false);
+            } else {
+                auto iwidth = selection_bmp->info_header.width;
+                auto iheight = selection_bmp->info_header.height;
+
+                m_selection_texture.setTextureUnitID(Texture::Unit::TEX_UNIT3);
+
+                m_selection_texture.bind();
+                {
+                    // Use NEAREST rather than LINEAR to prevent weird outlines around
+                    //  the textures
+                    m_selection_texture.setFiltering(Texture::FilterType::MAG, Texture::Filter::LINEAR);
+                    m_selection_texture.setFiltering(Texture::FilterType::MIN, Texture::Filter::LINEAR);
+
+                    m_selection_texture.setWrapping(Texture::Axis::S, Texture::WrapMode::REPEAT);
+                    m_selection_texture.setWrapping(Texture::Axis::T, Texture::WrapMode::REPEAT);
+
+                    m_selection_texture.setTextureData(Texture::Format::RGBA,
+                                                       iwidth, iheight,
+                                                       selection_bmp->data);
+                }
+                m_selection_texture.bind(false);
             }
-            m_selection_texture.bind(false);
         }
     }
 }
