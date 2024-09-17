@@ -9,6 +9,7 @@
 # include <sstream>
 # include <iomanip>
 # include <condition_variable>
+# include <algorithm>
 
 # include "Source.h"
 # include "Message.h"
