@@ -387,7 +387,8 @@ void HMDT::dumpBacktrace(FILE* out_file, std::uint32_t max_frames, int tid) noex
     std::fprintf(out_file, "STACK TRACE (Max %u Frames) [TID:%d]:\n",
                  max_frames, tid);
 
-    void* addr_list[max_frames + 1];
+    void** addr_list = (void**)malloc((max_frames + 1) * sizeof(void *));
+    RUN_AT_SCOPE_END(std::bind(std::free, addr_list));
 
 #ifdef _WIN32
     constexpr std::size_t MAX_SYMBOL_NAME_LENGTH = 1024;
