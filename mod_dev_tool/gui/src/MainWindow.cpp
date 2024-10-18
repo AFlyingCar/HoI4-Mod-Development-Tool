@@ -672,6 +672,39 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
         });
 
     }
+
+    // File Tree callbacks
+    {
+        setOnNodeDoubleClickCallback([this](Project::Hierarchy::INodePtr node,
+                                            GdkEventType /* type */,
+                                            uint32_t /* button */)
+        {
+            // On double clicking a link node, navigate us to that node in the tree
+            if(node->getType() == Project::Hierarchy::Node::Type::LINK) {
+                if(auto lnode = std::dynamic_pointer_cast<Project::Hierarchy::ILinkNode>(node);
+                        lnode != nullptr)
+                {
+                    auto key = getKeyForNode(lnode->getLinkedNode());
+                    if(IS_FAILURE(key)) {
+                        WRITE_ERROR("Failed to get key for node ",
+                                std::to_string(*node),
+                                ", cannot navigate to it.");
+                        return;
+                    }
+
+                    WRITE_DEBUG("Got key ", std::to_string(*key),
+                                ", selecting node in tree.");
+                    selectNode({*key}, SelectionManager::Action::SET);
+                } else {
+                    WRITE_WARN("Node ", std::to_string(*node, true),
+                               " is marked as a link node, but we failed to"
+                               " cast it to an ILinkNode object.");
+                }
+            }
+
+            // Do we want to perform any other actions when double clicking a node?
+        });
+    }
 }
 
 auto HMDT::GUI::MainWindow::getLogViewerWindow()
