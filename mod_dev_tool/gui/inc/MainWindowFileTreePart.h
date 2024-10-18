@@ -94,6 +94,8 @@ namespace HMDT::GUI {
 
                     bool isValid(const iterator&) const noexcept;
 
+                    Maybe<Project::Hierarchy::Key> getKeyForNode(Project::Hierarchy::INodePtr) const noexcept;
+
                 protected:
                     Maybe<std::string> valueAsString(const Project::Hierarchy::IPropertyNode&) const noexcept;
 
@@ -136,10 +138,16 @@ namespace HMDT::GUI {
 
             MaybeVoid onProjectOpened();
 
+            MaybeVoid handleNodeValueSelection(Project::Hierarchy::INode*,
+                                               std::vector<ProvinceID>&,
+                                               std::vector<StateID>&);
+
             void updateFileTree(const Project::Hierarchy::Key&) noexcept;
 
             void selectNode(const std::vector<Project::Hierarchy::Key>&,
                             const SelectionManager::Action&) noexcept;
+
+            Maybe<Project::Hierarchy::Key> getKeyForNode(Project::Hierarchy::INodePtr) const noexcept;
 
             static Driver::Pixbuf getTypeIcon(const Project::Hierarchy::Node::Type&) noexcept;
 

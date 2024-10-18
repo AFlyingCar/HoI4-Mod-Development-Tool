@@ -640,6 +640,47 @@ auto HMDT::GUI::MainWindowFileTreePart::HierarchyModel::getNthChildForNode(
     return m_ordered_children_map.at(node.get())[n];
 }
 
+auto HMDT::GUI::MainWindowFileTreePart::HierarchyModel::getKeyForNode(Project::Hierarchy::INodePtr node) const noexcept
+    -> Maybe<Project::Hierarchy::Key>
+{
+    RETURN_ERROR_IF(node == nullptr, STATUS_PARAM_CANNOT_BE_NULL);
+
+    std::vector<std::string> parts;
+
+    // Walk back up until we hit root
+    Project::Hierarchy::INodePtr next = node;
+
+    while(next != nullptr) {
+        if(m_parent_map.count(next.get()) == 0) {
+            WRITE_ERROR("Cannot find parent of ", std::to_string(*next),
+                        " in the parent_map. This should never happen.");
+            RETURN_ERROR(STATUS_VALUE_NOT_FOUND);
+        }
+
+        auto parent = m_parent_map.at(next.get());
+        if(parent == nullptr) {
+            if(next != m_project_hierarchy) {
+                std::reverse(parts.begin(), parts.end());
+                WRITE_ERROR("Somehow managed to reach a node without a parent "
+                            "that is not root! next=", std::to_string(*next),
+                            ", key=",
+                            std::to_string(Project::Hierarchy::Key{ parts }));
+                RETURN_ERROR(STATUS_INVALID_VALUE);
+            } else {
+                // Make sure we stop early, don't insert root into the key
+                break;
+            }
+        }
+
+        // Add the name to the front
+        parts.push_back(next->getName());
+        next = parent;
+    }
+
+    std::reverse(parts.begin(), parts.end());
+    return Project::Hierarchy::Key{ parts };
+}
+
 bool HMDT::GUI::MainWindowFileTreePart::HierarchyModel::iter_nth_root_child_vfunc(int n, iterator& iter) const
 {
     if(n != 0) {
@@ -1118,47 +1159,13 @@ Gtk::Frame* HMDT::GUI::MainWindowFileTreePart::buildFileTree(Gtk::Paned* pane) {
                 auto* node = static_cast<Project::Hierarchy::INode*>(iter.gobj()->user_data);
 
                 // If it was a Province, then select it
-                if(auto pnode = dynamic_cast<Project::Hierarchy::ProvinceNode*>(node);
-                        pnode != nullptr)
-                {
-                    auto maybe_id = pnode->getIDProperty();
-                    if(IS_FAILURE(maybe_id)) {
-                        WRITE_ERROR("Failed to get province ID property: ",
-                                    maybe_id.error());
-                        continue;
-                    }
-
-                    auto maybe_id2 = (*maybe_id)->getValue<ProvinceID>();
-                    if(IS_FAILURE(maybe_id2)) {
-                        WRITE_ERROR("Failed to get ID from property: ",
-                                    maybe_id2.error());
-                        continue;
-                    }
-                    ProvinceID id = *maybe_id2;
-
-                    // TODO: Select province with SelectionManager
-                    //   Is there a way we can do this without a lot of large
-                    //   boiler plate code?
-                    selected_provs.push_back(id);
-                } else if(auto snode = dynamic_cast<Project::Hierarchy::StateNode*>(node);
-                          snode != nullptr)
-                {
-                    auto maybe_id = snode->getIDProperty();
-                    if(IS_FAILURE(maybe_id)) {
-                        WRITE_ERROR("Failed to get province ID property: ",
-                                    maybe_id.error());
-                        continue;
-                    }
-
-                    auto maybe_id2 = (*maybe_id)->getValue<StateID>();
-                    if(IS_FAILURE(maybe_id2)) {
-                        WRITE_ERROR("Failed to get ID from property: ",
-                                    maybe_id2.error());
-                        continue;
-                    }
-                    StateID id = *maybe_id2;
-
-                    selected_states.push_back(id);
+                auto handle_result = handleNodeValueSelection(node,
+                                                              selected_provs,
+                                                              selected_states);
+                if(IS_FAILURE(handle_result)) {
+                    WRITE_ERROR("Failed to handle node value selection for ",
+                                printNode(node, true));
+                    continue;
                 }
             }
         }
@@ -1203,6 +1210,80 @@ Gtk::Frame* HMDT::GUI::MainWindowFileTreePart::buildFileTree(Gtk::Paned* pane) {
     file_tree_frame->show_all();
 
     return file_tree_frame;
+}
+
+/**
+ * @brief Handles selecting the object represented by a node.
+ * @details Will add the selected node object value to one of the vectors
+ *          provided, depending on what type of node was selected. Link nodes
+ *          will recurse and call this function on the node that it links to.
+ *
+ * @param node The node to handle value selection for.
+ * @param selected_provs A vector of all selected provinces. May be added to.
+ * @param selected_states A vector of all selected states. May be added to.
+ *
+ * @return STATUS_SUCCESS if no errors occurred while handling, and an error
+ *         code otherwise.
+ */
+auto HMDT::GUI::MainWindowFileTreePart::handleNodeValueSelection(
+        Project::Hierarchy::INode* node,
+        std::vector<ProvinceID>& selected_provs,
+        std::vector<StateID>& selected_states)
+    -> MaybeVoid
+{
+    if(auto pnode = dynamic_cast<Project::Hierarchy::ProvinceNode*>(node);
+            pnode != nullptr)
+    {
+        auto maybe_id = pnode->getIDProperty();
+        if(IS_FAILURE(maybe_id)) {
+            WRITE_ERROR("Failed to get province ID property: ",
+                        maybe_id.error());
+            RETURN_IF_ERROR(maybe_id);
+        }
+
+        auto maybe_id2 = (*maybe_id)->getValue<ProvinceID>();
+        if(IS_FAILURE(maybe_id2)) {
+            WRITE_ERROR("Failed to get ID from property: ",
+                        maybe_id2.error());
+            RETURN_IF_ERROR(maybe_id2);
+        }
+        ProvinceID id = *maybe_id2;
+
+        // TODO: Select province with SelectionManager
+        //   Is there a way we can do this without a lot of large
+        //   boiler plate code?
+        selected_provs.push_back(id);
+    } else if(auto snode = dynamic_cast<Project::Hierarchy::StateNode*>(node);
+              snode != nullptr)
+    {
+        auto maybe_id = snode->getIDProperty();
+        if(IS_FAILURE(maybe_id)) {
+            WRITE_ERROR("Failed to get province ID property: ",
+                        maybe_id.error());
+            RETURN_IF_ERROR(maybe_id);
+        }
+
+        auto maybe_id2 = (*maybe_id)->getValue<StateID>();
+        if(IS_FAILURE(maybe_id2)) {
+            WRITE_ERROR("Failed to get ID from property: ",
+                        maybe_id2.error());
+            RETURN_IF_ERROR(maybe_id2);
+        }
+        StateID id = *maybe_id2;
+
+        selected_states.push_back(id);
+    } else if(auto lnode = dynamic_cast<Project::Hierarchy::LinkNode*>(node);
+              lnode != nullptr)
+    {
+        WRITE_DEBUG("Redirect selection from ", printNode(lnode, true), " to ", 
+                printNode(lnode->getLinkedNode(), true));
+        auto result = handleNodeValueSelection(lnode->getLinkedNode().get(),
+                                               selected_provs,
+                                               selected_states);
+        RETURN_IF_ERROR(result);
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /**
@@ -1362,6 +1443,8 @@ void HMDT::GUI::MainWindowFileTreePart::selectNode(const std::vector<Project::Hi
     }
 
     for(auto&& key : keys) {
+        WRITE_DEBUG("Lookup key ", std::to_string(key));
+
         auto maybe_node = key.lookup(m_model->getHierarchy());
         if(IS_FAILURE(maybe_node)) {
             WRITE_ERROR("Failed to lookup node for key ", std::to_string(key));
@@ -1409,6 +1492,15 @@ void HMDT::GUI::MainWindowFileTreePart::selectNode(const std::vector<Project::Hi
             return false;
         });
     }
+}
+
+
+auto HMDT::GUI::MainWindowFileTreePart::getKeyForNode(Project::Hierarchy::INodePtr node) const noexcept
+    -> Maybe<Project::Hierarchy::Key>
+{
+    auto key = m_model->getKeyForNode(node);
+    RETURN_IF_ERROR(key);
+    return key;
 }
 
 void HMDT::GUI::MainWindowFileTreePart::setOnNodeClickCallback(const NodeClickCallback& on_click) noexcept
