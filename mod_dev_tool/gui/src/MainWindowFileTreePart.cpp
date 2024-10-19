@@ -1142,8 +1142,8 @@ Gtk::Frame* HMDT::GUI::MainWindowFileTreePart::buildFileTree(Gtk::Paned* pane) {
     auto update_selections_callback = [this](bool clear_previous) {
         auto selected_rows = m_tree_view->get_selection()->get_selected_rows();
 
-        std::vector<ProvinceID> selected_provs;
-        std::vector<StateID> selected_states;
+        std::vector<std::pair<ProvinceID, OnSelectNodeData>> selected_provs;
+        std::vector<std::pair<StateID, OnSelectNodeData>> selected_states;
 
         WRITE_DEBUG("Tree view signals: Selection changed");
         for(auto&& path : selected_rows) {
@@ -1159,9 +1159,12 @@ Gtk::Frame* HMDT::GUI::MainWindowFileTreePart::buildFileTree(Gtk::Paned* pane) {
                 auto* node = static_cast<Project::Hierarchy::INode*>(iter.gobj()->user_data);
 
                 // If it was a Province, then select it
+                OnSelectNodeData data;
+
                 auto handle_result = handleNodeValueSelection(node,
                                                               selected_provs,
-                                                              selected_states);
+                                                              selected_states,
+                                                              data);
                 if(IS_FAILURE(handle_result)) {
                     WRITE_ERROR("Failed to handle node value selection for ",
                                 printNode(node, true));
@@ -1179,8 +1182,8 @@ Gtk::Frame* HMDT::GUI::MainWindowFileTreePart::buildFileTree(Gtk::Paned* pane) {
                 SelectionManager::getInstance().clearProvinceSelection();
             }
 
-            for(auto&& prov_id : selected_provs) {
-                SelectionManager::getInstance().addProvinceSelection(prov_id);
+            for(auto&& [prov_id, data] : selected_provs) {
+                SelectionManager::getInstance().addProvinceSelection(prov_id, false, data);
             }
         }
 
@@ -1192,7 +1195,8 @@ Gtk::Frame* HMDT::GUI::MainWindowFileTreePart::buildFileTree(Gtk::Paned* pane) {
             }
 
 
-            for(auto&& state_id : selected_states) {
+            for(auto&& [state_id, data] : selected_states) {
+                // TODO: Use data
                 SelectionManager::getInstance().addStateSelection(state_id);
             }
         }
@@ -1227,8 +1231,9 @@ Gtk::Frame* HMDT::GUI::MainWindowFileTreePart::buildFileTree(Gtk::Paned* pane) {
  */
 auto HMDT::GUI::MainWindowFileTreePart::handleNodeValueSelection(
         Project::Hierarchy::INode* node,
-        std::vector<ProvinceID>& selected_provs,
-        std::vector<StateID>& selected_states)
+        std::vector<std::pair<ProvinceID, OnSelectNodeData>>& selected_provs,
+        std::vector<std::pair<StateID, OnSelectNodeData>>& selected_states,
+        OnSelectNodeData& data)
     -> MaybeVoid
 {
     if(auto pnode = dynamic_cast<Project::Hierarchy::ProvinceNode*>(node);
@@ -1252,7 +1257,7 @@ auto HMDT::GUI::MainWindowFileTreePart::handleNodeValueSelection(
         // TODO: Select province with SelectionManager
         //   Is there a way we can do this without a lot of large
         //   boiler plate code?
-        selected_provs.push_back(id);
+        selected_provs.push_back({id, data});
     } else if(auto snode = dynamic_cast<Project::Hierarchy::StateNode*>(node);
               snode != nullptr)
     {
@@ -1271,15 +1276,22 @@ auto HMDT::GUI::MainWindowFileTreePart::handleNodeValueSelection(
         }
         StateID id = *maybe_id2;
 
-        selected_states.push_back(id);
+        selected_states.push_back({id, data});
     } else if(auto lnode = dynamic_cast<Project::Hierarchy::LinkNode*>(node);
               lnode != nullptr)
     {
+        auto key = getKeyForNode(lnode->shared_from_this());
+        RETURN_IF_ERROR(key);
+
+        data.skip_select_in_tree = true;
+        data.select_in_tree_override = *key;
+
         WRITE_DEBUG("Redirect selection from ", printNode(lnode, true), " to ", 
                 printNode(lnode->getLinkedNode(), true));
         auto result = handleNodeValueSelection(lnode->getLinkedNode().get(),
                                                selected_provs,
-                                               selected_states);
+                                               selected_states,
+                                               data);
         RETURN_IF_ERROR(result);
     }
 
