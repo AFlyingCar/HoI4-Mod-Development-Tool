@@ -30,6 +30,15 @@ namespace HMDT::GUI {
 
             MainWindowFileTreePart() = default;
 
+            /**
+             * @brief Data structure that will be sent to the SelectionManager
+             *        when selecting a node in the file tree.
+             */
+            struct OnSelectNodeData {
+                bool skip_select_in_tree = false;
+                std::optional<Project::Hierarchy::Key> select_in_tree_override = std::nullopt;
+            };
+
             void setOnNodeClickCallback(const NodeClickCallback&) noexcept;
             void setOnNodeDoubleClickCallback(const NodeClickCallback&) noexcept;
 
@@ -139,8 +148,9 @@ namespace HMDT::GUI {
             MaybeVoid onProjectOpened();
 
             MaybeVoid handleNodeValueSelection(Project::Hierarchy::INode*,
-                                               std::vector<ProvinceID>&,
-                                               std::vector<StateID>&);
+                                               std::vector<std::pair<ProvinceID, OnSelectNodeData>>&,
+                                               std::vector<std::pair<StateID, OnSelectNodeData>>&,
+                                               OnSelectNodeData&);
 
             void updateFileTree(const Project::Hierarchy::Key&) noexcept;
 
