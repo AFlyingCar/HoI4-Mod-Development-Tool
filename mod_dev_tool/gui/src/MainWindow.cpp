@@ -460,11 +460,38 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
     // SelectionManager callbacks
     {
         SelectionManager::getInstance().setOnSelectProvinceCallback(
-            [this](const UUID& prov_id, SelectionManager::Action action)
+            [this](const UUID& prov_id,
+                   SelectionManager::Action action,
+                   SelectionManager::OptCallbackData data)
             {
+                WRITE_DEBUG("Select province ", prov_id, ", action=", (int)action);
+
                 auto& map_project = Driver::getInstance().getProject()->get().getMapProject();
 
-                WRITE_DEBUG("Select province ", prov_id, ", action=", (int)action);
+                // All possible expected structures that might be held within data
+                MainWindowFileTreePart::OnSelectNodeData* filetree_data = nullptr;
+
+                // Pull out the correct data field
+                if(data.has_value()) {
+                    if(data->type() == typeid(MainWindowFileTreePart::OnSelectNodeData))
+                    {
+                        filetree_data = std::any_cast<MainWindowFileTreePart::OnSelectNodeData>(&(*data));
+                    } else {
+                        WRITE_WARN("Got unexpected type in callback data: ",
+                                   data->type().name());
+                    }
+                }
+
+                // Global settings that might be set by one or more data structures
+                bool skip_select_in_filetree = false;
+                std::optional<Project::Hierarchy::Key> select_in_tree_override = std::nullopt;
+
+                // Set global settings based on provided data
+                if(filetree_data != nullptr) {
+                    skip_select_in_filetree = filetree_data->skip_select_in_tree;
+                    select_in_tree_override = filetree_data->select_in_tree_override;
+                }
+
                 switch(action) {
                     case SelectionManager::Action::SET:
                     case SelectionManager::Action::ADD:
@@ -536,14 +563,21 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                                         }
                                     }
 
-                                    keys.push_back(
-                                        Project::Hierarchy::Key{
-                                            Project::Hierarchy::ProjectKeys::MAP,
-                                            Project::Hierarchy::ProjectKeys::PROVINCES,
-                                            Project::Hierarchy::GroupKeys::PROVINCES,
-                                            std::to_string(merged_prov)
-                                        }
-                                    );
+                                    if(!skip_select_in_filetree) {
+                                        keys.push_back(
+                                            Project::Hierarchy::Key{
+                                                Project::Hierarchy::ProjectKeys::MAP,
+                                                Project::Hierarchy::ProjectKeys::PROVINCES,
+                                                Project::Hierarchy::GroupKeys::PROVINCES,
+                                                std::to_string(merged_prov)
+                                            }
+                                        );
+                                    } else if(select_in_tree_override.has_value()) {
+                                        WRITE_DEBUG("Override key, select ", 
+                                                    std::to_string(*select_in_tree_override),
+                                                    " instead.");
+                                        keys.push_back(*select_in_tree_override);
+                                    }
 
                                     m_drawing_area->addSelection({preview_data, province->bounding_box, province->id});
                                 }
