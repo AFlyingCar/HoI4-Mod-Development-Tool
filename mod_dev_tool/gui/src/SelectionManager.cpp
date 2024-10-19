@@ -13,45 +13,50 @@ auto HMDT::GUI::SelectionManager::getInstance() -> SelectionManager& {
 }
 
 void HMDT::GUI::SelectionManager::selectProvince(const ProvinceID& label,
-                                                 bool skip_callback)
+                                                 bool skip_callback,
+                                                 OptCallbackData data)
 {
     // Do not select if the label isn't valid
     if(auto opt_mproj = getCurrentMapProject();
             opt_mproj && opt_mproj->get().getProvinceProject().isValidProvinceID(label))
     {
         if(!skip_callback) {
-            m_on_province_selected_callback(label, Action::SET);
+            m_on_province_selected_callback(label, Action::SET, data);
         }
         m_selected_provinces = {label};
     }
 }
 
 void HMDT::GUI::SelectionManager::addProvinceSelection(const ProvinceID& label,
-                                                       bool skip_callback)
+                                                       bool skip_callback,
+                                                       OptCallbackData data)
 {
     // Do not select if the label isn't valid
     if(auto opt_mproj = getCurrentMapProject();
             opt_mproj && opt_mproj->get().getProvinceProject().isValidProvinceID(label))
     {
         if(!skip_callback) {
-            m_on_province_selected_callback(label, Action::ADD);
+            m_on_province_selected_callback(label, Action::ADD, data);
         }
         m_selected_provinces.insert(label);
     }
 }
 
 void HMDT::GUI::SelectionManager::removeProvinceSelection(const ProvinceID& label,
-                                                          bool skip_callback)
+                                                          bool skip_callback,
+                                                          OptCallbackData data)
 {
     if(!skip_callback) {
-        m_on_province_selected_callback(label, Action::REMOVE);
+        m_on_province_selected_callback(label, Action::REMOVE, data);
     }
     m_selected_provinces.erase(label);
 }
 
-void HMDT::GUI::SelectionManager::clearProvinceSelection(bool skip_callback) {
+void HMDT::GUI::SelectionManager::clearProvinceSelection(bool skip_callback,
+                                                         OptCallbackData data)
+{
     if(!skip_callback) {
-        m_on_province_selected_callback(INVALID_PROVINCE, Action::CLEAR);
+        m_on_province_selected_callback(INVALID_PROVINCE, Action::CLEAR, data);
     }
     m_selected_provinces.clear();
 }
@@ -86,12 +91,12 @@ void HMDT::GUI::SelectionManager::clearStateSelection() {
     m_selected_states.clear();
 }
 
-void HMDT::GUI::SelectionManager::setOnSelectProvinceCallback(const std::function<void(const ProvinceID&, Action)>& on_province_selected_callback)
+void HMDT::GUI::SelectionManager::setOnSelectProvinceCallback(const OnSelectProvinceCallback& on_province_selected_callback)
 {
     m_on_province_selected_callback = on_province_selected_callback;
 }
 
-void HMDT::GUI::SelectionManager::setOnSelectStateCallback(const std::function<void(StateID, Action)>& on_state_selected_callback)
+void HMDT::GUI::SelectionManager::setOnSelectStateCallback(const OnSelectStateCallback& on_state_selected_callback)
 {
     m_on_state_selected_callback = on_state_selected_callback;
 }

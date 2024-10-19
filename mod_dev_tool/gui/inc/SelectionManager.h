@@ -23,14 +23,22 @@ namespace HMDT::GUI {
                 CLEAR
             };
 
+            using OptCallbackData = std::optional<std::any>;
+
+            using OnSelectProvinceCallback = std::function<void(const ProvinceID&,
+                                                                Action,
+                                                                OptCallbackData)>;
+            using OnSelectStateCallback = std::function<void(StateID,
+                                                             Action)>;
+
             static constexpr StateID INVALID_STATE_ID = -1;
 
             static SelectionManager& getInstance();
 
-            void selectProvince(const ProvinceID&, bool = false);
-            void addProvinceSelection(const ProvinceID&, bool = false);
-            void removeProvinceSelection(const ProvinceID&, bool = false);
-            void clearProvinceSelection(bool = false);
+            void selectProvince(const ProvinceID&, bool = false, OptCallbackData = std::nullopt);
+            void addProvinceSelection(const ProvinceID&, bool = false, OptCallbackData = std::nullopt);
+            void removeProvinceSelection(const ProvinceID&, bool = false, OptCallbackData = std::nullopt);
+            void clearProvinceSelection(bool = false, OptCallbackData = std::nullopt);
 
             void selectState(StateID);
             void addStateSelection(StateID);
@@ -48,8 +56,8 @@ namespace HMDT::GUI {
             bool isProvinceSelected(const ProvinceID&) const;
             bool isStateSelected(const StateID&) const;
 
-            void setOnSelectProvinceCallback(const std::function<void(const ProvinceID&, Action)>&);
-            void setOnSelectStateCallback(const std::function<void(StateID, Action)>&);
+            void setOnSelectProvinceCallback(const OnSelectProvinceCallback&);
+            void setOnSelectStateCallback(const OnSelectStateCallback&);
 
             size_t getSelectedProvinceCount() const;
             size_t getSelectedStateCount() const;
@@ -72,10 +80,10 @@ namespace HMDT::GUI {
             std::set<StateID> m_selected_states;
 
             //! Callback for when a province is selected
-            std::function<void(const ProvinceID&, Action)> m_on_province_selected_callback;
+            OnSelectProvinceCallback m_on_province_selected_callback;
 
             //! Callback for when a province is selected
-            std::function<void(StateID, Action)> m_on_state_selected_callback;
+            OnSelectStateCallback m_on_state_selected_callback;
     };
 }
 
