@@ -30,6 +30,8 @@
 
 #include "Item.h"
 
+#include "NodeKeyNames.h"
+
 /**
  * @brief Constructs the main window.
  *
@@ -391,6 +393,9 @@ void HMDT::GUI::MainWindow::initializeHelpActions() {
 bool HMDT::GUI::MainWindow::initializeWidgets() {
     buildToolbar();
 
+    m_left_pane = manage(new Gtk::Paned());
+    m_left_pane->set_position(DEFAULT_FILE_TREE_POSITION);
+
     m_paned = addWidget<Gtk::Paned>();
     
     // Set the minimum size of the pane to 512x512
@@ -398,6 +403,10 @@ bool HMDT::GUI::MainWindow::initializeWidgets() {
 
     // Make sure that we take up all of the available vertical space
     m_paned->set_vexpand();
+
+    m_paned->pack1(*m_left_pane);
+
+    buildFileTree(m_left_pane);
 
     // The view pane will always be loaded, so load it now
     buildViewPane();
@@ -451,9 +460,37 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
     // SelectionManager callbacks
     {
         SelectionManager::getInstance().setOnSelectProvinceCallback(
-            [this](const UUID& prov_id, SelectionManager::Action action)
+            [this](const UUID& prov_id,
+                   SelectionManager::Action action,
+                   SelectionManager::OptCallbackData data)
             {
+                WRITE_DEBUG("Select province ", prov_id, ", action=", (int)action);
+
                 auto& map_project = Driver::getInstance().getProject()->get().getMapProject();
+
+                // All possible expected structures that might be held within data
+                MainWindowFileTreePart::OnSelectNodeData* filetree_data = nullptr;
+
+                // Pull out the correct data field
+                if(data.has_value()) {
+                    if(data->type() == typeid(MainWindowFileTreePart::OnSelectNodeData))
+                    {
+                        filetree_data = std::any_cast<MainWindowFileTreePart::OnSelectNodeData>(&(*data));
+                    } else {
+                        WRITE_WARN("Got unexpected type in callback data: ",
+                                   data->type().name());
+                    }
+                }
+
+                // Global settings that might be set by one or more data structures
+                bool skip_select_in_filetree = false;
+                std::optional<Project::Hierarchy::Key> select_in_tree_override = std::nullopt;
+
+                // Set global settings based on provided data
+                if(filetree_data != nullptr) {
+                    skip_select_in_filetree = filetree_data->skip_select_in_tree;
+                    select_in_tree_override = filetree_data->select_in_tree_override;
+                }
 
                 switch(action) {
                     case SelectionManager::Action::SET:
@@ -495,6 +532,11 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                                     root_id = maybe_root->get().id;
                                 }
 
+                                // List of keys for each merged province
+                                std::vector<Project::Hierarchy::Key> keys;
+
+                                // Go over every province in the merged
+                                //   provinces and add them to the selection
                                 for(auto&& merged_prov : merged_provinces) {
                                     if(merged_prov != prov_id &&
                                        !SelectionManager::getInstance().isProvinceSelected(merged_prov))
@@ -521,8 +563,26 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                                         }
                                     }
 
+                                    if(!skip_select_in_filetree) {
+                                        keys.push_back(
+                                            Project::Hierarchy::Key{
+                                                Project::Hierarchy::ProjectKeys::MAP,
+                                                Project::Hierarchy::ProjectKeys::PROVINCES,
+                                                Project::Hierarchy::GroupKeys::PROVINCES,
+                                                std::to_string(merged_prov)
+                                            }
+                                        );
+                                    } else if(select_in_tree_override.has_value()) {
+                                        WRITE_DEBUG("Override key, select ", 
+                                                    std::to_string(*select_in_tree_override),
+                                                    " instead.");
+                                        keys.push_back(*select_in_tree_override);
+                                    }
+
                                     m_drawing_area->addSelection({preview_data, province->bounding_box, province->id});
                                 }
+
+                                selectNode(keys, action);
                             }
                             m_drawing_area->queueDraw();
                         }
@@ -539,6 +599,11 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
 
                                 auto* ppp_province = getProvincePropertiesPane().getProvince();
 
+                                // List of keys for each merged province
+                                std::vector<Project::Hierarchy::Key> keys;
+
+                                // Go over every province in the merged province
+                                //   and remove it from the selection
                                 for(auto&& merged_prov : merged_provinces) {
                                     // Only remove the province from the properties pane if
                                     //  the province there is the same one we are removing
@@ -551,8 +616,18 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                                         getProvincePropertiesPane().setProvince(nullptr, null_data);
                                     }
 
+                                    keys.push_back(
+                                        Project::Hierarchy::Key{
+                                            Project::Hierarchy::ProjectKeys::MAP,
+                                            Project::Hierarchy::ProjectKeys::PROVINCES,
+                                            Project::Hierarchy::GroupKeys::PROVINCES,
+                                            std::to_string(merged_prov)
+                                        }
+                                    );
                                     m_drawing_area->removeSelection({nullptr, {}, merged_prov});
                                 }
+
+                                selectNode(keys, action);
                             }
 
                             m_drawing_area->queueDraw();
@@ -563,6 +638,8 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
                         getProvincePropertiesPane().setProvince(nullptr, null_data);
 
                         getStatePropertiesPane().setState(nullptr);
+
+                        selectNode({}, SelectionManager::Action::CLEAR);
 
                         m_drawing_area->setSelection();
                         m_drawing_area->queueDraw();
@@ -629,6 +706,39 @@ void HMDT::GUI::MainWindow::initializeCallbacks() {
         });
 
     }
+
+    // File Tree callbacks
+    {
+        setOnNodeDoubleClickCallback([this](Project::Hierarchy::INodePtr node,
+                                            GdkEventType /* type */,
+                                            uint32_t /* button */)
+        {
+            // On double clicking a link node, navigate us to that node in the tree
+            if(node->getType() == Project::Hierarchy::Node::Type::LINK) {
+                if(auto lnode = std::dynamic_pointer_cast<Project::Hierarchy::ILinkNode>(node);
+                        lnode != nullptr)
+                {
+                    auto key = getKeyForNode(lnode->getLinkedNode());
+                    if(IS_FAILURE(key)) {
+                        WRITE_ERROR("Failed to get key for node ",
+                                std::to_string(*node),
+                                ", cannot navigate to it.");
+                        return;
+                    }
+
+                    WRITE_DEBUG("Got key ", std::to_string(*key),
+                                ", selecting node in tree.");
+                    selectNode({*key}, SelectionManager::Action::SET);
+                } else {
+                    WRITE_WARN("Node ", std::to_string(*node, true),
+                               " is marked as a link node, but we failed to"
+                               " cast it to an ILinkNode object.");
+                }
+            }
+
+            // Do we want to perform any other actions when double clicking a node?
+        });
+    }
 }
 
 auto HMDT::GUI::MainWindow::getLogViewerWindow()
@@ -651,9 +761,29 @@ void HMDT::GUI::MainWindow::buildToolbar() {
  * @brief Builds the view pane, which is where the map gets rendered to.
  */
 void HMDT::GUI::MainWindow::buildViewPane() {
-    m_paned->pack1(*std::get<Gtk::Frame*>(setActiveChild(new Gtk::Frame)), true, false);
+    m_left_pane->pack2(*std::get<Gtk::Frame*>(setActiveChild(new Gtk::Frame)), true, false);
 
     buildDrawingArea();
+}
+
+/**
+ * @brief Updates a part of the main window.
+ *
+ * @param part Which part to update
+ * @param data User data that the specific part updater needs
+ */
+void HMDT::GUI::MainWindow::updatePart(const PartType& part, const std::any& data) noexcept
+{
+    switch(part) {
+        case PartType::MAIN:
+        case PartType::DRAWING_AREA:
+        case PartType::PROPERTIES_PANE:
+            WRITE_WARN("Asked to update part #", (int)part, ", but that hasn't "
+                       "been implemented yet.");
+            break;
+        case PartType::FILE_TREE:
+            updateFileTree(std::any_cast<Project::Hierarchy::Key>(data));
+    }
 }
 
 Gtk::Orientation HMDT::GUI::MainWindow::getDisplayOrientation() const {
@@ -800,6 +930,13 @@ void HMDT::GUI::MainWindow::onProjectOpened() {
     // Issue callback to the properties pane to inform it that a project has
     //   been opened
     MainWindowPropertiesPanePart::onProjectOpened();
+    auto result = MainWindowFileTreePart::onProjectOpened();
+    if(IS_FAILURE(result)) {
+        Gtk::MessageDialog dialog(*this, gettext("Failed to signal project opening to file tree."), false,
+                                  Gtk::MESSAGE_ERROR);
+        dialog.run();
+        return;
+    }
 }
 
 /**
