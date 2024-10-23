@@ -1,11 +1,14 @@
 cmake_minimum_required(VERSION 3.16)
 
+find_package(Ionicons REQUIRED)
+
 find_program(GLIB_COMPILE_RESOURCES NAMES glib-compile-resources REQUIRED)
 
 find_program(GETTEXT_XGETTEXT_EXECUTABLE xgettext REQUIRED)
 find_program(GETTEXT_MSGMERGE_EXECUTABLE msgmerge REQUIRED)
 find_program(GETTEXT_MSGFMT_EXECUTABLE msgfmt REQUIRED)
 
+set(RESOURCE_PREFIX "/com/aflyingcar/${PROJECT_NAME}" PARENT_SCOPE)
 set(RESOURCE_PREFIX "/com/aflyingcar/${PROJECT_NAME}")
 
 # Define twice so that it is available both here and in the parent scope
@@ -41,7 +44,7 @@ add_custom_command(OUTPUT ${RESOURCE_C_SRC}
 
 add_custom_target(glib_resources
     COMMAND ${CMAKE_COMMAND} -E copy ${RESOURCE_C_SRC} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-    DEPENDS ${RESOURCE_C_SRC}
+    DEPENDS ${RESOURCE_C_SRC} glib_ionicons_resources
 )
 
 set_source_files_properties(${RESOURCE_C_SRC} PROPERTIES GENERATED TRUE)

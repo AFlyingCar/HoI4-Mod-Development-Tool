@@ -16,9 +16,12 @@
 #include "StyleClasses.h"
 #include "SelectionManager.h"
 
+#include "NodeKeyNames.h"
+
 HMDT::GUI::StatePropertiesPane::StatePropertiesPane():
     m_state(nullptr),
-    m_box(Gtk::ORIENTATION_VERTICAL)
+    m_box(Gtk::ORIENTATION_VERTICAL),
+    m_value_changed_callback([](auto&&...) {})
 { }
 
 Gtk::ScrolledWindow& HMDT::GUI::StatePropertiesPane::getParent() {
@@ -79,8 +82,22 @@ void HMDT::GUI::StatePropertiesPane::buildNameField() {
 
         if(m_state != nullptr && m_state->name != m_name_field->get_text()) {
             Action::ActionManager::getInstance().doAction(
-                NewSetPropertyAction(m_state, name,
-                                     m_name_field->get_text()));
+                &NewSetPropertyAction(m_state, name,
+                                     m_name_field->get_text())
+                    ->onValueChanged([this](const auto& old, const auto& _new)
+                    {
+                        WRITE_DEBUG("Update name from ", old, " to ", _new);
+
+                        m_value_changed_callback(
+                            Project::Hierarchy::Key{
+                                Project::Hierarchy::ProjectKeys::HISTORY,
+                                Project::Hierarchy::ProjectKeys::STATES,
+                                Project::Hierarchy::GroupKeys::STATES,
+                                std::to_string(m_state->id),
+                                Project::Hierarchy::StateKeys::ID
+                            });
+                    })
+                );
         }
     });
     m_name_field->signal_focus_out_event().connect([this](GdkEventFocus*) {
@@ -103,8 +120,22 @@ void HMDT::GUI::StatePropertiesPane::buildManpowerField() {
            m_state->manpower != std::atoi(m_manpower_field->get_text().c_str()))
         {
             Action::ActionManager::getInstance().doAction(
-                NewSetPropertyAction(m_state, manpower,
-                                     std::atoi(m_manpower_field->get_text().c_str())));
+                &NewSetPropertyAction(m_state, manpower,
+                                     std::atoi(m_manpower_field->get_text().c_str()))
+                    ->onValueChanged([this](const auto& old, const auto& _new)
+                    {
+                        WRITE_DEBUG("Update manpower from ", old, " to ", _new);
+
+                        m_value_changed_callback(
+                            Project::Hierarchy::Key{
+                                Project::Hierarchy::ProjectKeys::HISTORY,
+                                Project::Hierarchy::ProjectKeys::STATES,
+                                Project::Hierarchy::GroupKeys::STATES,
+                                std::to_string(m_state->id),
+                                Project::Hierarchy::StateKeys::MANPOWER
+                            });
+                    })
+                );
         }
     });
     m_manpower_field->signal_focus_out_event().connect([this](GdkEventFocus*) {
@@ -132,8 +163,22 @@ void HMDT::GUI::StatePropertiesPane::buildBuildingsMaxLevelFactorField() {
            m_state->buildings_max_level_factor != std::atof(m_buildings_max_level_factor_field->get_text().c_str()))
         {
             Action::ActionManager::getInstance().doAction(
-                NewSetPropertyAction(m_state, buildings_max_level_factor,
-                                     std::atof(m_buildings_max_level_factor_field->get_text().c_str())));
+                &NewSetPropertyAction(m_state, buildings_max_level_factor,
+                                     std::atof(m_buildings_max_level_factor_field->get_text().c_str()))
+                    ->onValueChanged([this](const auto& old, const auto& _new)
+                    {
+                        WRITE_DEBUG("Update buildings max level factor from ", old, " to ", _new);
+
+                        m_value_changed_callback(
+                            Project::Hierarchy::Key{
+                                Project::Hierarchy::ProjectKeys::HISTORY,
+                                Project::Hierarchy::ProjectKeys::STATES,
+                                Project::Hierarchy::GroupKeys::STATES,
+                                std::to_string(m_state->id),
+                                Project::Hierarchy::StateKeys::BUILDINGS_MAX_LEVEL_FACTOR
+                            });
+                    })
+                );
         }
     });
     m_buildings_max_level_factor_field->signal_focus_out_event().connect([this](GdkEventFocus*)
@@ -151,8 +196,22 @@ void HMDT::GUI::StatePropertiesPane::buildIsImpassableField() {
 
         if(m_state != nullptr) {
             Action::ActionManager::getInstance().doAction(
-                NewSetPropertyAction(m_state, impassable,
-                                     m_is_impassable_button->get_active()));
+                &NewSetPropertyAction(m_state, impassable,
+                                     m_is_impassable_button->get_active())
+                    ->onValueChanged([this](const auto& old, const auto& _new)
+                    {
+                        WRITE_DEBUG("Update impassable from ", old, " to ", _new);
+
+                        m_value_changed_callback(
+                            Project::Hierarchy::Key{
+                                Project::Hierarchy::ProjectKeys::HISTORY,
+                                Project::Hierarchy::ProjectKeys::STATES,
+                                Project::Hierarchy::GroupKeys::STATES,
+                                std::to_string(m_state->id),
+                                Project::Hierarchy::StateKeys::IMPASSABLE
+                            });
+                    })
+                );
         }
     });
 }
@@ -337,5 +396,10 @@ void HMDT::GUI::StatePropertiesPane::updateProvinceListElements(const State* sta
                 std::set<ProvinceID>(state->provinces.begin(),
                                      state->provinces.end()));
     }
+}
+
+void HMDT::GUI::StatePropertiesPane::setCallbackOnValueChanged(const ValueChangedCallback& callback) noexcept
+{
+    m_value_changed_callback = callback;
 }
 

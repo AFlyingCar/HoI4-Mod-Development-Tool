@@ -24,6 +24,8 @@ namespace HMDT::GUI {
             Application();
             virtual ~Application();
 
+            std::unique_ptr<MainWindow>& getMainWindow() noexcept;
+
         protected:
             void on_activate() override;
             void on_startup() override;

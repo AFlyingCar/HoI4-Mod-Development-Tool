@@ -37,6 +37,12 @@ HMDT::GUI::Application::~Application() {
     *m_is_exiting = true;
 }
 
+auto HMDT::GUI::Application::getMainWindow() noexcept
+    -> std::unique_ptr<MainWindow>&
+{
+    return m_window;
+}
+
 void HMDT::GUI::Application::on_activate() {
     Gtk::Application::on_activate();
 
