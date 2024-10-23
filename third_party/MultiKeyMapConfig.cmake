@@ -14,7 +14,7 @@ if(NOT mkm_POPULATED)
     FetchContent_Populate(mkm)
     add_subdirectory(${mkm_SOURCE_DIR} ${mkm_BINARY_DIR} EXCLUDE_FROM_ALL)
 
-    install(FILES ${mkm_SOURCE_DIR}/LICENSE.MIT
+    install(FILES ${mkm_SOURCE_DIR}/LICENSE
             DESTINATION ${INSTALL_DESTINATION}/share/licenses
             RENAME LICENSE.mkm.txt)
 endif()
