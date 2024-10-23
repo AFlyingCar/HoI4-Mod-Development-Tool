@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 
 include(FetchContent)
 
+find_program(GLIB_COMPILE_RESOURCES NAMES glib-compile-resources REQUIRED)
+
 set(IONICONS_RESOURCE_PREFIX "/com/ionicons" PARENT_SCOPE)
 set(IONICONS_RESOURCE_PREFIX "/com/ionicons")
 
