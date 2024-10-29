@@ -16,6 +16,7 @@
 # include "BaseMainWindow.h"
 # include "MainWindowDrawingAreaPart.h"
 # include "MainWindowPropertiesPanePart.h"
+# include "MainWindowFileTreePart.h"
 
 # include "ConfigEditorWindow.h"
 # include "LogViewerWindow.h"
@@ -28,9 +29,13 @@ namespace HMDT::GUI {
      */
     class MainWindow: public virtual BaseMainWindow,
                       public MainWindowDrawingAreaPart,
-                      public MainWindowPropertiesPanePart
+                      public MainWindowPropertiesPanePart,
+                      public MainWindowFileTreePart
     {
         public:
+            //! The default position of the file tree pane
+            static constexpr std::int32_t DEFAULT_FILE_TREE_POSITION = 330;
+
             MainWindow(Gtk::Application&);
             virtual ~MainWindow();
 
@@ -40,7 +45,18 @@ namespace HMDT::GUI {
 
             OptionalReference<LogViewerWindow> getLogViewerWindow();
 
+            template<typename T>
+            T* thisAs() const noexcept {
+                static_assert(std::is_base_of_v<T, MainWindow>,
+                              "Can only get MainWindow as one if its base "
+                              "classes.");
+
+                return dynamic_cast<T*>(this);
+            }
+
         protected:
+            virtual void updatePart(const PartType&, const std::any&) noexcept override;
+
             virtual Gtk::Orientation getDisplayOrientation() const override;
             virtual void addWidgetToParent(Gtk::Widget&) override;
 
@@ -73,6 +89,9 @@ namespace HMDT::GUI {
 
             //! The main pane where all child widgets will be inside
             Gtk::Paned* m_paned;
+
+            //! Sub-pane for the left-hand of the screen, allowing us to have 3 panes
+            Gtk::Paned* m_left_pane;
 
             //! The window for viewing the logs
             std::unique_ptr<LogViewerWindow> m_log_viewer_window;

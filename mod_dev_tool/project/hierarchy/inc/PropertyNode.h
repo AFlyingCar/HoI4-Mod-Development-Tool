@@ -52,6 +52,8 @@ namespace HMDT::Project::Hierarchy {
 
             /**
              * @brief Gets the value held by this property
+             * @details The std::any returned will always be a
+             *          reference_wrapper<T>
              *
              * @return The value held by this property
              */
@@ -59,11 +61,13 @@ namespace HMDT::Project::Hierarchy {
                 auto result = m_getter();
                 RETURN_IF_ERROR(result);
 
-                return result->get();
+                return refAsConstRef(*result);
             }
 
             /**
              * @brief Gets the value held by this property
+             * @details Note that the Any returned here will _not_ contain a
+             *          reference_wrapper<T>, but instead will only hold a T
              *
              * @return The value held by this property
              */

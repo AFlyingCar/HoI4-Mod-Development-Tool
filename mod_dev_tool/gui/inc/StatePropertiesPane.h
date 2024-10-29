@@ -16,12 +16,16 @@
 
 # include "ConstrainedEntry.h"
 
+# include "INode.h"
+
 namespace HMDT::GUI {
     /**
      * @brief The pane where properties of a state are placed into
      */
     class StatePropertiesPane: public WidgetContainer {
         public:
+            using ValueChangedCallback = std::function<void(const Project::Hierarchy::Key&)>;
+
             StatePropertiesPane();
 
             Gtk::ScrolledWindow& getParent();
@@ -35,6 +39,8 @@ namespace HMDT::GUI {
             void onResize();
 
             void updateProperties(bool);
+
+            void setCallbackOnValueChanged(const ValueChangedCallback&) noexcept;
 
         protected:
             virtual void addWidgetToParent(Gtk::Widget&) override;
@@ -72,6 +78,9 @@ namespace HMDT::GUI {
             Gtk::Button* m_delete_state_button;
 
             bool m_is_updating_properties;
+
+            //! A callback which is called when a province property gets modified
+            ValueChangedCallback m_value_changed_callback;
     };
 }
 

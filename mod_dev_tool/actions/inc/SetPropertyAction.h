@@ -21,6 +21,8 @@ namespace HMDT::Action {
     template<typename S, typename T>
     class SetPropertyAction: public Action::IAction {
         public:
+            using OnValueChangedCallback = std::function<void(const T&, const T&)>;
+
             SetPropertyAction(S* structure,
                               T S::* field,
                               const T& new_value,
@@ -29,7 +31,8 @@ namespace HMDT::Action {
                 m_field(field),
                 m_old_value(structure->*m_field),
                 m_new_value(new_value),
-                m_field_name(field_name)
+                m_field_name(field_name),
+                m_on_value_changed_callback([](auto&&...) { })
             {
             }
 
@@ -60,6 +63,8 @@ namespace HMDT::Action {
                     return false;
                 }
 
+                m_on_value_changed_callback(m_old_value, m_new_value);
+
                 return true;
             }
 
@@ -81,7 +86,15 @@ namespace HMDT::Action {
                     return false;
                 }
 
+                m_on_value_changed_callback(m_old_value, m_new_value);
+
                 return true;
+            }
+
+            SetPropertyAction<S, T>& onValueChanged(const OnValueChangedCallback& callback) noexcept
+            {
+                m_on_value_changed_callback = callback;
+                return *this;
             }
 
         private:
@@ -99,13 +112,16 @@ namespace HMDT::Action {
 
             //! A string representation of the field that is being set (for debug)
             std::string_view m_field_name;
+
+            //! Callback called when the value is changed
+            OnValueChangedCallback m_on_value_changed_callback;
     };
 
 # define NewSetPropertyAction(OBJECT, NAME, VALUE) \
-    new HMDT::Action::SetPropertyAction< \
+    (new HMDT::Action::SetPropertyAction< \
         HMDT::RemoveAllPointers_t<decltype(OBJECT)>, \
                                   decltype(HMDT::RemoveAllPointers_t<decltype(OBJECT)>::NAME)> \
-            (OBJECT, &HMDT::RemoveAllPointers_t<decltype(OBJECT)>::NAME, VALUE, STR(NAME))
+            (OBJECT, &HMDT::RemoveAllPointers_t<decltype(OBJECT)>::NAME, VALUE, STR(NAME)))
 }
 
 #endif

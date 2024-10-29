@@ -39,6 +39,33 @@ namespace HMDT {
      */
     template<typename...>
     constexpr std::false_type alwaysFalse{};
+
+    /**
+     * @brief Checks if a given type is iterable with std::begin() and std::end()
+     *
+     * @tparam T The type to check
+     */
+    template<typename T, typename = void>
+    struct IsIterable: std::false_type {};
+
+    /**
+     * @brief Checks if a given type is iterable with std::begin() and std::end()
+     *
+     * @tparam T The type to check
+     */
+    template<typename T>
+    struct IsIterable<T, std::void_t<decltype(std::begin(std::declval<T&>())),
+                                     decltype(std::end(std::declval<T&>()))
+                                    >
+                     >: std::true_type {};
+
+    /**
+     * @brief Checks if a given type is iterable with std::begin() and std::end()
+     *
+     * @tparam T The type to check
+     */
+    template<typename T>
+    constexpr bool IsIterable_v = IsIterable<T>::value;
 }
 
 #endif

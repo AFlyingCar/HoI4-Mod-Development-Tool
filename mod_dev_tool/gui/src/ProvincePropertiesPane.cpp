@@ -18,10 +18,13 @@
 #include "Driver.h"
 #include "SelectionManager.h"
 
+#include "NodeKeyNames.h"
+
 HMDT::GUI::ProvincePropertiesPane::ProvincePropertiesPane():
     m_province(nullptr),
     m_box(Gtk::ORIENTATION_VERTICAL),
-    m_is_updating_properties(false)
+    m_is_updating_properties(false),
+    m_value_changed_callback([](auto&&...){})
 { }
 
 Gtk::ScrolledWindow& HMDT::GUI::ProvincePropertiesPane::getParent() {
@@ -77,8 +80,21 @@ void HMDT::GUI::ProvincePropertiesPane::buildIsCoastalField() {
 
         if(m_province != nullptr) {
             Action::ActionManager::getInstance().doAction(
-                NewSetPropertyAction(m_province, coastal,
+                &NewSetPropertyAction(m_province, coastal,
                                      m_is_coastal_button->get_active())
+                    ->onValueChanged([this](const auto& old, const auto& _new)
+                    {
+                        WRITE_DEBUG("Update coastal from ", old, " to ", _new);
+
+                        m_value_changed_callback(
+                            Project::Hierarchy::Key{
+                                Project::Hierarchy::ProjectKeys::MAP,
+                                Project::Hierarchy::ProjectKeys::PROVINCES,
+                                Project::Hierarchy::GroupKeys::PROVINCES,
+                                std::to_string(m_province->id),
+                                Project::Hierarchy::ProvinceKeys::COASTAL
+                            });
+                    })
             );
         }
     });
@@ -104,8 +120,22 @@ void HMDT::GUI::ProvincePropertiesPane::buildProvinceTypeField() {
                     current != -1)
             {
                 Action::ActionManager::getInstance().doAction(
-                    NewSetPropertyAction(m_province, type,
-                                         static_cast<ProvinceType>(current + 1)));
+                    &NewSetPropertyAction(m_province, type,
+                                         static_cast<ProvinceType>(current + 1))
+                    ->onValueChanged([this](const auto& old, const auto& _new)
+                    {
+                        WRITE_DEBUG("Update type from ", old, " to ", _new);
+
+                        m_value_changed_callback(
+                            Project::Hierarchy::Key{
+                                Project::Hierarchy::ProjectKeys::MAP,
+                                Project::Hierarchy::ProjectKeys::PROVINCES,
+                                Project::Hierarchy::GroupKeys::PROVINCES,
+                                std::to_string(m_province->id),
+                                Project::Hierarchy::ProvinceKeys::TYPE
+                            });
+                    })
+                );
             } else {
                 WRITE_ERROR("Province type somehow set to an invalid index: ",
                            m_provtype_menu->get_active_row_number());
@@ -135,8 +165,22 @@ void HMDT::GUI::ProvincePropertiesPane::buildTerrainTypeField() {
         if(m_province != nullptr) {
             // TODO: Verify that the active text is a valid terrain type
             Action::ActionManager::getInstance().doAction(
-                NewSetPropertyAction(m_province, terrain,
-                                     m_terrain_menu->get_active_text()));
+                &NewSetPropertyAction(m_province, terrain,
+                                     m_terrain_menu->get_active_text())
+                    ->onValueChanged([this](const auto& old, const auto& _new)
+                    {
+                        WRITE_DEBUG("Update terrain from ", old, " to ", _new);
+
+                        m_value_changed_callback(
+                            Project::Hierarchy::Key{
+                                Project::Hierarchy::ProjectKeys::MAP,
+                                Project::Hierarchy::ProjectKeys::PROVINCES,
+                                Project::Hierarchy::GroupKeys::PROVINCES,
+                                std::to_string(m_province->id),
+                                Project::Hierarchy::ProvinceKeys::TERRAIN
+                            });
+                    })
+                );
         }
     });
 }
@@ -152,8 +196,22 @@ void HMDT::GUI::ProvincePropertiesPane::buildContinentField() {
 
         if(m_province != nullptr) {
             Action::ActionManager::getInstance().doAction(
-                NewSetPropertyAction(m_province, continent,
-                                     m_continent_menu->get_active_text()));
+                &NewSetPropertyAction(m_province, continent,
+                                     m_continent_menu->get_active_text())
+                    ->onValueChanged([this](const auto& old, const auto& _new)
+                    {
+                        WRITE_DEBUG("Update continent from ", old, " to ", _new);
+
+                        m_value_changed_callback(
+                            Project::Hierarchy::Key{
+                                Project::Hierarchy::ProjectKeys::MAP,
+                                Project::Hierarchy::ProjectKeys::PROVINCES,
+                                Project::Hierarchy::GroupKeys::PROVINCES,
+                                std::to_string(m_province->id),
+                                Project::Hierarchy::ProvinceKeys::CONTINENT
+                            });
+                    })
+                );
         }
     });
 
@@ -556,5 +614,10 @@ void HMDT::GUI::ProvincePropertiesPane::onProjectOpened() {
         m_rem_button->set_sensitive(!continents.empty());
         m_add_button->set_sensitive(true);
     }
+}
+
+void HMDT::GUI::ProvincePropertiesPane::setCallbackOnValueChanged(const ValueChangedCallback& callback) noexcept
+{
+    m_value_changed_callback = callback;
 }
 
