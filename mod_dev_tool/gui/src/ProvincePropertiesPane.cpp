@@ -14,13 +14,16 @@
 #include "ActionManager.h"
 #include "SetPropertyAction.h"
 #include "CreateRemoveContinentAction.h"
+#include "CreateRemoveStateAction.h"
 
 #include "Driver.h"
 #include "SelectionManager.h"
+#include "MainWindowFileTreePart.h"
 
 #include "NodeKeyNames.h"
 
-HMDT::GUI::ProvincePropertiesPane::ProvincePropertiesPane():
+HMDT::GUI::ProvincePropertiesPane::ProvincePropertiesPane(BaseMainWindow& main_window):
+    m_main_window(main_window),
     m_province(nullptr),
     m_box(Gtk::ORIENTATION_VERTICAL),
     m_is_updating_properties(false),
@@ -354,18 +357,63 @@ void HMDT::GUI::ProvincePropertiesPane::buildContinentField() {
 void HMDT::GUI::ProvincePropertiesPane::buildStateCreationButton() {
     m_create_state_button = addWidget<Gtk::Button>(gettext("Create State"));
 
-    m_create_state_button->signal_clicked().connect([]() {
+    m_create_state_button->signal_clicked().connect([this]() {
         if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
             auto& history_project = opt_project->get().getHistoryProject();
+            auto& state_project = history_project.getStateProject();
 
             auto selected = SelectionManager::getInstance().getSelectedProvinceLabels();
-            auto id = history_project.getStateProject().addNewState(std::vector<ProvinceID>(selected.begin(),
-                                                                                            selected.end()));
-            SelectionManager::getInstance().selectState(id);
 
-            // TODO: If we have a State view, we should switch to it here
-            // TODO: We should also switch from the province properties pane to
-            //       the state properties pane
+            Project::Hierarchy::Key key{
+                Project::Hierarchy::ProjectKeys::HISTORY,
+                Project::Hierarchy::ProjectKeys::STATES,
+                Project::Hierarchy::GroupKeys::STATES
+            };
+
+            Action::ActionManager::getInstance().doAction(
+                &(new Action::CreateRemoveStateAction(history_project,
+                                                      std::vector<ProvinceID>(selected.begin(),
+                                                                              selected.end())
+                    )
+                  )
+                  ->onValueChanged([this, key](const StateID& id)
+                  {
+                      m_value_changed_callback(key);
+
+                      SelectionManager::getInstance().selectState(id);
+
+                      // TODO: If we have a State view, we should switch to it here
+                      // TODO: We should also switch from the province properties pane to
+                      //       the state properties pane
+                  })
+                  .onCreate([this, &state_project, key](const StateID& id) {
+                      // This will run right before onValueChanged, so make
+                      //   sure to update the hierarchy now
+                      auto& mwft = m_main_window.getPartAs<MainWindowFileTreePart>(BaseMainWindow::PartType::FILE_TREE);
+
+                      auto maybe_state = state_project.getStateForID(id);
+                      RETURN_VALUE_IF_ERROR(maybe_state, /* void */);
+
+                      auto state_node = state_project.createStateNode(id, *maybe_state);
+
+                      auto result = mwft.addNodeToHierarchy(key, state_node);
+                      RETURN_VALUE_IF_ERROR(result, /* void */);
+
+                      // No need to update the tree here, as that will happen
+                      //   in onValueChanged
+                  })
+                  .onRemove([this, key](const StateID& id) {
+                      // This will run right before onValueChanged, so make
+                      //   sure to update the hierarchy now
+                      auto& mwft = m_main_window.getPartAs<MainWindowFileTreePart>(BaseMainWindow::PartType::FILE_TREE);
+
+                      auto result = mwft.removeNodeFromHierarchy(key / std::to_string(id));
+                      RETURN_VALUE_IF_ERROR(result, /* void */);
+
+                      // No need to update the tree here, as that will happen
+                      //   in onValueChanged
+                  })
+            );
         }
     });
 }
