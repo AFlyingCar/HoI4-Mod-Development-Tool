@@ -114,11 +114,20 @@ void HMDT::MapData::setLabelMatrix(InternalMapType32 label_matrix) {
 
 void HMDT::MapData::setStateIDMatrix(uint32_t state_id_matrix[]) {
     m_state_id_matrix.reset(state_id_matrix);
-    ++m_state_id_matrix_updated_tag;
+    updateStateIDMatrixTag();
 }
 
 void HMDT::MapData::setStateIDMatrix(InternalMapType32 state_id_matrix) {
     m_state_id_matrix = state_id_matrix;
+    updateStateIDMatrixTag();
+}
+
+/**
+ * @brief Updates the tag for the state ID matrix, to mark that it has been
+ *        modified and any systems that use it (such as gui/gl) need to be
+ *        updated as well.
+ */
+void HMDT::MapData::updateStateIDMatrixTag() noexcept {
     ++m_state_id_matrix_updated_tag;
 }
 
