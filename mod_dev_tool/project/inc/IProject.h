@@ -17,6 +17,7 @@
 # include "Terrain.h"
 
 # include "INode.h"
+# include "StateNode.h"
 
 // Forward declarations
 namespace HMDT {
@@ -197,6 +198,8 @@ namespace HMDT::Project {
 
         MaybeRef<const State> getStateForID(StateID) const;
         MaybeRef<State> getStateForID(StateID);
+
+        std::shared_ptr<Hierarchy::StateNode> createStateNode(const StateID&, const State&) const noexcept;
 
         virtual const StateMap& getStates() const = 0;
 

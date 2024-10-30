@@ -553,6 +553,61 @@ auto HMDT::Project::IStateProject::getStateForID(StateID state_id)
     return STATUS_STATE_DOES_NOT_EXIST;
 }
 
+/**
+ * @brief Helper that creates a state node from an id and state
+ *
+ * @param id The id of the state.
+ * @param state The state to make a node for
+ *
+ * @return A shared_ptr of a new StateNode
+ */
+auto HMDT::Project::IStateProject::createStateNode(const StateID& id, const State& state) const noexcept
+    -> std::shared_ptr<Hierarchy::StateNode>
+{
+    auto state_node = std::make_shared<Hierarchy::StateNode>(state.name);
+    auto state_id = id;
+
+    state_node->setID([_this=const_cast<IStateProject*>(this), state_id]()
+            -> auto&
+        {
+            return _this->getStateMap()[state_id].id;
+        },
+        [](auto&&...){ return STATUS_SUCCESS; } /* visitor */);
+    state_node->setManpower([_this=const_cast<IStateProject*>(this),
+                             state_id]() -> auto&
+        {
+            return _this->getStateMap()[state_id].manpower;
+        },
+        [](auto&&...){ return STATUS_SUCCESS; });
+    state_node->setCategory([_this=const_cast<IStateProject*>(this),
+                             state_id]() -> auto&
+        {
+            return _this->getStateMap()[state_id].category;
+        },
+        [](auto&&...){ return STATUS_SUCCESS; });
+    state_node->setBuildingsMaxLevelFactor([_this=const_cast<IStateProject*>(this),
+                                            state_id]() -> auto&
+        {
+            return _this->getStateMap()[state_id].buildings_max_level_factor;
+        },
+        [](auto&&...){ return STATUS_SUCCESS; });
+    state_node->setImpassable([_this=const_cast<IStateProject*>(this),
+                               state_id]() -> auto&
+        {
+            return _this->getStateMap()[state_id].impassable;
+        },
+        [](auto&&...){ return STATUS_SUCCESS; });
+
+    // Since this is a DynamicGroup for States, setting the
+    //   provinces statically should be fine, but we may want to
+    //   change this to somehow produce a DynamicGroup instead?
+    WRITE_DEBUG("Add ", state.provinces.size(), " provinces to state node.");
+    state_node->setProvinces(state.provinces,
+                             [](auto&&...){ return STATUS_SUCCESS; });
+
+    return state_node;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void HMDT::Project::IContinentProject::addNewContinent(const std::string& continent)
