@@ -248,6 +248,34 @@ HMDT::Project::Hierarchy::Key::Key(std::initializer_list<std::string> parts):
 { }
 
 /**
+ * @brief Gets the parent of this key
+ *
+ * @return The parent of this key (includes parts - the last one)
+ */
+auto HMDT::Project::Hierarchy::Key::parent() const noexcept -> Key {
+    return Key(std::vector<std::string>(m_parts.begin(), m_parts.end() - 1));
+}
+
+/**
+ * @brief Creates a new key containing the specified part
+ *
+ * @param part The part to append to this key
+ *
+ * @return A new key containing this key followed by part
+ */
+auto HMDT::Project::Hierarchy::Key::operator/(const std::string& part) const noexcept
+    -> Key
+{
+    // Construct a new key from {existing parts}/part
+    std::vector<std::string> parts;
+    parts.reserve(m_parts.size() + 1);
+    parts.insert(parts.end(), m_parts.begin(), m_parts.end());
+    parts.push_back(part);
+
+    return Key(parts);
+}
+
+/**
  * @brief Looks up a node using this key starting from the given root.
  *
  * @param root The root to start searching from

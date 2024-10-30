@@ -346,6 +346,10 @@ namespace HMDT::Project::Hierarchy {
             Key(const std::vector<std::string>&);
             Key(std::initializer_list<std::string>);
 
+            Key parent() const noexcept;
+
+            Key operator/(const std::string&) const noexcept;
+
             Maybe<INodePtr> lookup(INodePtr) const noexcept;
 
             const std::vector<std::string>& getParts() const noexcept;
