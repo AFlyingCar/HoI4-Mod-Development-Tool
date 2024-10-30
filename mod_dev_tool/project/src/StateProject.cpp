@@ -388,6 +388,8 @@ void HMDT::Project::StateProject::updateStateIDMatrix() {
 
     auto* label_matrix_start = label_matrix.get();
 
+    // Rebuilds the state ID matrix
+    // This is a kind of expensive operation, so we should do it very infrequently
     parallelTransform(label_matrix_start, label_matrix_start + getMapData()->getProvincesSize(),
                       state_id_matrix.get(),
                       [this](ProvinceID prov_id) -> StateID {
@@ -400,6 +402,8 @@ void HMDT::Project::StateProject::updateStateIDMatrix() {
                               return 0;
                           }
                       });
+
+    getMapData()->updateStateIDMatrixTag();
 
     if(prog_opts.debug) {
         auto path = getRootParent().getDebugRoot();
@@ -607,5 +611,4 @@ auto HMDT::Project::StateProject::visitStates(const std::function<MaybeVoid(std:
 
     return states_group_node;
 }
-
 
