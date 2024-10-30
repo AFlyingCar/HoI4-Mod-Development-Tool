@@ -786,6 +786,36 @@ void HMDT::GUI::MainWindow::updatePart(const PartType& part, const std::any& dat
     }
 }
 
+auto HMDT::GUI::MainWindow::getPart(const PartType& part) noexcept
+    -> BaseMainWindow&
+{
+    switch(part) {
+        case PartType::MAIN:
+            return *this;
+        case PartType::DRAWING_AREA:
+            return *thisAs<MainWindowDrawingAreaPart>();
+        case PartType::PROPERTIES_PANE:
+            return *thisAs<MainWindowPropertiesPanePart>();
+        case PartType::FILE_TREE:
+            return *thisAs<MainWindowFileTreePart>();
+    }
+}
+
+auto HMDT::GUI::MainWindow::getPart(const PartType& part) const noexcept
+    -> const BaseMainWindow&
+{
+    switch(part) {
+        case PartType::MAIN:
+            return *this;
+        case PartType::DRAWING_AREA:
+            return *thisAs<MainWindowDrawingAreaPart>();
+        case PartType::PROPERTIES_PANE:
+            return *thisAs<MainWindowPropertiesPanePart>();
+        case PartType::FILE_TREE:
+            return *thisAs<MainWindowFileTreePart>();
+    }
+}
+
 Gtk::Orientation HMDT::GUI::MainWindow::getDisplayOrientation() const {
     return Gtk::Orientation::ORIENTATION_VERTICAL;
 }
