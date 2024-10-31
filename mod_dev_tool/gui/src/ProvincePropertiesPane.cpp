@@ -406,9 +406,16 @@ void HMDT::GUI::ProvincePropertiesPane::buildStateCreationButton() {
                       auto result = mwft.addNodeToHierarchy(key, state_node);
                       RETURN_VALUE_IF_ERROR(result, false);
 
-                      // Switch back to the states view
-                      m_main_window.getPartAs<MainWindow>(BaseMainWindow::PartType::MAIN)
-                          .switchRenderingView(IMapDrawingAreaBase::ViewingMode::STATES_VIEW);
+
+                      Preferences::getInstance().getPreferenceValue<bool>("Gui._.autoSwitchView")
+                          .andThen([this](bool autoSwitchView)
+                      {
+                          if(autoSwitchView) {
+                              // Switch back to the states view
+                              m_main_window.getPartAs<MainWindow>(BaseMainWindow::PartType::MAIN)
+                                  .switchRenderingView(IMapDrawingAreaBase::ViewingMode::STATES_VIEW);
+                          }
+                      });
 
                       // No need to update the tree here, as that will happen
                       //   in onValueChanged
