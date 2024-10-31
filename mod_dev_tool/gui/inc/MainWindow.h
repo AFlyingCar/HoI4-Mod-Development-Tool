@@ -63,6 +63,8 @@ namespace HMDT::GUI {
                 return dynamic_cast<T*>(this);
             }
 
+            IMapDrawingAreaBase::ViewingMode switchRenderingView(IMapDrawingAreaBase::ViewingMode) noexcept;
+
         protected:
             virtual void updatePart(const PartType&, const std::any&) noexcept override;
             virtual BaseMainWindow& getPart(const PartType&) noexcept override;

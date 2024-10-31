@@ -187,9 +187,7 @@ void HMDT::GUI::MainWindow::initializeViewActions() {
             auto state_option = lookup_action("switch_views.state");
             state_option->change_state(false);
 
-            auto prev_mode = m_drawing_area->setViewingMode(IMapDrawingAreaBase::ViewingMode::PROVINCE_VIEW);
-            WRITE_DEBUG("Switched from rendering view ", prev_mode, " to ",
-                        IMapDrawingAreaBase::ViewingMode::PROVINCE_VIEW);
+            switchRenderingView(IMapDrawingAreaBase::ViewingMode::PROVINCE_VIEW);
         });
 
         auto stateview_action = add_action_bool("switch_views.state", [this]() {
@@ -201,9 +199,7 @@ void HMDT::GUI::MainWindow::initializeViewActions() {
             auto province_option = lookup_action("switch_views.province");
             province_option->change_state(false);
 
-            auto prev_mode = m_drawing_area->setViewingMode(IMapDrawingAreaBase::ViewingMode::STATES_VIEW);
-            WRITE_DEBUG("Switched from rendering view ", prev_mode, " to ",
-                        IMapDrawingAreaBase::ViewingMode::STATES_VIEW);
+            switchRenderingView(IMapDrawingAreaBase::ViewingMode::STATES_VIEW);
         });
 
         provinceview_action->change_state(true);
@@ -232,6 +228,21 @@ void HMDT::GUI::MainWindow::initializeViewActions() {
         render_adjacencies_action->change_state(false);
         render_adjacencies_action->set_enabled(prog_opts.debug);
     }
+}
+
+/**
+ * @brief Switches the rendering view
+ *
+ * @param new_mode The new rendering view to switch to.
+ *
+ * @return The previous rendering view mode
+ */
+auto HMDT::GUI::MainWindow::switchRenderingView(IMapDrawingAreaBase::ViewingMode new_mode) noexcept
+    -> IMapDrawingAreaBase::ViewingMode
+{
+    auto prev_mode = m_drawing_area->setViewingMode(new_mode);
+    WRITE_DEBUG("Switched from rendering view ", prev_mode, " to ", new_mode);
+    return prev_mode;
 }
 
 /**
