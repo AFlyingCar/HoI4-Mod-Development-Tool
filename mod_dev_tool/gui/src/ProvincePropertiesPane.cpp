@@ -421,6 +421,11 @@ void HMDT::GUI::ProvincePropertiesPane::buildStateCreationButton() {
                       auto result = mwft.removeNodeFromHierarchy(key / state.name);
                       RETURN_VALUE_IF_ERROR(result, false);
 
+                      // Deselect the state to prevent crashes in
+                      //   StatePropertiesPane, which may still be referencing
+                      //   the state after it gets removed
+                      SelectionManager::getInstance().removeStateSelection(state.id);
+
                       // No need to update the tree here, as that will happen
                       //   in onValueChanged
 
