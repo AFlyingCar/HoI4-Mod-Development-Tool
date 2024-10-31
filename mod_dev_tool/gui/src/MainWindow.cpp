@@ -799,6 +799,8 @@ auto HMDT::GUI::MainWindow::getPart(const PartType& part) noexcept
         case PartType::FILE_TREE:
             return *thisAs<MainWindowFileTreePart>();
     }
+
+    UNREACHABLE();
 }
 
 auto HMDT::GUI::MainWindow::getPart(const PartType& part) const noexcept
@@ -814,6 +816,8 @@ auto HMDT::GUI::MainWindow::getPart(const PartType& part) const noexcept
         case PartType::FILE_TREE:
             return *thisAs<MainWindowFileTreePart>();
     }
+
+    UNREACHABLE();
 }
 
 Gtk::Orientation HMDT::GUI::MainWindow::getDisplayOrientation() const {
