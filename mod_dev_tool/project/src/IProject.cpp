@@ -541,7 +541,7 @@ auto HMDT::Project::IStateProject::getStateForID(StateID state_id) const
     if(isValidStateID(state_id)) {
         return std::ref(getStates().at(state_id));
     }
-    return STATUS_STATE_DOES_NOT_EXIST;
+    RETURN_ERROR(STATUS_STATE_DOES_NOT_EXIST);
 }
 
 auto HMDT::Project::IStateProject::getStateForID(StateID state_id)
@@ -550,7 +550,7 @@ auto HMDT::Project::IStateProject::getStateForID(StateID state_id)
     if(isValidStateID(state_id)) {
         return std::ref(getStateMap().at(state_id));
     }
-    return STATUS_STATE_DOES_NOT_EXIST;
+    RETURN_ERROR(STATUS_STATE_DOES_NOT_EXIST);
 }
 
 /**
