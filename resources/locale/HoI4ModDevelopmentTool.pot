@@ -140,6 +140,14 @@ msgstr ""
 msgid "Whether the program should use dark-mode."
 msgstr ""
 
+msgid "autoSwitchView"
+msgstr ""
+
+msgid ""
+"Whether rendering views should be automatically switched when performing "
+"certain actions."
+msgstr ""
+
 msgid "HoI4"
 msgstr ""
 
