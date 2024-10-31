@@ -67,16 +67,6 @@ HMDT::GUI::MainWindowFileTreePart::HierarchyModel::HierarchyModel(Project::Hiera
                 m_stamp);
 }
 
-HMDT::GUI::MainWindowFileTreePart::HierarchyModel::HierarchyModel(const HierarchyModel& old_model):
-    Glib::ObjectBase(typeid(HierarchyModel)), // Register a custom GType
-    Glib::Object(), // The custom GType is actually registered here
-    m_project_hierarchy(old_model.m_project_hierarchy),
-    m_parent_map(old_model.m_parent_map),
-    m_ordered_children_map(old_model.m_ordered_children_map),
-    m_node_index_map(old_model.m_node_index_map),
-    m_stamp(old_model.m_stamp) // do not update next_stamp
-{ }
-
 /**
  * @brief Gets the project hierarchy
  *

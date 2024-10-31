@@ -87,8 +87,6 @@ namespace HMDT::GUI {
                                    const OrderedChildrenMap&,
                                    const NodeIndexMap&);
 
-                    HierarchyModel(const HierarchyModel&);
-
                     virtual ~HierarchyModel() = default;
 
                     std::shared_ptr<Project::Hierarchy::INode> getHierarchy() noexcept;
