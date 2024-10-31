@@ -1,5 +1,7 @@
 #include "MainWindowFileTreePart.h"
 
+#include <numeric>
+
 #include "gtkmm/icontheme.h"
 
 #include "StatusCodes.h"
@@ -57,7 +59,13 @@ HMDT::GUI::MainWindowFileTreePart::HierarchyModel::HierarchyModel(Project::Hiera
     m_ordered_children_map(ordered_children_map),
     m_node_index_map(node_index_map),
     m_stamp(++next_stamp)
-{ }
+{
+    WRITE_DEBUG("HierarchyModel(", printNode(node, true),
+                ", parent_map[count=", parent_map.size(),
+                "], ord_children_map[count=", ordered_children_map.size(),
+                "], node_index_map[count=", node_index_map.size(), "]), stamp=",
+                m_stamp);
+}
 
 /**
  * @brief Gets the project hierarchy
@@ -934,6 +942,24 @@ auto HMDT::GUI::MainWindowFileTreePart::HierarchyModel::valueAsString(const Proj
 #undef RETURN_PROVTYPE
 }
 
+auto HMDT::GUI::MainWindowFileTreePart::HierarchyModel::getParentMap() const noexcept
+    -> const ParentMap&
+{
+    return m_parent_map;
+}
+
+auto HMDT::GUI::MainWindowFileTreePart::HierarchyModel::getOrderedChildrenMap() const noexcept
+    -> const OrderedChildrenMap&
+{
+    return m_ordered_children_map;
+}
+
+auto HMDT::GUI::MainWindowFileTreePart::HierarchyModel::getNodeIndexMap() const noexcept
+    -> const NodeIndexMap&
+{
+    return m_node_index_map;
+}
+
 /**
  * @brief Gets the icon for the given type
  *
@@ -1309,6 +1335,79 @@ auto HMDT::GUI::MainWindowFileTreePart::getHierarchy() noexcept
     return m_model->getHierarchy();
 }
 
+
+/**
+ * @brief Builds all mappings needed by HierarchyModel for true_root_node,
+ *        starting from the (optionally) specified key.
+ *
+ * @param true_root_node The root of the entire tree.
+ * @param key A key to the node to start building mappings from, relative to
+ *            true_root_node
+ *
+ * @return A tuple containing the mappings, or an error code upon failure.
+ */
+auto HMDT::GUI::MainWindowFileTreePart::buildMappingsFrom(const Project::Hierarchy::INodePtr& true_root_node,
+                                                          const Project::Hierarchy::Key& key) const noexcept
+    -> Maybe<std::tuple<HierarchyModel::ParentMap,
+                        HierarchyModel::OrderedChildrenMap,
+                        HierarchyModel::NodeIndexMap>>
+{
+    HierarchyModel::ParentMap parent_map;
+    HierarchyModel::OrderedChildrenMap ordered_children_map;
+    HierarchyModel::NodeIndexMap node_index_map;
+
+    WRITE_DEBUG("buildMappingsFrom: ", std::to_string(key));
+
+    // Find the starting place to start building mappings from
+    auto maybe_root_node = key.lookup(true_root_node);
+    RETURN_IF_ERROR(maybe_root_node);
+
+    auto root_node = *maybe_root_node;
+
+    // The root has no parent
+    parent_map[true_root_node.get()] = nullptr;
+    node_index_map[true_root_node.get()] = 0;
+
+    // Resolve links and build parent map
+    auto result = root_node->visit([&true_root_node,
+                                    &parent_map,
+                                    &ordered_children_map,
+                                    &node_index_map](auto node)
+        -> MaybeVoid
+    {
+        if(node->getType() == Project::Hierarchy::Node::Type::LINK) {
+            WRITE_DEBUG("Resolve link node ", node->getName());
+            auto link_node = std::dynamic_pointer_cast<Project::Hierarchy::LinkNode>(node);
+            auto result = link_node->resolve(true_root_node);
+            RETURN_IF_ERROR(result);
+
+            if(!link_node->isLinkValid()) {
+                WRITE_ERROR("Link resolution succeeded, but the link node is still invalid.");
+                RETURN_ERROR(STATUS_UNEXPECTED);
+            }
+        } else if(auto gnode = std::dynamic_pointer_cast<Project::Hierarchy::IGroupNode>(node);
+                  gnode != nullptr)
+        {
+            auto&& children = gnode->getChildren();
+
+            WRITE_DEBUG("Found group node ",
+                        std::to_string((Project::Hierarchy::INode&)*gnode),
+                        ", adding all ", children.size(),
+                        " children to the maps.");
+            for(auto&& [_, child] : children) {
+                parent_map[child.get()] = gnode;
+                ordered_children_map[node.get()].push_back(child);
+                node_index_map[child.get()] = ordered_children_map[node.get()].size() - 1;
+            }
+        }
+
+        return STATUS_SUCCESS;
+    });
+    RETURN_IF_ERROR(result);
+
+    return std::make_tuple(parent_map, ordered_children_map, node_index_map);
+}
+
 /**
  * @brief Callback invoked when a project is opened
  *
@@ -1325,50 +1424,11 @@ auto HMDT::GUI::MainWindowFileTreePart::onProjectOpened() -> MaybeVoid {
 
         auto root_node = *maybe_hierarchy;
 
-        HierarchyModel::ParentMap parent_map;
-        HierarchyModel::OrderedChildrenMap ordered_children_map;
-        HierarchyModel::NodeIndexMap node_index_map;
+        auto mappings = buildMappingsFrom(root_node);
+        RETURN_IF_ERROR(mappings);
 
-        // The root has no parent
-        parent_map[root_node.get()] = nullptr;
-        node_index_map[root_node.get()] = 0;
-
-        // Resolve links and build parent map
-        auto result = root_node->visit([&root_node,
-                                        &parent_map,
-                                        &ordered_children_map,
-                                        &node_index_map](auto node)
-            -> MaybeVoid
-        {
-            if(node->getType() == Project::Hierarchy::Node::Type::LINK) {
-                WRITE_DEBUG("Resolve link node ", node->getName());
-                auto link_node = std::dynamic_pointer_cast<Project::Hierarchy::LinkNode>(node);
-                auto result = link_node->resolve(root_node);
-                RETURN_IF_ERROR(result);
-
-                if(!link_node->isLinkValid()) {
-                    WRITE_ERROR("Link resolution succeeded, but the link node is still invalid.");
-                    RETURN_ERROR(STATUS_UNEXPECTED);
-                }
-            } else if(auto gnode = std::dynamic_pointer_cast<Project::Hierarchy::IGroupNode>(node);
-                      gnode != nullptr)
-            {
-                auto&& children = gnode->getChildren();
-
-                WRITE_DEBUG("Found group node ",
-                            std::to_string((Project::Hierarchy::INode&)*gnode),
-                            ", adding all ", children.size(),
-                            " children to the maps.");
-                for(auto&& [_, child] : children) {
-                    parent_map[child.get()] = gnode;
-                    ordered_children_map[node.get()].push_back(child);
-                    node_index_map[child.get()] = ordered_children_map[node.get()].size() - 1;
-                }
-            }
-
-            return STATUS_SUCCESS;
-        });
-        RETURN_IF_ERROR(result);
+        // Build mappings from root
+        auto [parent_map, ordered_children_map, node_index_map] = *mappings;
 
         // We have to make a new object every time a project is opened in order
         //   to force TreeView to be refreshed
@@ -1380,6 +1440,187 @@ auto HMDT::GUI::MainWindowFileTreePart::onProjectOpened() -> MaybeVoid {
         // Make sure that we refresh the model with the new data
         m_tree_view->set_model(m_model);
     }
+
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief Refreshes the model used by GTK. Only valid if a model already exists
+ *
+ * @return STATUS_SUCCESS if the model could be successfully refreshed, failure
+ *         otherwise.
+ */
+auto HMDT::GUI::MainWindowFileTreePart::refreshModel(const Project::Hierarchy::Key& key) noexcept
+    -> MaybeVoid
+{
+    RETURN_ERROR_IF(!m_model, STATUS_PARAM_CANNOT_BE_NULL);
+
+    auto root_node = m_model->getHierarchy();
+
+    auto mappings = buildMappingsFrom(root_node, key);
+    RETURN_IF_ERROR(mappings);
+
+    // Get updated versions of the mappings, override older data if found
+    auto [parent_map, ordered_children_map, node_index_map] = *mappings;
+
+    // Insert the old map elements into the new elements, effectively
+    //   "overwriting" the old elements with newer ones if applicable
+    parent_map.insert(m_model->getParentMap().begin(),
+                      m_model->getParentMap().end());
+    ordered_children_map.insert(m_model->getOrderedChildrenMap().begin(),
+                                m_model->getOrderedChildrenMap().end());
+    node_index_map.insert(m_model->getNodeIndexMap().begin(),
+                          m_model->getNodeIndexMap().end());
+
+    // This is potentially very spammy, so only do it if debugging is turned on
+    if(prog_opts.debug) {
+        // Dump difference between new map and old map
+        HierarchyModel::ParentMap diff;
+
+        for(auto&& pair : parent_map) {
+            if(m_model->getParentMap().count(pair.first) == 0) {
+                diff.insert(pair);
+            }
+        }
+        for(auto&& pair : m_model->getParentMap()) {
+            if(parent_map.count(pair.first) == 0) {
+                diff.insert(pair);
+            }
+        }
+
+        WRITE_DEBUG("ParentMap diff=[",
+                std::accumulate(diff.begin(), diff.end(), std::string(),
+                    [](auto&& s, auto&& p) {
+                        return s + ", " + printNode(p.first, true) + "=" + printNode(p.second, true);
+                    }), "]");
+
+        // Verify that every node in the hierarchy has a parent in the parent
+        //   map
+        const auto& parent_map_temp = parent_map;
+        root_node->visit([this, &parent_map_temp](auto node) -> MaybeVoid {
+            if(parent_map_temp.count(node.get()) == 0) {
+                WRITE_WARN("Node ", printNode(node, true),
+                           " was not found in parent map!! Was it at least in"
+                           " the original parent map?");
+                if(m_model->getParentMap().count(node.get()) == 0) {
+                    WRITE_ERROR("Node ", printNode(node, true), " also was not "
+                                "in the original map!");
+                } else {
+                    WRITE_DEBUG("Node ", printNode(node, true), " was in the "
+                                "original map. It mapped to ",
+                                printNode(m_model->getParentMap().at(node.get()), true));
+                }
+            }
+
+            return STATUS_SUCCESS;
+        });
+    }
+
+    // Create an exact copy of the model to force TreeView to be refreshed with
+    //   the new data
+    m_model = Glib::RefPtr<HierarchyModel>(new HierarchyModel(root_node,
+                                                              parent_map,
+                                                              ordered_children_map,
+                                                              node_index_map));
+
+    // Make sure that we refresh the model with the new data
+    m_tree_view->set_model(m_model);
+
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief Adds a node to the hierarchy.
+ * @details Important: This function does not update or notify GTK that the
+ *          hierarchy/model has been updated. For that, you must also call
+ *          updateFileTree (or BaseMainWindow::updatePart)
+ *
+ * @param key The root key for where to add the node to
+ * @param node The node to add
+ * @param name The name to add the key as
+ *
+ * @return STATUS_SUCCESS on success, or a failure code otherwise
+ */
+auto HMDT::GUI::MainWindowFileTreePart::addNodeToHierarchy(const Project::Hierarchy::Key& key,
+                                                           Project::Hierarchy::INodePtr node,
+                                                           const std::string& name) noexcept
+    -> MaybeVoid
+{
+    WRITE_DEBUG("Asked to add a node ", printNode(node, true), " at key ", std::to_string(key));
+
+    auto maybe_group_node = key.lookup(m_model->getHierarchy());
+    if(IS_FAILURE(maybe_group_node)) {
+        WRITE_ERROR("Failed to lookup node for key ", std::to_string(key));
+        RETURN_IF_ERROR(maybe_group_node);
+    }
+
+    // Try to convert it to a group node, if we cannot then something has gone
+    //   wrong
+    if(auto gnode = std::dynamic_pointer_cast<Project::Hierarchy::GroupNode>(*maybe_group_node);
+            gnode != nullptr)
+    {
+        if(name.empty()) {
+            auto result = gnode->addChild(node);
+            RETURN_IF_ERROR(result);
+        } else {
+            auto result = gnode->addChild(name, node);
+            RETURN_IF_ERROR(result);
+        }
+    } else {
+        WRITE_WARN("Node ", printNode(node, true), " is marked"
+                   " as a group node, but we failed to cast it to"
+                   " an IGroupNode object.");
+        RETURN_ERROR(STATUS_UNEXPECTED);
+    }
+
+    // Refresh the tree model to notify GTK of a new node, and where that node
+    //   is located
+    auto result = refreshModel(key);
+    RETURN_IF_ERROR(result);
+
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief Attempt to remove the node located at key from its parent
+ *
+ * @param key The key of the node to remove
+ *
+ * @return STATUS_SUCCESS if the removal was successful, an error code otherwise
+ */
+auto HMDT::GUI::MainWindowFileTreePart::removeNodeFromHierarchy(const Project::Hierarchy::Key& key) noexcept
+    -> MaybeVoid
+{
+    WRITE_DEBUG("Asked to remove a node found at key ", std::to_string(key));
+
+    // Lookup the parent key
+    auto maybe_group_node = key.parent().lookup(m_model->getHierarchy());
+    if(IS_FAILURE(maybe_group_node)) {
+        WRITE_ERROR("Failed to lookup node for key ", std::to_string(key));
+        RETURN_IF_ERROR(maybe_group_node);
+    }
+
+    // Try to convert it to a group node, if we cannot then something has gone
+    //   wrong
+    if(auto gnode = std::dynamic_pointer_cast<Project::Hierarchy::GroupNode>(*maybe_group_node);
+            gnode != nullptr)
+    {
+        auto child_name = key.getParts().back();
+
+        auto result = gnode->removeChild(child_name);
+        RETURN_IF_ERROR(result);
+    } else {
+        WRITE_WARN("Node ", printNode(*maybe_group_node, true), " is marked"
+                   " as a group node, but we failed to cast it to"
+                   " an IGroupNode object.");
+        RETURN_ERROR(STATUS_UNEXPECTED);
+    }
+
+    // Refresh the tree model to notify GTK of a new node, and where that node
+    //   is located
+    // Make sure to refresh from the parent
+    auto result = refreshModel(key.parent());
+    RETURN_IF_ERROR(result);
 
     return STATUS_SUCCESS;
 }

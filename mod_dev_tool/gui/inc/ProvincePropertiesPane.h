@@ -20,6 +20,8 @@
 # include "ProvincePreviewDrawingArea.h"
 
 namespace HMDT::GUI {
+    class BaseMainWindow;
+
     /**
      * @brief The pane where properties of a province are placed into
      */
@@ -27,7 +29,7 @@ namespace HMDT::GUI {
         public:
             using ValueChangedCallback = std::function<void(const Project::Hierarchy::Key&)>;
 
-            ProvincePropertiesPane();
+            ProvincePropertiesPane(BaseMainWindow&);
 
             Gtk::ScrolledWindow& getParent();
 
@@ -67,6 +69,8 @@ namespace HMDT::GUI {
             void setPreview(ProvincePreviewDrawingArea::DataPtr);
 
         private:
+            BaseMainWindow& m_main_window;
+
             //! The province currently being acted upon
             Province* m_province;
 

@@ -40,8 +40,26 @@ namespace HMDT::GUI {
             BaseMainWindow();
             virtual ~BaseMainWindow() = default;
 
+            template<typename T>
+            T& getPartAs(const PartType& part) noexcept {
+                static_assert(std::is_base_of_v<BaseMainWindow, T>,
+                              "All parts must inherit from BaseMainWindow.");
+
+                return dynamic_cast<T&>(getPart(part));
+            }
+
+            template<typename T>
+            const T& getPartAs(const PartType& part) const noexcept {
+                static_assert(std::is_base_of_v<BaseMainWindow, T>,
+                              "All parts must inherit from BaseMainWindow.");
+
+                return dynamic_cast<const T&>(getPart(part));
+            }
+
         protected:
             virtual void updatePart(const PartType&, const std::any&) noexcept = 0;
+            virtual BaseMainWindow& getPart(const PartType&) noexcept = 0;
+            virtual const BaseMainWindow& getPart(const PartType&) const noexcept = 0;
     };
 }
 

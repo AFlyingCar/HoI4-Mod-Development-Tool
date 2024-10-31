@@ -348,6 +348,7 @@ PREF_BEGIN_DEF()
 
         PREF_BEGIN_DEFINE_GROUP("_",)
             PREF_DEFINE_CONFIG(HMDT_LOCALIZE("darkMode"), false, HMDT_LOCALIZE("Whether the program should use dark-mode."), false)
+            PREF_DEFINE_CONFIG(HMDT_LOCALIZE("autoSwitchView"), true, HMDT_LOCALIZE("Whether rendering views should be automatically switched when performing certain actions."), false)
         PREF_END_DEFINE_GROUP()
     PREF_END_DEFINE_SECTION(),
 

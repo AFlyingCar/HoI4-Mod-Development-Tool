@@ -108,6 +108,8 @@ namespace HMDT {
         public:
             void setLabelMatrix(InternalMapType32);
             void setStateIDMatrix(InternalMapType32);
+
+            void updateStateIDMatrixTag() noexcept;
     };
 }
 

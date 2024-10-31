@@ -2,6 +2,7 @@
 #include "ProvincePropertiesPane.h"
 
 #include <libintl.h>
+#include <numeric>
 
 #include "gtkmm/messagedialog.h"
 #include "gtkmm/label.h"
@@ -10,17 +11,22 @@
 #include "Constants.h"
 #include "Logger.h"
 #include "Util.h"
+#include "Options.h"
 
 #include "ActionManager.h"
 #include "SetPropertyAction.h"
 #include "CreateRemoveContinentAction.h"
+#include "CreateRemoveStateAction.h"
 
 #include "Driver.h"
 #include "SelectionManager.h"
+#include "MainWindowFileTreePart.h"
+#include "MainWindow.h"
 
 #include "NodeKeyNames.h"
 
-HMDT::GUI::ProvincePropertiesPane::ProvincePropertiesPane():
+HMDT::GUI::ProvincePropertiesPane::ProvincePropertiesPane(BaseMainWindow& main_window):
+    m_main_window(main_window),
     m_province(nullptr),
     m_box(Gtk::ORIENTATION_VERTICAL),
     m_is_updating_properties(false),
@@ -354,18 +360,90 @@ void HMDT::GUI::ProvincePropertiesPane::buildContinentField() {
 void HMDT::GUI::ProvincePropertiesPane::buildStateCreationButton() {
     m_create_state_button = addWidget<Gtk::Button>(gettext("Create State"));
 
-    m_create_state_button->signal_clicked().connect([]() {
+    m_create_state_button->signal_clicked().connect([this]() {
         if(auto opt_project = Driver::getInstance().getProject(); opt_project) {
             auto& history_project = opt_project->get().getHistoryProject();
+            auto& state_project = history_project.getStateProject();
 
             auto selected = SelectionManager::getInstance().getSelectedProvinceLabels();
-            auto id = history_project.getStateProject().addNewState(std::vector<ProvinceID>(selected.begin(),
-                                                                                            selected.end()));
-            SelectionManager::getInstance().selectState(id);
 
-            // TODO: If we have a State view, we should switch to it here
-            // TODO: We should also switch from the province properties pane to
-            //       the state properties pane
+            Project::Hierarchy::Key key{
+                Project::Hierarchy::ProjectKeys::HISTORY,
+                Project::Hierarchy::ProjectKeys::STATES,
+                Project::Hierarchy::GroupKeys::STATES
+            };
+
+            Action::ActionManager::getInstance().doAction(
+                &(new Action::CreateRemoveStateAction(history_project,
+                                                      std::vector<ProvinceID>(selected.begin(),
+                                                                              selected.end())
+                    )
+                  )
+                  ->onValueChanged([this, &state_project, key](const StateID& id)
+                  {
+                      m_value_changed_callback(key);
+
+                      // Only select the state if it exists/is valid
+                      if(state_project.isValidStateID(id)) {
+                          SelectionManager::getInstance().selectState(id);
+                      }
+
+                      // TODO: If we have a State view, we should switch to it here
+                      // TODO: We should also switch from the province properties pane to
+                      //       the state properties pane
+                      return true;
+                  })
+                  .onCreate([this, &state_project, key](const StateID& id) {
+                      // This will run right before onValueChanged, so make
+                      //   sure to update the hierarchy now
+                      auto& mwft = m_main_window.getPartAs<MainWindowFileTreePart>(BaseMainWindow::PartType::FILE_TREE);
+
+                      auto maybe_state = state_project.getStateForID(id);
+                      RETURN_VALUE_IF_ERROR(maybe_state, false);
+
+                      auto state_node = state_project.createStateNode(id, *maybe_state);
+
+                      auto result = mwft.addNodeToHierarchy(key, state_node);
+                      RETURN_VALUE_IF_ERROR(result, false);
+
+
+                      Preferences::getInstance().getPreferenceValue<bool>("Gui._.autoSwitchView")
+                          .andThen([this](bool autoSwitchView)
+                      {
+                          if(autoSwitchView) {
+                              // Switch back to the states view
+                              m_main_window.getPartAs<MainWindow>(BaseMainWindow::PartType::MAIN)
+                                  .switchRenderingView(IMapDrawingAreaBase::ViewingMode::STATES_VIEW);
+                          }
+                      });
+
+                      // No need to update the tree here, as that will happen
+                      //   in onValueChanged
+                      return true;
+                  })
+                  .onRemove([this, key](const State& state) {
+                      // This will run right before onValueChanged, so make
+                      //   sure to update the hierarchy now
+                      auto& mwft = m_main_window.getPartAs<MainWindowFileTreePart>(BaseMainWindow::PartType::FILE_TREE);
+
+                      // TODO: Using the state name is really bad, we should
+                      //   honestly instead be using StateID, but we won't be
+                      //   able to do that until States have been migrated over
+                      //   to using UUID instead of an int for their ID
+                      auto result = mwft.removeNodeFromHierarchy(key / state.name);
+                      RETURN_VALUE_IF_ERROR(result, false);
+
+                      // Deselect the state to prevent crashes in
+                      //   StatePropertiesPane, which may still be referencing
+                      //   the state after it gets removed
+                      SelectionManager::getInstance().removeStateSelection(state.id);
+
+                      // No need to update the tree here, as that will happen
+                      //   in onValueChanged
+
+                      return true;
+                  })
+            );
         }
     });
 }

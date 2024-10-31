@@ -42,6 +42,11 @@ namespace HMDT::GUI {
             void setOnNodeClickCallback(const NodeClickCallback&) noexcept;
             void setOnNodeDoubleClickCallback(const NodeClickCallback&) noexcept;
 
+            MaybeVoid addNodeToHierarchy(const Project::Hierarchy::Key&,
+                                         Project::Hierarchy::INodePtr,
+                                         const std::string& = "") noexcept;
+            MaybeVoid removeNodeFromHierarchy(const Project::Hierarchy::Key&) noexcept;
+
         protected:
             /**
              * @brief Defines the model for representing the project hierarchy
@@ -105,6 +110,10 @@ namespace HMDT::GUI {
 
                     Maybe<Project::Hierarchy::Key> getKeyForNode(Project::Hierarchy::INodePtr) const noexcept;
 
+                    const ParentMap& getParentMap() const noexcept;
+                    const OrderedChildrenMap& getOrderedChildrenMap() const noexcept;
+                    const NodeIndexMap& getNodeIndexMap() const noexcept;
+
                 protected:
                     Maybe<std::string> valueAsString(const Project::Hierarchy::IPropertyNode&) const noexcept;
 
@@ -147,12 +156,19 @@ namespace HMDT::GUI {
 
             MaybeVoid onProjectOpened();
 
+            Maybe<std::tuple<HierarchyModel::ParentMap,
+                             HierarchyModel::OrderedChildrenMap,
+                             HierarchyModel::NodeIndexMap>>
+                buildMappingsFrom(const Project::Hierarchy::INodePtr&,
+                                  const Project::Hierarchy::Key& = Project::Hierarchy::Key{}) const noexcept;
+
             MaybeVoid handleNodeValueSelection(Project::Hierarchy::INode*,
                                                std::vector<std::pair<ProvinceID, OnSelectNodeData>>&,
                                                std::vector<std::pair<StateID, OnSelectNodeData>>&,
                                                OnSelectNodeData&);
 
             void updateFileTree(const Project::Hierarchy::Key&) noexcept;
+            MaybeVoid refreshModel(const Project::Hierarchy::Key&) noexcept;
 
             void selectNode(const std::vector<Project::Hierarchy::Key>&,
                             const SelectionManager::Action&) noexcept;

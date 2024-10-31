@@ -46,7 +46,16 @@ namespace HMDT::GUI {
             OptionalReference<LogViewerWindow> getLogViewerWindow();
 
             template<typename T>
-            T* thisAs() const noexcept {
+            const T* thisAs() const noexcept {
+                static_assert(std::is_base_of_v<T, MainWindow>,
+                              "Can only get MainWindow as one if its base "
+                              "classes.");
+
+                return dynamic_cast<const T*>(this);
+            }
+
+            template<typename T>
+            T* thisAs() noexcept {
                 static_assert(std::is_base_of_v<T, MainWindow>,
                               "Can only get MainWindow as one if its base "
                               "classes.");
@@ -54,8 +63,12 @@ namespace HMDT::GUI {
                 return dynamic_cast<T*>(this);
             }
 
+            IMapDrawingAreaBase::ViewingMode switchRenderingView(IMapDrawingAreaBase::ViewingMode) noexcept;
+
         protected:
             virtual void updatePart(const PartType&, const std::any&) noexcept override;
+            virtual BaseMainWindow& getPart(const PartType&) noexcept override;
+            virtual const BaseMainWindow& getPart(const PartType&) const noexcept override;
 
             virtual Gtk::Orientation getDisplayOrientation() const override;
             virtual void addWidgetToParent(Gtk::Widget&) override;

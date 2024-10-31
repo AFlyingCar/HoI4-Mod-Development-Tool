@@ -47,7 +47,7 @@ Gtk::Frame* HMDT::GUI::MainWindowPropertiesPanePart::buildPropertiesPane(Gtk::Pa
     auto properties_tab = addActiveWidget<Gtk::Notebook>();
 
     {
-        m_province_properties_pane.reset(new ProvincePropertiesPane);
+        m_province_properties_pane.reset(new ProvincePropertiesPane(*this));
         m_province_properties_pane->init();
         m_province_properties_pane->setCallbackOnValueChanged([this](const Project::Hierarchy::Key& key) {
             updatePart(BaseMainWindow::PartType::FILE_TREE, key);
