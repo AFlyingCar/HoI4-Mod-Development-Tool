@@ -15,9 +15,9 @@ HMDT::Action::CreateRemoveStateAction::CreateRemoveStateAction(
     m_history_project(history_project),
     m_provinces(provinces),
     m_type(Type::CREATE),
-    m_on_value_changed_callback([](auto&&...){}),
-    m_on_create_callback([](auto&&...){}),
-    m_on_remove_callback([](auto&&...){})
+    m_on_value_changed_callback([](auto&&...){return true;}),
+    m_on_create_callback([](auto&&...){return true;}),
+    m_on_remove_callback([](auto&&...){return true;})
 { }
 
 /**
@@ -33,9 +33,9 @@ HMDT::Action::CreateRemoveStateAction::CreateRemoveStateAction(
     m_provinces(),
     m_state_id(id),
     m_type(Type::REMOVE),
-    m_on_value_changed_callback([](auto&&...){}),
-    m_on_create_callback([](auto&&...){}),
-    m_on_remove_callback([](auto&&...){})
+    m_on_value_changed_callback([](auto&&...){return true;}),
+    m_on_create_callback([](auto&&...){return true;}),
+    m_on_remove_callback([](auto&&...){return true;})
 { }
 
 bool HMDT::Action::CreateRemoveStateAction::doAction(const Callback& callback) {
@@ -87,7 +87,7 @@ auto HMDT::Action::CreateRemoveStateAction::onCreate(const OnValueChangedCallbac
     return *this;
 }
 
-auto HMDT::Action::CreateRemoveStateAction::onRemove(const OnValueChangedCallback& callback) noexcept
+auto HMDT::Action::CreateRemoveStateAction::onRemove(const OnValueRemovedCallback& callback) noexcept
     -> CreateRemoveStateAction&
 {
     m_on_remove_callback = callback;
@@ -95,26 +95,31 @@ auto HMDT::Action::CreateRemoveStateAction::onRemove(const OnValueChangedCallbac
 }
 
 bool HMDT::Action::CreateRemoveStateAction::create() {
+    WRITE_DEBUG("Creating state with ", m_provinces.size(), " provinces.");
+
     // TODO: WARNING!!!! This action will not create a state with the same ID as
     //   before when undoing! To fix this, StateProject needs a way to add a
     //   state along with an existing ID.
     m_state_id = m_history_project.getStateProject().addNewState(m_provinces);
 
-    m_on_create_callback(m_state_id);
-    m_on_value_changed_callback(m_state_id);
+    if(!m_on_create_callback(m_state_id)) return false;
+    if(!m_on_value_changed_callback(m_state_id)) return false;
 
     return true;
 }
 
 bool HMDT::Action::CreateRemoveStateAction::remove() {
+    WRITE_DEBUG("Removing state ", m_state_id);
+
     auto maybe_state = m_history_project.getStateProject().getStateForID(m_state_id);
     RETURN_VALUE_IF_ERROR(maybe_state, false);
+
+    if(!m_on_remove_callback(maybe_state->get())) return false;
 
     m_provinces = maybe_state->get().provinces;
     m_history_project.getStateProject().removeState(m_state_id);
 
-    m_on_remove_callback(m_state_id);
-    m_on_value_changed_callback(m_state_id);
+    if(!m_on_value_changed_callback(m_state_id)) return false;
 
     return true;
 }

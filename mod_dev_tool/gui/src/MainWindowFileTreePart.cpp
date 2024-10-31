@@ -1366,6 +1366,8 @@ auto HMDT::GUI::MainWindowFileTreePart::buildMappingsFrom(const Project::Hierarc
     HierarchyModel::OrderedChildrenMap ordered_children_map;
     HierarchyModel::NodeIndexMap node_index_map;
 
+    WRITE_DEBUG("buildMappingsFrom: ", std::to_string(key));
+
     // Find the starting place to start building mappings from
     auto maybe_root_node = key.lookup(true_root_node);
     RETURN_IF_ERROR(maybe_root_node);
@@ -1626,7 +1628,8 @@ auto HMDT::GUI::MainWindowFileTreePart::removeNodeFromHierarchy(const Project::H
 
     // Refresh the tree model to notify GTK of a new node, and where that node
     //   is located
-    auto result = refreshModel(key);
+    // Make sure to refresh from the parent
+    auto result = refreshModel(key.parent());
     RETURN_IF_ERROR(result);
 
     return STATUS_SUCCESS;

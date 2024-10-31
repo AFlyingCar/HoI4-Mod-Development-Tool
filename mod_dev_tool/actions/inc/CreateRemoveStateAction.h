@@ -15,7 +15,8 @@ namespace HMDT::Action {
      */
     class CreateRemoveStateAction: public Action::IAction {
         public:
-            using OnValueChangedCallback = std::function<void(const StateID&)>;
+            using OnValueChangedCallback = std::function<bool(const StateID&)>;
+            using OnValueRemovedCallback = std::function<bool(const State&)>;
 
             /**
              * @brief The type of operation this action is doing
@@ -35,7 +36,7 @@ namespace HMDT::Action {
 
             CreateRemoveStateAction& onValueChanged(const OnValueChangedCallback&) noexcept;
             CreateRemoveStateAction& onCreate(const OnValueChangedCallback&) noexcept;
-            CreateRemoveStateAction& onRemove(const OnValueChangedCallback&) noexcept;
+            CreateRemoveStateAction& onRemove(const OnValueRemovedCallback&) noexcept;
 
         protected:
             bool create();
@@ -53,7 +54,7 @@ namespace HMDT::Action {
 
             OnValueChangedCallback m_on_value_changed_callback;
             OnValueChangedCallback m_on_create_callback;
-            OnValueChangedCallback m_on_remove_callback;
+            OnValueRemovedCallback m_on_remove_callback;
     };
 }
 

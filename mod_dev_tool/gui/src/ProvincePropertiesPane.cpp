@@ -2,6 +2,7 @@
 #include "ProvincePropertiesPane.h"
 
 #include <libintl.h>
+#include <numeric>
 
 #include "gtkmm/messagedialog.h"
 #include "gtkmm/label.h"
@@ -10,6 +11,7 @@
 #include "Constants.h"
 #include "Logger.h"
 #include "Util.h"
+#include "Options.h"
 
 #include "ActionManager.h"
 #include "SetPropertyAction.h"
@@ -376,15 +378,19 @@ void HMDT::GUI::ProvincePropertiesPane::buildStateCreationButton() {
                                                                               selected.end())
                     )
                   )
-                  ->onValueChanged([this, key](const StateID& id)
+                  ->onValueChanged([this, &state_project, key](const StateID& id)
                   {
                       m_value_changed_callback(key);
 
-                      SelectionManager::getInstance().selectState(id);
+                      // Only select the state if it exists/is valid
+                      if(state_project.isValidStateID(id)) {
+                          SelectionManager::getInstance().selectState(id);
+                      }
 
                       // TODO: If we have a State view, we should switch to it here
                       // TODO: We should also switch from the province properties pane to
                       //       the state properties pane
+                      return true;
                   })
                   .onCreate([this, &state_project, key](const StateID& id) {
                       // This will run right before onValueChanged, so make
@@ -392,26 +398,33 @@ void HMDT::GUI::ProvincePropertiesPane::buildStateCreationButton() {
                       auto& mwft = m_main_window.getPartAs<MainWindowFileTreePart>(BaseMainWindow::PartType::FILE_TREE);
 
                       auto maybe_state = state_project.getStateForID(id);
-                      RETURN_VALUE_IF_ERROR(maybe_state, /* void */);
+                      RETURN_VALUE_IF_ERROR(maybe_state, false);
 
                       auto state_node = state_project.createStateNode(id, *maybe_state);
 
                       auto result = mwft.addNodeToHierarchy(key, state_node);
-                      RETURN_VALUE_IF_ERROR(result, /* void */);
+                      RETURN_VALUE_IF_ERROR(result, false);
 
                       // No need to update the tree here, as that will happen
                       //   in onValueChanged
+                      return true;
                   })
-                  .onRemove([this, key](const StateID& id) {
+                  .onRemove([this, key](const State& state) {
                       // This will run right before onValueChanged, so make
                       //   sure to update the hierarchy now
                       auto& mwft = m_main_window.getPartAs<MainWindowFileTreePart>(BaseMainWindow::PartType::FILE_TREE);
 
-                      auto result = mwft.removeNodeFromHierarchy(key / std::to_string(id));
-                      RETURN_VALUE_IF_ERROR(result, /* void */);
+                      // TODO: Using the state name is really bad, we should
+                      //   honestly instead be using StateID, but we won't be
+                      //   able to do that until States have been migrated over
+                      //   to using UUID instead of an int for their ID
+                      auto result = mwft.removeNodeFromHierarchy(key / state.name);
+                      RETURN_VALUE_IF_ERROR(result, false);
 
                       // No need to update the tree here, as that will happen
                       //   in onValueChanged
+
+                      return true;
                   })
             );
         }
