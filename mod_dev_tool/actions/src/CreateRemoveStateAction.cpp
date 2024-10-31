@@ -14,11 +14,27 @@ HMDT::Action::CreateRemoveStateAction::CreateRemoveStateAction(
         const std::vector<ProvinceID>& provinces):
     m_history_project(history_project),
     m_provinces(provinces),
+    m_old_province_to_states(), // Initialize in body
     m_type(Type::CREATE),
+    m_is_valid(true),
     m_on_value_changed_callback([](auto&&...){return true;}),
     m_on_create_callback([](auto&&...){return true;}),
     m_on_remove_callback([](auto&&...){return true;})
-{ }
+{
+    const auto& prov_project = history_project.getRootParent().getMapProject().getProvinceProject();
+
+    for(auto&& id : provinces) {
+        // If any province ID is invalid, then mark this action as invalid and
+        //   stop immediately
+        if(!(m_is_valid = prov_project.isValidProvinceID(id))) {
+            return;
+        }
+
+        // Add in a mapping from the province to the current state so that we
+        //   can undo it properly
+        m_old_province_to_states[id] = prov_project.getProvinceForID(id).state;
+    }
+}
 
 /**
  * @brief Constructs a state removal action.
@@ -31,14 +47,32 @@ HMDT::Action::CreateRemoveStateAction::CreateRemoveStateAction(
         const StateID& id):
     m_history_project(history_project),
     m_provinces(),
+    m_old_province_to_states(), // Initialize in body
     m_state_id(id),
     m_type(Type::REMOVE),
     m_on_value_changed_callback([](auto&&...){return true;}),
     m_on_create_callback([](auto&&...){return true;}),
     m_on_remove_callback([](auto&&...){return true;})
-{ }
+{
+    // Initializing a removal action means we need to also store the existing
+    //   provinces
+    if((m_is_valid = history_project.getStateProject().isValidStateID(id))) {
+        // It's fine to just immediately de-reference the maybe, since we've already
+        //   checked for validity
+        const auto& state = history_project.getStateProject().getStateForID(id)->get();
+
+        m_provinces = state.provinces;
+
+        // Add every province ID to m_old_province_to_states
+        for(auto&& prov_id : state.provinces) {
+            m_old_province_to_states[prov_id] = id;
+        }
+    }
+}
 
 bool HMDT::Action::CreateRemoveStateAction::doAction(const Callback& callback) {
+    if(!m_is_valid) return false;
+
     if(!callback(0)) return false;
 
     switch(m_type) {
@@ -116,8 +150,13 @@ bool HMDT::Action::CreateRemoveStateAction::remove() {
 
     if(!m_on_remove_callback(maybe_state->get())) return false;
 
-    m_provinces = maybe_state->get().provinces;
-    m_history_project.getStateProject().removeState(m_state_id);
+    // Put all provinces back into their old states
+    for(auto&& [prov_id, old_state_id] : m_old_province_to_states) {
+        m_history_project.getRootParent().getMapProject().moveProvinceToState(prov_id, old_state_id);
+    }
+
+    auto result = m_history_project.getStateProject().removeState(m_state_id);
+    RETURN_VALUE_IF_ERROR(result, false);
 
     if(!m_on_value_changed_callback(m_state_id)) return false;
 
