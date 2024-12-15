@@ -56,7 +56,7 @@ if(WIN32)
     target_link_libraries(common PRIVATE rpcrt4.lib dbghelp)
 endif()
 
-target_link_libraries(common PUBLIC unique_colors logging)
+target_link_libraries(common PUBLIC unique_colors Logger::Logger)
 
 # Generate StatusCodes.csv after common is finished
 add_custom_command(TARGET common POST_BUILD

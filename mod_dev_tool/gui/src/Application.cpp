@@ -19,7 +19,7 @@ HMDT::GUI::Application::Application():
     std::shared_ptr<bool> is_exiting = m_is_exiting;
 
     // Register a function that can send logs to a special log viewing window
-    Log::Logger::registerOutputFunction([this, is_exiting](const Log::Message& message)
+    ::Log::Logger::registerOutputFunction([this, is_exiting](const ::Log::Message& message)
     {
         if(is_exiting && *is_exiting) return true;
 

@@ -11,7 +11,6 @@ set(TEST_SOURCES
     ${TEST_SRC_DIR}/UtilTests.cpp
     ${TEST_SRC_DIR}/VersionTests.cpp
     ${TEST_SRC_DIR}/ProjectTests.cpp
-    ${TEST_SRC_DIR}/LogTests.cpp
     ${TEST_SRC_DIR}/GuiTests.cpp
     ${TEST_SRC_DIR}/ActionTests.cpp
     ${TEST_SRC_DIR}/PreferencesTests.cpp

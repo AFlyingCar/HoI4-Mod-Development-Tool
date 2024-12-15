@@ -81,7 +81,7 @@ TEST(BitMapTests, SimpleLoadTest) {
     //   then we're probably fine (can't really verify the length easily)
     ASSERT_NE(bmp1.data, nullptr);
 
-    HMDT::Log::Logger::getInstance().reset();
+    ::Log::Logger::getInstance().reset();
 }
 
 TEST(BitMapTests, Load8BPP) {
@@ -132,7 +132,7 @@ TEST(BitMapTests, Load8BPP) {
     //   then we're probably fine (can't really verify the length easily)
     ASSERT_NE(bmp1.data, nullptr);
 
-    HMDT::Log::Logger::getInstance().reset();
+    ::Log::Logger::getInstance().reset();
 }
 
 TEST(BitMapTests, Load8BPPWithColorManagement) {
@@ -206,7 +206,7 @@ TEST(BitMapTests, Load8BPPWithColorManagement) {
     //   then we're probably fine (can't really verify the length easily)
     ASSERT_NE(bmp1.data, nullptr);
 
-    HMDT::Log::Logger::getInstance().reset();
+    ::Log::Logger::getInstance().reset();
 }
 
 TEST(BitMapTests, WriteSimpleBMP) {
@@ -296,7 +296,7 @@ TEST(BitMapTests, WriteSimpleBMP) {
                            bmp1.data.get() + bmp1.info_header.v1.sizeOfBitmap,
                            bmp2.data.get()));
 
-    HMDT::Log::Logger::getInstance().reset();
+    ::Log::Logger::getInstance().reset();
 }
 
 TEST(BitMapTests, WriteSimpleBMPWithoutObject) {
@@ -399,7 +399,7 @@ TEST(BitMapTests, WriteSimpleBMPWithoutObject) {
                            bmp1.data.get() + bmp1.info_header.v1.sizeOfBitmap,
                            bmp2.data.get()));
 
-    HMDT::Log::Logger::getInstance().reset();
+    ::Log::Logger::getInstance().reset();
 }
 
 TEST(BitMapTests, Write8BPP) {
@@ -521,7 +521,7 @@ TEST(BitMapTests, Write8BPP) {
                                return l == r;
                            }));
 
-    HMDT::Log::Logger::getInstance().reset();
+    ::Log::Logger::getInstance().reset();
 }
 
 TEST(BitMapTests, Write8BPPWithoutObject) {
@@ -646,7 +646,7 @@ TEST(BitMapTests, Write8BPPWithoutObject) {
                                return l == r;
                            }));
 
-    HMDT::Log::Logger::getInstance().reset();
+    ::Log::Logger::getInstance().reset();
 }
 
 TEST(BitMapTests, Convert24BPPTo8BPPTest) {
@@ -737,7 +737,7 @@ TEST(BitMapTests, Convert24BPPTo8BPPTest) {
     //   then we're probably fine (can't really verify the length easily)
     ASSERT_NE(bmp1.data, nullptr);
 
-    HMDT::Log::Logger::getInstance().reset();
+    ::Log::Logger::getInstance().reset();
 }
 
 TEST(BitMapTests, Test8BPPCustomColorTable) {
@@ -887,6 +887,6 @@ TEST(BitMapTests, Test8BPPCustomColorTable) {
                                return l == r;
                            }));
 
-    HMDT::Log::Logger::getInstance().reset();
+    ::Log::Logger::getInstance().reset();
 }
 
