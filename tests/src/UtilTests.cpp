@@ -453,7 +453,7 @@ TEST(UtilTests, BasicMaybeTest) {
     ASSERT_FALSE(v3.has_value());
     ASSERT_EQ(v3.error(), std::make_error_code(std::errc::io_error));
 
-    HMDT::Log::Logger::getInstance().reset();
+    ::Log::Logger::getInstance().reset();
 }
 
 TEST(UtilTests, StatusCodeEqualityTests) {

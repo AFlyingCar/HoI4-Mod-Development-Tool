@@ -12,24 +12,24 @@
 
 namespace {
     auto levelFromString(const std::string& s)
-        -> HMDT::Maybe<HMDT::Log::Message::Level>
+        -> HMDT::Maybe<::Log::Message::Level>
     {
         auto level = HMDT::toUpper(s);
 
         if(level == "ERROR") {
-            return HMDT::Log::Message::Level::ERROR;
+            return ::Log::Message::Level::ERROR;
         } else if(level == "WARN") {
-            return HMDT::Log::Message::Level::WARN;
+            return ::Log::Message::Level::WARN;
         } else if(level == "INFO") {
-            return HMDT::Log::Message::Level::INFO;
+            return ::Log::Message::Level::INFO;
         } else if(level == "DEBUG") {
-            return HMDT::Log::Message::Level::DEBUG;
+            return ::Log::Message::Level::DEBUG;
         } else {
             RETURN_ERROR(HMDT::STATUS_INVALID_LEVEL_STRING);
         }
     }
 
-    std::string debugLevelToColorString(const HMDT::Log::Message::Level& level) noexcept
+    std::string debugLevelToColorString(const ::Log::Message::Level& level) noexcept
     {
         std::stringstream ss;
 
@@ -43,7 +43,7 @@ namespace {
             "0092ff", "ff00ff", "00ffff", "ffffff"
         };
 
-        uint8_t color = HMDT::Log::getLevelDefaultColor(level);
+        uint8_t color = ::Log::getLevelDefaultColor(level);
 
         // https://gist.github.com/MightyPork/1d9bd3a3fd4eb1a661011560f6921b5b
         ss << '#';
@@ -69,9 +69,9 @@ namespace {
     }
 }
 
-std::deque<HMDT::Log::Message> HMDT::GUI::LogViewerWindow::viewable_messages;
+std::deque<::Log::Message> HMDT::GUI::LogViewerWindow::viewable_messages;
 std::mutex HMDT::GUI::LogViewerWindow::next_message_mutex;
-std::queue<HMDT::Log::Message> HMDT::GUI::LogViewerWindow::next_messages;
+std::queue<::Log::Message> HMDT::GUI::LogViewerWindow::next_messages;
 
 HMDT::GUI::LogViewerWindow::LogRowColumns::LogRowColumns() {
     add(m_level);

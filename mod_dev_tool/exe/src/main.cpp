@@ -236,7 +236,7 @@ extern "C" {
 
         // Wait for the logger to finish outputting all messages, then exit
         //   cleanly
-        HMDT::Log::Logger::getInstance().waitForLogger();
+        ::Log::Logger::getInstance().waitForLogger();
 
 #ifdef WIN32
         // Create timestamped filename in format:
@@ -534,31 +534,31 @@ int main(int argc, char** argv) {
     // First, we must register the console output function
     std::shared_ptr<bool> quiet(new bool(false));
     std::shared_ptr<bool> verbose(new bool(false));
-    HMDT::Log::Logger::registerOutputFunction(
-        [quiet, verbose](const HMDT::Log::Message& message) -> bool {
+    ::Log::Logger::registerOutputFunction(
+        [quiet, verbose](const ::Log::Message& message) -> bool {
             bool is_quiet = quiet != nullptr && *quiet;
             bool is_verbose = verbose != nullptr && *verbose;
 
             const auto& level = message.getDebugLevel();
 
             // Debug only outputs if verbose is true
-            if(!is_verbose && level == HMDT::Log::Message::Level::DEBUG) {
+            if(!is_verbose && level == ::Log::Message::Level::DEBUG) {
                 return true;
             }
 
             // Info and Debug only output if quiet is false
             // No need to check for debug because quiet and verbose cannot both
             //  be true at the same time
-            if(is_quiet && level == HMDT::Log::Message::Level::INFO) {
+            if(is_quiet && level == ::Log::Message::Level::INFO) {
                 return true;
             }
 
-            return HMDT::Log::outputWithFormatting(message);
+            return ::Log::outputWithFormatting(message);
         });
 
     // Set up a user-data pointer that will be registered with the output
     //   function
-    using UDType = std::tuple<std::ofstream, std::queue<HMDT::Log::Message>>;
+    using UDType = std::tuple<std::ofstream, std::queue<::Log::Message>>;
     std::shared_ptr<UDType> file_ud(new UDType);
 
     // Simple reference to the first part of the user-data pointer, as we will
@@ -567,9 +567,9 @@ int main(int argc, char** argv) {
 
     std::shared_ptr<bool> disable_file_log_output(new bool(false));
 
-    HMDT::Log::Logger::registerOutputFunction(
-        [disable_file_log_output](const HMDT::Log::Message& message,
-                                  HMDT::Log::Logger::UserData user_data)
+    ::Log::Logger::registerOutputFunction(
+        [disable_file_log_output](const ::Log::Message& message,
+                                  ::Log::Logger::UserData user_data)
 
             -> bool
         {
@@ -585,7 +585,7 @@ int main(int argc, char** argv) {
 
             while(!messages.empty()) {
                 auto&& message = messages.front();
-                if(!HMDT::Log::outputToStream(message, false, true, 
+                if(!::Log::outputToStream(message, false, true, 
                     [&log_output_file](uint8_t) -> std::ostream& {
                         return log_output_file;
                     }, true))

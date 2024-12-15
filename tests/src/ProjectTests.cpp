@@ -66,7 +66,7 @@ TEST(ProjectTests, LoadHoI4ProjectTest) {
     ASSERT_TRUE(hproject.getTags().empty());
     ASSERT_TRUE(hproject.getOverrides().empty());
 
-    HMDT::Log::Logger::getInstance().reset();
+    ::Log::Logger::getInstance().reset();
 }
 
 TEST(ProjectTests, CreateHeightMapProject) {
@@ -120,7 +120,7 @@ TEST(ProjectTests, CreateHeightMapProject) {
     auto res = heightmap_project.loadFile(input_heightmap);
     ASSERT_SUCCEEDED(res);
 
-    HMDT::Log::Logger::getInstance().reset();
+    ::Log::Logger::getInstance().reset();
 }
 
 TEST(ProjectTests, SaveAndExportHeightMapProject) {
@@ -183,7 +183,7 @@ TEST(ProjectTests, SaveAndExportHeightMapProject) {
     res = heightmap_project.export_(export_path);
     ASSERT_SUCCEEDED(res);
 
-    HMDT::Log::Logger::getInstance().reset();
+    ::Log::Logger::getInstance().reset();
 }
 
 TEST(ProjectTests, HeightMapProjectLoadWithNon8BPPImage) {
@@ -280,7 +280,7 @@ TEST(ProjectTests, HeightMapProjectLoadWithNon8BPPImage) {
     res = heightmap_project.export_(export_path);
     ASSERT_SUCCEEDED(res);
 
-    HMDT::Log::Logger::getInstance().reset();
+    ::Log::Logger::getInstance().reset();
 }
 
 TEST(ProjectTests, RiversProjectExportTemplateTest) {
@@ -364,7 +364,7 @@ TEST(ProjectTests, RiversProjectExportTemplateTest) {
     res = rivers_project.export_(export_path);
     ASSERT_SUCCEEDED(res);
 
-    HMDT::Log::Logger::getInstance().reset();
+    ::Log::Logger::getInstance().reset();
 }
 
 TEST(ProjectTests, ConvertV1ProvinceIDsToUUIDTest) {
@@ -410,7 +410,7 @@ TEST(ProjectTests, ConvertV1ProvinceIDsToUUIDTest) {
 
     // TODO: Validate UUIDs are valid
 
-    HMDT::Log::Logger::getInstance().reset();
+    ::Log::Logger::getInstance().reset();
 }
 
 TEST(ProjectTests, ProvinceProjectSaveAndLoad) {
@@ -523,7 +523,7 @@ TEST(ProjectTests, ProvinceProjectSaveAndLoad) {
                            prov_data.get() + map_data->getProvincesSize(),
                            map_data->getProvinces().lock().get()));
 
-    HMDT::Log::Logger::getInstance().reset();
+    ::Log::Logger::getInstance().reset();
 }
 
 TEST(ProjectTests, MergeProvinceTests) {
@@ -728,7 +728,7 @@ TEST(ProjectTests, MergeProvinceTests) {
     // Logical XOR
     ASSERT_TRUE(!prov1.children.empty() != !prov4.children.empty());
 
-    HMDT::Log::Logger::getInstance().reset();
+    ::Log::Logger::getInstance().reset();
 }
 
 TEST(ProjectTests, SimpleHierarchyTest) {
